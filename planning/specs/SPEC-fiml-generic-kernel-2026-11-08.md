@@ -262,3 +262,52 @@ Z2), one mediator M, one outcome Y; regressions `M ~ X + Z1 + Z2` and `Y ~ M + X
   equation only, covariate as mediator, fixed-zero or fixed covariate paths, covariate residual covariances and every
   topology listed in section 7. The stage-0 guard is unchanged; a covariate fit (one or two) is additionally refused by
   `.bootstrap_fiml()` (`medfit_error_fiml_covariate_source_fit`).
+
+# 9. FI-G2 slice 1: two parallel mediators, independent disturbances (2026-11-08)
+
+Public variant added, on the same entry points as sections 7 and 8: four observed numeric variables, one exogenous
+(X), two mediators, one outcome; regressions `M1 ~ X`, `M2 ~ X`, `Y ~ M1 + M2 [+ X]`, with the independence of the two
+mediator disturbances written as `M1 ~~ 0*M2` (either order).
+
+- One mediator-count generalization: `.sem_fiml_tables_med(j, direct)` (j = 1 or 2); `.sem_fiml_tables()` is `j = 1`
+  and is identical (`identical()`) to the previous literal tables for both direct policies. The generic
+  `.sem_fiml_prepare_core()`/`.sem_fiml_solve()` are unchanged; the three-variable and covariate paths do not touch any
+  new code (golden snapshot and slice tests unchanged). Kernel variable order X, M1, M2, Y.
+- Parameters (13, or 12 without a free direct path): `a1 a2 b1 b2 [cp] vx vm1 vm2 vy ix im1 im2 iy`. No free
+  covariance parameter exists, so the layout's `covariances` element is empty.
+- Mediators are `M1`, `M2` in order of appearance of their regressions. Direct-path policy: free, fixed at exactly zero
+  (`0*X`), or omitted (the same three policies as the three-variable model).
+- Residual policy decision: the independence must be WRITTEN. An omitted `M1 ~~ M2` is refused (lavaan's default frees
+  that covariance, medfit's completion does not, so silence is ambiguous across the two; the free covariance is the
+  next slice and must not become reachable by omission). A free or nonzero `M1 ~~ M2`, a duplicate, and any covariance
+  with Y or X are refused.
+- Class decision: a new internal subclass `FIMLParallelMediationData` of `ParallelMediationData` (property
+  `fit_context`, validator mirroring `FIMLMediationData`, S4-registered). `FIMLMediationData` is not extended: its
+  parent holds scalar `a_path`/`b_path`. The subclass inherits the parallel `nie`/`nde`/`te`/`paths`/`tidy`/`confint`
+  methods and the parallel branch of the effect-gradient builder (`a1..`, `b1..`), so the sum of the two products has
+  the delta-method gradient `(b1, b2, a1, a2)` over the FULL covariance.
+- Extraction: `extract_mediation(fit, treatment = "X", mediator = c("M1", "M2"))`, either mediator order (`a_j`, `b_j`
+  follow the requested order; the sum and its SE do not change). `@vcov` carries the alias rows `a1 a2 b1 b2 c_prime`
+  with the full fitted observed-information covariance (`Cov(a1, a2)`, `Cov(b1, b2)`, `Cov(a_i, b_j)` all retained; the
+  fixed-zero or omitted direct path is a zero row and column). `structure = "parallel"` is accepted for a parallel fit
+  (and still refused for a simple fit); a single mediator, a mediator that is not a fitted one, a repeated mediator,
+  standardized, `interaction`, `decomposition = "four_way"`, `outcome` other than Y and every other argument are refused
+  (`FIML extraction supports only ...`).
+- Consumers refuse the object as they refuse a simple FIML object: `pm()`, `glance()`, `quick()`,
+  `confint(method = "boot")`, `bootstrap_mediation(mediation_data = )`. `print()` states the FIML context and
+  `tidy()` carries `fit_context`.
+- The exact-origin rule (all `a_j = b_j = 0`, NIE SE `NA` for a zero delta gradient) is not extended to the parallel
+  class: the estimates are exact zeros only on constructed objects, and no fit reaches it.
+- Still refused at prepare, fit, extract and both `source_fit` methods: a free or implicit mediator residual
+  covariance, mediators affecting each other (serial), a mediator that does not affect Y or is not affected by X, three
+  or more mediators, any covariate with the parallel structure, interactions, ties, constraints, bounds, defined
+  parameters, fixed nonzero or fixed `a`/`b` paths. The stage-0 guard is unchanged; a parallel fit is additionally
+  refused by `.bootstrap_fiml()` (`medfit_error_fiml_parallel_source_fit`) before any RNG draw or refit.
+- Evidence (`tests/testthat/test-fiml-g2-parallel.R`): lavaan raw-data FIML for estimates, SEs, logLik and the `:=`
+  products, their SUM and the total, in the free, zero and omitted direct variants; the rowwise likelihood oracle and
+  an independent Hessian; closed-form complete-data OLS, ML covariances and the exact block structure. Planted defects
+  with positive controls: dropped `M2 -> Y` path, untransported covariance, `c'` wired to `b1`, `a1`/`a2` swapped,
+  and the cross-path covariance dropped (the lm-style `Cov(a1, a2)`, `Cov(b1, b2)` omission and the whole
+  cross-mediator block). On the fixed-zero fixture the sum's SE is 0.0488 (lavaan 0.0488); the lm-style omission gives
+  0.0843 and the dropped block 0.0849; `Cov(a1, a2)` is 1.7e-05 (about zero under independent disturbances) and
+  `Cov(b1, b2)` is -4.3e-03 (the term that matters), so the lm omission bites here through `Cov(b1, b2)` only.
