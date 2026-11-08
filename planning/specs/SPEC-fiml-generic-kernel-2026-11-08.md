@@ -158,11 +158,38 @@ Planted defects (each test must fail under the mutation, via `sem_mutate()` on t
 row counted in `n`; (D5) the observed index `j <- g$cols` replaced by all columns in the likelihood loop; (D6) the
 `2 * pi` constant dropped. A mutation that does not change the result is a failed oracle.
 
-# 4. Decisions needed from the maintainer
+# 4. Decisions (maintainer, 2026-11-08)
 
-1. May G0c/G0d change `R/sem-fiml.R` on a feature branch before the stage-0 decision? Recommended: yes, branch only,
-   no merge to `dev` until the pinned parity proof of R2 exists and the stage-0 study source is re-pinned.
-2. Is the base (`a92e8d4a`) the intended one, rather than `dev` or an earlier snapshot?
-3. Is `NaN` meant to be a missing value in `.sem_fiml_prepare()` (current) or an invalid input like `Inf`?
-4. Does "both source-fit entry points" mean the parametric and nonparametric methods of
-   `bootstrap_mediation(source_fit =)` (the reading used here), or a second function?
+1. **Decided.** `R/sem-fiml.R` may change on this feature branch only. No push, PR or merge to `dev` or `main`; it must
+   not merge before the stage-0 decision plus a pinned old-model parity proof (R2) and a re-pinned study source.
+2. **Decided.** Base stays `a92e8d4a` plus the spec and oracle commits; the branch is rebased onto `dev` after the guard
+   merges. Kernel commits stay isolated: spec, tests and `R/sem-fiml.R` only.
+3. **Decided.** `NaN` stays missing via `is.na` in `.sem_fiml_prepare()`; preserve exactly, no change. `Inf`/`-Inf`
+   remain refused as `invalid FIML input`.
+4. **Decided.** "Both source-fit entry points" are the parametric and nonparametric methods of
+   `bootstrap_mediation(source_fit =)`, the only exported function with `source_fit`. The stage-0 guard is untouched.
+
+# 5. Parity protocol for G0c/G0d
+
+Before the first production change a golden snapshot of the existing model was captured from the unchanged kernel:
+`tests/testthat/fixtures/fiml-generic-golden.rds`, produced by `gk_write_golden()` in
+`tests/testthat/helper-fiml-golden.R`. It holds, for the eight missingness kinds times both direct-path policies
+(16 cells): parameter names and order, `q`, prepared quantities (groups, standardized data, center, scale, units,
+transport, offset, Jacobian, row ledger), kernel numerics at a fixed point (value, gradient, Hessian at two multipliers,
+moment geometry, likelihood difference), and the end-to-end fit through `fit_sem()` (coefficients, covariance, logLik,
+attempt ledger, solver call count, ledger fields, table, likelihood context, extracted NIE/NDE/TE, paths, estimates)
+or the refusal (class, message, stage, attempts) for the cells that fail (`minimal free`, `ytwo free`, `ytwo zero`).
+`tests/testthat/test-fiml-generic-kernel-golden.R` recompares after every step: prepared and kernel quantities at
+1e-12 (bit-for-bit on the capturing machine), fitted results at 1e-6 (frozen SLSQP tolerance), discrete fields
+(statuses, acceptance, solver calls, names, messages) identical. A step that cannot meet this is not made; it is
+reported (observable behavior must not change).
+
+Generalization steps (each its own commit, golden test green after each, planted defects added per step):
+
+- T: transport (units, offset, transport matrix) derived from a parameter layout of the model's RAM tables instead of
+  literals for `a, b, cp, vx, ...`.
+- S: variance indices, lower bounds, starts and the SLSQP unit matrix from the layout and the number of variables.
+- E: evaluation and geometry loops over the layout (value, gradient, difference, Hessian step caps).
+
+The public adapter (`.sem_fiml_model()` and the topology refusals) is verified, not generalized: no new topology or
+direct-path policy is activated.
