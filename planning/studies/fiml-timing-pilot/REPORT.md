@@ -14,7 +14,7 @@ sequential single worker, guard override in-process. Raw log: `_agents_workspace
   parametric for cell 10 dataset 2. The pilot therefore did **not** cover the fixed-zero all-empty
   cells. No independent QA completeness check against the caps has been done yet.
 
-## Clean timings (86 ok units; every ok refit call had 999/999 successes, every draw call 20,000/20,000)
+## Clean timings (85 clean units of 86 logged ok; every ok refit call had 999/999 successes, every draw call 20,000/20,000)
 | Unit | Mean | Range |
 | --- | ---: | ---: |
 | FIML fit | 0.16 s | n/a |
@@ -31,6 +31,15 @@ Proposed stage 0: 60 cells x 2,500 datasets, one refit call per dataset per effe
   Whether refits can be shared across effects is a design question the pilot does not answer.
 - Draw calls add ~5e5 s total, negligible.
 - Real multi-core scaling (BLAS threading, memory) was not measured. Eleven later variants multiply this.
+
+## Corrections after independent QA (2026-11-07)
+- The log labels the sleep-suspended call (cell 10, dataset 2, nonparametric, seed 9101002, 4,632.86 s) `ok`;
+  it is **contaminated**, so 85 units are valid, not 86. The log has no contamination flag (the file is git-ignored);
+  treat that row as invalid.
+- Total elapsed was 7,941 s against the 7,200 s total cap (a 741 s overrun) and cell 10 exceeded its 15 min cap;
+  both overruns come from the suspension, since a suspended process cannot be killed on time.
+- Pilot used R 4.6.2 and source `3826c9ac`; Hopper will use R 4.4.0 and another commit, so cluster timings are unmeasured.
+- Cost is the draw-call mean 3.63 s (range 3.48-3.82 s); the QA-checked totals (198 and 593 core-days) are correct arithmetic.
 
 ## Disposition
 By the plan's gate, an unaffordable or unexpected pilot stops here: any redesign needs review and

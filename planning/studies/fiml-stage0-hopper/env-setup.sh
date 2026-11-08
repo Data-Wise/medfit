@@ -12,8 +12,8 @@ export R_LIBS_USER="$ROOT/Rlib" OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 test -d "$ROOT/src/medfit/.git" || { echo "clone medfit into $ROOT/src/medfit first"; exit 1; }
 git -C "$ROOT/src/medfit" fetch -q && git -C "$ROOT/src/medfit" checkout -q "$SRC_SHA"
 test -z "$(git -C "$ROOT/src/medfit" status --porcelain)" || { echo "dirty tree"; exit 1; }
-Rscript -e 'options(repos=c(CRAN="https://cloud.r-project.org")); install.packages(c("devtools","S7","checkmate","generics","MASS","nloptr","numDeriv","testthat","withr","rlang"))'
+Rscript -e 'options(repos=c(CRAN="https://packagemanager.posit.co/cran/2026-11-01"))   # dated snapshot: CONFIRM it exists; install.packages(c("devtools","S7","checkmate","generics","MASS","nloptr","numDeriv","testthat","withr","rlang"))'
 # Fingerprint: everything the results depend on, written once and referenced by every task.
 FP="$ROOT/env-fingerprint.txt"
 { echo "medfit_commit $SRC_SHA"; module list 2>&1; Rscript -e 'print(sessionInfo()); print(extSoftVersion()[["BLAS"]]); print(as.data.frame(installed.packages(lib.loc=Sys.getenv("R_LIBS_USER"))[,c("Package","Version")]))'; } > "$FP"
-sha256sum "$FP" >> "$FP.sha256"; echo "fingerprint: $FP"
+sha256sum "$FP" > "$FP.sha256"      # overwrite: a stale second line would fail every task; echo "fingerprint: $FP"

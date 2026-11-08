@@ -8,11 +8,12 @@ source("tests/testthat/helper-fiml-bootstrap.R")
 utils::assignInNamespace(".fiml_source_inference_admitted", function() TRUE, ns = "medfit")
 orig <- get(".bootstrap_fiml_refit", envir = asNamespace("medfit"))
 flaky <- function(source, rows) { if (sum(rows) %% 7L == 0L) stop("injected refit failure", call. = FALSE); orig(source, rows) }
-strip <- function(r) { i <- r@inference; i$replicates <- lapply(i$replicates, function(x) x[setdiff(names(x), c("frame"))]); list(est = r@estimate, ci = c(r@ci_lower, r@ci_upper), boot = r@boot_estimates, inf = i) }
+warny <- function(source, rows) { if (sum(rows) %% 3L == 0L) warning("injected refit warning", call. = FALSE); orig(source, rows) }
+strip <- function(r) list(est = r@estimate, ci = c(r@ci_lower, r@ci_upper), boot = r@boot_estimates, inf = r@inference)  # full records incl. frame and warnings
 fails <- 0L; checks <- 0L
-for (direct in c(TRUE, FALSE)) for (kind in c("mar", "mcar")) for (inject in c(FALSE, TRUE)) {
+for (direct in c(TRUE, FALSE)) for (kind in c("mar", "mcar")) for (inject in c("none", "fail", "warn")) {
   fit <- fit_sem(fb_model(direct), fb_fixture(kind, direct), missing = "fiml", fixed_x = FALSE)
-  utils::assignInNamespace(".bootstrap_fiml_refit", if (inject) flaky else orig, ns = "medfit")
+  utils::assignInNamespace(".bootstrap_fiml_refit", switch(inject, none = orig, fail = flaky, warn = warny), ns = "medfit")
   base <- lapply(c("nie", "nde", "te"), function(e) strip(bootstrap_mediation(source_fit = fit, effect = e, method = "nonparametric", n_boot = 40L, seed = 11L)))
   sh <- study_shared_refits_install(key_fun = if (mutant) function(rows) "constant" else function(rows) rlang::hash(rows))
   # the cache wraps whatever is currently installed (orig or flaky), so shared == base unless the cache is wrong
@@ -20,6 +21,7 @@ for (direct in c(TRUE, FALSE)) for (kind in c("mar", "mcar")) for (inject in c(F
   n_cached <- sh$size(); sh$restore(); utils::assignInNamespace(".bootstrap_fiml_refit", orig, ns = "medfit")
   ok <- identical(base, shared); checks <- checks + 1L; if (!ok) fails <- fails + 1L
   cat(sprintf("direct=%s %s inject=%s: identical=%s  cached refits=%d (40 requested; 3 calls)\n", direct, kind, inject, ok, n_cached))
+  if (inject == "warn") stopifnot(any(vapply(shared[[2]]$inf$replicates, function(x) length(x$warnings) > 0L, logical(1))))  # warning case is not vacuous
   stopifnot(mutant || n_cached <= 40L)
 }
 cat(sprintf("PARITY %s: %d/%d scenarios identical\n", if (fails == 0L) "PASS" else "FAIL", checks - fails, checks))
