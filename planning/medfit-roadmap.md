@@ -15,8 +15,12 @@
 > Stage 0 is planned for UNM Hopper with the full design (60 cells, M=2,500, B=999), a 250
 > core-day cap and a study-only shared-refit patch (about 208 core-days); the draft harness in
 > [`studies/fiml-stage0-hopper/`](studies/fiml-stage0-hopper/README.md) has had independent QA,
-> environment setup is in progress, nothing is submitted and the preregistration is not frozen
-> (a 25 core-day local cap was considered and withdrawn). Default next-release content is no
+> environment setup is in progress on Hopper (first attempt installed nothing because a `#` inside the
+> quoted R code commented out `install.packages`; fixed at `a92e8d4a`, rerun installing, 46 packages at last check),
+> nothing is submitted and the preregistration is not frozen (a 25 core-day local cap was considered and
+> withdrawn). 2026-11-08: three parallel tracks started in isolated worktrees (stage-0 preregistration draft,
+> FI-G0a/b contract and reference oracles on an unmerged branch, FI-TRACK reconciliation, already merged
+> here); next steps are in the plan's [critical path](PLAN-FIML-next-release-model-expansion-2026-11-01.md#critical-path-and-open-decisions-2026-11-08). Default next-release content is no
 > expanded FIML and no source-fit inference unless admitted.
 
 # medfit Package Development Roadmap

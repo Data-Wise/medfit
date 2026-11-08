@@ -56,6 +56,32 @@ variants ship only individually, after their own admission and a release-scope
 decision. If the maintainer wants a dated release, they must either authorize
 the stage-0 study with a budget, or accept this default.
 
+## Critical path and open decisions (2026-11-08)
+
+Status: Hopper environment install running (46 packages at last check; the first attempt
+installed nothing because a `#` inside quoted R code commented out `install.packages`, fixed at
+`a92e8d4a`); three parallel tracks started in isolated worktrees (stage-0 preregistration draft,
+FI-G0a/b contract and reference oracles on an unmerged branch cut from the guard branch tip,
+FI-TRACK reconciliation, merged here at `f85ecee4`). Nothing is submitted to Hopper; no push, PR
+or merge.
+
+Critical path to the stage-0 study, in order (each step needs its own approval where marked):
+1. Finish the Hopper environment; confirm the fingerprint file and that `S7`, `nloptr` and the
+   rest are installed. Needs no new approval.
+2. Re-run `parity-check.R` inside the pinned Hopper environment (QA gating item). Submitting it
+   as a job needs your approval.
+3. Time one real chunk on the 4-hour debug partition and check `MaxArraySize` (QA items 3d/3e);
+   re-estimate the 187 to 208 core-day cost against the 250 cap. Needs your approval.
+4. Preregistration draft -> independent review -> freeze. Blocked on the open decisions below.
+5. Submit the full 6,000-task array, only after step 4 and your approval of the exact job file.
+6. Run `check-complete.R`; analyze gates; decide stage-0 admission (separate decision).
+
+FI-G0 (generic kernel) proceeds in parallel but stays off `dev` until the stage-0 decision
+(finding R2). Open decisions for the maintainer: the remediation method if stage 0 fails (G3,
+declare before any outcome); the all-empty-cell collection cap and the failure/denominator policy;
+the FI-G0 branch base commit (currently the guard branch tip, an assumption); whether the guard
+branch is pushed and merged to `dev` (it is local only).
+
 ## Target and limits
 
 | Release target | Variants | Explicit scope |
