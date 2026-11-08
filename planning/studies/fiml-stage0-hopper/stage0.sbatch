@@ -1,13 +1,14 @@
 #!/bin/bash
 # DRAFT, NOT SUBMITTED. Submission needs the maintainer's approval of this exact file.
-# 60 cells x 100 chunks of 25 datasets = 6000 tasks, one core each. Cost (6 bootstrap calls/dataset, no refit sharing):
-#   25 datasets x ~(3 x 114 s) ~ 2.4 h per task  ->  ~600 core-days, OVER the 250 core-day cap (see README).
+# 60 cells x 100 chunks of 25 datasets = 6000 tasks, one core each. Refits are shared across NIE/NDE/TE by the
+# study-only patch (shared-refits.R, parity-check.R): ~96 s refit set + 6 x ~3.6 s draws ~ 2 min per dataset,
+# ~50 min per task, ~208 core-days total, under the 250 core-day cap. Time limit leaves 2x headroom.
 #SBATCH --job-name=medfit-stage0
 #SBATCH --account=2016507
 #SBATCH --partition=general
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=3G
-#SBATCH --time=04:00:00
+#SBATCH --mem=4G
+#SBATCH --time=02:00:00
 #SBATCH --array=1-6000%96
 #SBATCH --output=/carc/scratch/users/%u/medfit-stage0/logs/%A_%a.out
 set -euo pipefail

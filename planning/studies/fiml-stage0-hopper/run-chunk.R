@@ -10,6 +10,8 @@ suppressMessages(devtools::load_all(quiet = TRUE))
 fp <- Sys.getenv("STAGE0_FINGERPRINT"); stopifnot(nzchar(fp), file.exists(fp))
 utils::assignInNamespace(".fiml_source_inference_admitted", function() TRUE, ns = "medfit")
 stopifnot(isTRUE(medfit:::.fiml_source_inference_admitted()))
+source("planning/studies/fiml-stage0-hopper/shared-refits.R")   # study-only; parity proven by parity-check.R
+sh <- study_shared_refits_install()
 cl <- stage0_cells()[cell, ]
 gen <- function(seed) {
   set.seed(seed)
@@ -37,6 +39,7 @@ for (d in first:last) {
   g <- tryCatch(gen(seed), error = function(e) conditionMessage(e))
   base <- list(cell = cell, dataset = d, seed = seed)
   if (is.character(g)) { rows[[length(rows) + 1]] <- c(base, list(effect = NA, method = NA, status = "generation_failed", reason = g)); next }
+  sh$reset()                                      # one dataset at a time: the cache never spans datasets
   fit <- tryCatch(fit_sem(mod, g$data, missing = "fiml", fixed_x = FALSE), error = function(e) conditionMessage(e))
   if (is.character(fit)) { rows[[length(rows) + 1]] <- c(base, list(effect = NA, method = NA, status = "fit_failed", reason = fit)); next }
   for (eff in c("nie", "nde", "te")) for (meth in c("nonparametric", "parametric")) {

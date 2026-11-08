@@ -12,11 +12,17 @@ explicit approval of the exact files, per `reference/research-repo-session-lesso
 | `stage0.sbatch` | 6,000-task array (60 cells x 100 chunks of 25 datasets), 1 core each, throttle 96; syntax-checked only |
 
 ## Review items (blocking unless marked)
-1. **Cost exceeds the cap.** The API takes one effect per call, so each dataset does 3 refit calls
-   (NIE, NDE, TE) at ~114 s: ~2.4 h per 25-dataset task, ~6,000 tasks = **~600 core-days against the 250 cap**.
-   Either (a) a study-only patch that evaluates all three effects on one set of refits (~200 core-days, but
-   it changes the studied source and needs parity proof and review), or (b) raise the cap, or (c) revise the
-   design. Pilot timings: `../fiml-timing-pilot/REPORT.md`.
+1. **Cost: addressed by a study-only shared-refit patch (needs review).** Without it each dataset runs
+   three refit sets (~600 core-days, over the 250 cap). `shared-refits.R` caches each refit by its resampled
+   rows (a call's resamples depend only on seed, B and n, so the NIE/NDE/TE calls use identical rows) and
+   replays cached failures. Local evidence: `parity-check.R` shows shared == unpatched for all three effects
+   in 8 scenarios (free/fixed-zero direct x MAR/MCAR-with-empty-rows x without/with injected refit failures;
+   B=40, 6/40 failures observed in the injected case), and a planted defect (cache ignoring the rows) is caught
+   (0/8 identical). At B=999: first effect call 96 s, the other two 0.3 s each; process RSS ~0.5 GB (cache
+   object.size reports 0.7 GB, an overcount from shared references). Estimated total ~208 core-days. Limits to
+   review: parity was run at B=40 and nonparametric only (parametric makes no refits); re-run
+   `parity-check.R` inside the pinned Hopper environment before use; the patch changes the studied code path
+   and must be named in the preregistration with the pinned commit.
 2. **Environment.** R is a spack module (`r/4.4.0-fyqw` and `-ytj2` both exist; BLAS differs risk). The
    module hashes in the scripts are guesses to confirm; CRAN packages (`nloptr`, `S7`, ...) are installed
    from source on the cluster, so versions drift unless pinned. Results from another BLAS than the
