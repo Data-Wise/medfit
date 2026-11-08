@@ -214,3 +214,20 @@
   BootstrapResult(estimate = estimate, ci_lower = ci[1], ci_upper = ci[2], ci_level = ci_level,
                   boot_estimates = values, n_boot = B, method = method, call = call, inference = inference)
 }
+
+# Fail-closed release guard (stage 0, see planning/PLAN-FIML-stage0-release-guard-2026-11-01.md).
+# Flip only with a recorded stage-0 admission decision; tests mock this binding.
+.fiml_source_inference_admitted <- function() FALSE
+
+.fiml_source_inference_guard <- function() {
+  if (!isTRUE(.fiml_source_inference_admitted())) {
+    stop(structure(
+      class = c("medfit_error_fiml_inference_unavailable", "error", "condition"),
+      list(message = paste0(
+        "bootstrap_mediation(source_fit = ...) is unavailable: bounded FIML ",
+        "source-fit intervals are withheld until statistical admission."
+      ), call = NULL)
+    ))
+  }
+  invisible(TRUE)
+}

@@ -131,9 +131,9 @@
 #'
 #' SEMFit `glance()` reports likelihood/IC fields with unavailable model-test fields;
 #' extracted-object `glance()`, `quick()`, `pm()`, extracted-object bootstrap, profiles,
-#' MBCO and fit tests remain unavailable. Development [bootstrap_mediation()] source
-#' intervals accept the original validated SEMFit via named `source_fit` and `effect`;
-#' statistical admission remains deferred. Object-aware package guards precede
+#' MBCO and fit tests remain unavailable. The [bootstrap_mediation()] `source_fit`
+#' intervals are implemented but withheld (refused with a classed error) until
+#' statistical admission is decided. Object-aware package guards precede
 #' package-controlled refits/RNG/workers; opaque user callbacks and external-first
 #' dispatch remain outside that guarantee. Adapter/topology/numerical failures retain
 #' stage, reason, original parent and completed attempts; basic argument-type errors

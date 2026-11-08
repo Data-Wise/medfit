@@ -71,7 +71,7 @@ test_that("both FIML routes preserve aliases, covariance and provenance", {
     expect_equal(t$std_error, unname(se), tolerance = 1e-12)
     expect_warning(
       ci <- confint(m, parm = "effects"),
-      "Normal approximation for NIE may be inaccurate.*extracted FIML data.*source_fit.*original fit"
+      "Normal approximation for NIE may be inaccurate.*FIML fits are unavailable pending statistical admission"
     )
     expect_equal(unname(ci[, 1L]), t$conf_low, tolerance = 1e-12)
     expect_equal(unname(ci[, 2L]), t$conf_high, tolerance = 1e-12)

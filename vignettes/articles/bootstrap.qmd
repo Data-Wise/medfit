@@ -21,7 +21,8 @@ Bootstrap inference provides confidence intervals for indirect effects without a
 
 All methods return a `BootstrapResult` object with consistent structure.
 
-For bounded FIML, the development source-fit route requires explicit named
+For bounded FIML, the source-fit route is withheld until statistical admission
+(it raises `medfit_error_fiml_inference_unavailable`). Once admitted, it requires explicit named
 `source_fit` and `effect`, and explicit `method`. It provides retained-row FIML
 or joint Gaussian parameter-draw percentile intervals; the callback and extracted-data
 routes remain unavailable. This is narrower than the examples below. Any required

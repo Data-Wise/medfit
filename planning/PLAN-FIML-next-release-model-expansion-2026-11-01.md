@@ -15,6 +15,28 @@ Bounded FI-B1/FI-B2 source inference merged to `dev` via PR #379
 that is not statistical admission or a released feature. The preceding 0.16.0
 release already shipped bounded simple-model FIML fitting.
 
+## Adversarial review, 2026-11-07 (static; no runtime checks, no study run)
+
+Reviewed at `ecbfb19f` (dev) against `R/bootstrap.R`, `R/bootstrap-fiml.R`,
+`DESCRIPTION`, `NEWS.md`, the stage-0 guard design and the roadmap board.
+Findings that change this plan; each is folded into the sections named.
+
+| # | Finding | Severity | Amendment |
+| --- | --- | --- | --- |
+| R1 | **Exposure exists on `dev` today, not only at release.** `bootstrap_mediation(source_fit=)` is public on `dev` with no admission check (no admission reference in `R/`), `NEWS.md` advertises it under "development version", and `DESCRIPTION` Version is still `0.16.0`, identical to the released tag. A source install of `dev` is indistinguishable from the tag, and the documented `pkgdown.yaml --ref dev` publish (root deploy while Version has no `.9000`) would present unadmitted intervals as site documentation. The plan treats this only as a pre-candidate task. | High | Task 0 gains a maintainer decision on interim treatment: land the stage-0 guard on `dev` now, or mark `dev` with a `.9000` version and bar dev-docs publishing until stage 0 resolves. Version bump and publishing stay release-engineering actions needing separate authorization. |
+| R2 | **FI-G0 can invalidate stage-0 evidence.** G0b/G0c rewrite the shared `R/sem-fiml.R` kernel that a stage-0 study must pin. Stage-0 admission is evidence about an exact source; a refactor merged first leaves it unattached, and a refactor merged after must prove parity. The plan covers shared *defects* but not shared *changes*. | High | FI-G0 may not merge to `dev` before the stage-0 decision unless a pinned parity proof (old-model numerics and refusals bit-for-bit within the frozen tolerances) is recorded and the study source is re-pinned. Otherwise keep G0 on a feature branch. |
+| R3 | **"Next release" is a hostage to deferred, unauthorized work.** Expanded variants need stage-0 admission, which needs a study that is unauthorized, unscheduled and unbudgeted. Nothing states what the next release contains if that does not happen. | Medium | Add the default release content below. The 11-variant target is conditional; a missing authorization or budget decision is itself the "defer" outcome, not an open loop. |
+| R4 | **Guard tests arrive too late.** Refusal of every unadmitted topology and direct-path policy is verified "before release". G1 code lands on `dev` earlier, and `.sem_fiml_model()`/`.sem_fiml_extract()` guards are the only barrier. | Medium | A per-topology, per-policy refusal test at every public entry point (fit, extract, both source-fit methods) is a merge condition for each G1-G3 slice into `dev`, not only a release condition. |
+| R5 | **Stale ownership text.** `CLAUDE.md` names `PLAN-0.16.0-GitHub-release` as the active plan though it is complete; `.STATUS` headers stop at 2026-10-30. | Low | Reconcile at the next checkpoint (FI-TRACK); not part of this change. |
+
+**Default release content (applies unless the maintainer decides otherwise):**
+the next release ships no expanded FIML variant and no source-fit inference.
+Stage-0 inference ships only if admitted and in scope; otherwise it is withheld
+by the guard (R1). Shipped bounded simple-model fitting is unchanged. Expanded
+variants ship only individually, after their own admission and a release-scope
+decision. If the maintainer wants a dated release, they must either authorize
+the stage-0 study with a budget, or accept this default.
+
 ## Target and limits
 
 | Release target | Variants | Explicit scope |
@@ -128,6 +150,15 @@ required verification; the maintainer owns scope, authorization and admission.
   `PLAN-FIML-stage0-release-guard-2026-11-01.md` design before any separately
   authorized guard work. Failure to establish the selected treatment keeps
   stage-0 inference out of the candidate.
+- [x] **Maintainer (R1, 2026-11-07 review):** Decided 2026-11-07: guard on `dev`
+  now. Implemented on branch `claude/restore-b0bd19` (not yet merged): public
+  `source_fit` refused first with class `medfit_error_fiml_inference_unavailable`;
+  `.fiml_source_inference_admitted()` returns `FALSE`; guard tests plus a planted
+  defect (flip to `TRUE` fails 3 expectations, 2 errors); existing source-fit
+  tests mock the binding. Flip only with a recorded stage-0 admission decision.
+  Evidence: PR #382 (fix/fiml-withhold-source-fit-intervals) full suite 1812 tests,
+  0 failures; lint, pkgdown and risk-tier on CI; independent review found the
+  minibook chapter, four articles and the `tests/qa/` scripts still using the route, fixed in the PR.
 - **Acceptance/verification:** A reviewed contract and source/owner map exist;
   check existing tests and metadata without treating prior green checks as
   admission. Dependency: none beyond current merged baseline.
@@ -153,6 +184,9 @@ required verification; the maintainer owns scope, authorization and admission.
   comparisons; exercise parameter transport and all-row/restart gates when later
   authorized. Include observed-information, constraints/Jacobian/Hessian and
   zero-product branch requirements from repository instructions.
+- **Ordering constraint (R2):** G0 changes to `R/sem-fiml.R` stay off `dev`
+  until the stage-0 decision, or until a pinned old-model parity proof exists
+  and the stage-0 study source is re-pinned.
 - **Acceptance/verification:** Independent checks show old results/refusals are
   preserved and generic internals meet the parent numerical contract. FI-G0
   alone admits no additional public topology. Dependency: task 0's baseline and
@@ -171,6 +205,9 @@ required verification; the maintainer owns scope, authorization and admission.
   covariates, fixed-zero direct paths, mixed explicit/automatic covariances,
   unidentified masks and complete-data neutrality. Independently verify
   effect/covariance extraction and both inference methods per variant.
+- **Merge condition (R4, applies to FI-G1 to FI-G3):** before a slice merges to
+  `dev`, independent tests show every still-unadmitted topology and direct-path
+  policy is refused at fit, extract and both source-fit entry points.
 - **Acceptance/verification:** Each of two named variants satisfies its own
   numerical, failure, extraction and inference contracts; statistical admission
   remains a separate stage. Dependency: task 1.

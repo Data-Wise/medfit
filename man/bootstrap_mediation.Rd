@@ -92,7 +92,13 @@ mediation statistics. Supports parametric, nonparametric, and
 plugin methods.
 }
 \details{
-\subsection{Bounded FIML source intervals (development)}{
+\subsection{Bounded FIML source intervals (unavailable pending admission)}{
+
+\strong{Unavailable.} While statistical admission is undecided, every non-\code{NULL}
+\code{source_fit} is refused before any other check, random draw, refit or worker,
+with a classed error (\code{medfit_error_fiml_inference_unavailable}). No option or
+environment variable enables it. The text below records the implemented design
+and is not a statement that the intervals are supported.
 
 Supply \code{source_fit} and \code{effect} by name and choose \code{method} explicitly. Only
 accepted three-variable Gaussian random-X simple mediation fits from \code{\link[=fit_sem]{fit_sem()}}
@@ -129,7 +135,7 @@ of model parameters; independently empty MCAR records suffice. Arbitrary
 value-dependent empty-row deletion and MNAR are not covered. Numerical verification
 does not establish interval coverage; statistical admission remains deferred.
 See the Methods and Formulas article, Bounded FIML, for the mathematical definition.
-These source intervals are development functionality added after 0.16.0.
+These source intervals are development code added after 0.16.0 and are withheld.
 }
 
 \subsection{Bootstrap Methods}{

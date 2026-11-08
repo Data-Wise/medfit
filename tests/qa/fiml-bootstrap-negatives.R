@@ -1,5 +1,7 @@
 # Zero-fit negative controls, independent of the paired optimizer execution.
 devtools::load_all(quiet = TRUE)
+# The release guard withholds source-fit intervals; these evidence scripts exercise the withheld route in-process only.
+utils::assignInNamespace(".fiml_source_inference_admitted", function() TRUE, ns = "medfit")
 source("tests/testthat/helper-fiml-oracle.R")
 workspace <- "_agents_workspace/fiml-bounded-inference"
 mat <- readRDS(file.path(workspace, "qa-matrix.rds"))

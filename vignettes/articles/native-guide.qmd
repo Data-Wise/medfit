@@ -321,7 +321,7 @@ confidence intervals. At a = b = 0 the NIE point value is retained but its
 inferential fields are unavailable. A fixed direct path of zero instead has
 known zero covariance; other valid effect inference remains available.
 
-Development `bootstrap_mediation(source_fit = fiml_fit, effect = "nie",
+Implemented but currently withheld (the call is refused pending admission): `bootstrap_mediation(source_fit = fiml_fit, effect = "nie",
 method = "nonparametric")` uses the original accepted source fit for a retained-row
 FIML percentile interval. Explicit `method = "parametric"` instead gives a joint
 Gaussian parameter-draw percentile interval with no refits. Both use the original
