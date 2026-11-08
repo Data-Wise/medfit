@@ -17,21 +17,35 @@
   m <- data.frame(row = c("X", "M", "Y"), label = c("ix", "im", "iy"), value = NA_real_)
   list(vars = c("X", "M", "Y"), a = a, s = s, m = m)
 }
-# One observed covariate Z (FI-G1): X and Z are jointly Gaussian exogenous variables (free covariance); M ~ X + Z and
-# Y ~ M + X + Z, with the X -> Y path free or fixed exactly at zero. Variable order X, Z, M, Y.
-.sem_fiml_tables_cov1 <- function(direct) {
+# k observed covariates (FI-G1, k = 1 or 2): X and the covariates are jointly Gaussian exogenous variables (free
+# covariance for every pair); every one of them has a path to M and to Y, with the X -> Y path free or fixed exactly at
+# zero. Variable order X, Z, M, Y for k = 1 and X, Z1, ..., Zk, M, Y otherwise. Labels: a, gm, b, cp, gy, vx, vz, vm,
+# vy, cxz, ix, iz, im, iy for k = 1; the covariate labels carry the index (gm1, gy2, vz1, cxz1, cz1z2, iz2) for k = 2.
+.sem_fiml_cov_names <- function(k) {
+  if (!is.numeric(k) || length(k) != 1L || !k %in% 1:2) .sem_fiml_diagnostic("unsupported number of FIML covariates")
+  list(z = if (k == 1L) "Z" else paste0("Z", seq_len(k)), sfx = if (k == 1L) "" else as.character(seq_len(k)))
+}
+.sem_fiml_tables_cov <- function(k, direct) {
+  nm <- .sem_fiml_cov_names(k)
+  z <- nm$z
+  sfx <- nm$sfx
   a <- data.frame(
-    row = c("M", "M", "Y", "Y", "Y"), col = c("X", "Z", "M", "X", "Z"),
-    label = c("a", "gm", "b", "cp", "gy"), value = c(NA, NA, NA, if (direct) NA else 0, NA)
+    row = c("M", rep("M", k), "Y", "Y", rep("Y", k)), col = c("X", z, "M", "X", z),
+    label = c("a", paste0("gm", sfx), "b", "cp", paste0("gy", sfx)),
+    value = c(NA, rep(NA, k), NA, if (direct) NA else 0, rep(NA, k))
   )
-  vars <- c("X", "Z", "M", "Y")
+  vars <- c("X", z, "M", "Y")
+  e <- c("X", z)
+  pairs <- utils::combn(e, 2L)
   s <- data.frame(
-    row = c(vars, "X"), col = c(vars, "Z"),
-    label = c("vx", "vz", "vm", "vy", "cxz"), value = NA_real_
+    row = c(vars, pairs[1L, ]), col = c(vars, pairs[2L, ]),
+    label = c("vx", paste0("vz", sfx), "vm", "vy", paste0("c", tolower(pairs[1L, ]), tolower(pairs[2L, ]))),
+    value = NA_real_
   )
-  m <- data.frame(row = vars, label = c("ix", "iz", "im", "iy"), value = NA_real_)
+  m <- data.frame(row = vars, label = c("ix", paste0("iz", sfx), "im", "iy"), value = NA_real_)
   list(vars = vars, a = a, s = s, m = m)
 }
+.sem_fiml_tables_cov1 <- function(direct) .sem_fiml_tables_cov(1L, direct)
 .sem_fiml_ram <- function(direct) {
   t <- .sem_fiml_tables(direct)
   .sem_ram(t$vars, t$vars, t$a, t$s, t$m)
