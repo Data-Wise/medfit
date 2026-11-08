@@ -5,18 +5,28 @@
     class = c("medfit_sem_fiml_error", "error", "condition")
   ))
 }
-.sem_fiml_tables <- function(direct) {
-  a <- data.frame(
-    row = c("M", "Y", "Y"), col = c("X", "M", "X"),
-    label = c("a", "b", "cp"), value = c(NA, NA, if (direct) NA else 0)
-  )
-  s <- data.frame(
-    row = c("X", "M", "Y"), col = c("X", "M", "Y"),
-    label = c("vx", "vm", "vy"), value = NA_real_
-  )
-  m <- data.frame(row = c("X", "M", "Y"), label = c("ix", "im", "iy"), value = NA_real_)
-  list(vars = c("X", "M", "Y"), a = a, s = s, m = m)
+# j mediators in parallel (FI-G2, j = 1 or 2): X -> M_i -> Y with an optional direct path, independent disturbances
+# (no residual covariance). Variable order X, M1, ..., Mj, Y; the single mediator keeps the names M, a, b, vm, im.
+# Labels: a1..aj, b1..bj, cp, vx, vm1..vmj, vy, ix, im1..imj, iy for j = 2.
+.sem_fiml_med_names <- function(j) {
+  if (!is.numeric(j) || length(j) != 1L || !j %in% 1:2) .sem_fiml_diagnostic("unsupported number of FIML mediators")
+  if (j == 1L) "M" else paste0("M", seq_len(j))
 }
+.sem_fiml_tables_med <- function(j, direct) {
+  m <- .sem_fiml_med_names(j)
+  sfx <- if (j == 1L) "" else as.character(seq_len(j))
+  a <- data.frame(
+    row = c(m, rep("Y", j), "Y"), col = c(rep("X", j), m, "X"),
+    label = c(paste0("a", sfx), paste0("b", sfx), "cp"), value = c(rep(NA, 2L * j), if (direct) NA else 0)
+  )
+  vars <- c("X", m, "Y")
+  s <- data.frame(
+    row = vars, col = vars, label = c("vx", paste0("vm", sfx), "vy"), value = NA_real_
+  )
+  mu <- data.frame(row = vars, label = c("ix", paste0("im", sfx), "iy"), value = NA_real_)
+  list(vars = vars, a = a, s = s, m = mu)
+}
+.sem_fiml_tables <- function(direct) .sem_fiml_tables_med(1L, direct)
 # k observed covariates (FI-G1, k = 1 or 2): X and the covariates are jointly Gaussian exogenous variables (free
 # covariance for every pair); every one of them has a path to M and to Y, with the X -> Y path free or fixed exactly at
 # zero. Variable order X, Z, M, Y for k = 1 and X, Z1, ..., Zk, M, Y otherwise. Labels: a, gm, b, cp, gy, vx, vz, vm,
