@@ -1,5 +1,7 @@
 # Independent structural snapshot QA; saved accepted source, zero optimizer calls.
 devtools::load_all(quiet = TRUE)
+# The release guard withholds source-fit intervals; these evidence scripts exercise the withheld route in-process only.
+utils::assignInNamespace(".fiml_source_inference_admitted", function() TRUE, ns = "medfit")
 library(testthat)
 source("tests/testthat/helper-fiml-bootstrap.R")
 workspace <- "_agents_workspace/fiml-bounded-inference"

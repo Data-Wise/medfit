@@ -227,13 +227,16 @@ round(as.numeric(nie(wrapped)), 4)
 
 ### Development intervals from the original fit
 
-This subsection requires the development source-fit interval addition after
-0.16.0. It illustrates execution, not statistical admission or calibrated coverage.
+The source-fit interval route is implemented but withheld pending statistical
+admission: calling `bootstrap_mediation(source_fit = ...)` raises
+`medfit_error_fiml_inference_unavailable`. The code below is shown, not run, and
+illustrates execution only, not admission or calibrated coverage.
 The original accepted `fit`, including its incomplete retained records and settings,
 is the source. An extracted mediation object alone does not supply this route.
 
 ```{r}
 #| label: fiml-source-intervals
+#| eval: false
 row_interval <- medfit::bootstrap_mediation(
   source_fit = fit, effect = "nie", method = "nonparametric", n_boot = 2L, seed = 911L
 )

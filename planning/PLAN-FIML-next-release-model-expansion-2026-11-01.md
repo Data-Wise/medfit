@@ -156,9 +156,9 @@ required verification; the maintainer owns scope, authorization and admission.
   `.fiml_source_inference_admitted()` returns `FALSE`; guard tests plus a planted
   defect (flip to `TRUE` fails 3 expectations, 2 errors); existing source-fit
   tests mock the binding. Flip only with a recorded stage-0 admission decision.
-  Local evidence: guard, bootstrap-fiml, execution, sem-fiml, bootstrap,
-  methods-base and docs/guide/refcard files pass; full suite, lint of the whole
-  tree and PR not yet run.
+  Evidence: PR #382 (fix/fiml-withhold-source-fit-intervals) full suite 1812 tests,
+  0 failures; lint, pkgdown and risk-tier on CI; independent review found the
+  minibook chapter, four articles and the `tests/qa/` scripts still using the route, fixed in the PR.
 - **Acceptance/verification:** A reviewed contract and source/owner map exist;
   check existing tests and metadata without treating prior green checks as
   admission. Dependency: none beyond current merged baseline.

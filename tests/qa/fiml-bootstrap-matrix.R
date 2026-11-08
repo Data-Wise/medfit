@@ -1,5 +1,7 @@
 # Opt-in bounded numerical oracle; run once through the verification budget runner.
 devtools::load_all(quiet = TRUE)
+# The release guard withholds source-fit intervals; these evidence scripts exercise the withheld route in-process only.
+utils::assignInNamespace(".fiml_source_inference_admitted", function() TRUE, ns = "medfit")
 source("tests/testthat/helper-fiml-bootstrap.R")
 source("tests/testthat/helper-fiml-oracle.R")
 fo_helpers <- mget(c("fo_assert_parameters", "fo_affine", "fo_nll"), inherits = FALSE)
