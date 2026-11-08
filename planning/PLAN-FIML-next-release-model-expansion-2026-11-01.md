@@ -235,10 +235,10 @@ required verification; the maintainer owns scope, authorization and admission.
   handling in bounded changes. Preserve row identities, likelihood constants
   and original-scale Jacobians; independently compare observed-subvector
   likelihoods and transport against reference calculations.
-- [ ] **Implementer, G0c:** Generalize parameter/variance transport, starts,
+- [x] **Implementer, G0c** (done 2026-11-08 on branch `worktree-agent-a4f9ed5f1273b3b20`, tip `56471d59`, not merged, not pushed): Generalize parameter/variance transport, starts,
   evaluation and geometry in bounded changes, retaining numerical safeguards.
   Compare the existing model with the baseline before proceeding.
-- [ ] **Implementer and independent QA, G0d:** Verify the existing public
+- [x] **Implementer and independent QA, G0d** (done 2026-11-08, same branch; I reran the tests: golden 17/738, oracle 71/446, four-var 4/25, sem-fiml 20/312, sem-fiml-oracles 10/134, guard 4/11, bootstrap-fiml 17/131, 0 failures; 2 warnings in `test-sem-fiml-oracles.R` (free and zero patterns) not yet traced; full suite, lint on the branch and native-defaults/fixed_x regressions not run; golden snapshot predates the only `R/` edit, `R/sem-fiml.R`): Verify the existing public
   adapter and refusal boundary and complete the numerical checkpoint before
   FI-G1; generic internals alone expose no new topology.
 - [ ] **Independent QA:** Plan rowwise Gaussian likelihood and derivative
