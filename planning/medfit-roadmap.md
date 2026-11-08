@@ -4,7 +4,8 @@
 > **Adversarial review (2026-11-07):** `dev` (`ecbfb19f`) exposes the unadmitted
 > `bootstrap_mediation(source_fit=)` route with no guard while `DESCRIPTION` still
 > reads `0.16.0`, the released version. Maintainer chose a guard on dev
-> (2026-11-07); implemented on a feature branch, unmerged, full suite pending. Default next-release content is no
+> (2026-11-07); implemented on a feature branch, unmerged, full suite pending. Stage-0 timing pilot done (~114 s per 999-refit call); stage-0 cap set at 25 core-days with a smaller
+> design, which at B=999 misses the Q12 power target, so the design needs rework. Default next-release content is no
 > expanded FIML and no source-fit inference unless admitted. See the
 > [review table](PLAN-FIML-next-release-model-expansion-2026-11-01.md#adversarial-review-2026-11-07-static-no-runtime-checks-no-study-run).
 

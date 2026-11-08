@@ -36,6 +36,10 @@ built on a branch kept off `dev`; one pre-registered remediation round if stage 
 a hard compute and wall-clock cap set from the pilot with a mandatory decision on
 overrun; the pilot runs locally under `medfit-implementer` and `medfit-oracle-qa` with a limit of
 2 h total wall-clock and 15 min per cell (set 2026-11-07; start still needs activation).
+Pilot result (2026-11-07, `studies/fiml-timing-pilot/REPORT.md`): a 999-refit call costs about
+114 s. The maintainer set the stage-0 cap at 25 core-days with a smaller design (G6); at B=999 that
+buys about 315 datasets per cell, per-decision power about 0.44, below the Q12 target, so the
+design must be reworked (B, cell count) and independently reviewed before preregistration.
 The default release content below governs what ships until a variant is admitted.
 
 **Default release content (applies unless the maintainer decides otherwise):**
