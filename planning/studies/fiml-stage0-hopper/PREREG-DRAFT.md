@@ -267,8 +267,27 @@ and account for every difference (release-guard design).
 Decided in the grill: **one** pre-registered remediation round, declared before any stage-0 outcome exists,
 with fresh seeds, the failed cells kept as evidence, and deferral if the round also fails. "The rule must not
 be stretched": no second round, no post-outcome change of the family, labels, thresholds or denominators.
-The **remediation method is not decided** and must be declared here before any stage-0 outcome exists
-(**[OPEN-1]**, with the trigger definition and cost cap in OPEN-1 and OPEN-2).
+**Method (decided 2026-11-08, closes OPEN-1; still unfrozen until the document is frozen):** rerun only the
+failed cells on fresh seeds, under these rules.
+- **Eligible (inconclusive) decision:** a decision that failed a gate although its observed rate meets that
+  gate's floor, so only the exact one-sided 95% lower bound falls short (coverage floor 0.925 among returned
+  intervals; availability floor 0.95; usable-and-covering floor 0.90). A decision whose observed rate is below
+  the floor is a clear failure.
+- **Trigger:** the round runs only if every failed decision in the stage is inconclusive. Any clear failure, any
+  structural-zero violation, and any incomplete or inconsistent ledger ends the stage as failed, with no round.
+  Software, ledger and parity defects are repaired and the affected study rerun as a defect repair; that is not
+  the remediation round and does not consume it.
+- **Rerun:** each cell holding an inconclusive decision is rerun in full (same M, B, draws, all effects and
+  methods) on fresh seeds: data seed 20,000,000 + cell*10,000 + dataset, call seed = data seed + 5,000,000
+  (proposed blocks 20,010,001 to 20,602,500 and 25,010,001 to 25,602,500; disjoint from the main study,
+  its call seeds 12,010,001 to 12,602,500, and the pilot 9,100,101 to 9,101,203).
+- **Counting:** each inconclusive decision must pass its gates on the rerun alone, at the same thresholds. The
+  original result stays in the ledger and in the final report; original and rerun counts are never pooled.
+  The stage is admitted only if every decision passed, each either originally or on its single rerun.
+- **One round only:** no second round, no change of family, labels, thresholds or denominators after outcomes.
+  If any rerun decision fails, the stage fails and deferral follows.
+- Cost: proportional to the reruns (at most one full study, about 187 to 208 core-days); whether it counts
+  against the 250 core-day cap is OPEN-2.
 
 ## 11. Environment pinning
 
@@ -307,7 +326,7 @@ None of these is chosen here. Each must be closed, and the draft edited, before 
 
 | ID | Decision | Options and consequences |
 | --- | --- | --- |
-| OPEN-1 | Remediation method for the one round (G3) and its trigger | (a) Rerun only failed cells with fresh seeds: cheapest (cost proportional to failed cells), but selective rerun of failures needs a rule that avoids picking favorable outcomes. (b) Rerun the whole stage with fresh seeds: cleanest provenance, about one more full study (187-208 core-days), likely beyond the 250 cap if the cap is total. (c) A pre-specified design or method amendment (for example a different B): addresses a diagnosed cause but changes the studied method, so its power and cost need new review. Also define what counts as a "marginal miss" that triggers it and whether a structural-zero violation or incomplete ledger can trigger it (a correctness failure is arguably not remediable by rerun). |
+| OPEN-1 | **CLOSED 2026-11-08 (see section 10):** remediation method for the one round (G3) and its trigger | (a) Rerun only failed cells with fresh seeds: cheapest (cost proportional to failed cells), but selective rerun of failures needs a rule that avoids picking favorable outcomes. (b) Rerun the whole stage with fresh seeds: cleanest provenance, about one more full study (187-208 core-days), likely beyond the 250 cap if the cap is total. (c) A pre-specified design or method amendment (for example a different B): addresses a diagnosed cause but changes the studied method, so its power and cost need new review. Also define what counts as a "marginal miss" that triggers it and whether a structural-zero violation or incomplete ledger can trigger it (a correctness failure is arguably not remediable by rerun). |
 | OPEN-2 | Cap scope and remediation seeds | Is 250 core-days per study or total across stage 0 and the remediation round, and what is the wall-clock cap (G4 requires one; none is set for Hopper)? Fresh seed block value for the round: must be disjoint from 7,010,001-7,602,500, 12,010,001-12,602,500 and 9,100,101-9,101,203. |
 | OPEN-3 | Collection cap value and classification of a cap hit | Cap value (placeholder 10n). A hit may count as (a) generation failure in the attempted denominator, no interval (current harness; conservative, never helps a gate), (b) a design violation making the stage inconclusive, or (c) excluded from the denominator (changes the estimand and is not recommended by the plan, which keeps failures in denominators). |
 | OPEN-4 | Treatment of `unattempted_budget` rows | (a) Count as unavailable (conservative, but a time-limit artifact then fails the stage), (b) rerun the same seeds under a pre-stated rule (no new seeds; keeps estimand, costs extra, must be declared as non-retry of failures), (c) treat as an incomplete ledger so the stage is inconclusive until rerun. Related: implement a per-call timeout (not present) and its classification. |

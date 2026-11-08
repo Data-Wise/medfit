@@ -84,8 +84,10 @@ Critical path to the stage-0 study, in order (each step needs its own approval w
 6. Run `check-complete.R`; analyze gates; decide stage-0 admission (separate decision).
 
 FI-G0 (generic kernel) proceeds in parallel but stays off `dev` until the stage-0 decision
-(finding R2). Open decisions for the maintainer: the remediation method if stage 0 fails (G3,
-declare before any outcome); the all-empty-cell collection cap and the failure/denominator policy;
+(finding R2). Remediation if stage 0 fails is decided (G9: rerun only inconclusive failed cells on fresh seeds, one round,
+no pooling; see the preregistration draft section 10). FI-G0a/b are done on the unmerged branch
+`worktree-agent-a4f9ed5f1273b3b20` (spec plus oracle tests, 7/7 planted defects caught, no `R/` change).
+Open decisions for the maintainer: the all-empty-cell collection cap and the failure/denominator policy;
 the FI-G0 branch base commit (currently the guard branch tip, an assumption); whether the guard
 branch is pushed and merged to `dev` (it is local only).
 
