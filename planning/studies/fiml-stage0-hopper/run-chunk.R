@@ -6,7 +6,7 @@ args <- commandArgs(TRUE); cell <- as.integer(args[1]); first <- as.integer(args
 B <- as.integer(Sys.getenv("STAGE0_B", "999")); DRAWS <- as.integer(Sys.getenv("STAGE0_DRAWS", "20000"))
 stopifnot(Sys.getenv("OPENBLAS_NUM_THREADS") == "1", Sys.getenv("OMP_NUM_THREADS") == "1")   # one core per task
 source("planning/studies/fiml-stage0-hopper/cells.R")
-suppressMessages(devtools::load_all(quiet = TRUE))
+suppressMessages(pkgload::load_all(quiet = TRUE))
 # Study-only override of the stage-0 release guard (in-process; never committed). Fingerprint gate:
 fp <- Sys.getenv("STAGE0_FINGERPRINT"); stopifnot(nzchar(fp), file.exists(fp))
 fp_commit <- sub("^medfit_commit +", "", grep("^medfit_commit", readLines(fp), value = TRUE)[1])

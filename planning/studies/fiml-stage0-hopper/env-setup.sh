@@ -13,7 +13,9 @@ test -d "$ROOT/src/medfit/.git" || { test -f "$ROOT/medfit.bundle" && git clone 
 git -C "$ROOT/src/medfit" checkout -q "$SRC_SHA"
 test -z "$(git -C "$ROOT/src/medfit" status --porcelain)" || { echo "dirty tree"; exit 1; }
 # Dated package snapshot (verified reachable). No '#' inside the quoted R code: it would comment out the install.
-Rscript -e 'options(repos=c(CRAN="https://packagemanager.posit.co/cran/2026-11-01")); install.packages(c("devtools","S7","checkmate","generics","MASS","nloptr","numDeriv","testthat","withr","rlang"))'
+# devtools is not needed (it pulls ragg and pkgdown, which need system graphics libraries): pkgload loads the source.
+# Idempotent: installs only what is missing, so a rerun does not recompile everything.
+Rscript -e 'options(repos=c(CRAN="https://packagemanager.posit.co/cran/2026-11-01")); want <- c("pkgload","S7","checkmate","generics","lifecycle","MASS","nloptr","numDeriv","testthat","withr","rlang"); miss <- setdiff(want, rownames(installed.packages())); if (length(miss)) install.packages(miss); stopifnot(all(want %in% rownames(installed.packages())))'
 # Fingerprint: everything the results depend on, written once and referenced by every task.
 FP="$ROOT/env-fingerprint.txt"
 { echo "medfit_commit $SRC_SHA"; module list 2>&1; cmake --version | head -1; gcc --version | head -1; uname -r; Rscript -e 'print(sessionInfo()); print(extSoftVersion()[["BLAS"]]); print(as.data.frame(installed.packages(lib.loc=Sys.getenv("R_LIBS_USER"))[,c("Package","Version")]))'; } > "$FP"

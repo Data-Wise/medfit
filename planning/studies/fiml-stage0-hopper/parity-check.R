@@ -2,7 +2,7 @@
 # exactly (estimates, interval, status, counts, per-replicate records), including with injected refit failures.
 # Run from the repo root: Rscript planning/studies/fiml-stage0-hopper/parity-check.R [mutant]
 mutant <- "mutant" %in% commandArgs(TRUE)
-suppressMessages(devtools::load_all(quiet = TRUE))
+suppressMessages(pkgload::load_all(quiet = TRUE))
 source("planning/studies/fiml-stage0-hopper/shared-refits.R")
 source("tests/testthat/helper-fiml-bootstrap.R")
 utils::assignInNamespace(".fiml_source_inference_admitted", function() TRUE, ns = "medfit")
