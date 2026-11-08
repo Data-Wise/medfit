@@ -36,7 +36,7 @@ parameters in \code{tidy()} (\code{fixed_x} column \code{TRUE}, no standard erro
 \code{summary()}; \code{coef()} and \code{vcov()} leave them out. \code{print()} and \code{summary()}
 say what the log likelihood is conditional on.
 \item \strong{Bounded FIML.} Raw total Gaussian \code{logLik()} includes constants; its \code{df}
-attribute counts the eight or nine free parameters. AIC/BIC use retained N.
+attribute counts the free parameters (8 or 9; 13 or 14 with one covariate; 19 or 20 with two). AIC/BIC use retained N.
 \code{f} and model-test \code{df} are unavailable: no saturated missing-data reference
 fit is performed. SEMFit \code{glance()} retains likelihood/IC fields with unavailable
 model tests and a reason. Extracted-object \code{glance()} is instead deferred.

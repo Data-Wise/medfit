@@ -43,7 +43,14 @@
 #'   the lavaan method. A treatment-by-mediator product written `x:m` (or `m:x`)
 #'   in the outcome equation gives the four-way decomposition, stored under the
 #'   canonical name `m:x`; without it `decomposition = "four_way"` is refused
-#'   by name. `interaction =` takes that product written with `:`.
+#'   by name. `interaction =` takes that product written with `:`. A fit from
+#'   `fit_sem(missing = "fiml")` extracts to a `FIMLMediationData` object for the
+#'   three-variable model and for the bounded one- and two-covariate models (see
+#'   the Bounded FIML section of [fit_sem()]). With covariates, `treatment` may
+#'   name any exogenous variable when no outcome path is fixed at zero; with
+#'   exactly one outcome path fixed at zero, that variable is the treatment. The
+#'   other exogenous variables are the covariates; three or more covariates, a
+#'   covariate on one equation only and every other structure are refused.
 #' - **brmsfit**: Extract from Bayesian models (future)
 #'
 #' Note: OpenMx extraction is planned for a future release.

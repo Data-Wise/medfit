@@ -49,7 +49,14 @@ maximum-likelihood engine), with the same arguments and structures as
 the lavaan method. A treatment-by-mediator product written \code{x:m} (or \code{m:x})
 in the outcome equation gives the four-way decomposition, stored under the
 canonical name \code{m:x}; without it \code{decomposition = "four_way"} is refused
-by name. \verb{interaction =} takes that product written with \code{:}.
+by name. \verb{interaction =} takes that product written with \code{:}. A fit from
+\code{fit_sem(missing = "fiml")} extracts to a \code{FIMLMediationData} object for the
+three-variable model and for the bounded one- and two-covariate models (see
+the Bounded FIML section of \code{\link[=fit_sem]{fit_sem()}}). With covariates, \code{treatment} may
+name any exogenous variable when no outcome path is fixed at zero; with
+exactly one outcome path fixed at zero, that variable is the treatment. The
+other exogenous variables are the covariates; three or more covariates, a
+covariate on one equation only and every other structure are refused.
 \item \strong{brmsfit}: Extract from Bayesian models (future)
 }
 

@@ -70,6 +70,8 @@
 #' accepted three-variable Gaussian random-X simple mediation fits from [fit_sem()]
 #' are supported, with the direct path free or fixed exactly at zero. This route
 #' does not support callbacks, plugin estimates, clusters or additional arguments.
+#' Fits with one or two covariates are refused with
+#' `medfit_error_fiml_covariate_source_fit`.
 #' Bounded FIML objects supplied as `mediation_data` or `data` remain refused.
 #' Object-aware guards run before package-controlled RNG, workers or refits; opaque
 #' user callbacks and external-first dispatch are outside that guarantee.
