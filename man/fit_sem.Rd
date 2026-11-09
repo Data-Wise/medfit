@@ -181,10 +181,10 @@ with the direct path and the free residual covariance. Three or more mediators,
 three or more covariates and a covariate on only some of the equations stay
 refused.
 
-Two serial mediators are fitted in two forms so far, both with no covariates:
-the saturated forward graph \code{M1 ~ X}, \code{M2 ~ M1 + X} and \code{Y ~ M1 + M2 + X}, and
-the pure chain \code{M1 ~ X}, \code{M2 ~ M1} and \code{Y ~ M2} (the direct
-path \code{Y ~ X} is free, \code{0*X}, or omitted in both), with the independence of all three
+Two serial mediators are fitted in two forms, each with no covariate or one
+covariate: the saturated forward graph \code{M1 ~ X}, \code{M2 ~ M1 + X} and
+\code{Y ~ M1 + M2 + X}, and the pure chain \code{M1 ~ X}, \code{M2 ~ M1} and \code{Y ~ M2} (the direct
+path \code{Y ~ X} is free, \code{0*X}, or omitted in both without a covariate), with the independence of all three
 disturbance pairs written as \code{M1 ~~ 0*M2}, \code{M1 ~~ 0*Y} and \code{M2 ~~ 0*Y}
 (either order within a pair; an omitted or free statement is refused). The
 saturated model has 14 free parameters (13 with the direct path fixed) and is just
@@ -194,6 +194,12 @@ numerical stage). The chain has 12 free parameters (11 with the direct path
 fixed), is overidentified (2 or 3 degrees of freedom) and so is a restriction
 the data can reject; it fails closed for fewer unobserved pairs. A graph with
 exactly one of the two shortcuts, and a fixed or labeled shortcut, is refused.
+With one covariate \code{Z} it predicts \code{M1}, \code{M2} and \code{Y} (\code{M1 ~ X + Z},
+\code{M2 ~ M1 + X + Z} or \code{M2 ~ M1 + Z}, \code{Y ~ ... + X + Z}), \code{X} and \code{Z} have a free
+covariance, and every exogenous variable needs a written \code{Y} path (free; at most
+one fixed at exactly zero, which makes that variable the treatment). The
+saturated model then has 20 free parameters (19) and the chain 18 (17). In the
+pure chain the treatment is structural, the variable with no path to \code{M2}.
 \code{\link[=extract_mediation]{extract_mediation()}} needs both mediators named in the fitted
 order (the reversed order is refused) and returns a \code{FIMLSerialMediationData}
 object with the full covariance of \code{a}, \code{a2} (X to M2), \code{d1} (M1 to M2), \code{b1}
@@ -201,11 +207,14 @@ object with the full covariance of \code{a}, \code{a2} (X to M2), \code{d1} (M1 
 \code{nie(type = "total")} adds \code{a2 * b + a * b1}, and \code{paths()}, \code{tidy()},
 \code{coef(type = "paths")} and \code{summary()} list all six paths. For the chain the
 object has the four paths \code{a}, \code{d1}, \code{b} and \code{c_prime}, and \code{nie()} and
-\code{nie(type = "total")} are the same effect. Its normal intervals
+\code{nie(type = "total")} are the same effect. The covariate's coefficients are never
+paths: the aliases are the treatment's. In the saturated graph with a free direct
+path a covariate may be named the treatment; in the pure chain naming a covariate
+is refused. Its normal intervals
 are available; \code{pm()}, \code{quick()}, \code{glance()} and bootstrap intervals are not
 (\code{bootstrap_mediation(source_fit = )} stays withheld, and behind that guard a
-serial fit raises \code{medfit_error_fiml_serial_source_fit}). Serial models with
-covariates and every other serial shape stay refused.
+serial fit raises \code{medfit_error_fiml_serial_source_fit}). Serial models with two
+or more covariates and every other serial shape stay refused.
 
 Supply \code{fixed_x = FALSE} explicitly; omission, \code{TRUE} and named subsets are errors.
 Require \code{meanstructure = TRUE}, \code{information = "observed"}, \code{se_type = "model"},

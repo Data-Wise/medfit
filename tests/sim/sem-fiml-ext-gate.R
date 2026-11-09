@@ -93,10 +93,10 @@ if (mutant == "wrong_unit") {
   swap(".effect_gradients", "g_te <- .serial_te_gradient(x)", "g_te <- .serial_te_gradient(x)[c(\"a\", \"d1\", \"b\")]")
 } else if (mutant == "ser_cov_alias") {
   # the serial extraction reads a (the X -> M1 path) from the covariate's M1 coefficient
-  swap(".sem_fiml_extract_serial", "else par(\"a\"),", "else par(\"gm1z1\"),")
+  swap(".sem_fiml_extract_serial", "else par(\"a\"),", "else par(if (is.null(covariate)) \"a\" else \"gm1z1\"),")
 } else if (mutant == "ser_cov_drop_y") {
   # the covariate dropped from the outcome equation of the serial tables (the fit then fails the parameter count)
-  swap(".sem_fiml_tables_ser", "if (k > 0L) path(\"Y\", z, paste0(\"gy\", nm$sfx))", "NULL")
+  swap(".sem_fiml_tables_ser", "path(\"Y\", z, paste0(\"gy\", nm$sfx))", "NULL")
 } else if (mutant == "ser_cov_wrong_offset") {
   # the centering of the covariate is not carried into the intercepts
   swap(
