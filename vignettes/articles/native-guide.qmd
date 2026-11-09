@@ -230,8 +230,8 @@ to Y (three variables) with a free or exactly zero direct path, independent
 Gaussian disturbances and free intercepts. After 0.16.0 the development version
 also fits the same model with one covariate or two covariates (see
 [covariates](#bounded-fiml-covariates)), two parallel mediators (see
-[parallel mediators](#bounded-fiml-parallel)) and the saturated two-mediator serial
-graph without covariates (see [serial mediators](#bounded-fiml-serial)). It assumes ignorable missingness
+[parallel mediators](#bounded-fiml-parallel)) and the two-mediator serial forms, saturated or
+pure chain, without covariates (see [serial mediators](#bounded-fiml-serial)). It assumes ignorable missingness
 under that joint model; FIML does not impute the missing values.
 
 Generate continuous Gaussian X, M and Y with independent disturbances for this
@@ -294,7 +294,7 @@ back to listwise deletion or another engine, even on complete data.
 | `information`, `se_type` | `"observed"`, `"model"` |
 | Weights | No non-NULL vector, including unit weights or the deprecated alias |
 | `n_starts`, `control` | `NULL` or 3; empty control; no syntax-supplied starts |
-| Topology | X, M, Y, with at most two covariates, or X, M1, M2, Y (two parallel mediators, with at most two covariates, or the saturated serial graph without covariates); free or exactly zero direct path; no `:=`, constraints, ties, bounds, other extra predictors, latent variables, factors or products |
+| Topology | X, M, Y, with at most two covariates, or X, M1, M2, Y (two parallel mediators, with at most two covariates, or the saturated serial graph or the pure chain, without covariates); free or exactly zero direct path; no `:=`, constraints, ties, bounds, other extra predictors, latent variables, factors or products |
 
 The start/control restrictions preserve the initial validated protocol, rather
 than expressing mathematical limits of FIML. Three starts run for each solver;
@@ -389,9 +389,10 @@ covariates `medfit_error_fiml_covariate_source_fit`).
 ### Serial mediators {#bounded-fiml-serial}
 
 Development version only; not in 0.16.0. The opt-in also fits two serial
-mediators in one form so far, the saturated forward graph with no covariates:
-`M1 ~ X`, `M2 ~ M1 + X` and `Y ~ M1 + M2 + X` (the direct path `Y ~ X` is free,
-fixed at exactly zero, or omitted). The rules:
+mediators in two forms so far, both with no covariates: the saturated forward
+graph `M1 ~ X`, `M2 ~ M1 + X` and `Y ~ M1 + M2 + X`, and the pure chain
+`M1 ~ X`, `M2 ~ M1` and `Y ~ M2` (in both the direct path `Y ~ X` is free, fixed
+at exactly zero, or omitted). The rules:
 
 - The independence of all three disturbance pairs must be written:
   `M1 ~~ 0*M2`, `M1 ~~ 0*Y` and `M2 ~~ 0*Y` (either order within a pair). Omitting
@@ -399,29 +400,38 @@ fixed at exactly zero, or omitted). The rules:
   correlated disturbances. lavaan 0.7-3 frees none of these covariances for
   such models, so the written statement mirrors the parallel form rather than
   overriding a default.
-- Both shortcut paths, `X -> M2` and `M1 -> Y`, are written and free; the pure
-  chain, one shortcut only, and a fixed or labeled shortcut are refused.
-- The model has 14 free parameters (13 with the direct path fixed at zero). With
-  the direct path free it equals the unrestricted multivariate normal in
-  parameters (the fit is a reparameterization of it), so it cannot misfit, and a pair of variables
-  that is never observed together leaves that covariance undetermined: the fit
-  fails closed with a `medfit_sem_fiml_error` at the numerical stage. A parallel
-  fit that is accepted on the same data can therefore be refused here.
+- Both shortcut paths, `X -> M2` and `M1 -> Y`, are written and free (the
+  saturated graph) or both are absent (the pure chain); one shortcut only, and a
+  fixed or labeled shortcut, are refused.
+- The saturated model has 14 free parameters (13 with the direct path fixed at
+  zero). With the direct path free it equals the unrestricted multivariate normal
+  in parameters (the fit is a reparameterization of it), so it cannot misfit, and a
+  pair of variables that is never observed together leaves that covariance
+  undetermined: the fit fails closed with a `medfit_sem_fiml_error` at the
+  numerical stage. A parallel fit that is accepted on the same data can therefore
+  be refused here.
+- The pure chain has 12 free parameters (11 with the direct path fixed at zero)
+  against 14 moments, so it has 2 (3) degrees of freedom: it is a restriction
+  (`X -> M2` and `M1 -> Y` are zero) that the data can reject, and its
+  log-likelihood is at most the saturated one. Its structural zeros pin some
+  covariances, so it can fit where the saturated graph fails closed.
 - `extract_mediation(fit, treatment = , mediator = c("M1", "M2"))` names both
   mediators in the fitted order (the reversed order is refused) and returns a
   `FIMLSerialMediationData` object. Its covariance is the fitted full covariance
-  of `a`, `a2`, `d1`, `b1`, `b` and `c_prime`. `nie()` is the chain effect
-  `a * d1 * b`; `nie(type = "total")` is `a * d1 * b + a2 * b + a * b1`, and
-  `te()` adds `c_prime`. All six paths are listed by `paths()`, `tidy()`,
-  `coef(type = "paths")` and `summary()`; `c_prime` is listed with value 0 and
-  standard error 0 when it is fixed. A refused extraction has class
-  `medfit_error_fiml_extract_unsupported`.
+  of `a`, `a2`, `d1`, `b1`, `b` and `c_prime` (the chain: `a`, `d1`, `b` and
+  `c_prime`; no `a2` or `b1` exist). `nie()` is the chain effect `a * d1 * b`;
+  for the saturated graph `nie(type = "total")` is `a * d1 * b + a2 * b + a * b1`,
+  for the chain it is the same effect, and `te()` adds `c_prime`. Every estimated
+  path is listed by `paths()`, `tidy()`, `coef(type = "paths")` and `summary()`;
+  `c_prime` is listed with value 0 and standard error 0 when it is fixed. A
+  refused extraction has class `medfit_error_fiml_extract_unsupported`.
 - At an exact origin the standard error of an indirect effect is withheld only
   where its delta gradient is zero: the chain effect when at least two of `a`, `d1`,
-  `b` are zero, the total indirect effect when `a`, `a2`, `b` and `b1` are all zero.
-  Fits never produce exact zeros; this concerns constructed objects.
-- Serial models with covariates and the pure chain remain refused, as do
-  three or more mediators.
+  `b` are zero, the saturated total indirect effect when `a`, `a2`, `b` and `b1` are
+  all zero. In the pure chain both indirect rows are the same effect and are
+  withheld together, when at least two of `a`, `d1`, `b` are zero. Fits never
+  produce exact zeros; this concerns constructed objects.
+- Serial models with covariates remain refused, as do three or more mediators.
 
 Like the other bounded fits, this one is implemented and numerically verified but
 not calibrated for coverage or statistically admitted. Delta-method Wald

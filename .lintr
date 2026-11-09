@@ -26,6 +26,10 @@ exclusions: list(
     "tests/testthat/test-fiml-g3-serial-saturated.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g3-serial-effects.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g3-serial-defects.R" = list(object_usage_linter = Inf),
+    # S2 helpers (sc_*) live in helper-fiml-serial2-chain.R and use the sb_* helpers
+    "tests/testthat/helper-fiml-serial2-chain.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-serial-chain.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-serial-chain-defects.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-generic-kernel-fourvar.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-generic-kernel-oracle.R" = list(object_usage_linter = Inf)
   )

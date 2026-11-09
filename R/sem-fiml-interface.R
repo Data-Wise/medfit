@@ -233,15 +233,18 @@
 
 # Fail-closed admission of serial FIML fits (FI-G3). `.fiml_serial_admitted()` is the master switch that opens every
 # serial shape (always FALSE; tests mock it to exercise the downstream serial plumbing: tables, ledger, source-fit and
-# extract refusals). Each slice admits its own shape through `.fiml_serial_shape_admitted()`: slice S1b admits the
-# saturated variant with no covariates and nothing else (the chain is S2, covariates are S3 and S4), so the predicate
-# tests the variant AND the covariate count. Every other serial syntax is refused at fit with its classed reason.
+# extract refusals). Each slice admits its own shapes through `.fiml_serial_shape_admitted()`: slices S1b and S2 admit
+# the saturated variant and the pure chain with no covariates and nothing else (covariates are S3 and S4), so the
+# predicate tests the variant AND the covariate count. Every other serial syntax is refused at fit with its classed
+# reason.
 .fiml_serial_admitted <- function() FALSE
 .fiml_serial_shape_admitted <- function(variant, k) {
-  isTRUE(.fiml_serial_admitted()) || (identical(variant, "saturated") && identical(as.integer(k), 0L))
+  isTRUE(.fiml_serial_admitted()) || (variant %in% c("saturated", "chain") && identical(as.integer(k), 0L))
 }
 # The shapes `.sem_fiml_extract_serial()` implements (a mocked-open fit of any other shape is refused at extract).
-.fiml_serial_extract_supported <- function(variant, k) identical(variant, "saturated") && identical(as.integer(k), 0L)
+.fiml_serial_extract_supported <- function(variant, k) {
+  variant %in% c("saturated", "chain") && identical(as.integer(k), 0L)
+}
 
 # Serial syntax: exactly one outcome, exactly two other endogenous variables, and a regression of one of them on the
 # other. Anything else keeps the existing routing (and its refusal messages) unchanged.
@@ -739,11 +742,11 @@
   )
 }
 
-# Two serial mediators, saturated variant, no covariates (FI-G3 slice S1b). Both mediators are named in the fitted
+# Two serial mediators, both variants, no covariates (FI-G3 slices S1b and S2). Both mediators are named in the fitted
 # (structural) order; the reversed order asks for a different model (M2 -> M1) and is refused with the fitted order
-# named. The six path estimates and their 6 x 6 covariance are the fitted observed-information block, so every
-# cross-path term (Cov(a, d1), Cov(d1, b), Cov(a2, d1), Cov(b1, b), ...) is kept, unlike the separate-regression
-# lm/glm route; a fixed-zero or omitted direct path is a zero row and column.
+# named. The six (saturated) or four (pure chain) path estimates and their covariance are the fitted
+# observed-information block, so every cross-path term (Cov(a, d1), Cov(d1, b), Cov(a2, d1), Cov(b1, b), ...) is kept,
+# unlike the separate-regression lm/glm route; a fixed-zero or omitted direct path is a zero row and column.
 .sem_fiml_extract_serial <- function(object, treatment, mediator, args) {
   ctx0 <- object@internals$likelihood
   v <- ctx0$variables
@@ -778,8 +781,10 @@
   map <- spec$map
   par <- function(label) unname(map[[label]])
   # The kernel label of each role; the fitted parameter names may be user labels, so roles are read by topology.
+  # The pure chain has no a2 and b1 rows at all (structural zeros): its aliases are the four paths a, d1, b, c_prime.
+  chain <- identical(ctx0$variant, "chain")
   roles <- c(
-    a = par("a"), a2 = par("a2"), d1 = par("d1"), b1 = par("b1"), b = par("b"),
+    a = par("a"), if (!chain) c(a2 = par("a2")), d1 = par("d1"), if (!chain) c(b1 = par("b1")), b = par("b"),
     c_prime = if (spec$direct) par("cp") else NA_character_
   )
   present <- !is.na(roles)
@@ -800,14 +805,17 @@
   d_path <- unname(estimates[["d1"]])
   b_path <- unname(estimates[["b"]])
   c_prime <- unname(estimates[["c_prime"]])
-  ctx$parameter_hash <- rlang::hash(list(estimates, V, a_path, d_path, b_path, c_prime, "saturated"))
+  ctx$parameter_hash <- rlang::hash(list(estimates, V, a_path, d_path, b_path, c_prime, ctx0$variant))
+  # the absent shortcuts of the chain are recorded as absent: X is not a predictor of M2, M1 is not a predictor of Y
+  mediator_predictors <- list(x, c(meds[1L], if (!chain) x))
+  outcome_predictors <- c(if (!chain) meds[1L], meds[2L], x)
   FIMLSerialMediationData(
     a_path = a_path, d_path = d_path, b_path = b_path, c_prime = c_prime, estimates = estimates, vcov = V,
     sigma_mediators = c(sigma("vm1"), sigma("vm2")), sigma_y = sigma("vy"),
     treatment = x, mediators = meds, outcome = y,
-    mediator_predictors = list(x, c(meds[1L], x)), outcome_predictors = c(meds, x),
+    mediator_predictors = mediator_predictors, outcome_predictors = outcome_predictors,
     data = object@data, n_obs = object@n_obs, converged = TRUE, source_package = "medfit", fit_context = ctx,
-    variant = "saturated"
+    variant = ctx0$variant
   )
 }
 

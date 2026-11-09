@@ -149,25 +149,31 @@
 #' three or more covariates and a covariate on only some of the equations stay
 #' refused.
 #'
-#' Two serial mediators are fitted in one form so far, the saturated forward graph
-#' with no covariates: `M1 ~ X`, `M2 ~ M1 + X` and `Y ~ M1 + M2 + X` (the direct
-#' path `Y ~ X` is free, `0*X`, or omitted), with the independence of all three
+#' Two serial mediators are fitted in two forms so far, both with no covariates:
+#' the saturated forward graph `M1 ~ X`, `M2 ~ M1 + X` and `Y ~ M1 + M2 + X`, and
+#' the pure chain `M1 ~ X`, `M2 ~ M1` and `Y ~ M2` (the direct
+#' path `Y ~ X` is free, `0*X`, or omitted in both), with the independence of all three
 #' disturbance pairs written as `M1 ~~ 0*M2`, `M1 ~~ 0*Y` and `M2 ~~ 0*Y`
 #' (either order within a pair; an omitted or free statement is refused). The
-#' model has 14 free parameters (13 with the direct path fixed) and is just
+#' saturated model has 14 free parameters (13 with the direct path fixed) and is just
 #' identified with the direct path free, so a pair of variables that is never
 #' observed together makes the fit fail closed (`medfit_sem_fiml_error` at the
-#' numerical stage). [extract_mediation()] needs both mediators named in the fitted
+#' numerical stage). The chain has 12 free parameters (11 with the direct path
+#' fixed), is overidentified (2 or 3 degrees of freedom) and so is a restriction
+#' the data can reject; it fails closed for fewer unobserved pairs. A graph with
+#' exactly one of the two shortcuts, and a fixed or labeled shortcut, is refused.
+#' [extract_mediation()] needs both mediators named in the fitted
 #' order (the reversed order is refused) and returns a `FIMLSerialMediationData`
 #' object with the full covariance of `a`, `a2` (X to M2), `d1` (M1 to M2), `b1`
 #' (M1 to Y), `b` and `c_prime`; `nie()` is the chain effect `a * d1 * b`,
 #' `nie(type = "total")` adds `a2 * b + a * b1`, and `paths()`, `tidy()`,
-#' `coef(type = "paths")` and `summary()` list all six paths. Its normal intervals
+#' `coef(type = "paths")` and `summary()` list all six paths. For the chain the
+#' object has the four paths `a`, `d1`, `b` and `c_prime`, and `nie()` and
+#' `nie(type = "total")` are the same effect. Its normal intervals
 #' are available; `pm()`, `quick()`, `glance()` and bootstrap intervals are not
 #' (`bootstrap_mediation(source_fit = )` stays withheld, and behind that guard a
-#' serial fit raises `medfit_error_fiml_serial_source_fit`). The pure chain (no
-#' `X -> M2` and `M1 -> Y`), serial models with covariates and every other serial
-#' shape stay refused.
+#' serial fit raises `medfit_error_fiml_serial_source_fit`). Serial models with
+#' covariates and every other serial shape stay refused.
 #'
 #' Supply `fixed_x = FALSE` explicitly; omission, `TRUE` and named subsets are errors.
 #' Require `meanstructure = TRUE`, `information = "observed"`, `se_type = "model"`,

@@ -1,4 +1,4 @@
-# FI-G3 slice S1b: the first public serial FIML variant, the SATURATED forward graph with no covariates
+# FI-G3 slice S1b (kept current by S2): the first public serial FIML variant, the SATURATED graph with no covariates
 # (X -> M1 -> M2 -> Y with X -> M2 and M1 -> Y free, independent disturbances written as zero covariances, the direct
 # path free, fixed at exactly zero or omitted). Oracles, each independent of the production kernel and adapter:
 # matched lavaan raw-data FIML (estimates, covariance, logLik, the defined effects), the unrestricted multivariate
@@ -37,8 +37,6 @@ test_that("every other serial shape stays refused at fit with the not-yet-availa
   d$Z2 <- stats::rnorm(nrow(d))
   z <- paste(sb_zeros, collapse = "\n")
   shapes <- c(
-    chain0 = "M1 ~ X\nM2 ~ M1\nY ~ M2 + X",
-    chain0_zero = "M1 ~ X\nM2 ~ M1\nY ~ M2 + 0*X",
     sat1 = "M1 ~ X + Z\nM2 ~ M1 + X + Z\nY ~ M1 + M2 + X + Z",
     chain1 = "M1 ~ X + Z\nM2 ~ M1 + Z\nY ~ M2 + X + Z",
     sat2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + X + Z1 + Z2\nY ~ M1 + M2 + X + Z1 + Z2",
@@ -59,10 +57,11 @@ test_that("every other serial shape stays refused at fit with the not-yet-availa
   expect_identical(length(spec$covariate), 1L)
 })
 
-test_that("the admission predicate is true for the saturated k = 0 shape only, and the master switch opens the rest", {
+test_that("the admission predicate is true for the k = 0 shapes only; the switch opens the rest", {
   expect_true(.fiml_serial_shape_admitted("saturated", 0L))
+  expect_true(.fiml_serial_shape_admitted("chain", 0L)) # slice S2
   for (k in 1:2) expect_false(.fiml_serial_shape_admitted("saturated", k))
-  for (k in 0:2) expect_false(.fiml_serial_shape_admitted("chain", k))
+  for (k in 1:2) expect_false(.fiml_serial_shape_admitted("chain", k))
   testthat::local_mocked_bindings(.fiml_serial_admitted = function() TRUE)
   for (k in 0:2) for (v in c("saturated", "chain")) expect_true(.fiml_serial_shape_admitted(v, k))
 })
@@ -448,7 +447,6 @@ test_that("extraction of the shapes that are not public stays refused with the c
   d$Z2 <- stats::rnorm(nrow(d))
   z <- paste(sb_zeros, collapse = "\n")
   shapes <- c(
-    chain0 = "M1 ~ X\nM2 ~ M1\nY ~ M2 + X",
     sat1 = "M1 ~ X + Z\nM2 ~ M1 + X + Z\nY ~ M1 + M2 + X + Z",
     chain2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + Z1 + Z2\nY ~ M2 + X + Z1 + Z2"
   )

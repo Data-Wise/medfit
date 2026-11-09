@@ -12,7 +12,7 @@ sb_setup <- function() {
     sb_env$f <- sb_fit(sb_env$d)
     sb_env$ref <- sb_reference(sb_env$d)
     sb_env$z <- sb_extract(sb_env$f)
-    # a data set with covariates, for the admission probes, and the chain fit with the master switch opened
+    # a data set with covariates, for the admission probes
     dz <- sb_env$d
     dz$Z <- stats::rnorm(nrow(dz))
     sb_env$dz <- dz
@@ -29,6 +29,11 @@ sb_class_error <- function(expr, class) {
 }
 sb_chain_fit <- function() {
   fit_sem(paste(c("M1 ~ X", "M2 ~ M1", "Y ~ M2 + X", sb_zeros), collapse = "\n"), sb_env$d,
+          missing = "fiml", fixed_x = FALSE)
+}
+# the chain with one covariate: still refused at fit (slice S3), and refused at extract when the fit is mocked open
+sb_chain1_fit <- function() {
+  fit_sem(paste(c("M1 ~ X + Z", "M2 ~ M1 + Z", "Y ~ M2 + X + Z", sb_zeros), collapse = "\n"), sb_env$dz,
           missing = "fiml", fixed_x = FALSE)
 }
 sb_battery <- function() {
@@ -79,15 +84,16 @@ sb_battery <- function() {
     # reversed order is refused with the class
     reversed_refused = sb_class_error(extract_mediation(f, treatment = "X", mediator = c("M2", "M1")),
                                       "medfit_error_fiml_extract_unsupported"),
-    # admission: only the saturated k = 0 shape is public
+    # admission: only the k = 0 shapes (saturated and, since S2, the pure chain) are public
     sat1_refused = sb_class_error(fit_sem(
       paste(c("M1 ~ X + Z", "M2 ~ M1 + X + Z", "Y ~ M1 + M2 + X + Z", sb_zeros), collapse = "\n"), sb_env$dz,
       missing = "fiml", fixed_x = FALSE
     ), "medfit_sem_fiml_error"),
-    chain0_refused = sb_class_error(sb_chain_fit(), "medfit_sem_fiml_error"),
-    chain0_extract_refused = sb_ok(testthat::with_mocked_bindings(
+    chain0_fits = sb_ok(identical(sb_extract(sb_chain_fit())@variant, "chain")),
+    chain1_refused = sb_class_error(sb_chain1_fit(), "medfit_sem_fiml_error"),
+    chain1_extract_refused = sb_ok(testthat::with_mocked_bindings(
       sb_class_error(
-        extract_mediation(sb_chain_fit(), treatment = "X", mediator = c("M1", "M2")),
+        extract_mediation(sb_chain1_fit(), treatment = "X", mediator = c("M1", "M2")),
         "medfit_error_fiml_extract_unsupported"
       ),
       .fiml_serial_admitted = function() TRUE
@@ -121,12 +127,13 @@ test_that("extraction defects: swapped paths, aliased paths, dropped covariance 
   sb_setup()
   # D1: d1 and b swapped. The chain NIE a*d1*b and its SE are invariant to the swap, so the path rows and every
   # effect that is not a plain product must expose it
-  r <- sb_caught(".sem_fiml_extract_serial", "d1 = par(\"d1\"), b1 = par(\"b1\"), b = par(\"b\")",
-                 "d1 = par(\"b\"), b1 = par(\"b1\"), b = par(\"d1\")")
+  r <- sb_caught(".sem_fiml_extract_serial", "d1 = par(\"d1\"), if (!chain) c(b1 = par(\"b1\")), b = par(\"b\")",
+                 "d1 = par(\"b\"), if (!chain) c(b1 = par(\"b1\")), b = par(\"d1\")")
   expect_false(r$all_pass)
   expect_true("paths" %in% r$failed)
   # D2: a and a2 swapped
-  r <- sb_caught(".sem_fiml_extract_serial", "a = par(\"a\"), a2 = par(\"a2\")", "a = par(\"a2\"), a2 = par(\"a\")")
+  r <- sb_caught(".sem_fiml_extract_serial", "a = par(\"a\"), if (!chain) c(a2 = par(\"a2\"))",
+                 "a = par(\"a2\"), if (!chain) c(a2 = par(\"a\"))")
   expect_false(r$all_pass)
   expect_true("paths" %in% r$failed)
   # D3: the shortcut b1 taken from the direct path
@@ -157,8 +164,8 @@ test_that("extraction defects: swapped paths, aliased paths, dropped covariance 
   r <- sb_caught(".sem_fiml_extract", "identical(object@internals$likelihood$structure, \"serial\")", "FALSE")
   expect_false(r$all_pass)
   # an extraction that stores the chain predictor lists for a saturated fit is rejected by the validator
-  r <- sb_caught(".sem_fiml_extract_serial", "mediator_predictors = list(x, c(meds[1L], x))",
-                 "mediator_predictors = list(x, meds[1L])")
+  r <- sb_caught(".sem_fiml_extract_serial", "mediator_predictors <- list(x, c(meds[1L], if (!chain) x))",
+                 "mediator_predictors <- list(x, meds[1L])")
   expect_false(r$all_pass)
   expect_identical(r$failed, "extraction")
 })
@@ -257,18 +264,20 @@ test_that("consumer defects: quick, pm, glance, bootstrap advice, coef/summary p
   expect_true("confint_total" %in% r$failed)
 })
 
-test_that("admission defects: the predicate ignoring k or the variant, the extract predicate ignoring the variant", {
+test_that("admission defects: the predicate ignoring k or dropping the chain, the extract predicate ignoring k", {
   fx_skip_covr()
   sb_setup()
   r <- sb_caught(".fiml_serial_shape_admitted", "identical(as.integer(k), 0L)", "TRUE")
   expect_false(r$all_pass)
-  expect_true("sat1_refused" %in% r$failed)
-  r <- sb_caught(".fiml_serial_shape_admitted", "identical(variant, \"saturated\")", "TRUE")
+  expect_true(all(c("sat1_refused", "chain1_refused") %in% r$failed))
+  # the chain dropped from the admitted set (a regression of slice S2)
+  r <- sb_caught(".fiml_serial_shape_admitted", "variant %in% c(\"saturated\", \"chain\")",
+                 "identical(variant, \"saturated\")")
   expect_false(r$all_pass)
-  expect_true("chain0_refused" %in% r$failed)
-  r <- sb_caught(".fiml_serial_extract_supported", "identical(variant, \"saturated\")", "TRUE")
+  expect_true("chain0_fits" %in% r$failed)
+  r <- sb_caught(".fiml_serial_extract_supported", "identical(as.integer(k), 0L)", "TRUE")
   expect_false(r$all_pass)
-  expect_true("chain0_extract_refused" %in% r$failed)
+  expect_true("chain1_extract_refused" %in% r$failed)
 })
 
 test_that("fit-level defects: a transport offset dropped and a hidden chain (b1 removed from the saturated tables)", {
