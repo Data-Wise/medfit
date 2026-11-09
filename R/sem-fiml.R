@@ -14,11 +14,16 @@
 }
 # `residual_covariance = TRUE` (FI-G2 slice 2, j = 2 only) adds one free covariance between the two mediator
 # disturbances (label cm12) after the variances; FALSE keeps the independent-disturbance tables exactly.
-.sem_fiml_tables_med <- function(j, direct, residual_covariance = FALSE) {
+# `k` (FI-G2 slices 3 and 4, j = 2 only) adds k observed covariates: see `.sem_fiml_tables_parcov()`.
+.sem_fiml_tables_med <- function(j, direct, residual_covariance = FALSE, k = 0L) {
   if (!is.logical(residual_covariance) || length(residual_covariance) != 1L || is.na(residual_covariance) ||
         (residual_covariance && j != 2L)) {
     .sem_fiml_diagnostic("unsupported FIML residual covariance")
   }
+  if (!is.numeric(k) || length(k) != 1L || is.na(k) || k < 0L || (k > 0L && j != 2L)) {
+    .sem_fiml_diagnostic("unsupported number of FIML covariates")
+  }
+  if (k > 0L) return(.sem_fiml_tables_parcov(k, direct, residual_covariance))
   m <- .sem_fiml_med_names(j)
   sfx <- if (j == 1L) "" else as.character(seq_len(j))
   a <- data.frame(
@@ -33,6 +38,36 @@
     s <- rbind(s, data.frame(row = m[1L], col = m[2L], label = "cm12", value = NA_real_))
   }
   mu <- data.frame(row = vars, label = c("ix", paste0("im", sfx), "iy"), value = NA_real_)
+  list(vars = vars, a = a, s = s, m = mu)
+}
+# Two parallel mediators with k observed covariates (k = 1 or 2): X and the covariates are jointly Gaussian exogenous
+# variables (free covariance for every pair); every one of them has a path to M1, to M2 and to Y, with the X -> Y path
+# free or fixed exactly at zero; independent mediator disturbances, or one free covariance cm12 between them. Kernel
+# order X, Z, M1, M2, Y for k = 1 and X, Z1, ..., Zk, M1, M2, Y otherwise. Labels: a1 a2 (X -> M_j), gm<j>z<i>
+# (covariate i -> M_j), b1 b2, cp, gy (gy1, gy2 for k = 2: covariate i -> Y), vx, vz, vm1, vm2, vy, the exogenous
+# covariances cxz (cxz1, cxz2, cz1z2), cm12, then the intercepts ix, iz, im1, im2, iy; the covariate labels carry the
+# index for k = 2 (vz1, iz2).
+.sem_fiml_tables_parcov <- function(k, direct, residual_covariance) {
+  nm <- .sem_fiml_cov_names(k)
+  z <- nm$z
+  m <- c("M1", "M2")
+  a <- data.frame(
+    row = c(m, rep(m, k), "Y", "Y", "Y", rep("Y", k)), col = c(rep("X", 2L), rep(z, each = 2L), m, "X", z),
+    label = c(
+      "a1", "a2", paste0("gm", rep(1:2, k), "z", rep(seq_len(k), each = 2L)), "b1", "b2", "cp", paste0("gy", nm$sfx)
+    ),
+    value = c(rep(NA, 2L + 2L * k + 2L), if (direct) NA else 0, rep(NA, k))
+  )
+  vars <- c("X", z, m, "Y")
+  e <- c("X", z)
+  pairs <- utils::combn(e, 2L)
+  s <- data.frame(
+    row = c(vars, pairs[1L, ]), col = c(vars, pairs[2L, ]),
+    label = c("vx", paste0("vz", nm$sfx), "vm1", "vm2", "vy", paste0("c", tolower(pairs[1L, ]), tolower(pairs[2L, ]))),
+    value = NA_real_
+  )
+  if (residual_covariance) s <- rbind(s, data.frame(row = "M1", col = "M2", label = "cm12", value = NA_real_))
+  mu <- data.frame(row = vars, label = c("ix", paste0("iz", nm$sfx), "im1", "im2", "iy"), value = NA_real_)
   list(vars = vars, a = a, s = s, m = mu)
 }
 .sem_fiml_tables <- function(direct) .sem_fiml_tables_med(1L, direct)

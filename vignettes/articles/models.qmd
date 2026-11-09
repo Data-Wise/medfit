@@ -82,7 +82,7 @@ before you swap one for another.
 
 The native column describes the default listwise path. The separate
 [bounded FIML workflow](native-guide.html#bounded-fiml) is limited to X, M and Y
-with at most two covariates, or two parallel mediators without covariates (numeric, continuous), explicit random X and observed/model SEs;
+with at most two covariates, or two parallel mediators with up to two covariates (numeric, continuous), explicit random X and observed/model SEs;
 weights and fit tests remain unavailable. Source-fit retained-row and
 Gaussian parameter-draw intervals are implemented but withheld until statistical
 admission (the call raises `medfit_error_fiml_inference_unavailable`). Bounded FIML is

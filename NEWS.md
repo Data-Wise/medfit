@@ -2,6 +2,26 @@
 
 ## Added
 
+* Bounded Gaussian random-X FIML now also fits two parallel mediators with one
+  or two observed covariates (`M1 ~ X + Z`, `M2 ~ X + Z`, `Y ~ M1 + M2 + X + Z`,
+  and the two-covariate analogue), in both residual forms (`M1 ~~ 0*M2` written,
+  or the free, label-less `M1 ~~ M2`), each with a free or exactly zero direct
+  path. The covariate rules are those of the one-mediator covariate form: every
+  covariate enters both mediator equations and the outcome equation, the exogenous
+  variables have a free joint covariance (write every pair or none), every
+  exogenous variable needs a written `Y` path (one may be fixed at zero and is
+  then the treatment), and any variable may be incomplete. The free-parameter
+  count is 18 to 20 with one covariate and 25 to 27 with two. With no `Y` path
+  fixed at zero, `extract_mediation()` may name any exogenous variable as the
+  treatment; it returns a `FIMLParallelMediationData` object with the full
+  covariance of `a1`, `a2`, `b1`, `b2` and `c_prime` (covariate coefficients stay
+  in the fitted covariance, not among the paths). Serial mediators with
+  covariates, three or more mediators and three or more covariates stay refused.
+  The fits are verified against lavaan (and OpenMx for one cell) and an
+  independent likelihood, not calibrated for coverage or statistically admitted;
+  `bootstrap_mediation(source_fit = )` stays withheld and a covariate parallel fit
+  is also refused with `medfit_error_fiml_covariate_source_fit`.
+
 * Bounded Gaussian random-X FIML (`fit_sem(missing = "fiml", fixed_x = FALSE)`
   and `extract_mediation()`) now also fits two parallel mediators without
   covariates: `M1 ~ X`, `M2 ~ X`, `Y ~ M1 + M2` with a free or exactly zero direct
@@ -9,8 +29,8 @@
   refused, since lavaan's default would free it); a free, label-less `M1 ~~ M2`
   fits the mediator residual covariance. The free-parameter count is 12 or 13
   (independent) and 13 or 14 (free covariance). A labeled, fixed nonzero, bounded,
-  tied or constrained covariance is refused, as are parallel mediators with
-  covariates, serial mediators and three or more mediators. `extract_mediation()`
+  tied or constrained covariance is refused, as are serial mediators and three or
+  more mediators (parallel mediators with covariates are described in the entry above). `extract_mediation()`
   returns a `FIMLParallelMediationData` object with the full covariance of
   `a1`, `a2`, `b1`, `b2` and `c_prime`, so the standard error of the sum of the
   indirect effects keeps the cross-path terms. Extraction refusals for this form

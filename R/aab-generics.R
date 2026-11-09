@@ -54,7 +54,8 @@
 #'   A fit with two parallel mediators extracts to a `FIMLParallelMediationData`
 #'   object when `mediator` names both mediators (`structure = "parallel"` or
 #'   `"auto"`); it carries the full covariance of the paths, and a refusal has
-#'   class `medfit_error_fiml_extract_unsupported`.
+#'   class `medfit_error_fiml_extract_unsupported`. With one or two covariates
+#'   the same rules as for the one-mediator covariate fits choose the treatment.
 #' - **brmsfit**: Extract from Bayesian models (future)
 #'
 #' Note: OpenMx extraction is planned for a future release.

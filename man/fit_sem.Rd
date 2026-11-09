@@ -157,7 +157,7 @@ Input checks and local numerical gates do not establish global identification,
 a global optimum or inference coverage.
 
 Two parallel mediators (\code{M1 ~ X}, \code{M2 ~ X}, \code{Y ~ M1 + M2}, with or without
-\code{Y ~ X}, no covariates) are fitted in two forms. Independent residuals require
+\code{Y ~ X}) are fitted in two forms. Independent residuals require
 the statement \code{M1 ~~ 0*M2} (either order): an omitted statement is refused
 because lavaan's default would free it. A free, label-less \code{M1 ~~ M2} fits the
 mediator residual covariance. A labeled, fixed nonzero, bounded, tied or
@@ -166,9 +166,20 @@ otherwise constrained covariance is refused. The free-parameter count is 12 or
 direct path. \code{\link[=extract_mediation]{extract_mediation()}} needs both mediators named and returns a
 \code{FIMLParallelMediationData} object with the full path covariance of \code{a1}, \code{a2},
 \code{b1}, \code{b2} and \code{c_prime}, so the sum of the indirect effects keeps every
-cross-path term. Parallel mediation with covariates, serial mediation and three
-or more mediators stay refused. Extraction refusals for the parallel form have
-class \code{medfit_error_fiml_extract_unsupported}.
+cross-path term. Extraction refusals for the parallel form have class
+\code{medfit_error_fiml_extract_unsupported}.
+
+Two parallel mediators also take one covariate \code{Z} or two covariates \code{Z1},
+\code{Z2} (\code{M1 ~ X + Z}, \code{M2 ~ X + Z}, \code{Y ~ M1 + M2 + X + Z}, in either residual
+form). The covariate rules are those above: every exogenous variable has a free
+path to both mediators and a written path to \code{Y}, the exogenous covariance is
+free (write every pair or none), and any variable may be incomplete. With no \code{Y}
+path fixed at zero, \code{\link[=extract_mediation]{extract_mediation()}} may name any exogenous variable as the
+treatment; with one fixed at zero that variable is the treatment. The
+free-parameter count is 18 to 20 (one covariate) and 25 to 27 (two), without or
+with the direct path and the free residual covariance. Serial mediation, three
+or more mediators, three or more covariates and a covariate on only some of the
+equations stay refused.
 
 Supply \code{fixed_x = FALSE} explicitly; omission, \code{TRUE} and named subsets are errors.
 Require \code{meanstructure = TRUE}, \code{information = "observed"}, \code{se_type = "model"},
@@ -200,7 +211,8 @@ extracted-object \code{glance()}, \code{quick()}, \code{pm()}, extracted-object 
 MBCO and fit tests remain unavailable. The \code{\link[=bootstrap_mediation]{bootstrap_mediation()}} \code{source_fit}
 intervals are implemented but withheld (refused with a classed error) until
 statistical admission is decided; a covariate fit is additionally refused with
-\code{medfit_error_fiml_covariate_source_fit} and a parallel fit with
+\code{medfit_error_fiml_covariate_source_fit} (including a parallel fit with
+covariates) and a parallel fit without covariates with
 \code{medfit_error_fiml_parallel_source_fit}, so no source-fit interval exists for
 either. Delta-method Wald intervals stay available for these extracted objects;
 as for the three-variable model, the NIE standard error is \code{NA} only at the

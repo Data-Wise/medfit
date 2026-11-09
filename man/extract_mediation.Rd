@@ -60,7 +60,8 @@ covariate on one equation only and every other structure are refused.
 A fit with two parallel mediators extracts to a \code{FIMLParallelMediationData}
 object when \code{mediator} names both mediators (\code{structure = "parallel"} or
 \code{"auto"}); it carries the full covariance of the paths, and a refusal has
-class \code{medfit_error_fiml_extract_unsupported}.
+class \code{medfit_error_fiml_extract_unsupported}. With one or two covariates
+the same rules as for the one-mediator covariate fits choose the treatment.
 \item \strong{brmsfit}: Extract from Bayesian models (future)
 }
 

@@ -293,7 +293,7 @@ back to listwise deletion or another engine, even on complete data.
 | `information`, `se_type` | `"observed"`, `"model"` |
 | Weights | No non-NULL vector, including unit weights or the deprecated alias |
 | `n_starts`, `control` | `NULL` or 3; empty control; no syntax-supplied starts |
-| Topology | X, M, Y, with at most two covariates, or X, M1, M2, Y (two parallel mediators, no covariates); free or exactly zero direct path; no `:=`, constraints, ties, bounds, other extra predictors, latent variables, factors or products |
+| Topology | X, M, Y, with at most two covariates, or X, M1, M2, Y (two parallel mediators, with at most two covariates); free or exactly zero direct path; no `:=`, constraints, ties, bounds, other extra predictors, latent variables, factors or products |
 
 The start/control restrictions preserve the initial validated protocol, rather
 than expressing mathematical limits of FIML. Three starts run for each solver;
@@ -334,7 +334,8 @@ disturbances, and any variable may be incomplete. The rules:
   that variable is the treatment.
 - Three or more covariates, a covariate on one equation only, residual
   covariances, constraints, ties, products and serial mediators
-  remain refused, as do covariates combined with parallel mediators.
+  remain refused. Covariates combined with two parallel mediators are covered
+  in the [next section](#bounded-fiml-parallel).
 
 These fits are implemented and numerically verified against lavaan and an
 independent likelihood. They are not calibrated for coverage and not
@@ -347,8 +348,8 @@ own error (`medfit_error_fiml_covariate_source_fit`).
 
 Development version only; not in 0.16.0. The opt-in also fits two parallel
 mediators, written `M1 ~ X`, `M2 ~ X` and `Y ~ M1 + M2` (the direct path
-`Y ~ X` is free, fixed at exactly zero, or omitted), with no covariates. Any
-variable may be incomplete. The rules:
+`Y ~ X` is free, fixed at exactly zero, or omitted). Any variable may be
+incomplete. The rules:
 
 - Independent residuals need the statement `M1 ~~ 0*M2` (either order). Omitting
   the statement is refused: lavaan's default would free that covariance, so
@@ -364,14 +365,25 @@ variable may be incomplete. The rules:
   standard error of the sum of the indirect effects keeps the cross-path terms
   (unlike separate regressions). A refused extraction has class
   `medfit_error_fiml_extract_unsupported`.
-- Parallel mediators with covariates, serial mediators and three or more
-  mediators remain refused.
+- With one covariate `Z` (or two, `Z1` and `Z2`), write `M1 ~ X + Z`,
+  `M2 ~ X + Z` and `Y ~ M1 + M2 + X + Z`, plus the mediator residual statement
+  above. The covariate rules are those of the [covariates](#bounded-fiml-covariates)
+  section: every exogenous variable has a free path to both mediators and a
+  written path to `Y` (omitting the direct path is therefore refused), the
+  exogenous covariance pairs are all written or none, one `Y` path may be fixed at
+  zero (that variable is then the treatment), and `extract_mediation()` may name
+  any exogenous variable as the treatment otherwise. The free-parameter count is 18
+  to 20 with one covariate and 25 to 27 with two (without or with the direct path
+  and the free residual covariance).
+- Serial mediators, three or more mediators, three or more covariates and a
+  covariate on only some of the equations remain refused.
 
 Like the covariate fits, these are implemented and numerically verified but not
 calibrated for coverage or statistically admitted. Delta-method Wald intervals
 for paths and effects are available. `bootstrap_mediation(source_fit = )` is
 withheld by `medfit_error_fiml_inference_unavailable`; behind that guard a parallel
-fit has no source-fit route either (`medfit_error_fiml_parallel_source_fit`).
+fit has no source-fit route either (`medfit_error_fiml_parallel_source_fit`; with
+covariates `medfit_error_fiml_covariate_source_fit`).
 
 Extraction preserves validated FIML context through copying and serialization.
 Original SEMFit labels/full covariance stay unchanged; extracted a/b/c_prime

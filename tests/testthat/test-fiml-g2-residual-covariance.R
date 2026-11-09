@@ -312,7 +312,7 @@ p3_unadmitted <- c(
   mediator_outcome_covariance = "M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X\nM1 ~~ M2\nM1 ~~ Y",
   mediator_outcome_covariance_2 = "M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X\nM1 ~~ M2\nM2 ~~ Y",
   treatment_mediator_covariance = "M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X\nM1 ~~ M2\nX ~~ M1",
-  covariate_with_parallel = "M1 ~ X + Z\nM2 ~ X + Z\nY ~ M1 + M2 + X + Z\nM1 ~~ M2",
+  covariate_on_one_mediator = "M1 ~ X + Z\nM2 ~ X\nY ~ M1 + M2 + X + Z\nM1 ~~ M2",
   serial = "M1 ~ X\nM2 ~ M1 + X\nY ~ M1 + M2 + X\nM1 ~~ M2",
   three_mediators = "M1 ~ X\nM2 ~ X\nM3 ~ X\nY ~ M1 + M2 + M3 + X\nM1 ~~ M2",
   one_mediator_only_to_y = "M1 ~ X\nM2 ~ X\nY ~ M1 + X\nM1 ~~ M2",

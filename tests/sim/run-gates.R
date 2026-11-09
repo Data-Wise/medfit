@@ -475,7 +475,10 @@ verdict_gate <- function(gate, d, s) {
     },
     "fiml-ext" = {
       checks <- c("estimates", "covariance", "likelihood", "retained", "provenance", "nie_estimate", "nie_se", "guard")
-      structures <- c("cov1", "cov2", "par_ind", "par_free")
+      structures <- c(
+        "cov1", "cov2", "par_ind", "par_free",
+        "parcov1_ind", "parcov1_free", "parcov2_ind", "parcov2_free"
+      )
       cells <- as.vector(outer(structures, c(4111L, 7219L), paste, sep = "-"))
       expected <- c(as.vector(outer(cells, checks, paste, sep = ":")), "refusals:unadmitted_accepted")
       keys <- paste(d$cell, d$check, sep = ":")
@@ -484,7 +487,7 @@ verdict_gate <- function(gate, d, s) {
       rbind(
         rows_chk(d, s),
         chk("complete cells", identical(sort(keys), sort(expected)),
-            "four structures x two seeds x eight checks plus the refusal count, no duplicates"),
+            "eight structures x two seeds x eight checks plus the refusal count, no duplicates"),
         chk("numerical checks", all(is.finite(d$value) & d$value >= 0 & d$value <= d$limit),
             "every recorded discrepancy satisfies its frozen limit"),
         chk("frozen limits", all(d$limit == limits[d$check]), "limits cannot be widened in results"),
