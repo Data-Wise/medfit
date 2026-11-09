@@ -5,7 +5,7 @@
 # products, their SUM and the total), a from-scratch rowwise Gaussian likelihood with an independent Hessian,
 # closed-form complete-data OLS, and OpenMx for one cell. Helpers are prefixed p4_ and self-contained.
 
-p4_ks <- 1L # lifted to 1:2 with slice 4
+p4_ks <- 1:2
 p4_exo <- function(k) c("X", if (k == 1L) "Z" else c("Z1", "Z2"))
 p4_kvars <- function(k) c(p4_exo(k), "M1", "M2", "Y")
 p4_data <- function(k = 1L, kind = "mar", n = 450L, direct = TRUE, seed = 6141L, rho = .5) {
@@ -201,6 +201,25 @@ test_that("the parameter map has exact names and targets for the admitted models
   expect_identical(unname(s3$covariate), "X")
 })
 
+test_that("the two-covariate parameter map has exact names and targets", {
+  s <- .sem_fiml_model(p4_model(2L, TRUE, "free"))
+  expect_identical(
+    names(s$map),
+    c("a1", "a2", "gm1z1", "gm2z1", "gm1z2", "gm2z2", "b1", "b2", "cp", "gy1", "gy2", "vx", "vz1", "vz2", "vm1",
+      "vm2", "vy", "cxz1", "cxz2", "cz1z2", "cm12", "ix", "iz1", "iz2", "im1", "im2", "iy")
+  )
+  expect_identical(
+    unname(s$map)[c(3:6, 10:11, 18:20)],
+    c("M1~Z1", "M2~Z1", "M1~Z2", "M2~Z2", "Y~Z1", "Y~Z2", "X~~Z1", "X~~Z2", "Z1~~Z2")
+  )
+  expect_identical(unname(s$covariate), c("Z1", "Z2"))
+  expect_length(.sem_fiml_model(p4_model(2L, FALSE, "ind"))$map, 25L)
+  # the treatment follows the fixed Y path
+  s2 <- .sem_fiml_model("M1 ~ X + Z1 + Z2\nM2 ~ X + Z1 + Z2\nY ~ M1 + M2 + X + 0*Z1 + Z2\nM1 ~~ M2")
+  expect_identical(unname(s2$vars["X"]), "Z1")
+  expect_identical(unname(s2$covariate), c("X", "Z2"))
+})
+
 # ---- fit versus lavaan ----------------------------------------------------------------------------------------------
 
 test_that("parallel covariate FIML matches lavaan: estimates, covariance, logLik, products, SUM, te and SEs", {
@@ -296,6 +315,21 @@ test_that("a covariate may be named the treatment with a free direct path; it ma
   expect_equal(m@c_prime, coef(f)[["Y~Z"]], ignore_attr = TRUE)
   expect_lt(p4_rel_gap(m@vcov[c("a1", "a2", "b1", "b2", "c_prime"), c("a1", "a2", "b1", "b2", "c_prime")],
                        lavaan::vcov(rl)[c("a1", "a2", "b1", "b2", "cp"), c("a1", "a2", "b1", "b2", "cp")]), 1e-3)
+  # with two covariates either covariate may be named; the other exogenous variables are then the covariates
+  d2 <- p4_data(2L)
+  f2 <- p4_fit(d2, p4_model(2L, TRUE, "free"))
+  for (tr in c("Z1", "Z2")) {
+    m2 <- extract_mediation(f2, treatment = tr, mediator = c("M1", "M2"))
+    others <- setdiff(c("X", "Z1", "Z2"), tr)
+    rl2 <- p4_lavaan(d2, p4_lavaan_labeled(2L, TRUE, "free", exo = c(tr, others)))
+    pe2 <- lavaan::parameterEstimates(rl2)
+    pe2 <- pe2[pe2$op == ":=", ]
+    expect_identical(m2@treatment, tr)
+    expect_setequal(m2@fit_context$covariate, others)
+    expect_equal(as.numeric(nie(m2)), pe2$est[pe2$label == "tot"], tolerance = 1e-5)
+    expect_equal(as.numeric(te(m2)), pe2$est[pe2$label == "te"], tolerance = 1e-5)
+    expect_equal(generics::tidy(m2, type = "effects")$std_error[1L], pe2$se[pe2$label == "tot"], tolerance = 2e-3)
+  }
   # the fixed-zero fit names only X as the treatment
   fz <- p4_fit(p4_data(1L, direct = FALSE), p4_model(1L, FALSE, "free"))
   expect_error(extract_mediation(fz, treatment = "Z", mediator = c("M1", "M2")),
@@ -468,9 +502,20 @@ p4_refused <- c(
   three_covariates = "M1 ~ X + Z + W + V\nM2 ~ X + Z + W + V\nY ~ M1 + M2 + X + Z + W + V\nM1 ~~ M2",
   fixed_variance = "M1 ~ X + Z\nM2 ~ X + Z\nY ~ M1 + M2 + X + Z\nM1 ~~ M2\nZ ~~ 1*Z"
 )
-if (!2L %in% p4_ks) {
-  p4_refused[["two_covariates_not_yet"]] <- p4_model(2L)
-}
+# two-covariate neighbors: a partial exogenous covariance set, a Y path left out, two Y paths fixed, one covariate on
+# one mediator only, a fixed covariate-to-mediator path, a covariate-covariance with a mediator
+p4_refused <- c(p4_refused, c(
+  two_partial_exogenous_covariances = paste0(p4_model(2L), "\nX ~~ Z1\nX ~~ Z2"),
+  two_one_exogenous_covariance = paste0(p4_model(2L), "\nZ1 ~~ Z2"),
+  two_fixed_exogenous_covariance = paste0(p4_model(2L), "\nX ~~ Z1\nX ~~ Z2\nZ1 ~~ 0*Z2"),
+  two_omitted_covariate_y_path = "M1 ~ X + Z1 + Z2\nM2 ~ X + Z1 + Z2\nY ~ M1 + M2 + X + Z1\nM1 ~~ M2",
+  two_y_paths_fixed = "M1 ~ X + Z1 + Z2\nM2 ~ X + Z1 + Z2\nY ~ M1 + M2 + 0*X + 0*Z1 + Z2\nM1 ~~ M2",
+  two_covariate_on_one_mediator = "M1 ~ X + Z1 + Z2\nM2 ~ X + Z1\nY ~ M1 + M2 + X + Z1 + Z2\nM1 ~~ M2",
+  two_fixed_covariate_path = "M1 ~ X + Z1 + 0*Z2\nM2 ~ X + Z1 + Z2\nY ~ M1 + M2 + X + Z1 + Z2\nM1 ~~ M2",
+  two_omitted_independence = "M1 ~ X + Z1 + Z2\nM2 ~ X + Z1 + Z2\nY ~ M1 + M2 + X + Z1 + Z2",
+  two_serial = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + X + Z1 + Z2\nY ~ M1 + M2 + X + Z1 + Z2\nM1 ~~ M2",
+  two_tied_covariate_paths = "M1 ~ X + p*Z1 + Z2\nM2 ~ X + p*Z1 + Z2\nY ~ M1 + M2 + X + Z1 + Z2\nM1 ~~ M2"
+))
 p4_refusal_data <- function() {
   d <- p4_data(2L)
   d$Z <- d$Z1
