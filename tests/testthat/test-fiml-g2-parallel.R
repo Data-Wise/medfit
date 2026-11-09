@@ -358,7 +358,8 @@ test_that("downstream consumers refuse the extracted parallel object exactly as 
 # ---- everything else is refused, at prepare, fit, extraction and both source-fit methods -----------------------------
 
 p2_unadmitted <- c(
-  free_residual_covariance = "M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X\nM1 ~~ M2",
+  # a free label-less `M1 ~~ M2` is admitted from slice 2 (test-fiml-g2-residual-covariance.R)
+  labeled_residual_covariance = "M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X\nM1 ~~ c*M2",
   implicit_independence = "M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X",
   duplicate_covariance = "M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X\nM1 ~~ 0*M2\nM2 ~~ 0*M1",
   fixed_nonzero_covariance = "M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X\nM1 ~~ 0.2*M2",
