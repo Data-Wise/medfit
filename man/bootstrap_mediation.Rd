@@ -104,9 +104,9 @@ Supply \code{source_fit} and \code{effect} by name and choose \code{method} expl
 accepted three-variable Gaussian random-X simple mediation fits from \code{\link[=fit_sem]{fit_sem()}}
 are supported, with the direct path free or fixed exactly at zero. This route
 does not support callbacks, plugin estimates, clusters or additional arguments.
-Fits with one or two covariates are refused with
-\code{medfit_error_fiml_covariate_source_fit}, and fits with two parallel mediators
-with \code{medfit_error_fiml_parallel_source_fit} (both checks follow the
+Fits with one or two covariates (including two parallel mediators with
+covariates) are refused with \code{medfit_error_fiml_covariate_source_fit}, and fits
+with two parallel mediators and no covariates with \code{medfit_error_fiml_parallel_source_fit} (both checks follow the
 withheld-inference guard above).
 Bounded FIML objects supplied as \code{mediation_data} or \code{data} remain refused.
 Object-aware guards run before package-controlled RNG, workers or refits; opaque

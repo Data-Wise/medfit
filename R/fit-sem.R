@@ -125,7 +125,7 @@
 #' a global optimum or inference coverage.
 #'
 #' Two parallel mediators (`M1 ~ X`, `M2 ~ X`, `Y ~ M1 + M2`, with or without
-#' `Y ~ X`, no covariates) are fitted in two forms. Independent residuals require
+#' `Y ~ X`) are fitted in two forms. Independent residuals require
 #' the statement `M1 ~~ 0*M2` (either order): an omitted statement is refused
 #' because lavaan's default would free it. A free, label-less `M1 ~~ M2` fits the
 #' mediator residual covariance. A labeled, fixed nonzero, bounded, tied or
@@ -134,9 +134,20 @@
 #' direct path. [extract_mediation()] needs both mediators named and returns a
 #' `FIMLParallelMediationData` object with the full path covariance of `a1`, `a2`,
 #' `b1`, `b2` and `c_prime`, so the sum of the indirect effects keeps every
-#' cross-path term. Parallel mediation with covariates, serial mediation and three
-#' or more mediators stay refused. Extraction refusals for the parallel form have
-#' class `medfit_error_fiml_extract_unsupported`.
+#' cross-path term. Extraction refusals for the parallel form have class
+#' `medfit_error_fiml_extract_unsupported`.
+#'
+#' Two parallel mediators also take one covariate `Z` or two covariates `Z1`,
+#' `Z2` (`M1 ~ X + Z`, `M2 ~ X + Z`, `Y ~ M1 + M2 + X + Z`, in either residual
+#' form). The covariate rules are those above: every exogenous variable has a free
+#' path to both mediators and a written path to `Y`, the exogenous covariance is
+#' free (write every pair or none), and any variable may be incomplete. With no `Y`
+#' path fixed at zero, [extract_mediation()] may name any exogenous variable as the
+#' treatment; with one fixed at zero that variable is the treatment. The
+#' free-parameter count is 18 to 20 (one covariate) and 25 to 27 (two), without or
+#' with the direct path and the free residual covariance. Serial mediation, three
+#' or more mediators, three or more covariates and a covariate on only some of the
+#' equations stay refused.
 #'
 #' Supply `fixed_x = FALSE` explicitly; omission, `TRUE` and named subsets are errors.
 #' Require `meanstructure = TRUE`, `information = "observed"`, `se_type = "model"`,
@@ -168,7 +179,8 @@
 #' MBCO and fit tests remain unavailable. The [bootstrap_mediation()] `source_fit`
 #' intervals are implemented but withheld (refused with a classed error) until
 #' statistical admission is decided; a covariate fit is additionally refused with
-#' `medfit_error_fiml_covariate_source_fit` and a parallel fit with
+#' `medfit_error_fiml_covariate_source_fit` (including a parallel fit with
+#' covariates) and a parallel fit without covariates with
 #' `medfit_error_fiml_parallel_source_fit`, so no source-fit interval exists for
 #' either. Delta-method Wald intervals stay available for these extracted objects;
 #' as for the three-variable model, the NIE standard error is `NA` only at the

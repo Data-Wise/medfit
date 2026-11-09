@@ -1,6 +1,6 @@
-# Extended bounded FIML gate (FI-G1 covariates, FI-G2 parallel mediators). Oracle: matched lavaan raw-data FIML with
+# Extended bounded FIML gate (FI-G1 covariates, FI-G2 parallel mediators with zero, one or two covariates). Oracle: matched lavaan raw-data FIML with
 # observed information (estimates, covariance, logLik, defined indirect effect and its delta SE). Two seeds each.
-# MUTANT= wrong_unit, no_offset, swap_b, dropped_cov, missing_guard alter production functions in memory only.
+# MUTANT= wrong_unit, no_offset, swap_b, dropped_cov, missing_guard, parcov_drop_path, parcov_orthogonal alter production functions in memory only.
 suppressMessages(pkgload::load_all(quiet = TRUE))
 source("tests/testthat/helper-sem.R")
 ns <- asNamespace("medfit")
@@ -25,6 +25,20 @@ if (mutant == "wrong_unit") {
   swap(
     ".sem_fiml_extract_parallel", "V[present, present] <- object@vcov[idx[present], idx[present], drop = FALSE]",
     "V[present, present] <- diag(diag(object@vcov[idx[present], idx[present], drop = FALSE]))"
+  )
+} else if (mutant == "parcov_drop_path") {
+  # the first covariate dropped from the second mediator equation of the parallel-with-covariates tables
+  swap(
+    ".sem_fiml_tables_med", "return(.sem_fiml_tables_parcov(k, direct, residual_covariance))",
+    paste0("return({ t <- .sem_fiml_tables_parcov(k, direct, residual_covariance); ",
+           "t$a <- t$a[!(t$a$row == \"M2\" & t$a$col == t$vars[2L]), ]; t })")
+  )
+} else if (mutant == "parcov_orthogonal") {
+  # the exogenous covariance block imposed as orthogonal in the parallel-with-covariates tables
+  swap(
+    ".sem_fiml_tables_med", "return(.sem_fiml_tables_parcov(k, direct, residual_covariance))",
+    paste0("return({ t <- .sem_fiml_tables_parcov(k, direct, residual_covariance); ",
+           "t$s <- t$s[!(t$s$row == \"X\" & t$s$col == t$vars[2L]), ]; t })")
   )
 } else if (mutant == "missing_guard") {
   swap(".sem_fiml_refuse", "if (.sem_fiml_is(x))", "if (FALSE)")
@@ -57,11 +71,17 @@ make_data <- function(structure, seed, n = 300L) {
     vars <- names(d)
   } else {
     e <- stats::rnorm(n)
-    rho <- if (structure == "par_free") .5 else 0
-    m1 <- .3 + .9 * x + .5 * (sqrt(rho) * e + sqrt(1 - rho) * stats::rnorm(n))
-    m2 <- -.2 + .6 * x + .5 * (sqrt(rho) * e + sqrt(1 - rho) * stats::rnorm(n))
-    y <- .2 + .7 * m1 + .3 * m2 + .25 * x + stats::rnorm(n, sd = .9)
+    rho <- if (grepl("free$", structure)) .5 else 0
+    kk <- if (grepl("^parcov", structure)) as.integer(sub("^parcov(\\d).*", "\\1", structure)) else 0L
+    z1 <- 1 + .4 * x + stats::rnorm(n, sd = 1.2)
+    z2 <- -.5 + .3 * x - .35 * z1 + stats::rnorm(n, sd = 1.1)
+    zc <- function(w) (if (kk >= 1L) w[1L] * z1 else 0) + (if (kk >= 2L) w[2L] * z2 else 0)
+    m1 <- .3 + .9 * x + zc(c(.4, -.25)) + .5 * (sqrt(rho) * e + sqrt(1 - rho) * stats::rnorm(n))
+    m2 <- -.2 + .6 * x + zc(c(-.3, .2)) + .5 * (sqrt(rho) * e + sqrt(1 - rho) * stats::rnorm(n))
+    y <- .2 + .7 * m1 + .3 * m2 + .25 * x + zc(c(.3, -.2)) + stats::rnorm(n, sd = .9)
     d <- data.frame(X = x, M1 = m1, M2 = m2, Y = y)
+    if (kk >= 1L) d <- data.frame(X = x, Z1 = z1, M1 = m1, M2 = m2, Y = y)
+    if (kk >= 2L) d <- data.frame(X = x, Z1 = z1, Z2 = z2, M1 = m1, M2 = m2, Y = y)
     vars <- names(d)
   }
   # every variable can be incomplete; the mediators and Y depend (ignorably) on the observed X
@@ -91,6 +111,18 @@ models <- list(
     med = c("M1", "M2")
   )
 )
+for (kk in 1:2) {
+  zs <- paste0("Z", seq_len(kk), collapse = " + ")
+  for (resid in c("ind", "free")) {
+    cv <- if (resid == "free") "M1 ~~ M2" else "M1 ~~ 0*M2"
+    models[[paste0("parcov", kk, "_", resid)]] <- list(
+      fit = paste0("M1 ~ X + ", zs, "\nM2 ~ X + ", zs, "\nY ~ M1 + M2 + X + ", zs, "\n", cv),
+      lab = paste0("M1 ~ a1*X + ", zs, "\nM2 ~ a2*X + ", zs, "\nY ~ b1*M1 + b2*M2 + cp*X + ", zs, "\n", cv,
+                   "\nnie := a1*b1 + a2*b2"),
+      med = c("M1", "M2")
+    )
+  }
+}
 records <- new.env(parent = emptyenv())
 records$rows <- list()
 add <- function(cell, check, value, limit) {
@@ -142,7 +174,10 @@ refused <- c(
   three_covariates = "M ~ X + Z1 + Z2 + Z3\nY ~ M + X + Z1 + Z2 + Z3",
   covariate_on_M_only = "M ~ X + Z1\nY ~ M + X",
   serial = "M1 ~ X\nM2 ~ M1\nY ~ M2 + X",
-  parallel_with_covariate = "M1 ~ X + Z1\nM2 ~ X + Z1\nY ~ M1 + M2 + X + Z1\nM1 ~~ 0*M2",
+  parallel_covariate_on_one_mediator = "M1 ~ X + Z1\nM2 ~ X\nY ~ M1 + M2 + X + Z1\nM1 ~~ 0*M2",
+  parallel_three_covariates = paste0("M1 ~ X + Z1 + Z2 + Z3\nM2 ~ X + Z1 + Z2 + Z3\n",
+                                     "Y ~ M1 + M2 + X + Z1 + Z2 + Z3\nM1 ~~ 0*M2"),
+  parallel_covariate_serial = "M1 ~ X + Z1\nM2 ~ M1 + X + Z1\nY ~ M1 + M2 + X + Z1\nM1 ~~ 0*M2",
   parallel_omitted_cov = "M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X",
   parallel_tied_paths = "M1 ~ a*X\nM2 ~ a*X\nY ~ M1 + M2 + X\nM1 ~~ 0*M2",
   parallel_fixed_cov = "M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X\nM1 ~~ 0.3*M2"
