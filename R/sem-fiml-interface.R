@@ -126,7 +126,8 @@
 
 # Two parallel mediators (FI-G2): M1 ~ X, M2 ~ X and Y ~ M1 + M2 [+ X], independent disturbances. The independence of
 # the two mediator disturbances must be WRITTEN as `M1 ~~ 0*M2` (either order): an omitted statement is ambiguous with
-# lavaan's default of a free residual covariance among such variables, so it is refused, as is a free or nonzero one.
+# lavaan's default of a free residual covariance among such variables, so it is refused. Slice 2 also admits the free,
+# label-less statement `M1 ~~ M2` (either order); a labeled, bounded, tied or fixed nonzero one is refused.
 # The direct path may be free, fixed at exactly zero, or omitted. Mediators are `M1`, `M2` in order of appearance.
 .sem_fiml_model_par <- function(parsed, tab, roles, reg) {
   x <- roles$ov_x
@@ -153,27 +154,31 @@
     .sem_fiml_diagnostic("unsupported FIML topology: parallel mediation needs M1 ~ X, M2 ~ X and Y ~ M1 + M2")
   }
   is_cp <- keys == cp
-  if (any(is_cov & is.na(tab$fixed))) {
-    .sem_fiml_diagnostic("a free mediator residual covariance is not supported in this FIML variant")
+  # The residual covariance is admitted either fixed at exactly zero (independent disturbances) or free and label-less
+  # (FI-G2 slice 2); a labeled, bounded, nonzero or tied one is refused.
+  free_cov <- any(is_cov & is.na(tab$fixed))
+  if (free_cov && any(is_cov & nzchar(tab$label))) {
+    .sem_fiml_diagnostic("a labeled mediator residual covariance is not supported in FIML")
   }
   if (any(!is.na(tab$fixed) & !((is_cp | is_cov) & tab$fixed == 0 & !is.na(tab$fixed)))) {
     .sem_fiml_diagnostic("only the direct path and the mediator residual covariance may be fixed, exactly at zero")
   }
   direct <- any(is_cp & is.na(tab$fixed))
   conv <- .sem_to_ram(tab)
-  if (conv$ram$q != if (direct) 13L else 12L) {
+  if (conv$ram$q != (if (direct) 13L else 12L) + free_cov) {
     .sem_fiml_diagnostic("FIML does not support parameter ties")
   }
   canonical <- c(
-    paste(m, "~", x), paste(y, "~", m), if (direct) cp, paste(obs, "~~", obs), paste(obs, "~1", "")
+    paste(m, "~", x), paste(y, "~", m), if (direct) cp, paste(obs, "~~", obs), if (free_cov) covariance,
+    paste(obs, "~1", "")
   )
-  tables <- .sem_fiml_tables_med(2L, direct)
+  tables <- .sem_fiml_tables_med(2L, direct, free_cov)
   labels <- c(tables$a$label[is.na(tables$a$value)], tables$s$label, tables$m$label)
   stopifnot(length(labels) == length(canonical))
   map <- stats::setNames(conv$ram$par_names[conv$par_map[match(canonical, keys)]], labels)
   list(
     parsed = parsed, conv = conv, vars = stats::setNames(c(x, m, y), tables$vars), direct = direct, map = map,
-    mediators = stats::setNames(m, c("M1", "M2"))
+    mediators = stats::setNames(m, c("M1", "M2")), residual_covariance = free_cov
   )
 }
 
@@ -240,7 +245,7 @@
       z <- as.matrix(d)
       colnames(z) <- names(model_vars)
       if (!is.null(spec$mediators)) {
-        tables <- .sem_fiml_tables_med(length(spec$mediators), spec$direct)
+        tables <- .sem_fiml_tables_med(length(spec$mediators), spec$direct, isTRUE(spec$residual_covariance))
         prepared <- .sem_fiml_prepare_core(z, tables, direct = spec$direct)
         stage <- "numerical"
         candidate <- .sem_fiml_solve(prepared)

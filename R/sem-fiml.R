@@ -12,7 +12,13 @@
   if (!is.numeric(j) || length(j) != 1L || !j %in% 1:2) .sem_fiml_diagnostic("unsupported number of FIML mediators")
   if (j == 1L) "M" else paste0("M", seq_len(j))
 }
-.sem_fiml_tables_med <- function(j, direct) {
+# `residual_covariance = TRUE` (FI-G2 slice 2, j = 2 only) adds one free covariance between the two mediator
+# disturbances (label cm12) after the variances; FALSE keeps the independent-disturbance tables exactly.
+.sem_fiml_tables_med <- function(j, direct, residual_covariance = FALSE) {
+  if (!is.logical(residual_covariance) || length(residual_covariance) != 1L || is.na(residual_covariance) ||
+        (residual_covariance && j != 2L)) {
+    .sem_fiml_diagnostic("unsupported FIML residual covariance")
+  }
   m <- .sem_fiml_med_names(j)
   sfx <- if (j == 1L) "" else as.character(seq_len(j))
   a <- data.frame(
@@ -23,6 +29,9 @@
   s <- data.frame(
     row = vars, col = vars, label = c("vx", paste0("vm", sfx), "vy"), value = NA_real_
   )
+  if (residual_covariance) {
+    s <- rbind(s, data.frame(row = m[1L], col = m[2L], label = "cm12", value = NA_real_))
+  }
   mu <- data.frame(row = vars, label = c("ix", paste0("im", sfx), "iy"), value = NA_real_)
   list(vars = vars, a = a, s = s, m = mu)
 }
