@@ -812,8 +812,8 @@
 }
 
 # Exact origin: the NIE delta gradient (b, a for one mediator; b_j, a_j for the sum over parallel mediators) is zero.
-# Scalar by contract: it is read inside scalar `if (... && ...)` by the simple and parallel callers. A serial FIML object
-# has two effects with their own rules and uses `.sem_fiml_origin_effects()`; it is FALSE here.
+# Scalar by contract: it is read inside scalar `if (... && ...)` by the simple and parallel callers. A serial FIML
+# object has two effects with their own rules and uses `.sem_fiml_origin_effects()`; it is FALSE here.
 .sem_fiml_origin <- function(x) {
   if (!.sem_fiml_is(x)) return(FALSE)
   if (S7::S7_inherits(x, FIMLSerialMediationData)) return(FALSE)
@@ -857,7 +857,7 @@
   if (identical(x@variant, "chain")) c("a", "d1", "b", "c_prime") else c("a", "a2", "d1", "b1", "b", "c_prime")
 }
 
-# `coef(type = "paths")` and `summary()` of a serial FIML object list every estimated path (Q4), not the four base paths.
+# `coef(type = "paths")` and `summary()` of a serial FIML object list every estimated path (Q4), not the base four.
 .sem_fiml_ser_coef_paths <- function(x) .sem_fiml_ser_paths(x)
 .sem_fiml_ser_summary_paths <- function(x) {
   c(

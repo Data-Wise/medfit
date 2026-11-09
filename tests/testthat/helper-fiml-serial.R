@@ -94,7 +94,10 @@ sb_recursive <- function(mu, S) {
     int <- mu[[y]] - sum(b * mu[xs])
     list(b = b, int = int, v = S[y, y] - sum(b * S[xs, y]))
   }
-  list(m1 = reg("M1", "X"), m2 = reg("M2", c("M1", "X")), y = reg("Y", c("M1", "M2", "X")), vx = S[["X", "X"]], mx = mu[["X"]])
+  list(
+    m1 = reg("M1", "X"), m2 = reg("M2", c("M1", "X")), y = reg("Y", c("M1", "M2", "X")),
+    vx = S[["X", "X"]], mx = mu[["X"]]
+  )
 }
 sb_recursive_vec <- function(r) {
   c(a = r$m1$b[["X"]], a2 = r$m2$b[["X"]], d1 = r$m2$b[["M1"]], b1 = r$y$b[["M1"]], b = r$y$b[["M2"]],
@@ -132,7 +135,7 @@ sb_grad <- function(z) {
     te = c(a = d1 * b + b1, a2 = b, d1 = a * b, b1 = a, b = a * d1 + a2, c_prime = 1)
   )
 }
-# a forged object: set named estimates and the path slots, rebinding the parameter hash exactly as the validator reads it
+# a forged object: set named estimates and the path slots, rebinding the parameter hash as the validator reads it
 sb_forge <- function(z, vals, vcov = NULL) {
   ctx <- z@fit_context
   est <- z@estimates

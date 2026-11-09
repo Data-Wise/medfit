@@ -21,6 +21,11 @@ exclusions: list(
     "tests/testthat/test-fiml-g2-residual-covariance.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g3-parallel-covariates.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g3-baseline.R" = list(object_usage_linter = Inf),
+    # S1b helpers (sb_*) live in helper-fiml-serial.R, which object_usage_linter cannot see
+    "tests/testthat/helper-fiml-serial.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-serial-saturated.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-serial-effects.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-serial-defects.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-generic-kernel-fourvar.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-generic-kernel-oracle.R" = list(object_usage_linter = Inf)
   )

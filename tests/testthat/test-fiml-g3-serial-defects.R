@@ -27,6 +27,10 @@ sb_class_error <- function(expr, class) {
   }, error = identity)
   inherits(e, class)
 }
+sb_chain_fit <- function() {
+  fit_sem(paste(c("M1 ~ X", "M2 ~ M1", "Y ~ M2 + X", sb_zeros), collapse = "\n"), sb_env$d,
+          missing = "fiml", fixed_x = FALSE)
+}
 sb_battery <- function() {
   f <- sb_env$f
   ref <- sb_env$ref
@@ -50,7 +54,9 @@ sb_battery <- function() {
     nie_se = sb_ok(abs(se[["nie"]] - ref$ind$se) / ref$ind$se < 2e-3),
     nie_total_se = sb_ok(abs(se[["nie_total"]] - ref$ind_tot$se) / ref$ind_tot$se < 2e-3),
     te_se = sb_ok(abs(se[["te"]] - ref$te$se) / ref$te$se < 2e-3),
-    tidy_all = sb_ok(identical(generics::tidy(z)$term, c("a", "a2", "d", "b1", "b", "c_prime", "nie", "nie_total", "nde", "te"))),
+    tidy_all = sb_ok(identical(
+      generics::tidy(z)$term, c("a", "a2", "d", "b1", "b", "c_prime", "nie", "nie_total", "nde", "te")
+    )),
     confint_paths = sb_ok({
       ci <- confint(z, parm = "paths")
       identical(rownames(ci), c("a", "a2", "d", "b1", "b", "c_prime")) &&
@@ -61,7 +67,7 @@ sb_battery <- function() {
                                 "bootstrap CI is not supported for bounded FIML objects")),
     coef_paths = sb_ok(identical(names(coef(z, type = "paths")), c("a", "a2", "d", "b1", "b", "c_prime"))),
     summary_paths = sb_ok(all(c("a2", "b1") %in% names(summary(z)$paths))),
-    quick_refused = sb_class_error(quick(z), "error") && sb_ok(grepl("not supported", tryCatch(quick(z), error = conditionMessage))),
+    quick_refused = sb_ok(grepl("not supported", tryCatch(quick(z), error = conditionMessage))),
     pm_refused = sb_ok(grepl("not supported", tryCatch(pm(z), error = conditionMessage))),
     glance_refused = sb_ok(grepl("not supported", tryCatch(generics::glance(z), error = conditionMessage))),
     # the exact-origin rule
@@ -74,18 +80,16 @@ sb_battery <- function() {
     reversed_refused = sb_class_error(extract_mediation(f, treatment = "X", mediator = c("M2", "M1")),
                                       "medfit_error_fiml_extract_unsupported"),
     # admission: only the saturated k = 0 shape is public
-    sat1_refused = sb_class_error(fit_sem(paste(c(
-      "M1 ~ X + Z", "M2 ~ M1 + X + Z", "Y ~ M1 + M2 + X + Z", sb_zeros), collapse = "\n"), sb_env$dz,
-      missing = "fiml", fixed_x = FALSE), "medfit_sem_fiml_error"),
-    chain0_refused = sb_class_error(fit_sem(paste(c(
-      "M1 ~ X", "M2 ~ M1", "Y ~ M2 + X", sb_zeros), collapse = "\n"), sb_env$d, missing = "fiml", fixed_x = FALSE),
-      "medfit_sem_fiml_error"),
+    sat1_refused = sb_class_error(fit_sem(
+      paste(c("M1 ~ X + Z", "M2 ~ M1 + X + Z", "Y ~ M1 + M2 + X + Z", sb_zeros), collapse = "\n"), sb_env$dz,
+      missing = "fiml", fixed_x = FALSE
+    ), "medfit_sem_fiml_error"),
+    chain0_refused = sb_class_error(sb_chain_fit(), "medfit_sem_fiml_error"),
     chain0_extract_refused = sb_ok(testthat::with_mocked_bindings(
-      sb_class_error(extract_mediation(
-        fit_sem(paste(c("M1 ~ X", "M2 ~ M1", "Y ~ M2 + X", sb_zeros), collapse = "\n"), sb_env$d,
-                missing = "fiml", fixed_x = FALSE),
-        treatment = "X", mediator = c("M1", "M2")
-      ), "medfit_error_fiml_extract_unsupported"),
+      sb_class_error(
+        extract_mediation(sb_chain_fit(), treatment = "X", mediator = c("M1", "M2")),
+        "medfit_error_fiml_extract_unsupported"
+      ),
       .fiml_serial_admitted = function() TRUE
     ))
   )
@@ -177,13 +181,12 @@ test_that("origin defects: too broad, narrow, missing, scalar helper, length-two
   expect_false(r$all_pass)
   expect_true("origin_one_zero_finite" %in% r$failed)
   # D13: nie_total uses the nie rule
-  r <- sb_caught(".sem_fiml_origin_effects", "nie_total = all(c(e[[\"a\"]], e[[\"a2\"]], e[[\"b\"]], e[[\"b1\"]]) == 0)",
-                 "nie_total = chain_zero")
+  total_rule <- "nie_total = all(c(e[[\"a\"]], e[[\"a2\"]], e[[\"b\"]], e[[\"b1\"]]) == 0)"
+  r <- sb_caught(".sem_fiml_origin_effects", total_rule, "nie_total = chain_zero")
   expect_false(r$all_pass)
   expect_true("origin_nie_total_finite" %in% r$failed)
   # D13b: the nie_total rule never fires
-  r <- sb_caught(".sem_fiml_origin_effects", "nie_total = all(c(e[[\"a\"]], e[[\"a2\"]], e[[\"b\"]], e[[\"b1\"]]) == 0)",
-                 "nie_total = FALSE")
+  r <- sb_caught(".sem_fiml_origin_effects", total_rule, "nie_total = FALSE")
   expect_false(r$all_pass)
   expect_true("origin_fires" %in% r$failed)
   # D26: the serial code calls the scalar helper (the serial origin never fires)
@@ -201,11 +204,10 @@ test_that("origin defects: too broad, narrow, missing, scalar helper, length-two
   expect_true(r$all_pass) # the battery has no note check ...
   zz <- sb_forge(sb_env$z, list(a = 0, a2 = 0, b = 0, b1 = 0))
   good <- attr(suppressWarnings(generics::tidy(zz)), "note")
-  bad <- testthat::with_mocked_bindings(
-    attr(suppressWarnings(generics::tidy(zz)), "note"),
-    .sem_fiml_origin_notes = mut(".sem_fiml_origin_notes", "nie_total = \"NIE total inference unavailable: zero delta gradient\"",
-                                 "nie_total = \"NIE inference unavailable: zero delta gradient\"")
-  )
+  broken <- mut(".sem_fiml_origin_notes", "nie_total = \"NIE total inference unavailable: zero delta gradient\"",
+                "nie_total = \"NIE inference unavailable: zero delta gradient\"")
+  bad <- testthat::with_mocked_bindings(attr(suppressWarnings(generics::tidy(zz)), "note"),
+                                        .sem_fiml_origin_notes = broken)
   expect_false(identical(good, bad)) # ... so the note is pinned by comparison with the correct text
   expect_identical(good[["nie_total"]], "NIE total inference unavailable: zero delta gradient")
 })

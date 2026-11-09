@@ -63,7 +63,7 @@ test_that("a rebound forged object passes only when every part agrees", {
   expect_true(S7::S7_inherits(ok, FIMLSerialMediationData))
 })
 
-# ---- V8: effects, hand gradients and path enumeration -----------------------------------------------------------------
+# ---- V8: effects, hand gradients and path enumeration ---------------------------------------------------------
 test_that("effects: chain, total indirect, direct and total equal the path enumeration to 1e-12", {
   for (dr in c("free", "zero")) {
     z <- sb_obj(dr)
@@ -158,7 +158,8 @@ test_that("tidy: the nie SE is NA only where its gradient is zero, and each effe
   w <- sb_forge(z, list(a = 0))
   r <- sb_row(w, "nie")
   expect_true(is.finite(r$row$std_error))
-  expect_equal(r$row$std_error, sb_se(w, c(a = w@estimates[["d1"]] * w@estimates[["b"]], d1 = 0, b = 0)), tolerance = 1e-12)
+  hand <- sb_se(w, c(a = w@estimates[["d1"]] * w@estimates[["b"]], d1 = 0, b = 0))
+  expect_equal(r$row$std_error, hand, tolerance = 1e-12)
   expect_null(attr(r$tb, "note"))
   # a = a2 = b = b1 = 0: both withheld, both noted, te and nde never
   w <- sb_forge(z, list(a = 0, a2 = 0, b = 0, b1 = 0))
@@ -273,14 +274,15 @@ test_that("pm(), glance() and quick() refuse the serial FIML object; bootstrap_m
   expect_error(pm(z), "pm\\(\\) is not supported for bounded FIML objects")
   expect_error(generics::glance(z), "not supported for bounded FIML objects")
   expect_error(quick(z), "quick\\(\\) is not supported for bounded FIML objects")
-  expect_error(bootstrap_mediation(function(x) 1, mediation_data = z), "bootstrap_mediation\\(\\) is not supported for bounded FIML")
-  expect_error(bootstrap_mediation(function(x) 1, data = z), "bootstrap_mediation\\(\\) is not supported for bounded FIML")
+  refusal <- "bootstrap_mediation\\(\\) is not supported for bounded FIML"
+  expect_error(bootstrap_mediation(function(x) 1, mediation_data = z), refusal)
+  expect_error(bootstrap_mediation(function(x) 1, data = z), refusal)
   # the effects remain available, and printing works
   expect_s3_class(nie(z), "mediation_effect")
   expect_output(print(z))
 })
 
-# ---- the base serial class is byte-identical ---------------------------------------------------------------------------
+# ---- the base serial class is byte-identical ----------------------------------------------------------------
 sb_lm_serial <- function() {
   e <- c(a = .5, d1 = .4, b = .3, c_prime = .2)
   V <- diag(4) * c(.01, .02, .03, .04)
@@ -292,7 +294,7 @@ sb_lm_serial <- function() {
     converged = TRUE, source_package = "lm"
   )
 }
-test_that("the lm/glm serial class is unchanged: four paths, three effect rows, the bootstrap advice, pm/glance/quick work", {
+test_that("the lm/glm serial class is unchanged: four paths, three effect rows, bootstrap advice, pm/glance/quick", {
   z <- sb_lm_serial()
   expect_identical(names(coef(z, type = "paths")), c("a", "d", "b", "c_prime"))
   expect_identical(names(paths(z)), c("a", "d", "b", "c_prime"))

@@ -439,7 +439,7 @@ test_that("the existing covariate and parallel source-fit refusals keep their cl
                class = "medfit_error_fiml_covariate_source_fit")
 })
 
-test_that("a serial fit outside the public shape cannot be extracted: classed extract refusal, not the parallel extractor", {
+test_that("a serial fit outside the public shape cannot be extracted (classed refusal, not the parallel extractor)", {
   fx_skip_covr()
   for (sh in list(c("chain", 0L), c("sat", 1L), c("chain", 1L), c("chain", 2L))) {
     g <- sr_open_fit(sh[[1L]], as.integer(sh[[2L]]))

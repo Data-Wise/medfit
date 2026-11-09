@@ -316,7 +316,7 @@ test_that("V10: with the direct path fixed, each never-jointly-observed pair is 
     }
   }
 })
-test_that("V10: weak first stage and a near-deterministic M2 ~ M1 give a fit that agrees with lavaan or a classed error", {
+test_that("V10: a weak first stage and a near-deterministic M2 ~ M1 fit like lavaan or error with a class", {
   skip_if_not_installed("lavaan")
   for (seed in 1:3) {
     set.seed(seed)
@@ -405,7 +405,8 @@ test_that("V9: with distinct large path values every extracted path is the one i
   d <- sb_data("complete", n = 2000L, seed = 7)
   z <- sb_extract(sb_fit(d))
   expect_equal(unname(z@estimates), unname(sb_truth[c("a", "a2", "d1", "b1", "b", "cp")]), tolerance = .08)
-  expect_lt(abs(z@estimates[["d1"]] - z@estimates[["b"]]), .2) # d1 = .7 and b = .6 are close: the SEs and rows tell them apart
+  # d1 = .7 and b = .6 are close: only the rows and SEs tell them apart
+  expect_lt(abs(z@estimates[["d1"]] - z@estimates[["b"]]), .2)
   tb <- generics::tidy(z, type = "paths")
   expect_identical(tb$term, c("a", "a2", "d", "b1", "b", "c_prime"))
 })
@@ -479,8 +480,8 @@ test_that("only the fitted object is extracted: a forged or foreign fit is refus
   expect_error(sb_extract(g), class = "medfit_error_ledger")
 })
 
-# ---- the classed refusals of the source-fit path are now reachable for a real fit -------------------------------------
-test_that("source-fit inference: the stage-0 guard answers first, then the serial class, before any RNG draw or refit", {
+# ---- the classed refusals of the source-fit path are now reachable for a real fit ------------------------------
+test_that("source-fit inference: the stage-0 guard answers first, then the serial class, before any RNG or refit", {
   fx_skip_covr()
   f <- sb_fit(sb_data("mar"))
   refit_calls <- 0L
