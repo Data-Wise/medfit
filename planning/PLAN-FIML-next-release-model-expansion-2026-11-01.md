@@ -2,7 +2,7 @@
 
 **Status: planning only, 2026-11-01.** The maintainer requests more FIML models
 in the next release, starting with covariates, parallel and serial mediation.
-The target below is the existing 11-variant roadmap, not a guarantee that an
+The target below is the existing 14-variant roadmap (11 before the 2026-11-09 pure-chain amendment), not a guarantee that an
 unadmitted model will ship. Version, date, implementation activation, admission
 gates, timing pilots, statistical studies and release remain deferred. This
 plan neither executes nor waives any gate and does not authorize a study.
@@ -131,7 +131,7 @@ branch is pushed and merged to `dev` (it is local only).
 | --- | ---: | --- |
 | Simple mediation with covariates | 2 | One or two continuous covariates. |
 | Two parallel mediators | 6 | Zero, one or two covariates, crossed with independent versus explicitly free correlated mediator residuals. |
-| Two serial mediators | 3 | Zero, one or two covariates; independent disturbances and all prescribed forward shortcuts. |
+| Two serial mediators | 6 | Zero, one or two covariates, crossed with two shortcut states: the saturated forward graph (X-to-M2 and M1-to-Y free) and the pure chain (X-to-M2 and M1-to-Y absent); independent disturbances written as zero covariances. |
 
 All variants use independent observations and continuous recursive linear
 Gaussian random-X models, free means and observed/model covariance. Every
@@ -143,16 +143,20 @@ directed path and the declared shortcuts. An estimated zero is not an omitted
 edge. Arbitrary topologies, categorical/latent/multilevel models, fixed-X FIML,
 interactions, weights and general constraints require separately designed scope.
 
-The 11 are model-family/shape variants; free versus exactly fixed-zero direct
-path is a required within-variant axis, not 11 additional variants. Each
+The 14 are model-family/shape variants; free versus exactly fixed-zero direct
+path is a required within-variant axis, not 14 additional variants. Each
 variant's complete admission stage must separately cover both direct-path
 policies, methods, effects and prespecified cells, including fixed-zero
 correctness; record results at that granularity. Do not infer one policy's
-admission from the other or pool away a failure. The 22 policy combinations
-are not 22 separately admitted stages under Q13.
-For serial models, only the X-to-Y direct edge may be fixed at zero; the other
-prescribed forward shortcuts remain present and free. An additional fixed or
-absent shortcut is not covered by this registry.
+admission from the other or pool away a failure. The 28 policy combinations
+are not 28 separately admitted stages under Q13.
+For serial models two shortcut states are covered: both forward shortcuts
+(X-to-M2, M1-to-Y) present and free, or both absent. Within either state only the
+X-to-Y direct edge may be free or fixed exactly at zero. A single present
+shortcut, a fixed or labeled shortcut, and any other fixed or absent edge are not
+covered by this registry. Serial totals include every directed path of the
+declared state; for the pure chain the total indirect effect equals the chain
+indirect effect. (Amended 2026-11-09 per `planning/specs/SPEC-fiml-serial-FI-G3-2026-11-09.md` section 1.2, maintainer decision Q1.)
 
 The source-fit row-bootstrap and Gaussian parameter-draw methods remain distinct.
 Existing callbacks, unsupported-input guards, empty-row treatment and strict
@@ -190,7 +194,7 @@ simple-model inference, covering both interval methods and the prespecified
 effects and free/fixed-zero policies in
 `PLAN-FIML-statistical-admission-2026-11-01.md`. It must be decided successfully
 before any expanded variant's inference admission or release. Only then may
-the 11 expanded variants be admitted in their own separately preregistered
+the 14 expanded variants be admitted in their own separately preregistered
 stages. Stage-0 numerical implementation and its existing merged status do not
 constitute admission. If stage 0 fails, is inconclusive or is deferred, do not
 release stage-0 or expanded-model inference; keep unadmitted variants unavailable
@@ -315,14 +319,14 @@ required verification; the maintainer owns scope, authorization and admission.
 
 ### 4. FI-G3: serial mediation
 
-- [ ] **Implementer:** Add the two-mediator serial graph, all mandated forward
-  shortcuts and zero/one/two-covariate variants; enumerate every directed path
+- [ ] **Implementer:** Add the two-mediator serial graph in both shortcut states
+  (saturated and pure chain) and the zero/one/two-covariate variants of each; enumerate every directed path
   for indirect and total effects and retain the complete covariance.
 - [ ] **Independent QA:** Independently enumerate path products and gradients,
   compare fitting and extraction with matched oracles, and plant/detect an
-  omitted-shortcut defect. Verify each variant's two inference methods and
+  omitted-shortcut defect, and, for the pure chain, a freed shortcut (and, for the saturated graph, a wrongly dropped shortcut). Verify each variant's two inference methods and
   failures; correlated serial disturbances remain outside this scope.
-- **Acceptance/verification:** Three named variants satisfy their own numeric,
+- **Acceptance/verification:** Six named variants satisfy their own numeric,
   extraction, failure and inference evidence. Dependency: task 3.
 
 ### 5. Per-variant admission, documentation and release decision
