@@ -24,7 +24,7 @@ Local machine: macOS aarch64, R 4.6.2. Tree: worktree `feature/fiml-g1-covariate
 
 | Check | Command | Result |
 |---|---|---|
-| Full suite | `NOT_CRAN=true Rscript -e 'r <- as.data.frame(devtools::test(reporter="silent", stop_on_failure=FALSE))'` | 186 files, 1962 test blocks, 12347 expectations, 0 failed, 0 errors, 2 skipped, 4 warnings |
+| Full suite | `NOT_CRAN=true Rscript -e 'r <- as.data.frame(devtools::test(reporter="silent", stop_on_failure=FALSE))'` | 187 files, 1967 test blocks, 12388 expectations, 0 failed, 0 errors, 2 skipped, 4 warnings (re-run at the final tip eaee39e5, after the exact-origin fix) |
 | Skips | same run | `test-extract-lavaan.R` (needs lavaan absent) and `test-restore-docs.R` (help-page check): each skips 1 test; both also skip 1 on `origin/dev` `ba50f998` |
 | Lint | install source into an isolated library, then `R_LIBS=<lib> Rscript -e 'lintr::lint_package()'` (verified `find.package("medfit")` is the isolated lib) | 0 findings. `origin/dev` measured the same way: 0 findings |
 | R CMD check | `R CMD build --no-manual --no-build-vignettes` then `_R_CHECK_FORCE_SUGGESTS_=false NOT_CRAN=false R CMD check --no-manual --ignore-vignettes --no-tests --as-cran` (the `scripts/check-local.sh` options, plus `--as-cran`) | Status: 1 NOTE (CRAN incoming feasibility: "Version jumps in minor (submitted: 0.16.0, existing: 0.3.2)"); 0 WARNING, 0 ERROR. The version is unchanged from `dev` (0.16.0), so the NOTE is not from this branch. Built at `18bb05a9`; later commits touch only `tests/sim` and `planning/` |
