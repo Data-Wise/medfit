@@ -1,8 +1,8 @@
 # Extended bounded FIML gate (FI-G1 covariates, FI-G2 parallel mediators with zero, one or two covariates).
 # Oracle: matched lavaan raw-data FIML with observed information (estimates, covariance, logLik, defined indirect
 # effect and its delta SE). Two seeds each.
-# MUTANT= wrong_unit, no_offset, swap_b, dropped_cov, missing_guard, parcov_drop_path, parcov_orthogonal
-# alter production functions in memory only.
+# MUTANT= wrong_unit, no_offset, swap_b, dropped_cov, missing_guard, parcov_drop_path, parcov_orthogonal,
+# serial_admitted, serial_router_off alter production functions in memory only.
 suppressMessages(pkgload::load_all(quiet = TRUE))
 source("tests/testthat/helper-sem.R")
 ns <- asNamespace("medfit")
@@ -42,6 +42,12 @@ if (mutant == "wrong_unit") {
     paste0("return({ t <- .sem_fiml_tables_parcov(k, direct, residual_covariance); ",
            "t$s <- t$s[!(t$s$row == \"X\" & t$s$col == t$vars[2L]), ]; t })")
   )
+} else if (mutant == "serial_admitted") {
+  # the serial fit-entry refusal removed: serial syntaxes that are valid but not yet public are fitted (R4 probes)
+  swap(".fiml_serial_admitted", "FALSE", "TRUE")
+} else if (mutant == "serial_router_off") {
+  # serial detection disabled: serial syntax falls to the parallel parser and loses its Q2 and shortcut reasons
+  swap(".sem_fiml_ser_detect", "length(outcome) == 1L", "FALSE && length(outcome) == 1L")
 } else if (mutant == "missing_guard") {
   swap(".sem_fiml_refuse", "if (.sem_fiml_is(x))", "if (FALSE)")
 } else if (nzchar(mutant)) {
@@ -168,25 +174,52 @@ for (structure in names(models)) {
   }
 }
 # Refusals (R4): every unadmitted neighbor must be rejected with the classed FIML error; count the ones admitted.
+# A probe with an expected reason (a regular expression on the message) also counts as admitted when it is refused for
+# any other reason, so a refusal that moved to the wrong rule cannot hide behind the class.
 set.seed(1)
 big <- as.data.frame(matrix(stats::rnorm(200 * 6), 200, dimnames = list(NULL, c("X", "Z1", "Z2", "Z3", "M", "Y"))))
 big$M1 <- big$M
 big$M2 <- big$Z3
-refused <- c(
-  three_covariates = "M ~ X + Z1 + Z2 + Z3\nY ~ M + X + Z1 + Z2 + Z3",
-  covariate_on_M_only = "M ~ X + Z1\nY ~ M + X",
-  serial = "M1 ~ X\nM2 ~ M1\nY ~ M2 + X",
-  parallel_covariate_on_one_mediator = "M1 ~ X + Z1\nM2 ~ X\nY ~ M1 + M2 + X + Z1\nM1 ~~ 0*M2",
-  parallel_three_covariates = paste0("M1 ~ X + Z1 + Z2 + Z3\nM2 ~ X + Z1 + Z2 + Z3\n",
-                                     "Y ~ M1 + M2 + X + Z1 + Z2 + Z3\nM1 ~~ 0*M2"),
-  parallel_covariate_serial = "M1 ~ X + Z1\nM2 ~ M1 + X + Z1\nY ~ M1 + M2 + X + Z1\nM1 ~~ 0*M2",
-  parallel_omitted_cov = "M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X",
-  parallel_tied_paths = "M1 ~ a*X\nM2 ~ a*X\nY ~ M1 + M2 + X\nM1 ~~ 0*M2",
-  parallel_fixed_cov = "M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X\nM1 ~~ 0.3*M2"
+zeros <- "\nM1 ~~ 0*M2\nM1 ~~ 0*Y\nM2 ~~ 0*Y"
+sat0 <- "M1 ~ X\nM2 ~ M1 + X\nY ~ M1 + M2 + X"
+chn0 <- "M1 ~ X\nM2 ~ M1\nY ~ M2 + X"
+sat1 <- "M1 ~ X + Z1\nM2 ~ M1 + X + Z1\nY ~ M1 + M2 + X + Z1"
+chn1 <- "M1 ~ X + Z1\nM2 ~ M1 + Z1\nY ~ M2 + X + Z1"
+sat2 <- "M1 ~ X + Z1 + Z2\nM2 ~ M1 + X + Z1 + Z2\nY ~ M1 + M2 + X + Z1 + Z2"
+chn2 <- "M1 ~ X + Z1 + Z2\nM2 ~ M1 + Z1 + Z2\nY ~ M2 + X + Z1 + Z2"
+omit <- "not yet available"
+refused <- list(
+  three_covariates = list("M ~ X + Z1 + Z2 + Z3\nY ~ M + X + Z1 + Z2 + Z3"),
+  covariate_on_M_only = list("M ~ X + Z1\nY ~ M + X"),
+  # Q2 probes: the serial syntax without the three written disturbance zeros (previously `serial` and
+  # `parallel_covariate_serial`, which are the chain with a free direct path and the saturated k = 1 set with only
+  # `M1 ~~ 0*M2`)
+  q2_serial_chain_no_zeros = list(chn0, "needs the independent disturbances"),
+  q2_parallel_covariate_serial = list(paste0(sat1, "\nM1 ~~ 0*M2"), "M1 ~~ 0\\*Y, M2 ~~ 0\\*Y"),
+  q2_omit_m1m2 = list(paste0(sat0, "\nM1 ~~ 0*Y\nM2 ~~ 0*Y"), "M1 ~~ 0\\*M2"),
+  q2_omit_m1y = list(paste0(chn0, "\nM1 ~~ 0*M2\nM2 ~~ 0*Y"), "M1 ~~ 0\\*Y"),
+  q2_omit_m2y = list(paste0(sat0, "\nM1 ~~ 0*M2\nM1 ~~ 0*Y"), "M2 ~~ 0\\*Y"),
+  q2_free_serial_residual = list(paste0(sat0, "\nM1 ~~ M2\nM1 ~~ 0*Y\nM2 ~~ 0*Y"), "correlated"),
+  q2_free_serial_residual_chain = list(paste0(chn0, "\nM1 ~~ 0*M2\nM1 ~~ 0*Y\nM2 ~~ Y"), "correlated"),
+  partial_shortcut_x_to_m2 = list(paste0("M1 ~ X\nM2 ~ M1 + X\nY ~ M2 + X", zeros), "shortcut"),
+  partial_shortcut_m1_to_y = list(paste0("M1 ~ X\nM2 ~ M1\nY ~ M1 + M2 + X", zeros), "shortcut"),
+  fixed_shortcut = list(paste0("M1 ~ X + Z1\nM2 ~ M1 + 0*X + Z1\nY ~ M2 + X + Z1", zeros), "free or absent"),
+  labeled_shortcut = list(paste0("M1 ~ X\nM2 ~ M1 + a2*X\nY ~ M1 + M2 + X", zeros), "free or absent"),
+  # valid serial syntax is not public until its slice: each variant stays refused (S1b to S4 remove their own entries)
+  serial_saturated_k0 = list(paste0(sat0, zeros), omit), serial_chain_k0 = list(paste0(chn0, zeros), omit),
+  serial_saturated_k1 = list(paste0(sat1, zeros), omit), serial_chain_k1 = list(paste0(chn1, zeros), omit),
+  serial_saturated_k2 = list(paste0(sat2, zeros), omit), serial_chain_k2 = list(paste0(chn2, zeros), omit),
+  parallel_covariate_on_one_mediator = list("M1 ~ X + Z1\nM2 ~ X\nY ~ M1 + M2 + X + Z1\nM1 ~~ 0*M2"),
+  parallel_three_covariates = list(paste0("M1 ~ X + Z1 + Z2 + Z3\nM2 ~ X + Z1 + Z2 + Z3\n",
+                                          "Y ~ M1 + M2 + X + Z1 + Z2 + Z3\nM1 ~~ 0*M2")),
+  parallel_omitted_cov = list("M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X"),
+  parallel_tied_paths = list("M1 ~ a*X\nM2 ~ a*X\nY ~ M1 + M2 + X\nM1 ~~ 0*M2"),
+  parallel_fixed_cov = list("M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X\nM1 ~~ 0.3*M2")
 )
-accepted <- vapply(refused, function(model) {
-  r <- tryCatch(fit_sem(model, big, missing = "fiml", fixed_x = FALSE, meanstructure = TRUE), error = identity)
-  !inherits(r, "medfit_sem_fiml_error")
+# deferred to slice S1b (no fit exists to extract from): the reversed-order extraction probe of spec 4.4
+accepted <- vapply(refused, function(p) {
+  r <- tryCatch(fit_sem(p[[1L]], big, missing = "fiml", fixed_x = FALSE, meanstructure = TRUE), error = identity)
+  !inherits(r, "medfit_sem_fiml_error") || (length(p) > 1L && !grepl(p[[2L]], conditionMessage(r)))
 }, logical(1))
 add("refusals", "unadmitted_accepted", sum(accepted), 0)
 results <- do.call(rbind, records$rows)

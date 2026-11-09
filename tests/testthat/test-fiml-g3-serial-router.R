@@ -549,3 +549,88 @@ test_that("planted defect D8: a serial fit built with the parallel tables is cau
   )
   expect_false(testthat::with_mocked_bindings(built(), .sem_fiml_syntax = fn))
 })
+
+# ---- V10: a pair of variables that is never jointly observed, through the internals ---------------------------------
+# Rows 1-60 lack the second variable of the pair, rows 61-120 lack the first, so every other pair is co-observed and
+# every variable has 60 or more observed values. Outcomes observed on 2026-11-09 (lavaan 0.7-3, this machine, seeds 1
+# and 7701):
+#   saturated, direct path free:   all six pairs fail closed (the moment Jacobian is rank deficient);
+#   saturated, direct fixed at 0:  most pairs fit (the restriction pins the covariance); (X, M1) fails closed with
+#                                  "no accepted candidate" on both seeds, (M2, Y) on one of them;
+#   chain, either direct policy:   almost every pair fits (the structural zeros pin the covariance); (X, M1) with the
+#                                  direct path fixed fails closed on seed 7701 only.
+# The fixed-direct refusals are numerical ("no accepted candidate for each optimizer") and seed dependent, not a
+# structural rank result. Only the first row is forced by theory (the saturated model has a free covariance for every
+# pair and df 0), so it is the only one asserted as a refusal; every other cell is asserted as "a finite fit or a
+# classed error". Whether the numerical-stage label reaches the public error is UNVERIFIED here: no public serial fit
+# exists in S1a, so `.sem_fiml_solve()` errors are checked for class only.
+sr_never <- function(pair, variant, direct) {
+  set.seed(7701L)
+  n <- 120L
+  d <- data.frame(X = stats::rnorm(n))
+  d$M1 <- .6 * d$X + stats::rnorm(n)
+  d$M2 <- .5 * d$M1 + stats::rnorm(n)
+  d$Y <- .5 * d$M2 + .2 * d$X + stats::rnorm(n)
+  z <- as.matrix(d)
+  z[1:60, pair[2L]] <- NA_real_
+  z[61:120, pair[1L]] <- NA_real_
+  list(d = d, z = z, tables = .sem_fiml_tables_ser(direct, 0L, variant == "sat"))
+}
+test_that("V10: a never-jointly-observed pair fails closed for the saturated variant with a free direct path", {
+  for (pair in utils::combn(c("X", "M1", "M2", "Y"), 2L, simplify = FALSE)) {
+    s <- sr_never(pair, "sat", TRUE)
+    e <- tryCatch(.sem_fiml_solve(.sem_fiml_prepare_core(s$z, s$tables)), error = identity)
+    info <- paste(pair, collapse = ",")
+    expect_s3_class(e, "medfit_sem_fiml_error")
+    expect_match(conditionMessage(e), "rank deficient", info = info)
+  }
+})
+test_that("V10: every other cell is a finite fit or a classed error, never a silent boundary solution", {
+  outcome <- character()
+  for (variant in c("sat", "chain")) for (direct in c(TRUE, FALSE)) {
+    for (pair in utils::combn(c("X", "M1", "M2", "Y"), 2L, simplify = FALSE)) {
+      s <- sr_never(pair, variant, direct)
+      r <- tryCatch(.sem_fiml_solve(.sem_fiml_prepare_core(s$z, s$tables)), error = identity)
+      info <- paste(variant, direct, paste(pair, collapse = ","))
+      if (inherits(r, "error")) {
+        expect_s3_class(r, "medfit_sem_fiml_error")
+        outcome[info] <- "refused"
+      } else {
+        expect_true(all(is.finite(r$estimate)) && all(is.finite(r$covariance)), info = info)
+        expect_true(all(diag(r$covariance) > 0), info = info)
+        expect_true(all(r$estimate[grep("^v", names(r$estimate))] > 1e-6), info = info) # no variance on the boundary
+        outcome[info] <- "fit"
+      }
+    }
+  }
+  # the one cell the theory forces (see the header), and the chain is not uniformly refused
+  expect_true(all(outcome[grepl("^sat TRUE", names(outcome))] == "refused"))
+  expect_gte(sum(outcome[grepl("^chain", names(outcome))] == "fit"), 6L)
+})
+test_that("V10: where lavaan converges on the same masks, the fitted serial tables agree with it", {
+  skip_if_not_installed("lavaan")
+  fx_skip_covr()
+  checked <- 0L
+  for (variant in c("sat", "chain")) for (direct in c(TRUE, FALSE)) {
+    for (pair in utils::combn(c("X", "M1", "M2", "Y"), 2L, simplify = FALSE)) {
+      s <- sr_never(pair, variant, direct)
+      r <- tryCatch(.sem_fiml_solve(.sem_fiml_prepare_core(s$z, s$tables)), error = identity)
+      if (inherits(r, "error")) next
+      d <- as.data.frame(s$z)
+      ref <- tryCatch(suppressWarnings(lavaan::sem(sr_model(variant, 0L, sr_dir(direct)), d, missing = "ml",
+                                                   fixed.x = FALSE, information = "observed")), error = identity)
+      if (inherits(ref, "error") || !lavaan::lavInspect(ref, "converged")) next
+      pe <- lavaan::parameterEstimates(ref)
+      key <- sr_key(s$tables)
+      pk <- ifelse(pe$op == "~1", paste(pe$lhs, "~1"), paste(pe$lhs, pe$op, pe$rhs))
+      for (j in seq_along(key)) {
+        row <- which(pk == names(key)[j])
+        if (!length(row)) next
+        expect_equal(r$estimate[[key[[j]]]], pe$est[row[1L]], tolerance = 1e-3,
+                     info = paste(variant, direct, paste(pair, collapse = ","), names(key)[j]))
+      }
+      checked <- checked + 1L
+    }
+  }
+  expect_gte(checked, 4L) # at least some cells were comparable; the rest are lavaan non-convergence
+})
