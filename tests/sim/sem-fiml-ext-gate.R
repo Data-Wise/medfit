@@ -326,7 +326,8 @@ accepted[["serial_reversed_order_extraction"]] <- !inherits(rev_err, "medfit_err
 rev_chain <- tryCatch(fit_sem(paste0(chn0, zeros), big, missing = "fiml", fixed_x = FALSE, meanstructure = TRUE),
                       error = identity)
 rev_chain_err <- tryCatch(extract_mediation(rev_chain, treatment = "X", mediator = c("M2", "M1")), error = identity)
-accepted[["serial_chain_reversed_order_extraction"]] <- !inherits(rev_chain_err, "medfit_error_fiml_extract_unsupported")
+accepted[["serial_chain_reversed_order_extraction"]] <-
+  !inherits(rev_chain_err, "medfit_error_fiml_extract_unsupported")
 # a pair of variables never jointly observed (saturated serial, direct path free): fails closed at the numerical stage
 never <- big[, c("X", "M1", "M2", "Y")]
 never$M2 <- .5 * never$M1 + stats::rnorm(nrow(never))

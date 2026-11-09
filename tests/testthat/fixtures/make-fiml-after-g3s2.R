@@ -2,7 +2,8 @@
 # frozen pre-serial, post-S1a and post-S1b files:
 #   Rscript tests/testthat/fixtures/make-fiml-after-g3s2.R
 # Writes fiml-refusals-after-g3s2.rds: the same near-miss models, with the class, stage and message they have once the
-# pure chain k = 0 serial shape is also a public fit (the entries that became fits are listed in test-fiml-g3-baseline.R).
+# pure chain k = 0 serial shape is also a public fit (the entries that became fits are listed in
+# test-fiml-g3-baseline.R).
 devtools::load_all(quiet = TRUE)
 out <- "tests/testthat/fixtures"
 before <- readRDS(file.path(out, "fiml-refusals-before-g3s1.rds"))
