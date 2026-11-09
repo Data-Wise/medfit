@@ -422,8 +422,12 @@
         (!is.null(args$standardized) && !identical(args$standardized, FALSE)) ||
         (!is.null(args$structure) && !args$structure %in% c("auto", "parallel")) ||
         (!is.null(args$decomposition) && !args$decomposition %in% c("auto", "two_way"))) {
-    stop("FIML extraction supports only the fitted unstandardized two-way parallel mediation naming both mediators",
-         call. = FALSE)
+    stop(structure(
+      class = c("medfit_error_fiml_extract_unsupported", "error", "condition"),
+      list(message = paste0(
+        "FIML extraction supports only the fitted unstandardized two-way parallel mediation naming both mediators"
+      ), call = NULL)
+    ))
   }
   map <- spec$map
   i <- match(mediator, meds)
