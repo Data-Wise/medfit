@@ -1,5 +1,5 @@
 # Extended bounded FIML gate (FI-G1 covariates, FI-G2 parallel mediators). Oracle: matched lavaan raw-data FIML with
-# observed information (estimates, covariance, logLik, defined indirect effect and its delta SE). Two seeds per structure.
+# observed information (estimates, covariance, logLik, defined indirect effect and its delta SE). Two seeds each.
 # MUTANT= wrong_unit, no_offset, swap_b, dropped_cov, missing_guard alter production functions in memory only.
 suppressMessages(pkgload::load_all(quiet = TRUE))
 source("tests/testthat/helper-sem.R")

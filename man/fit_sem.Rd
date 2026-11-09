@@ -182,7 +182,8 @@ Native \code{\link[=fit_mediation]{fit_mediation()}} forwards these settings thr
 all-empty rows. Singleton patterns and data with no complete rows are supported
 when the local identification and information checks pass. Original positional
 row IDs and pattern counts are retained. \code{logLik()} includes the full Gaussian
-constants, with its \code{df} attribute equal to the free-parameter count (8 or 9 for three variables; see above for covariates).
+constants, with its \code{df} attribute equal to the free-parameter count (8 or 9 for three variables; see above for
+covariates).
 AIC and BIC use that likelihood and retained row count. The discrepancy \code{f} and
 model-test \code{df} are \code{NA}: no saturated missing-data reference model is fitted.
 

@@ -150,7 +150,8 @@
 #' all-empty rows. Singleton patterns and data with no complete rows are supported
 #' when the local identification and information checks pass. Original positional
 #' row IDs and pattern counts are retained. `logLik()` includes the full Gaussian
-#' constants, with its `df` attribute equal to the free-parameter count (8 or 9 for three variables; see above for covariates).
+#' constants, with its `df` attribute equal to the free-parameter count (8 or 9 for three variables; see above for
+#' covariates).
 #' AIC and BIC use that likelihood and retained row count. The discrepancy `f` and
 #' model-test `df` are `NA`: no saturated missing-data reference model is fitted.
 #'

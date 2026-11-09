@@ -31,7 +31,8 @@
 #'   `summary()`; `coef()` and `vcov()` leave them out. `print()` and `summary()`
 #'   say what the log likelihood is conditional on.
 #' * **Bounded FIML.** Raw total Gaussian `logLik()` includes constants; its `df`
-#'   attribute counts the free parameters (8 or 9; 13 or 14 with one covariate; 19 or 20 with two). AIC/BIC use retained N.
+#'   attribute counts the free parameters (8 or 9; 13 or 14 with one covariate; 19 or 20 with two). AIC/BIC use
+#'   retained N.
 #'   `f` and model-test `df` are unavailable: no saturated missing-data reference
 #'   fit is performed. SEMFit `glance()` retains likelihood/IC fields with unavailable
 #'   model tests and a reason. Extracted-object `glance()` is instead deferred.

@@ -82,7 +82,7 @@ gk_data <- function(kind) {
   m <- -.4 + .5 * x + stats::rnorm(n, sd = .8)
   y <- .7 + .6 * m + .25 * x + stats::rnorm(n, sd = .9)
   d <- cbind(X = x, M = m, Y = y)
-  hide <- function(rows, cols) d[rows, cols] <<- NA_real_
+  hide <- function(rows, cols) d[rows, cols] <<- NA_real_ # nolint: assignment_linter.
   i <- seq_len(n)
   switch(kind,
     complete = NULL,
