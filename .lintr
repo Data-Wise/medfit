@@ -20,6 +20,7 @@ exclusions: list(
     "tests/testthat/test-fiml-g2-parallel.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g2-residual-covariance.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g3-parallel-covariates.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-baseline.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-generic-kernel-fourvar.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-generic-kernel-oracle.R" = list(object_usage_linter = Inf)
   )
