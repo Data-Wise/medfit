@@ -2,6 +2,29 @@
 
 ## Added
 
+* Bounded Gaussian random-X FIML now also fits the pure chain of two serial
+  mediators with no covariates: `M1 ~ X`, `M2 ~ M1`, `Y ~ M2` (plus `Y ~ X` free,
+  `0*X` or omitted), with `X -> M2` and `M1 -> Y` absent and the same three
+  disturbance zeros written. Unlike the saturated graph the chain is
+  overidentified (12 free parameters, 11 with the direct path fixed, against 14
+  moments: 2 and 3 degrees of freedom), so its likelihood is a restriction the data
+  can reject; a pair of variables that is never observed together fits more often
+  than in the saturated graph. A graph with exactly one shortcut, or a fixed or
+  labeled shortcut, is still refused. `extract_mediation()` returns a
+  `FIMLSerialMediationData` object whose paths are `a`, `d1`, `b` and `c_prime`
+  (no `a2` or `b1` exist) with the 4 x 4 covariance from the fitted information;
+  `nie()` and `nie(type = "total")` are the same effect `a * d1 * b`, `te()` adds
+  `c_prime`, and the standard errors of both indirect rows are withheld together
+  only where at least two of `a`, `d1`, `b` are exactly zero. `paths()`, `tidy()`,
+  `coef(type = "paths")`, `summary()` and `confint()` list the four paths
+  (`c_prime` with value 0 and standard error 0 when it is fixed). `pm()`,
+  `quick()`, `glance()` and bootstrap intervals stay refused, and
+  `bootstrap_mediation(source_fit = )` stays withheld. The predictor lists of an
+  extracted serial object must now match its variant exactly. Verified against
+  lavaan (restriction test, estimates, covariance and effects), OpenMx for one
+  cell and an independent likelihood; serial models with covariates stay refused;
+  not calibrated for coverage or statistically admitted.
+
 * Bounded Gaussian random-X FIML now also fits two serial mediators in the saturated
   forward graph with no covariates: `M1 ~ X`, `M2 ~ M1 + X`, `Y ~ M1 + M2 + X`
   (the direct path free, `0*X` or omitted) with the three disturbance zeros
@@ -20,7 +43,7 @@
   indirect effect is withheld only where its delta gradient is exactly zero
   (per effect). `pm()`, `quick()`, `glance()` and bootstrap intervals are refused
   for these objects, and `bootstrap_mediation(source_fit = )` stays withheld
-  (`medfit_error_fiml_serial_source_fit` behind the guard). The pure chain, serial
+  (`medfit_error_fiml_serial_source_fit` behind the guard). Serial
   models with covariates and other serial shapes stay refused. Verified against
   lavaan (and OpenMx for one cell), the unrestricted multivariate normal
   maximum likelihood and an independent likelihood; not calibrated for coverage or

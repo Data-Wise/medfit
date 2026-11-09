@@ -527,7 +527,7 @@ the listwise path unless stated otherwise.
 The separate `missing = "fiml"` route supports only Gaussian
 random-X simple mediation with three continuous numeric observed variables
 (or the development-version variants with one or two covariates and a free joint
-exogenous covariance, or with two parallel mediators, alone or with one or two such covariates, or with two serial mediators in the saturated graph without covariates), independent disturbances
+exogenous covariance, or with two parallel mediators, alone or with one or two such covariates, or with two serial mediators in the saturated graph or the pure chain, without covariates), independent disturbances
 (the parallel form also allows a free mediator residual covariance), free intercepts and a free or exactly zero direct path. It assumes
 ignorable missingness under that model; choosing FIML does not validate MAR or
 protect against nonignorable missingness. See the
@@ -585,6 +585,26 @@ $\mathrm{Cov}(a, d_1)$, $\mathrm{Cov}(a, b)$ and $\mathrm{Cov}(d_1, b)$. The
 chain gradient is zero exactly when at least two of $a$, $d_1$, $b$ are zero, and
 the total-indirect gradient is zero exactly when $a = a_2 = b = b_1 = 0$ ($d_1$
 free); only then is the corresponding standard error withheld.
+
+#### Pure-chain serial mediators {#fiml-serial-chain}
+
+The pure chain drops both shortcuts: $M_1 = i_1 + aX + e_1$,
+$M_2 = i_2 + d_1 M_1 + e_2$ and $Y = i_3 + b M_2 + c' X + e_3$, with independent
+disturbances and a free joint distribution of $X$. With $c'$ free it has 12
+parameters against 14 moments (2 degrees of freedom; 11 parameters and 3 degrees
+of freedom with $c'$ fixed at zero), so unlike the saturated graph its likelihood
+is a restriction that the data can reject: the likelihood-ratio statistic
+$2(\ell_{\mathrm{sat}} - \ell_{\mathrm{chain}})$ against the saturated serial fit
+has 2 (3) degrees of freedom. The only indirect effect is $a d_1 b$, so the total
+indirect effect equals the chain effect, and the total effect adds $c'$. The
+covariance block is that of $(a, d_1, b, c')$; its gradients are
+$(d_1 b,\ a b,\ a d_1,\ 0)$ for both indirect effects and
+$(d_1 b,\ a b,\ a d_1,\ 1)$ for the total effect. With complete data the three
+factors of $a d_1 b$ sit in three different equations and are uncorrelated, while
+$b$ and $c'$ share the outcome equation; with incomplete data the cross-equation
+blocks are not zero. Both indirect rows have a zero gradient exactly when at
+least two of $a$, $d_1$, $b$ are zero, and only then are their standard errors
+withheld together.
 
 #### Development source-fit intervals {#fiml-source-intervals}
 
