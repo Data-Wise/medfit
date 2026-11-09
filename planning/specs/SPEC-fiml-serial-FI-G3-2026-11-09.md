@@ -671,6 +671,8 @@ Revision 3 (Claude adversarial review, `scratchpad/adv-serial-spec.md`, verdict 
 
 # 9. New open questions raised by revision 2
 
+**All resolved 2026-11-09: the maintainer accepted every recommendation below** (ledger rows Q12-Q16). Questions 1 and 4 were resolved earlier. Items 6 and 7 remain tasks, not open decisions: the lavaan 0.6.x recheck runs before any text cites the claim, and the final probe set is confirmed at the S1a review.
+
 1. (Resolved: Q6a, covariate-as-treatment refused for the chain at k >= 1, allowed for the saturated variant; see 8a and the ledger.)
 2. **`c_prime` row when the direct path is fixed at zero.** Q4 reads "chain: a, d, b, +c_prime if free"; existing
    simple and parallel FIML `paths()` list `c_prime` regardless (behavior with a fixed zero unverified). Recommendation:

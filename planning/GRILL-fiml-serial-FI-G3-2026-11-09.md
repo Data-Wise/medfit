@@ -17,6 +17,16 @@ Target: `planning/specs/SPEC-fiml-serial-FI-G3-2026-11-09.md` section 8. Interro
 | Q10 | Parity cadence | Two-install parity run once per slice | as recommended | About 10 background minutes per slice; Hopper harness commit stays on `ba50f998` |
 | Q11 | print() | Print the chain and covariates; may slip | as recommended | Cosmetic, can land after the main slices |
 
+## Revision-2 questions, accepted 2026-11-09 (all recommendations)
+
+| # | Question | Decision |
+|---|---|---|
+| Q12 | `c_prime` row with a fixed-zero direct path | Always listed (value 0, SE 0) in both serial variants, as simple and parallel FIML do |
+| Q13 | Gate rows per direct policy | Free direct only (225 rows for six serial structures); fixed-zero cells in the V-tests; revisit at admission |
+| Q14 | `variant` storage | Class property plus `fit_context`; the validator requires agreement so a forged object breaks the hash |
+| Q15 | lavaan 0.6.x residual-covariance recheck | One-off recheck on 0.6.x in a scratch library before any text cites "lavaan frees it"; until then say "lavaan 0.7-3 frees none" only |
+| Q16 | Refusal-probe set | Relabel the `serial` and `parallel_covariate_serial` probes as Q2 probes, add the new probes of spec section 4.4; confirm the final set at the S1a review |
+
 ## Open items carried forward
 
 - Recheck the lavaan residual-covariance claim on lavaan 0.6.x (probe here: 0.7.3 frees none for serial or parallel, with or without missing data). The parallel spec should cite the version.
