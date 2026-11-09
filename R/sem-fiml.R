@@ -75,10 +75,10 @@
 # `shortcuts = FALSE` is the pure chain: those two rows are absent, not fixed at zero. `direct` frees or fixes at
 # exactly zero the Y <- X row. Every covariate has a path to M1, M2 and Y, and the exogenous variables are jointly
 # Gaussian with a free covariance for every pair. There is no free residual covariance among M1, M2 and Y. Kernel
-# order X, [Z], M1, M2, Y. Labels: a, a2, d1, b1, b, cp, gm1z<i> and gm2z<i> (covariate i -> M1, M2), gy (gy1, gy2) for the covariate
-# Y paths, vx, vz, vm1, vm2, vy, the exogenous covariances cxz (cxz1, cxz2, cz1z2), ix, iz, im1, im2, iy. The parameter
-# count is 13 + 5k + choose(k + 1, 2) + direct for the saturated graph and 11 + 5k + choose(k + 1, 2) + direct for the
-# chain.
+# order X, [Z], M1, M2, Y. Labels: a, a2, d1, b1, b, cp, gm1z<i> and gm2z<i> (covariate i -> M1, M2), gy (gy1, gy2)
+# for the covariate Y paths, vx, vz, vm1, vm2, vy, the exogenous covariances cxz (cxz1, cxz2, cz1z2), ix, iz, im1, im2,
+# iy. The parameter count is 13 + 5k + choose(k + 1, 2) + direct for the saturated graph and
+# 11 + 5k + choose(k + 1, 2) + direct for the chain.
 .sem_fiml_tables_ser <- function(direct, k, shortcuts) {
   if (!is.logical(direct) || length(direct) != 1L || is.na(direct) ||
         !is.logical(shortcuts) || length(shortcuts) != 1L || is.na(shortcuts)) {

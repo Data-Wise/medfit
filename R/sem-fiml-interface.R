@@ -328,8 +328,11 @@
   lo <- pmin(match(tab$lhs, ex), match(tab$rhs, ex))
   hi <- pmax(match(tab$lhs, ex), match(tab$rhs, ex))
   keys[pair] <- paste(ex[lo[pair]], "~~", ex[hi[pair]])
-  cb <- utils::combn(k + 1L, 2L)
-  exo_cov <- if (k > 0L) paste(ex[cb[1L, ]], "~~", ex[cb[2L, ]]) else character()
+  exo_cov <- character()
+  if (k > 0L) {
+    cb <- utils::combn(k + 1L, 2L)
+    exo_cov <- paste(ex[cb[1L, ]], "~~", ex[cb[2L, ]])
+  }
   # the three disturbance pairs, in structural order
   pairs <- list(c(m1, m2), c(m1, y), c(m2, y))
   is_pair <- lapply(pairs, function(p) {

@@ -639,3 +639,63 @@ test_that("V10: where lavaan converges on the same masks, the fitted serial tabl
   }
   expect_gte(checked, 4L) # at least some cells were comparable; the rest are lavaan non-convergence
 })
+
+# ---- which label sits on which row: written down independently of the builder ---------------------------------------
+# A d1/b (or a/a2) label swap leaves every count, the lm and lavaan oracles (which read row, column and label from the
+# same table) and an identical() fixture untouched, so the assignments are pinned here directly from the spec.
+sr_expected_paths <- function(k, shortcuts) {
+  z <- sr_exo(k)[-1L]
+  out <- c(a = "M1<-X", d1 = "M2<-M1", b = "Y<-M2", cp = "Y<-X")
+  if (shortcuts) out <- c(out, a2 = "M2<-X", b1 = "Y<-M1")
+  if (k > 0L) {
+    sfx <- if (k == 1L) "" else as.character(seq_len(k))
+    for (i in seq_len(k)) {
+      out[paste0("gm1z", i)] <- paste0("M1<-", z[i])
+      out[paste0("gm2z", i)] <- paste0("M2<-", z[i])
+      out[paste0("gy", sfx[i])] <- paste0("Y<-", z[i])
+    }
+  }
+  out
+}
+sr_row_labels <- function(tb) stats::setNames(paste0(tb$a$row, "<-", tb$a$col), tb$a$label)
+test_that("each path label sits on the row the spec assigns it, for both variants, k = 0 to 2", {
+  for (sc in c(TRUE, FALSE)) for (k in 0:2) for (d in c(TRUE, FALSE)) {
+    got <- sr_row_labels(.sem_fiml_tables_ser(d, k, sc))
+    want <- sr_expected_paths(k, sc)
+    expect_identical(got[order(names(got))], want[order(names(want))], info = paste(sc, k, d))
+  }
+})
+test_that("the parameter map sends every kernel label to the RAM parameter of the written regression", {
+  for (i in seq_len(nrow(sr_cells))) {
+    v <- sr_cells$variant[i]
+    k <- sr_cells$k[i]
+    dr <- sr_cells$direct[i]
+    spec <- sr_parse(sr_model(v, k, sr_dir(dr)))
+    paths <- sr_expected_paths(k, v == "sat")
+    paths <- paths[names(paths) != "cp" | dr]
+    for (lab in names(paths)) {
+      ends <- strsplit(paths[[lab]], "<-", fixed = TRUE)[[1L]]
+      # the data names equal the kernel names in these models; the RAM parameter is the table row `lhs ~ rhs`
+      row <- which(spec$conv$table$lhs == ends[1L] & spec$conv$table$op == "~" & spec$conv$table$rhs == ends[2L])
+      expect_length(row, 1L)
+      expect_identical(unname(spec$map[[lab]]), spec$conv$ram$par_names[spec$conv$par_map[row]],
+                       info = paste(v, k, dr, lab))
+    }
+  }
+})
+test_that("planted defect: d1 and b swapped in the table builder is caught by the label assignment tests", {
+  expect_identical(sr_row_labels(.sem_fiml_tables_ser(TRUE, 0L, TRUE))[["d1"]], "M2<-M1") # positive control
+  orig <- .sem_fiml_tables_ser
+  swapped <- function(direct, k, shortcuts) {
+    t <- orig(direct, k, shortcuts)
+    i <- t$a$label %in% c("d1", "b")
+    t$a$label[i] <- rev(t$a$label[i])
+    t
+  }
+  expect_false(identical(sr_row_labels(swapped(TRUE, 0L, FALSE))[["d1"]], "M2<-M1"))
+  # the count-based parser battery cannot see it: it only fails the map-to-RAM assertion
+  spec <- testthat::with_mocked_bindings(sr_parse(sr_model("chain", 0L)), .sem_fiml_tables_ser = swapped)
+  par <- spec$conv$ram$par_names[spec$conv$par_map[which(spec$conv$table$lhs == "M2" & spec$conv$table$rhs == "M1" &
+                                                            spec$conv$table$op == "~")]]
+  expect_false(identical(unname(spec$map[["d1"]]), par))
+})
