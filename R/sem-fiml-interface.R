@@ -471,6 +471,9 @@
   )
 }
 
+# Exact origin: the NIE delta gradient (b, a for one mediator; b_j, a_j for the sum over parallel mediators) is zero
 .sem_fiml_origin <- function(x) {
-  .sem_fiml_is(x) && S7::S7_inherits(x, MediationData) && x@a_path == 0 && x@b_path == 0
+  if (!.sem_fiml_is(x)) return(FALSE)
+  if (S7::S7_inherits(x, FIMLParallelMediationData)) return(all(x@a_paths == 0) && all(x@b_paths == 0))
+  S7::S7_inherits(x, MediationData) && x@a_path == 0 && x@b_path == 0
 }

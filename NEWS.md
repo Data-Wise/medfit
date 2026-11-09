@@ -18,7 +18,10 @@
   verified, not calibrated for coverage or statistically admitted; delta-method
   Wald intervals are available, while `bootstrap_mediation(source_fit = )` stays
   withheld (`medfit_error_fiml_inference_unavailable`) and a parallel fit is also
-  refused with `medfit_error_fiml_parallel_source_fit`.
+  refused with `medfit_error_fiml_parallel_source_fit`. At an exact origin (every
+  `a_j` and `b_j` equal to 0) the delta gradient of the NIE is zero, so `tidy()` and
+  `confint(parm = "effects")` withhold the NIE interval (NA plus a note), as for the
+  single-mediator FIML object.
 
 * Bounded Gaussian random-X FIML (`fit_sem(missing = "fiml", fixed_x = FALSE)`
   and `extract_mediation()`) now also fits one covariate `Z` or two covariates
