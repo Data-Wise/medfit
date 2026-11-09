@@ -512,3 +512,40 @@ test_that("other consumers of the fit refuse it as for every FIML fit", {
   expect_error(compare_lr(f, paths = c("M1~X", "Y~M2")), "FIML")
   expect_error(anova(f, f), "FIML")
 })
+
+# ---- the SEMFit surface that was unreachable before this slice -------------------------------------------------------
+test_that("the serial SEMFit prints, summarizes, tidies and reports its information criteria like every FIML fit", {
+  d <- sb_data("mar")
+  f <- sb_fit(d)
+  out <- utils::capture.output(print(f))
+  expect_true(any(grepl("FIML, random X", out, fixed = TRUE)))
+  expect_true(any(grepl("14 free", out, fixed = TRUE)))
+  expect_true(any(grepl("FIML model test unavailable", out, fixed = TRUE)))
+  expect_s3_class(summary(f), "summary_SEMFit")
+  tb <- generics::tidy(f)
+  expect_identical(nrow(tb), 14L)
+  expect_true(all(is.finite(tb$std_error)))
+  gl <- generics::glance(f)
+  expect_identical(gl$npar, 14L)
+  expect_true(is.na(gl$chisq) && is.na(gl$p_value))
+  expect_equal(gl$logLik, as.numeric(logLik(f)), tolerance = 1e-12)
+  expect_identical(attr(logLik(f), "df"), 14L)
+  n <- nobs(f)
+  expect_equal(stats::AIC(f), -2 * as.numeric(logLik(f)) + 2 * 14, tolerance = 1e-10)
+  expect_equal(stats::BIC(f), -2 * as.numeric(logLik(f)) + log(n) * 14, tolerance = 1e-10)
+  fz <- sb_fit(d, "zero")
+  expect_identical(generics::glance(fz)$npar, 13L)
+})
+
+test_that("fit_mediation(engine = 'native') keeps its one-mediator limit for a serial FIML model", {
+  d <- sb_data("mar")
+  m <- paste(c("M1 ~ X", "M2 ~ M1 + X", "Y ~ M1 + M2 + X", sb_zeros), collapse = "\n")
+  call <- function(med) {
+    fit_mediation(engine = "native", model = m, data = d, treatment = "X", mediator = med,
+                  engine_args = list(missing = "fiml", fixed_x = FALSE))
+  }
+  # two mediators are not taken by fit_mediation() (fit_sem() then extract_mediation() is the route)
+  expect_error(call(c("M1", "M2")), "mediator")
+  # a single mediator named for the serial fit is refused by the extraction, with its class
+  expect_error(call("M1"), class = "medfit_error_fiml_extract_unsupported")
+})

@@ -877,3 +877,11 @@
     class = "summary_SerialMediationData"
   )
 }
+
+# The four effects `confint(parm = "effects")` reports for a serial FIML object (`nie_total` has its own row).
+.sem_fiml_ser_effect_estimates <- function(object) {
+  c(
+    nie = unname(nie(object)), nie_total = unname(nie(object, type = "total")),
+    nde = unname(nde(object)), te = unname(te(object))
+  )
+}

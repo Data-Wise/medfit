@@ -308,8 +308,7 @@ S7::method(confint, SerialMediationData) <- function(object,
     # serial FIML: the total indirect effect has its own row, each effect its own exact-origin rule, no bootstrap advice
     warning("Normal approximation for NIE may be inaccurate. ",
             "Bootstrap intervals for FIML fits are unavailable pending statistical admission.", call. = FALSE)
-    coefs <- c(nie = unname(nie(object)), nie_total = unname(nie(object, type = "total")),
-               nde = unname(nde(object)), te = unname(te(object)))
+    coefs <- .sem_fiml_ser_effect_estimates(object)
     se <- .effect_se(object, names(coefs))
     withheld <- .sem_fiml_origin_effects(object)
     se[intersect(names(withheld)[withheld], names(se))] <- NA_real_

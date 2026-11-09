@@ -109,6 +109,7 @@ sb_caught <- function(name, pattern, replacement) {
 }
 
 test_that("the battery passes on the unmutated code (positive control) and has teeth in every group", {
+  fx_skip_covr()
   sb_setup()
   r <- sb_battery()
   expect_true(all(r), info = paste(names(r)[!r], collapse = ", "))
@@ -116,6 +117,7 @@ test_that("the battery passes on the unmutated code (positive control) and has t
 })
 
 test_that("extraction defects: swapped paths, aliased paths, dropped covariance blocks", {
+  fx_skip_covr()
   sb_setup()
   # D1: d1 and b swapped. The chain NIE a*d1*b and its SE are invariant to the swap, so the path rows and every
   # effect that is not a plain product must expose it
@@ -162,6 +164,7 @@ test_that("extraction defects: swapped paths, aliased paths, dropped covariance 
 })
 
 test_that("effect defects: wrong total-indirect and total gradients", {
+  fx_skip_covr()
   sb_setup()
   # D7: the total-indirect gradient replaced by the chain gradient
   r <- sb_caught(".effect_gradients", "g_te[names(g_te) != \"c_prime\"]", "g_nie")
@@ -174,6 +177,7 @@ test_that("effect defects: wrong total-indirect and total gradients", {
 })
 
 test_that("origin defects: too broad, narrow, missing, scalar helper, length-two helper into scalar callers", {
+  fx_skip_covr()
   sb_setup()
   # D12: the chain rule withholds when ONE factor is 0
   r <- sb_caught(".sem_fiml_origin_effects", "sum(c(e[[\"a\"]], e[[\"d1\"]], e[[\"b\"]]) == 0) >= 2L",
@@ -213,6 +217,7 @@ test_that("origin defects: too broad, narrow, missing, scalar helper, length-two
 })
 
 test_that("consumer defects: quick, pm, glance, bootstrap advice, coef/summary paths, recycled aliases", {
+  fx_skip_covr()
   sb_setup()
   # D24: quick() not refusing the serial FIML class (it would print PM)
   r <- sb_caught(".quick_serial_mediation_data", ".sem_fiml_refuse(x, \"quick()\")", "invisible(NULL)")
@@ -243,12 +248,17 @@ test_that("consumer defects: quick, pm, glance, bootstrap advice, coef/summary p
   r <- sb_caught(".serial_tidy_alias", "if (S7::S7_inherits(x, FIMLSerialMediationData)) ", "if (FALSE) ")
   expect_false(r$all_pass)
   expect_true(all(c("tidy_all", "confint_paths") %in% r$failed))
-  # the total indirect effect has no confint row
+  # the shortcut path a2 dropped from the path rows (paths(), tidy and confint alike)
   r <- sb_caught(".sem_fiml_ser_paths", "a2 = e[[\"a2\"]], d = e[[\"d1\"]]", "d = e[[\"d1\"]]")
   expect_false(r$all_pass)
+  # the total indirect effect has no confint row (spec 3.3 item 3)
+  r <- sb_caught(".sem_fiml_ser_effect_estimates", "nie_total = unname(nie(object, type = \"total\")), ", "")
+  expect_false(r$all_pass)
+  expect_true("confint_total" %in% r$failed)
 })
 
 test_that("admission defects: the predicate ignoring k or the variant, the extract predicate ignoring the variant", {
+  fx_skip_covr()
   sb_setup()
   r <- sb_caught(".fiml_serial_shape_admitted", "identical(as.integer(k), 0L)", "TRUE")
   expect_false(r$all_pass)
@@ -262,6 +272,7 @@ test_that("admission defects: the predicate ignoring k or the variant, the extra
 })
 
 test_that("fit-level defects: a transport offset dropped and a hidden chain (b1 removed from the saturated tables)", {
+  fx_skip_covr()
   skip_if_not_installed("lavaan")
   sb_setup()
   ref <- sb_env$ref

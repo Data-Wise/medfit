@@ -7,8 +7,9 @@
   (the direct path free, `0*X` or omitted) with the three disturbance zeros
   written (`M1 ~~ 0*M2`, `M1 ~~ 0*Y`, `M2 ~~ 0*Y`; an omitted or free statement is
   refused). The model has 14 free parameters (13 with the direct path fixed), is
-  just identified with the direct path free, and fails closed when a pair of
-  variables is never observed together. `extract_mediation()` needs both mediators
+  just identified with the direct path free, in which case it fails closed when a
+  pair of variables is never observed together (with the direct path fixed some
+  such pairs still fit). `extract_mediation()` needs both mediators
   in the fitted order (the reversed order is refused) and returns a
   `FIMLSerialMediationData` object with the full covariance of `a`, `a2`, `d1`,
   `b1`, `b` and `c_prime`; `nie()` is the chain effect and
