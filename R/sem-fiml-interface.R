@@ -3,7 +3,8 @@
   if (S7::S7_inherits(x, SEMFit)) {
     identical(x@internals$likelihood$method, "fiml") || identical(x@diagnostics$ledger$schema, "fiml-1")
   } else {
-    S7::S7_inherits(x, FIMLMediationData) || S7::S7_inherits(x, FIMLParallelMediationData)
+    S7::S7_inherits(x, FIMLMediationData) || S7::S7_inherits(x, FIMLParallelMediationData) ||
+      S7::S7_inherits(x, FIMLSerialMediationData)
   }
 }
 
@@ -230,10 +231,17 @@
   out
 }
 
-# Fail-closed admission of serial FIML fits (FI-G3). Slice S1a builds the serial parser and tables but no public serial
-# fit exists: every serial syntax is refused at fit until slice S1b flips this with its own recorded decision. Tests
-# mock this binding to exercise the downstream serial plumbing (tables, ledger, source-fit and extract refusals).
+# Fail-closed admission of serial FIML fits (FI-G3). `.fiml_serial_admitted()` is the master switch that opens every
+# serial shape (always FALSE; tests mock it to exercise the downstream serial plumbing: tables, ledger, source-fit and
+# extract refusals). Each slice admits its own shape through `.fiml_serial_shape_admitted()`: slice S1b admits the
+# saturated variant with no covariates and nothing else (the chain is S2, covariates are S3 and S4), so the predicate
+# tests the variant AND the covariate count. Every other serial syntax is refused at fit with its classed reason.
 .fiml_serial_admitted <- function() FALSE
+.fiml_serial_shape_admitted <- function(variant, k) {
+  isTRUE(.fiml_serial_admitted()) || (identical(variant, "saturated") && identical(as.integer(k), 0L))
+}
+# The shapes `.sem_fiml_extract_serial()` implements (a mocked-open fit of any other shape is refused at extract).
+.fiml_serial_extract_supported <- function(variant, k) identical(variant, "saturated") && identical(as.integer(k), 0L)
 
 # Serial syntax: exactly one outcome, exactly two other endogenous variables, and a regression of one of them on the
 # other. Anything else keeps the existing routing (and its refusal messages) unchanged.
@@ -447,7 +455,7 @@
       }
       spec <- .sem_fiml_model(model)
       serial <- identical(spec$structure, "serial")
-      if (serial && !isTRUE(.fiml_serial_admitted())) {
+      if (serial && !isTRUE(.fiml_serial_shape_admitted(spec$variant, length(spec$covariate)))) {
         .sem_fiml_diagnostic(paste0(
           "serial FIML is not yet available: the ", spec$variant, " serial syntax is valid but bounded FIML serial ",
           "fits are withheld until their own admission"
@@ -560,11 +568,9 @@
 
 .sem_fiml_extract <- function(object, treatment, mediator, args) {
   .sem_fiml_require(object)
+  # serial before parallel: both have two mediators, and share the strings `a2` and `b1` with different roles
   if (identical(object@internals$likelihood$structure, "serial")) {
-    stop(structure(
-      class = c("medfit_error_fiml_extract_unsupported", "error", "condition"),
-      list(message = "FIML extraction of serial mediation fits is not yet available", call = NULL)
-    ))
+    return(.sem_fiml_extract_serial(object, treatment, mediator, args))
   }
   if (!is.null(object@internals$likelihood$mediators)) {
     return(.sem_fiml_extract_parallel(object, treatment, mediator, args))
@@ -733,9 +739,141 @@
   )
 }
 
-# Exact origin: the NIE delta gradient (b, a for one mediator; b_j, a_j for the sum over parallel mediators) is zero
+# Two serial mediators, saturated variant, no covariates (FI-G3 slice S1b). Both mediators are named in the fitted
+# (structural) order; the reversed order asks for a different model (M2 -> M1) and is refused with the fitted order
+# named. The six path estimates and their 6 x 6 covariance are the fitted observed-information block, so every
+# cross-path term (Cov(a, d1), Cov(d1, b), Cov(a2, d1), Cov(b1, b), ...) is kept, unlike the separate-regression
+# lm/glm route; a fixed-zero or omitted direct path is a zero row and column.
+.sem_fiml_extract_serial <- function(object, treatment, mediator, args) {
+  ctx0 <- object@internals$likelihood
+  v <- ctx0$variables
+  meds <- unname(ctx0$mediators)
+  refuse <- function(message) {
+    stop(structure(
+      class = c("medfit_error_fiml_extract_unsupported", "error", "condition"),
+      list(message = message, call = NULL)
+    ))
+  }
+  if (!.fiml_serial_extract_supported(ctx0$variant, length(ctx0$covariate))) {
+    refuse("FIML extraction of serial mediation fits is not yet available")
+  }
+  ok_mediators <- is.character(mediator) && length(mediator) == 2L && setequal(mediator, meds)
+  if (ok_mediators && !identical(mediator, meds)) {
+    refuse(paste0(
+      "FIML extraction of serial mediation needs the mediators in the fitted order (", paste(meds, collapse = ", "),
+      "); the reversed order is a different model"
+    ))
+  }
+  allowed <- c("outcome", "standardized", "structure", "decomposition")
+  if (length(setdiff(names(args), allowed)) || !identical(treatment, unname(v["X"])) || !ok_mediators ||
+        (!is.null(args$outcome) && !identical(args$outcome, unname(v["Y"]))) ||
+        (!is.null(args$standardized) && !identical(args$standardized, FALSE)) ||
+        (!is.null(args$structure) && !args$structure %in% c("auto", "serial")) ||
+        (!is.null(args$decomposition) && !args$decomposition %in% c("auto", "two_way"))) {
+    refuse(paste0(
+      "FIML extraction supports only the fitted unstandardized two-way serial mediation naming both mediators in order"
+    ))
+  }
+  spec <- .sem_fiml_model(object@model)
+  map <- spec$map
+  par <- function(label) unname(map[[label]])
+  # The kernel label of each role; the fitted parameter names may be user labels, so roles are read by topology.
+  roles <- c(
+    a = par("a"), a2 = par("a2"), d1 = par("d1"), b1 = par("b1"), b = par("b"),
+    c_prime = if (spec$direct) par("cp") else NA_character_
+  )
+  present <- !is.na(roles)
+  estimates <- stats::setNames(numeric(length(roles)), names(roles))
+  estimates[present] <- object@theta[roles[present]]
+  V <- matrix(0, length(roles), length(roles), dimnames = list(names(roles), names(roles)))
+  V[present, present] <- object@vcov[roles[present], roles[present], drop = FALSE]
+  sigma <- function(label) sqrt(unname(object@theta[par(label)]))
+  x <- unname(v["X"])
+  y <- unname(v["Y"])
+  ctx <- ctx0
+  ctx$source_theta <- object@theta
+  ctx$source_vcov <- object@vcov
+  ctx$source_roles <- roles
+  ctx$source_hash <- rlang::hash(list(ctx$source_theta, ctx$source_vcov, ctx$source_roles))
+  ctx$data_hash <- rlang::hash(object@data)
+  a_path <- unname(estimates[["a"]])
+  d_path <- unname(estimates[["d1"]])
+  b_path <- unname(estimates[["b"]])
+  c_prime <- unname(estimates[["c_prime"]])
+  ctx$parameter_hash <- rlang::hash(list(estimates, V, a_path, d_path, b_path, c_prime, "saturated"))
+  FIMLSerialMediationData(
+    a_path = a_path, d_path = d_path, b_path = b_path, c_prime = c_prime, estimates = estimates, vcov = V,
+    sigma_mediators = c(sigma("vm1"), sigma("vm2")), sigma_y = sigma("vy"),
+    treatment = x, mediators = meds, outcome = y,
+    mediator_predictors = list(x, c(meds[1L], x)), outcome_predictors = c(meds, x),
+    data = object@data, n_obs = object@n_obs, converged = TRUE, source_package = "medfit", fit_context = ctx,
+    variant = "saturated"
+  )
+}
+
+# Exact origin: the NIE delta gradient (b, a for one mediator; b_j, a_j for the sum over parallel mediators) is zero.
+# Scalar by contract: it is read inside scalar `if (... && ...)` by the simple and parallel callers. A serial FIML object
+# has two effects with their own rules and uses `.sem_fiml_origin_effects()`; it is FALSE here.
 .sem_fiml_origin <- function(x) {
   if (!.sem_fiml_is(x)) return(FALSE)
+  if (S7::S7_inherits(x, FIMLSerialMediationData)) return(FALSE)
   if (S7::S7_inherits(x, FIMLParallelMediationData)) return(all(x@a_paths == 0) && all(x@b_paths == 0))
   S7::S7_inherits(x, MediationData) && x@a_path == 0 && x@b_path == 0
+}
+
+# Per-effect exact origin (FI-G3, decision Q8): a named logical over the effects whose delta gradient can vanish.
+# Chain `nie` = a d1 b has gradient (d1 b, a b, a d1), zero exactly when AT LEAST TWO of a, d1, b are 0 (one zero factor
+# leaves a nonzero gradient). Saturated `nie_total` = a d1 b + a2 b + a b1 has gradient
+# (d1 b + b1, b, a b, a, a d1 + a2), zero exactly when a = a2 = b = b1 = 0 (d1 free). In the pure chain `nie_total` is
+# the chain effect, so both follow the one chain rule. `te` and `nde` (gradient 1 on c_prime) are never withheld.
+# Every other class has the scalar rule for `nie` only.
+.sem_fiml_origin_effects <- function(x) {
+  if (!S7::S7_inherits(x, FIMLSerialMediationData)) return(c(nie = .sem_fiml_origin(x)))
+  e <- x@estimates
+  chain_zero <- sum(c(e[["a"]], e[["d1"]], e[["b"]]) == 0) >= 2L
+  if (identical(x@variant, "chain")) return(c(nie = chain_zero, nie_total = chain_zero))
+  c(nie = chain_zero, nie_total = all(c(e[["a"]], e[["a2"]], e[["b"]], e[["b1"]]) == 0))
+}
+
+# The note of each withheld effect, named by effect.
+.sem_fiml_origin_notes <- function(withheld) {
+  notes <- c(
+    nie = "NIE inference unavailable: zero delta gradient",
+    nie_total = "NIE total inference unavailable: zero delta gradient"
+  )
+  notes[names(withheld)[withheld]]
+}
+
+# The path rows an extracted serial FIML object reports (Q4: every estimated path; Q12: `c_prime` always listed, value 0
+# and SE 0 when it is fixed), and the `@vcov` alias of each row.
+.sem_fiml_ser_paths <- function(x) {
+  e <- x@estimates
+  if (identical(x@variant, "chain")) {
+    return(c(a = e[["a"]], d = e[["d1"]], b = e[["b"]], c_prime = e[["c_prime"]]))
+  }
+  c(a = e[["a"]], a2 = e[["a2"]], d = e[["d1"]], b1 = e[["b1"]], b = e[["b"]], c_prime = e[["c_prime"]])
+}
+.sem_fiml_ser_alias <- function(x) {
+  if (identical(x@variant, "chain")) c("a", "d1", "b", "c_prime") else c("a", "a2", "d1", "b1", "b", "c_prime")
+}
+
+# `coef(type = "paths")` and `summary()` of a serial FIML object list every estimated path (Q4), not the four base paths.
+.sem_fiml_ser_coef_paths <- function(x) .sem_fiml_ser_paths(x)
+.sem_fiml_ser_summary_paths <- function(x) {
+  c(
+    .sem_fiml_ser_paths(x), indirect = x@a_path * prod(x@d_path) * x@b_path,
+    indirect_total = as.numeric(nie(x, type = "total"))
+  )
+}
+.sem_fiml_ser_summary <- function(object) {
+  structure(
+    list(
+      paths = .sem_fiml_ser_summary_paths(object), mediators = object@mediators,
+      variables = c(treatment = object@treatment, outcome = object@outcome),
+      n_mediators = length(object@mediators), n_obs = object@n_obs, converged = object@converged,
+      source_package = object@source_package, estimates = object@estimates, vcov = object@vcov,
+      sigma_mediators = object@sigma_mediators, sigma_y = object@sigma_y, fit_context = object@fit_context
+    ),
+    class = "summary_SerialMediationData"
+  )
 }

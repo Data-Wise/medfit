@@ -390,11 +390,11 @@ test_that("a fixed-zero or omitted direct path is a zero row and column and the 
   expect_equal(as.numeric(te(zz)), as.numeric(nie(zz, type = "total")))
 })
 
-test_that("labels never decide a role: a model that reuses reserved alias names extracts the same effects", {
+test_that("labels never decide a role: labels that reuse reserved alias names extract the same effects", {
   d <- sb_data("mar")
   plain <- sb_extract(sb_fit(d))
   odd <- sb_extract(sb_fit(d, model = paste(
-    c("M1 ~ b*X", "M2 ~ a*M1 + d1*X", "Y ~ a2*M1 + cp*M2 + b1*X", sb_zeros), collapse = "\n"
+    c("M1 ~ b*X", "M2 ~ a*M1 + X", "Y ~ M1 + d1*M2 + a2*X", sb_zeros), collapse = "\n"
   )))
   expect_equal(unname(odd@estimates), unname(plain@estimates), tolerance = 1e-8)
   expect_equal(unname(odd@vcov), unname(plain@vcov), tolerance = 1e-6)
@@ -456,6 +456,20 @@ test_that("extraction of the shapes that are not public stays refused with the c
     expect_error(extract_mediation(f, treatment = "X", mediator = c("M1", "M2")),
                  class = "medfit_error_fiml_extract_unsupported", info = nm)
   }
+})
+
+test_that("D9: the mediators are structural, not in order of appearance, at extraction too", {
+  d <- sb_data("mar")
+  names(d) <- c("X", "B", "A", "Y") # B is the first mediator in the chain, A the second
+  m <- paste(c("A ~ B + X", "B ~ X", "Y ~ B + A + X", "A ~~ 0*B", "B ~~ 0*Y", "A ~~ 0*Y"), collapse = "\n")
+  f <- fit_sem(m, d, missing = "fiml", fixed_x = FALSE)
+  z <- extract_mediation(f, treatment = "X", mediator = c("B", "A"))
+  expect_identical(z@mediators, c("B", "A"))
+  ref <- sb_extract(sb_fit(sb_data("mar")))
+  expect_equal(unname(z@estimates), unname(ref@estimates), tolerance = 1e-8)
+  e <- tryCatch(extract_mediation(f, treatment = "X", mediator = c("A", "B")), error = identity)
+  expect_s3_class(e, "medfit_error_fiml_extract_unsupported")
+  expect_match(conditionMessage(e), "B, A", fixed = TRUE)
 })
 
 test_that("only the fitted object is extracted: a forged or foreign fit is refused by the ledger", {

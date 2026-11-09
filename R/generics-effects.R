@@ -410,12 +410,14 @@ S7::method(te, SerialMediationData) <- function(x, ...) {
 #' @describeIn pm Method for SerialMediationData
 #' @noRd
 S7::method(pm, SerialMediationData) <- function(x, ...) {
+  .sem_fiml_refuse(x, "pm()")
   .serial_pm_from_total(.serial_total_effect(x), x@c_prime)
 }
 
 #' @describeIn paths Method for SerialMediationData
 #' @noRd
 S7::method(paths, SerialMediationData) <- function(x, ...) {
+  if (S7::S7_inherits(x, FIMLSerialMediationData)) return(.sem_fiml_ser_paths(x))
   n_mediators <- length(x@mediators)
   result <- c(a = x@a_path)
 

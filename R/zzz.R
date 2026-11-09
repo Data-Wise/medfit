@@ -59,6 +59,7 @@
   S7::S4_register(MediationData)
   S7::S4_register(FIMLMediationData)
   S7::S4_register(FIMLParallelMediationData)
+  S7::S4_register(FIMLSerialMediationData)
   S7::S4_register(SerialMediationData)
   S7::S4_register(ParallelMediationData)
   S7::S4_register(InteractionMediationData)

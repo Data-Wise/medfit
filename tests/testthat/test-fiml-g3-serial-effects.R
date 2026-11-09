@@ -273,8 +273,8 @@ test_that("pm(), glance() and quick() refuse the serial FIML object; bootstrap_m
   expect_error(pm(z), "pm\\(\\) is not supported for bounded FIML objects")
   expect_error(generics::glance(z), "not supported for bounded FIML objects")
   expect_error(quick(z), "quick\\(\\) is not supported for bounded FIML objects")
-  expect_error(bootstrap_mediation(mediation_data = z, effect = "nie", n_boot = 3L), "not supported for bounded FIML")
-  expect_error(bootstrap_mediation(data = z, effect = "nie", n_boot = 3L), "not supported for bounded FIML")
+  expect_error(bootstrap_mediation(function(x) 1, mediation_data = z), "bootstrap_mediation\\(\\) is not supported for bounded FIML")
+  expect_error(bootstrap_mediation(function(x) 1, data = z), "bootstrap_mediation\\(\\) is not supported for bounded FIML")
   # the effects remain available, and printing works
   expect_s3_class(nie(z), "mediation_effect")
   expect_output(print(z))

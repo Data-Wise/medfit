@@ -272,9 +272,7 @@ glance_s7_object <- function(x, ...) {
   path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
   # paths() names the d paths by mediator pair (d, or d21, d32, ...);
   # @vcov aliases them d1..dk
-  path_alias <- if (!is.null(path_vec)) {
-    c("a", paste0("d", seq_along(x@d_path)), "b", "c_prime")
-  }
+  path_alias <- if (!is.null(path_vec)) .serial_tidy_alias(x)
   effect_vec <- if (type %in% c("all", "effects")) {
     # nie: chain-specific (a * d1 * ... * b); nie_total + nde = te (all paths)
     te_val <- as.numeric(te(x))
@@ -283,7 +281,17 @@ glance_s7_object <- function(x, ...) {
       nde = nde_val, te = te_val)
   }
   .tidy_paths_effects(x, path_vec, effect_vec, conf_int, conf_level,
-                      path_alias = path_alias)
+                      path_alias = path_alias,
+                      withheld = if (S7::S7_inherits(x, FIMLSerialMediationData)) .sem_fiml_origin_effects(x))
+}
+
+
+# `@vcov` alias row of each path `paths()` reports for a serial object: a, d1..dk, b, c_prime for the lm/glm and lavaan
+# objects; the per-variant six (saturated) or four (chain) rows for a serial FIML object, so every displayed path maps
+# to a covariance row.
+.serial_tidy_alias <- function(x) {
+  if (S7::S7_inherits(x, FIMLSerialMediationData)) return(.sem_fiml_ser_alias(x))
+  c("a", paste0("d", seq_along(x@d_path)), "b", "c_prime")
 }
 
 
@@ -294,6 +302,7 @@ glance_s7_object <- function(x, ...) {
 #'
 #' @noRd
 .glance_serial_mediation_data <- function(x, ...) {
+  .sem_fiml_refuse(x, "glance() on extracted data")
   # One te() call: nie_total and pm derive from it (one warning when unavailable)
   te_val <- as.numeric(te(x))
   nde_val <- as.numeric(nde(x))
@@ -335,14 +344,18 @@ glance_s7_object <- function(x, ...) {
 #' @param conf_int,conf_level As in `.tidy_mediation_data()`
 #' @param path_alias `@vcov` row names for `path_vec`, when they differ from
 #'   `names(path_vec)` (serial d paths)
+#' @param withheld Named logical over effects whose SE is withheld at an exact
+#'   origin (serial FIML objects), or `NULL`
 #' @noRd
 .tidy_paths_effects <- function(x, path_vec, effect_vec, conf_int, conf_level,
-                                path_alias = names(path_vec), path_df = NULL) {
+                                path_alias = names(path_vec), path_df = NULL, withheld = NULL) {
   vc <- x@vcov
   # match() gives NA (not an error) for a path name missing from @vcov
   path_se <- sqrt(diag(vc)[match(path_alias, rownames(vc))])
   effect_se <- if (length(effect_vec)) .effect_se_or_na(x, names(effect_vec)) else NULL
   if (.sem_fiml_origin(x) && "nie" %in% names(effect_se)) effect_se["nie"] <- NA_real_
+  # a serial FIML object withholds each effect by its own exact-origin rule (`withheld`, named by effect)
+  if (!is.null(withheld)) effect_se[intersect(names(withheld)[withheld], names(effect_se))] <- NA_real_
 
   result <- data.frame(
     term = c(names(path_vec), names(effect_vec)),
@@ -370,6 +383,7 @@ glance_s7_object <- function(x, ...) {
   if (.sem_fiml_is(x)) {
     attr(result, "fit_context") <- x@fit_context
     if (.sem_fiml_origin(x)) attr(result, "note") <- "NIE inference unavailable: zero delta gradient"
+    if (!is.null(withheld) && any(withheld)) attr(result, "note") <- .sem_fiml_origin_notes(withheld)
   }
   result
 }
