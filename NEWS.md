@@ -2,6 +2,29 @@
 
 ## Added
 
+* Bounded Gaussian random-X FIML now also fits two serial mediators in the saturated
+  forward graph with no covariates: `M1 ~ X`, `M2 ~ M1 + X`, `Y ~ M1 + M2 + X`
+  (the direct path free, `0*X` or omitted) with the three disturbance zeros
+  written (`M1 ~~ 0*M2`, `M1 ~~ 0*Y`, `M2 ~~ 0*Y`; an omitted or free statement is
+  refused). The model has 14 free parameters (13 with the direct path fixed), is
+  just identified with the direct path free, and fails closed when a pair of
+  variables is never observed together. `extract_mediation()` needs both mediators
+  in the fitted order (the reversed order is refused) and returns a
+  `FIMLSerialMediationData` object with the full covariance of `a`, `a2`, `d1`,
+  `b1`, `b` and `c_prime`; `nie()` is the chain effect and
+  `nie(type = "total")` the sum of every indirect path, both with delta-method
+  standard errors from the full covariance. `paths()`, `tidy()`,
+  `coef(type = "paths")`, `summary()` and `confint()` report all six paths, and
+  `confint(parm = "effects")` also reports `nie_total`. The standard error of an
+  indirect effect is withheld only where its delta gradient is exactly zero
+  (per effect). `pm()`, `quick()`, `glance()` and bootstrap intervals are refused
+  for these objects, and `bootstrap_mediation(source_fit = )` stays withheld
+  (`medfit_error_fiml_serial_source_fit` behind the guard). The pure chain, serial
+  models with covariates and other serial shapes stay refused. Verified against
+  lavaan (and OpenMx for one cell), the unrestricted multivariate normal
+  maximum likelihood and an independent likelihood; not calibrated for coverage or
+  statistically admitted.
+
 * Bounded Gaussian random-X FIML now also fits two parallel mediators with one
   or two observed covariates (`M1 ~ X + Z`, `M2 ~ X + Z`, `Y ~ M1 + M2 + X + Z`,
   and the two-covariate analogue), in both residual forms (`M1 ~~ 0*M2` written,

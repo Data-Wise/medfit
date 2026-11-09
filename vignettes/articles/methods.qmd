@@ -527,7 +527,7 @@ the listwise path unless stated otherwise.
 The separate `missing = "fiml"` route supports only Gaussian
 random-X simple mediation with three continuous numeric observed variables
 (or the development-version variants with one or two covariates and a free joint
-exogenous covariance, or with two parallel mediators, alone or with one or two such covariates), independent disturbances
+exogenous covariance, or with two parallel mediators, alone or with one or two such covariates, or with two serial mediators in the saturated graph without covariates), independent disturbances
 (the parallel form also allows a free mediator residual covariance), free intercepts and a free or exactly zero direct path. It assumes
 ignorable missingness under that model; choosing FIML does not validate MAR or
 protect against nonignorable missingness. See the
@@ -563,6 +563,28 @@ use that count and retained N. The complete-data discrepancy and model-test df
 are unavailable. No missing-data saturated reference fit, chi-square or fit
 indices are synthesized. At the NIE origin, a zero first derivative does not
 supply regular normal inference; NIE inferential fields are unavailable.
+
+#### Saturated serial mediators {#fiml-serial}
+
+For $X \to M_1 \to M_2 \to Y$ with both shortcuts, the equations are
+$M_1 = i_1 + aX + e_1$, $M_2 = i_2 + d_1 M_1 + a_2 X + e_2$ and
+$Y = i_3 + b M_2 + b_1 M_1 + c' X + e_3$, with independent disturbances and a
+free joint distribution of $X$. With $c'$ free this has 14 parameters, as many
+as the unrestricted multivariate normal has moments, so the maximum likelihood
+estimate is a one-to-one reparameterization of the unrestricted estimate (df 0);
+fixing $c'$ at zero is one restriction. The chain effect is
+$a d_1 b$, the total indirect effect is $a d_1 b + a_2 b + a b_1$ and the total
+effect adds $c'$. With $\hat\Sigma$ the fitted covariance of
+$(a, a_2, d_1, b_1, b, c')$ taken from the full observed information, the delta
+gradients are $(d_1 b, 0, ab, 0, a d_1, 0)$ for the chain effect and
+$(d_1 b + b_1,\ b,\ a b,\ a,\ a d_1 + a_2,\ 0)$ for the total indirect effect
+(the total effect adds 1 for $c'$). With complete data $\hat\Sigma$ is block
+diagonal across the three equations; with incomplete data the cross-equation
+blocks are not zero, so the standard error of the chain effect then involves
+$\mathrm{Cov}(a, d_1)$, $\mathrm{Cov}(a, b)$ and $\mathrm{Cov}(d_1, b)$. The
+chain gradient is zero exactly when at least two of $a$, $d_1$, $b$ are zero, and
+the total-indirect gradient is zero exactly when $a = a_2 = b = b_1 = 0$ ($d_1$
+free); only then is the corresponding standard error withheld.
 
 #### Development source-fit intervals {#fiml-source-intervals}
 
