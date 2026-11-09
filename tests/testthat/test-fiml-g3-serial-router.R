@@ -45,8 +45,9 @@ sr_parse <- function(model) tryCatch(.sem_fiml_model(model), error = identity)
 sr_fit <- function(model, data = sr_data()) {
   tryCatch(fit_sem(model, data, missing = "fiml", fixed_x = FALSE), error = identity)
 }
-sr_refused <- function(model, pattern = NULL) {
-  e <- sr_parse(model)
+sr_refused <- function(model, pattern = NULL, at_fit = FALSE) {
+  # a plain parser error (duplicate statement, product rule) is classed by the fit wrapper, not by the model parser
+  e <- if (at_fit) sr_fit(model, sr_data(mar = FALSE)) else sr_parse(model)
   inherits(e, "medfit_sem_fiml_error") && (is.null(pattern) || grepl(pattern, conditionMessage(e), fixed = FALSE))
 }
 
@@ -158,10 +159,10 @@ test_that("topology refusals: missing paths, a cycle, a third mediator, three co
   expect_true(sr_refused(txt("M1 ~ Z", "M2 ~ M1 + X", "Y ~ M1 + M2 + X"), "topology|M1"))    # no X -> M1
   expect_true(sr_refused(txt("M1 ~ X", "M2 ~ M1 + M1b", "Y ~ M2 + X"), "topology|FIML"))
   expect_true(sr_refused(txt("M1 ~ X + M2", "M2 ~ M1 + X", "Y ~ M1 + M2 + X"), "topology|cycle"))
-  expect_true(sr_refused(txt("M1 ~ X", "M2 ~ M1 + X", "Y ~ M1 + M2 + X", "M1 ~ M2"), "topology|cycle"))
+  expect_true(sr_refused(txt("M1 ~ X", "M2 ~ M1 + X", "Y ~ M1 + M2 + X", "M1 ~ M2"), "topology|cycle", at_fit = TRUE))
   expect_true(sr_refused(txt("M1 ~ X + Z1 + Z2 + W", "M2 ~ M1 + X + Z1 + Z2 + W", "Y ~ M1 + M2 + X + Z1 + Z2 + W"),
                          "covariates"))
-  expect_true(sr_refused(txt("M1 ~ X + X:Z1", "M2 ~ M1 + X", "Y ~ M1 + M2 + X"), "interaction|topology"))
+  expect_true(sr_refused(txt("M1 ~ X + X:Z1", "M2 ~ M1 + X", "Y ~ M1 + M2 + X"), "interaction|topology|product", at_fit = TRUE))
 })
 
 # ---- Q2: the three residual zeros must be written ----------------------------------------------------------------
@@ -198,13 +199,17 @@ test_that("Q2: a pair written free, labeled, fixed nonzero, duplicated or tied t
     labeled = list(c("M1 ~~ c*M2", base[2:3]), "correlated"),
     nonzero = list(c("M1 ~~ 0.3*M2", base[2:3]), "correlated"),
     nonzero_y = list(c(base[1], "M1 ~~ 0.2*Y", base[3]), "correlated"),
-    dup_same = list(c(base, "M1 ~~ 0*M2"), "topology"),
-    dup_reversed = list(c(base, "M2 ~~ 0*M1"), "topology"),
+    dup_same = list(c(base, "M1 ~~ 0*M2"), "specified more than once"),
+    dup_reversed = list(c(base, "M2 ~~ 0*M1"), "specified more than once"),
     exo_endo = list(c(base, "X ~~ 0*M1"), "topology"),
     exo_y = list(c(base, "Y ~~ 0*X"), "topology")
   )
   for (v in c("sat", "chain")) for (nm in names(bad)) {
-    e <- sr_parse(sr_model(v, 0L, "free", zeros = bad[[nm]][[1L]]))
+    e <- if (grepl("^dup", nm)) {
+      sr_fit(sr_model(v, 0L, "free", zeros = bad[[nm]][[1L]]), sr_data(mar = FALSE))
+    } else {
+      sr_parse(sr_model(v, 0L, "free", zeros = bad[[nm]][[1L]]))
+    }
     info <- paste(v, nm)
     expect_s3_class(e, "medfit_sem_fiml_error")
     expect_match(conditionMessage(e), bad[[nm]][[2L]], info = info)
@@ -318,7 +323,7 @@ test_that("complete data: the serial tables reproduce equation-wise ML OLS, both
 
 # Oracle 2, incomplete data: matched lavaan raw-data FIML (the saturated tables are the just-identified model).
 sr_key <- function(tb) {
-  p <- tb$a
+  p <- tb$a[is.na(tb$a$value), ]
   kk <- c(paste(p$row, "~", p$col), paste(tb$s$row, "~~", tb$s$col), paste(tb$m$row, "~1"))
   stats::setNames(c(p$label, tb$s$label, tb$m$label), kk)
 }
@@ -445,7 +450,7 @@ test_that("a serial fit cannot be extracted yet: classed extract refusal, not th
 sr_battery <- function() {
   one <- function(x) isTRUE(x)
   c(
-    router = one(sr_refused(sr_model("sat", 0L, "free", zeros = sr_zeros[2:3]), "M1 ~~ 0*M2")),
+    router = one(sr_refused(sr_model("sat", 0L, "free", zeros = sr_zeros[2:3]), "M1 ~~ 0\\*M2")),
     two_missing = one(sr_refused(sr_model("chain", 0L, "free", zeros = sr_zeros[3]), "M1 ~~ 0\\*M2.*M1 ~~ 0\\*Y")),
     fixed_shortcut = one(sr_refused(
       paste("M1 ~ X + Z", "M2 ~ M1 + 0*X + Z", "Y ~ M2 + X + Z", paste(sr_zeros, collapse = "\n"), sep = "\n"),

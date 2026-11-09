@@ -25,6 +25,9 @@
   roles <- .sem_roles(tab)
   reg <- tab[tab$op == "~", , drop = FALSE]
   x <- roles$ov_x
+  # Two mediators in sequence (FI-G3): a regression between the two non-outcome endogenous variables. This runs before
+  # the covariate and parallel routing, which would answer a serial syntax with a parallel-flavored refusal.
+  if (.sem_fiml_ser_detect(reg)) return(.sem_fiml_model_ser(parsed, tab, roles, reg))
   if (length(x) %in% 2:3 && length(roles$obs) == length(x) + 2L && !any(grepl(":", roles$obs, fixed = TRUE))) {
     return(.sem_fiml_model_cov(parsed, tab, roles, reg))
   }
@@ -227,6 +230,167 @@
   out
 }
 
+# Fail-closed admission of serial FIML fits (FI-G3). Slice S1a builds the serial parser and tables but no public serial
+# fit exists: every serial syntax is refused at fit until slice S1b flips this with its own recorded decision. Tests
+# mock this binding to exercise the downstream serial plumbing (tables, ledger, source-fit and extract refusals).
+.fiml_serial_admitted <- function() FALSE
+
+# Serial syntax: exactly one outcome, exactly two other endogenous variables, and a regression of one of them on the
+# other. Anything else keeps the existing routing (and its refusal messages) unchanged.
+.sem_fiml_ser_detect <- function(reg) {
+  endo <- unique(reg$lhs)
+  outcome <- setdiff(endo, reg$rhs)
+  mediators <- setdiff(endo, outcome)
+  length(outcome) == 1L && length(mediators) == 2L && any(reg$lhs %in% mediators & reg$rhs %in% mediators)
+}
+
+# TRUE where a regression `lhs ~ rhs` is WRITTEN, a fixed term (`0*X`) included: variant detection counts every written
+# term before it decides the variant.
+.sem_fiml_ser_written <- function(tab, keys, lhs, rhs) paste(lhs, "~", rhs) %in% keys
+
+# The residual-zero statements (all three pairs of M1, M2, Y must be written; Q2) that no row of the table supplies.
+.sem_fiml_ser_missing_zeros <- function(counts, labels) labels[counts == 0L]
+
+# Two serial mediators (FI-G3): X -> M1 -> M2 -> Y with zero, one or two covariates, in two shortcut states. Saturated:
+# X -> M2 and M1 -> Y both written and free. Pure chain: both absent (a structural zero, not a fixed one). Everything
+# else (one shortcut only, a fixed, labeled or tied shortcut) is refused. The independence of ALL THREE disturbance
+# pairs among M1, M2 and Y must be written as `M1 ~~ 0*M2`, `M1 ~~ 0*Y` and `M2 ~~ 0*Y` (either order within a pair);
+# an omitted, free, labeled, nonzero or duplicated statement is refused. In lavaan 0.7-3 `sem()` frees none of these
+# covariances, so the written statement mirrors the parallel contract; no claim about other lavaan versions is made.
+# Mediators are structural: M1 has no mediator among its predictors, M2 regresses on M1. The treatment `X` is the one
+# exogenous variable with no path to M2 in the chain; in the saturated graph it is the variable whose Y path is fixed
+# at exactly zero, else the first by appearance. The direct path may be free, fixed at zero, or (k = 0 only) omitted.
+.sem_fiml_model_ser <- function(parsed, tab, roles, reg) {
+  e <- roles$ov_x
+  k <- length(e) - 1L
+  y <- setdiff(unique(reg$lhs), reg$rhs)
+  m <- setdiff(unique(reg$lhs), y)
+  if (any(grepl(":", roles$obs, fixed = TRUE))) .sem_fiml_diagnostic("unsupported FIML topology: interactions")
+  if (k > .sem_fiml_par_cov_max()) .sem_fiml_diagnostic("unsupported number of FIML covariates")
+  if (k < 0L || !setequal(roles$obs, c(e, m, y))) {
+    .sem_fiml_diagnostic("unsupported FIML topology: serial mediation needs M1 ~ X, M2 ~ M1 and Y ~ M2")
+  }
+  mm <- reg[reg$lhs %in% m & reg$rhs %in% m, , drop = FALSE]
+  if (nrow(mm) != 1L || mm$lhs == mm$rhs) {
+    .sem_fiml_diagnostic("unsupported FIML topology: the two mediators must be in sequence, without a cycle")
+  }
+  m1 <- mm$rhs
+  m2 <- mm$lhs
+  keys <- paste(tab$lhs, tab$op, tab$rhs)
+  reg_keys <- keys[tab$op == "~"]
+  if (anyDuplicated(reg_keys)) .sem_fiml_diagnostic("unsupported FIML topology or correlated disturbances")
+  written <- function(lhs, rhs) .sem_fiml_ser_written(tab, keys, lhs, rhs)
+  fixed_of <- function(lhs, rhs) tab$fixed[match(paste(lhs, "~", rhs), keys)]
+  label_of <- function(lhs, rhs) tab$label[match(paste(lhs, "~", rhs), keys)]
+  # the shortcut rows: any exogenous variable on M2, and M1 on Y; a fixed or labeled one is refused before the variant
+  # is decided (`M2 ~ M1 + 0*X` is a fixed shortcut, not a chain)
+  sc_lhs <- c(rep(m2, length(e)), y)
+  sc_rhs <- c(e, m1)
+  sc_here <- written(sc_lhs, sc_rhs)
+  if (any(sc_here & (!is.na(fixed_of(sc_lhs, sc_rhs)) | nzchar(label_of(sc_lhs, sc_rhs))), na.rm = TRUE)) {
+    .sem_fiml_diagnostic("FIML serial shortcut paths are free or absent, never fixed or labeled")
+  }
+  absent <- e[!written(m2, e)]
+  b1 <- written(y, m1)
+  if (length(absent) == 0L && b1) {
+    variant <- "saturated"
+  } else if (length(absent) == 1L && !b1) {
+    variant <- "chain"
+  } else {
+    .sem_fiml_diagnostic(paste0(
+      "unsupported FIML topology: serial mediation needs both shortcut paths (X to M2 and M1 to Y) or neither, ",
+      "and in the pure chain exactly one exogenous variable (the treatment) without a path to M2"
+    ))
+  }
+  y_keys <- paste(y, "~", e)
+  fixed_y <- which(y_keys %in% keys & !is.na(tab$fixed[match(y_keys, keys)]))
+  if (k > 0L && any(!y_keys %in% keys)) {
+    .sem_fiml_diagnostic("FIML with a covariate needs a Y path from each exogenous variable (free, or one fixed at 0)")
+  }
+  if (length(fixed_y) > 1L) .sem_fiml_diagnostic("only one direct path may be fixed, exactly at zero, in FIML")
+  x <- if (variant == "chain") {
+    absent
+  } else if (length(fixed_y)) {
+    e[fixed_y]
+  } else {
+    e[1L]
+  }
+  if (variant == "chain" && length(fixed_y) && e[fixed_y] != x) {
+    .sem_fiml_diagnostic("in the pure chain only the direct path of the treatment may be fixed, exactly at zero")
+  }
+  z <- setdiff(e, x)
+  if (any(!written(m1, e))) .sem_fiml_diagnostic("unsupported FIML topology: every exogenous variable needs a path to M1")
+  ex <- c(x, z)
+  # exogenous covariances in either written order are the one canonical pair
+  pair <- tab$op == "~~" & tab$lhs %in% ex & tab$rhs %in% ex & tab$lhs != tab$rhs
+  lo <- pmin(match(tab$lhs, ex), match(tab$rhs, ex))
+  hi <- pmax(match(tab$lhs, ex), match(tab$rhs, ex))
+  keys[pair] <- paste(ex[lo[pair]], "~~", ex[hi[pair]])
+  exo_cov <- if (k > 0L) paste(ex[utils::combn(k + 1L, 2L)[1L, ]], "~~", ex[utils::combn(k + 1L, 2L)[2L, ]]) else character()
+  # the three disturbance pairs, in structural order
+  pairs <- list(c(m1, m2), c(m1, y), c(m2, y))
+  is_pair <- lapply(pairs, function(p) {
+    tab$op == "~~" & ((tab$lhs == p[1L] & tab$rhs == p[2L]) | (tab$lhs == p[2L] & tab$rhs == p[1L]))
+  })
+  stray <- tab$op == "~~" & tab$lhs != tab$rhs & !pair & !Reduce(`|`, is_pair)
+  if (any(stray) || any(vapply(is_pair, sum, 0L) > 1L)) {
+    .sem_fiml_diagnostic("unsupported FIML topology or correlated disturbances")
+  }
+  free_pair <- vapply(is_pair, function(i) {
+    any(i & (is.na(tab$fixed) | (!is.na(tab$fixed) & tab$fixed != 0) | nzchar(tab$label)))
+  }, logical(1))
+  if (any(free_pair)) .sem_fiml_diagnostic("correlated serial disturbances are not supported in FIML")
+  labels <- vapply(pairs, function(p) paste0(p[1L], " ~~ 0*", p[2L]), character(1))
+  missing_zeros <- .sem_fiml_ser_missing_zeros(vapply(is_pair, sum, 0L), labels)
+  if (length(missing_zeros)) {
+    .sem_fiml_diagnostic(paste0(
+      "FIML serial mediation needs the independent disturbances written as ", paste(missing_zeros, collapse = ", ")
+    ))
+  }
+  keys[Reduce(`|`, is_pair)] <- "disturbance"
+  required <- c(
+    paste(m1, "~", e), paste(m2, "~", m1), if (variant == "saturated") paste(m2, "~", x),
+    if (k > 0L) paste(m2, "~", z),
+    if (variant == "saturated") paste(y, "~", m1), paste(y, "~", m2), if (k > 0L) paste(y, "~", z), exo_cov
+  )
+  cp <- paste(y, "~", x)
+  obs <- c(x, z, m1, m2, y)
+  allowed <- c(required, cp, "disturbance", paste(obs, "~~", obs), paste(obs, "~1", ""))
+  if (anyDuplicated(keys[keys != "disturbance"]) || any(!keys %in% allowed)) {
+    .sem_fiml_diagnostic("unsupported FIML topology or correlated disturbances")
+  }
+  if (!all(required %in% keys)) {
+    .sem_fiml_diagnostic("unsupported FIML topology: serial mediation needs M1 ~ X, M2 ~ M1 and Y ~ M2")
+  }
+  is_cp <- keys == cp
+  is_dist <- keys == "disturbance"
+  if (any(!is.na(tab$fixed) & !((is_cp | is_dist) & tab$fixed == 0 & !is.na(tab$fixed)))) {
+    .sem_fiml_diagnostic("only the direct path and the disturbance covariances may be fixed, exactly at zero, in FIML")
+  }
+  direct <- any(is_cp & is.na(tab$fixed))
+  conv <- .sem_to_ram(tab)
+  q_expected <- (if (variant == "saturated") 13L else 11L) + 5L * k + choose(k + 1L, 2L) + direct
+  if (conv$ram$q != q_expected) .sem_fiml_diagnostic("FIML does not support parameter ties")
+  tables <- .sem_fiml_tables_ser(direct, k, variant == "saturated")
+  # The data name of every kernel variable; the canonical key of every free table entry follows from it.
+  kernel <- stats::setNames(c(x, z, m1, m2, y), tables$vars)
+  free <- function(tb) is.na(tb$value)
+  canonical <- c(
+    paste(kernel[tables$a$row[free(tables$a)]], "~", kernel[tables$a$col[free(tables$a)]]),
+    paste(kernel[tables$s$row], "~~", kernel[tables$s$col]),
+    paste(kernel[tables$m$row], "~1", "")
+  )
+  labels <- c(tables$a$label[free(tables$a)], tables$s$label, tables$m$label)
+  stopifnot(length(labels) == length(canonical), length(labels) == conv$ram$q, all(canonical %in% keys))
+  map <- stats::setNames(conv$ram$par_names[conv$par_map[match(canonical, keys)]], labels)
+  out <- list(
+    parsed = parsed, conv = conv, vars = stats::setNames(c(x, m1, m2, y), c("X", "M1", "M2", "Y")), direct = direct,
+    map = map, mediators = stats::setNames(c(m1, m2), c("M1", "M2")), structure = "serial", variant = variant
+  )
+  if (k > 0L) out$covariate <- stats::setNames(z, .sem_fiml_cov_names(k)$z)
+  out
+}
+
 .sem_fiml_binding <- function(object) {
   list(
     model = object@model, data = object@data, theta = object@theta, vcov = object@vcov,
@@ -276,6 +440,13 @@
         ))
       }
       spec <- .sem_fiml_model(model)
+      serial <- identical(spec$structure, "serial")
+      if (serial && !isTRUE(.fiml_serial_admitted())) {
+        .sem_fiml_diagnostic(paste0(
+          "serial FIML is not yet available: the ", spec$variant, " serial syntax is valid but bounded FIML serial ",
+          "fits are withheld until their own admission"
+        ))
+      }
       # data columns in kernel order: X, [Z], M, Y (M1, M2 for the parallel form)
       model_vars <- if (is.null(spec$covariate)) {
         spec$vars
@@ -289,7 +460,12 @@
       }
       z <- as.matrix(d)
       colnames(z) <- names(model_vars)
-      if (!is.null(spec$mediators)) {
+      if (serial) {
+        tables <- .sem_fiml_tables_ser(spec$direct, length(spec$covariate), identical(spec$variant, "saturated"))
+        prepared <- .sem_fiml_prepare_core(z, tables, direct = spec$direct)
+        stage <- "numerical"
+        candidate <- .sem_fiml_solve(prepared)
+      } else if (!is.null(spec$mediators)) {
         tables <- .sem_fiml_tables_med(
           length(spec$mediators), spec$direct, isTRUE(spec$residual_covariance), length(spec$covariate)
         )
@@ -328,6 +504,10 @@
       )
       if (!is.null(spec$covariate)) likelihood$covariate <- unname(spec$covariate)
       if (!is.null(spec$mediators)) likelihood$mediators <- unname(spec$mediators)
+      if (serial) {
+        likelihood$structure <- "serial"
+        likelihood$variant <- spec$variant
+      }
       out <- SEMFit(
         theta = theta, vcov = V,
         table = tab[, c("lhs", "op", "rhs", "label", "free", "est", "se", "fixed_x")],
@@ -374,6 +554,12 @@
 
 .sem_fiml_extract <- function(object, treatment, mediator, args) {
   .sem_fiml_require(object)
+  if (identical(object@internals$likelihood$structure, "serial")) {
+    stop(structure(
+      class = c("medfit_error_fiml_extract_unsupported", "error", "condition"),
+      list(message = "FIML extraction of serial mediation fits is not yet available", call = NULL)
+    ))
+  }
   if (!is.null(object@internals$likelihood$mediators)) {
     return(.sem_fiml_extract_parallel(object, treatment, mediator, args))
   }
