@@ -287,7 +287,7 @@ test_that("V16: nesting on a sparse mask, direct-path ordering, and a restrictio
 # Rows 1-60 lack the second variable of the pair and rows 61-120 the first, so the pair is never jointly observed. The
 # chain restricts Cov(X, M2), Cov(M1, Y) and (fixed direct path) Cov(X, Y) through its structure, so it fits where the
 # saturated variant fails closed; the cells that do fail must fail closed with a class, never as a silent fit.
-sc_never <- function(pair, seed = 7701L, direct = "free") {
+sc_never_data <- function(pair, seed = 7701L) {
   set.seed(seed)
   n <- 120L
   d <- data.frame(X = stats::rnorm(n))
@@ -296,7 +296,10 @@ sc_never <- function(pair, seed = 7701L, direct = "free") {
   d$Y <- .5 * d$M2 + .2 * d$X + stats::rnorm(n)
   d[1:60, pair[2L]] <- NA_real_
   d[61:120, pair[1L]] <- NA_real_
-  tryCatch(sc_fit(d, direct), error = identity)
+  d
+}
+sc_never <- function(pair, seed = 7701L, direct = "free") {
+  tryCatch(sc_fit(sc_never_data(pair, seed), direct), error = identity)
 }
 test_that("V10: each never-jointly-observed pair is a finite fit or a classed numerical error, per direct policy", {
   out <- character()
@@ -318,6 +321,28 @@ test_that("V10: each never-jointly-observed pair is a finite fit or a classed nu
   # accepted candidate". The refusals are numerical and seed dependent, so only the class and the contrast are pinned.
   expect_true(all(out[grepl("^free", names(out))] == "fit"))
   expect_gte(sum(out == "fit"), 10L)
+})
+# Added after the first full-suite run (review): a finite fit is not a correct one, and these cells are new numerical
+# territory for the chain. Each fitted cell must agree with lavaan raw-data FIML wherever lavaan converges.
+test_that("V10: every fitted never-jointly-observed cell agrees with lavaan where lavaan converges", {
+  skip_if_not_installed("lavaan")
+  compared <- 0L
+  for (direct in c("free", "zero")) for (pair in utils::combn(c("X", "M1", "M2", "Y"), 2L, simplify = FALSE)) {
+    d <- sc_never_data(pair)
+    e <- sc_never(pair, direct = direct)
+    if (inherits(e, "error")) next
+    ref <- tryCatch(sb_lavaan(sc_model(direct), d), error = identity)
+    if (inherits(ref, "error") || !isTRUE(lavaan::lavInspect(ref, "converged"))) next
+    info <- paste(direct, paste(pair, collapse = ","))
+    q <- coef(e)
+    expect_lt(abs(as.numeric(logLik(e)) - as.numeric(lavaan::logLik(ref))), 1e-6, label = info)
+    # Observed on 2026-11-09: the logLik gap is below 1e-8 in every cell and the largest estimate gap 1.4e-5 (a flat
+    # likelihood with 120 rows and half of the rows missing a variable); the limit for the estimates is 5e-5 here, not
+    # the 1e-5 of the regular cells
+    expect_lt(max(abs(q - sb_align(lavaan::coef(ref), q))), 5e-5, label = info)
+    compared <- compared + 1L
+  }
+  expect_gte(compared, 6L)
 })
 test_that("V10: a weak first stage and a near-deterministic M2 ~ M1 fit like lavaan or error with a class", {
   skip_if_not_installed("lavaan")
