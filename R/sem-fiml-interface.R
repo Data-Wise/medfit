@@ -233,17 +233,17 @@
 
 # Fail-closed admission of serial FIML fits (FI-G3). `.fiml_serial_admitted()` is the master switch that opens every
 # serial shape (always FALSE; tests mock it to exercise the downstream serial plumbing: tables, ledger, source-fit and
-# extract refusals). Each slice admits its own shapes through `.fiml_serial_shape_admitted()`: slices S1b and S2 admit
-# the saturated variant and the pure chain with no covariates and nothing else (covariates are S3 and S4), so the
+# extract refusals). Each slice admits its own shapes through `.fiml_serial_shape_admitted()`: slices S1b, S2 and S3 admit
+# the saturated variant and the pure chain with no covariate or one covariate and nothing else (two covariates are S4), so the
 # predicate tests the variant AND the covariate count. Every other serial syntax is refused at fit with its classed
 # reason.
 .fiml_serial_admitted <- function() FALSE
 .fiml_serial_shape_admitted <- function(variant, k) {
-  isTRUE(.fiml_serial_admitted()) || (variant %in% c("saturated", "chain") && identical(as.integer(k), 0L))
+  isTRUE(.fiml_serial_admitted()) || (variant %in% c("saturated", "chain") && as.integer(k) %in% 0:1)
 }
 # The shapes `.sem_fiml_extract_serial()` implements (a mocked-open fit of any other shape is refused at extract).
 .fiml_serial_extract_supported <- function(variant, k) {
-  variant %in% c("saturated", "chain") && identical(as.integer(k), 0L)
+  variant %in% c("saturated", "chain") && as.integer(k) %in% 0:1
 }
 
 # Serial syntax: exactly one outcome, exactly two other endogenous variables, and a regression of one of them on the
@@ -742,11 +742,15 @@
   )
 }
 
-# Two serial mediators, both variants, no covariates (FI-G3 slices S1b and S2). Both mediators are named in the fitted
-# (structural) order; the reversed order asks for a different model (M2 -> M1) and is refused with the fitted order
-# named. The six (saturated) or four (pure chain) path estimates and their covariance are the fitted
+# Two serial mediators, both variants, with no covariate or one (FI-G3 slices S1b, S2 and S3). Both mediators are named in
+# the fitted (structural) order; the reversed order asks for a different model (M2 -> M1) and is refused with the fitted
+# order named. The six (saturated) or four (pure chain) path estimates and their covariance are the fitted
 # observed-information block, so every cross-path term (Cov(a, d1), Cov(d1, b), Cov(a2, d1), Cov(b1, b), ...) is kept,
-# unlike the separate-regression lm/glm route; a fixed-zero or omitted direct path is a zero row and column.
+# unlike the separate-regression lm/glm route; a fixed-zero or omitted direct path is a zero row and column. A covariate
+# coefficient is never a path: the aliases are the treatment's coefficients. In the saturated variant with a free direct
+# path a covariate may be named the treatment (it then takes a = gm1, a2 = gm2, c_prime = gy, the exogenous block being
+# symmetric); in the pure chain the treatment is structural (the variable with no path to M2) and naming a covariate is
+# refused (Q6a): its free Z -> M2 and Z -> Y paths would be the one-shortcut graph that is not admitted.
 .sem_fiml_extract_serial <- function(object, treatment, mediator, args) {
   ctx0 <- object@internals$likelihood
   v <- ctx0$variables
@@ -757,7 +761,8 @@
       list(message = message, call = NULL)
     ))
   }
-  if (!.fiml_serial_extract_supported(ctx0$variant, length(ctx0$covariate))) {
+  covariate <- ctx0$covariate
+  if (!.fiml_serial_extract_supported(ctx0$variant, length(covariate))) {
     refuse("FIML extraction of serial mediation fits is not yet available")
   }
   ok_mediators <- is.character(mediator) && length(mediator) == 2L && setequal(mediator, meds)
@@ -767,8 +772,21 @@
       "); the reversed order is a different model"
     ))
   }
+  chain <- identical(ctx0$variant, "chain")
+  spec <- .sem_fiml_model(object@model)
+  x0 <- unname(v["X"])
+  named_cov <- !is.null(covariate) && is.character(treatment) && length(treatment) == 1L && treatment %in% covariate
+  if (chain && named_cov) {
+    refuse(paste0(
+      "FIML extraction of the pure serial chain needs the structural treatment (", x0, ", the variable with no path ",
+      "to the second mediator); a covariate cannot be named the treatment"
+    ))
+  }
+  # With a free direct path any exogenous variable may be the saturated treatment; a fixed-zero direct path belongs to
+  # the fit's treatment `X` (a covariate's outcome path must be complete).
+  treatment_ok <- identical(treatment, x0) || (named_cov && !chain && spec$direct)
   allowed <- c("outcome", "standardized", "structure", "decomposition")
-  if (length(setdiff(names(args), allowed)) || !identical(treatment, unname(v["X"])) || !ok_mediators ||
+  if (length(setdiff(names(args), allowed)) || !treatment_ok || !ok_mediators ||
         (!is.null(args$outcome) && !identical(args$outcome, unname(v["Y"]))) ||
         (!is.null(args$standardized) && !identical(args$standardized, FALSE)) ||
         (!is.null(args$structure) && !args$structure %in% c("auto", "serial")) ||
@@ -777,15 +795,19 @@
       "FIML extraction supports only the fitted unstandardized two-way serial mediation naming both mediators in order"
     ))
   }
-  spec <- .sem_fiml_model(object@model)
   map <- spec$map
   par <- function(label) unname(map[[label]])
   # The kernel label of each role; the fitted parameter names may be user labels, so roles are read by topology.
   # The pure chain has no a2 and b1 rows at all (structural zeros): its aliases are the four paths a, d1, b, c_prime.
-  chain <- identical(ctx0$variant, "chain")
+  # A covariate named the treatment takes the covariate rows of the first mediator, the second mediator and Y.
+  as_covariate <- !is.null(covariate) && !identical(treatment, x0)
+  iz <- match(treatment, covariate)
+  sfx <- if (!is.null(covariate)) .sem_fiml_cov_names(length(covariate))$sfx
   roles <- c(
-    a = par("a"), if (!chain) c(a2 = par("a2")), d1 = par("d1"), if (!chain) c(b1 = par("b1")), b = par("b"),
-    c_prime = if (spec$direct) par("cp") else NA_character_
+    a = if (as_covariate) par(paste0("gm1z", iz)) else par("a"),
+    if (!chain) c(a2 = if (as_covariate) par(paste0("gm2z", iz)) else par("a2")),
+    d1 = par("d1"), if (!chain) c(b1 = par("b1")), b = par("b"),
+    c_prime = if (as_covariate) par(paste0("gy", sfx[iz])) else if (spec$direct) par("cp") else NA_character_
   )
   present <- !is.na(roles)
   estimates <- stats::setNames(numeric(length(roles)), names(roles))
@@ -793,9 +815,15 @@
   V <- matrix(0, length(roles), length(roles), dimnames = list(names(roles), names(roles)))
   V[present, present] <- object@vcov[roles[present], roles[present], drop = FALSE]
   sigma <- function(label) sqrt(unname(object@theta[par(label)]))
-  x <- unname(v["X"])
   y <- unname(v["Y"])
   ctx <- ctx0
+  # the treatment and the covariates as the extracted object names them (a covariate treatment swaps with X)
+  x <- if (as_covariate) treatment else x0
+  zz <- if (as_covariate) replace(covariate, iz, x0) else covariate
+  if (as_covariate) {
+    ctx$variables["X"] <- treatment
+    ctx$covariate <- zz
+  }
   ctx$source_theta <- object@theta
   ctx$source_vcov <- object@vcov
   ctx$source_roles <- roles
@@ -806,9 +834,10 @@
   b_path <- unname(estimates[["b"]])
   c_prime <- unname(estimates[["c_prime"]])
   ctx$parameter_hash <- rlang::hash(list(estimates, V, a_path, d_path, b_path, c_prime, ctx0$variant))
-  # the absent shortcuts of the chain are recorded as absent: X is not a predictor of M2, M1 is not a predictor of Y
-  mediator_predictors <- list(x, c(meds[1L], if (!chain) x))
-  outcome_predictors <- c(if (!chain) meds[1L], meds[2L], x)
+  # the absent shortcuts of the chain are recorded as absent: X is not a predictor of M2, M1 is not a predictor of Y;
+  # every covariate predicts every equation
+  mediator_predictors <- list(c(x, zz), c(meds[1L], if (!chain) x, zz))
+  outcome_predictors <- c(if (!chain) meds[1L], meds[2L], x, zz)
   FIMLSerialMediationData(
     a_path = a_path, d_path = d_path, b_path = b_path, c_prime = c_prime, estimates = estimates, vcov = V,
     sigma_mediators = c(sigma("vm1"), sigma("vm2")), sigma_y = sigma("vy"),

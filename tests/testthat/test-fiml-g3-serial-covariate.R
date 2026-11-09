@@ -7,6 +7,11 @@
 # helper-fiml-serial.R (sb_*) and helper-fiml-serial3.R (s3_*). The covariate effects in the data-generating process are
 # large and distinct from the path values, so a covariate coefficient mistaken for a path cannot hide.
 
+s3_observe <- function(model, data) {
+  e <- tryCatch(fit_sem(model, data, missing = "fiml", fixed_x = FALSE), error = identity)
+  if (!inherits(e, "error")) return(list(class = "<fit>", message = NA_character_))
+  list(class = class(e), message = conditionMessage(e))
+}
 s3_cells <- expand.grid(variant = c("saturated", "chain"), direct = c("free", "zero"), stringsAsFactors = FALSE)
 
 # ---- admission ------------------------------------------------------------------------------------------------------
@@ -42,7 +47,7 @@ test_that("the admission predicates open k = 1 for both variants and keep k = 2 
 test_that("k = 2 serial syntax stays refused with the not-yet-available reason, for both variants", {
   d <- s3_data("complete")
   d$Z1 <- d$Z
-  d$Z2 <- d$X - d$Z
+  d$Z2 <- stats::rnorm(nrow(d))
   for (v in c("saturated", "chain")) {
     sat <- v == "saturated"
     m <- paste(c(
@@ -299,7 +304,7 @@ test_that("the path rows and intervals come from the extracted covariance: every
     expect_lt(max(abs((ci[, 2L] - ci[, 1L]) / 2 / stats::qnorm(.975) - sqrt(diag(z@vcov)[alias]))), 1e-10)
     expect_identical(names(coef(z, type = "paths")), if (v == "saturated") c("a", "a2", "d", "b1", "b", "c_prime") else
       c("a", "d", "b", "c_prime"))
-    ce <- confint(z, parm = "effects")
+    ce <- suppressWarnings(confint(z, parm = "effects"))
     expect_identical(rownames(ce), c("nie", "nie_total", "nde", "te"))
   }
 })
@@ -403,7 +408,7 @@ test_that("extraction refuses the reversed mediators, a covariate as mediator, s
 test_that("k = 2 extraction stays refused for a mock-opened fit, both variants", {
   d <- s3_data("complete")
   d$Z1 <- d$Z
-  d$Z2 <- d$X - d$Z
+  d$Z2 <- stats::rnorm(nrow(d))
   testthat::local_mocked_bindings(.fiml_serial_admitted = function() TRUE)
   for (v in c("saturated", "chain")) {
     sat <- v == "saturated"
@@ -535,10 +540,11 @@ test_that("the tied-shortcut and the written exogenous-covariance forms behave a
   # the exogenous covariance written (either order) is the same model as the omitted one
   f0 <- s3_fit(d, "saturated", "free")
   fz <- s3_fit(d, model = s3_model("saturated", "free", exo_cov = TRUE))
-  expect_equal(coef(fz), coef(f0), tolerance = 1e-8)
+  expect_equal(unname(s3_align_v(coef(fz), names(coef(f0)))), unname(coef(f0)), tolerance = 1e-8)
   fr <- s3_fit(d, model = sub("X ~~ Z", "Z ~~ X", s3_model("chain", "free", exo_cov = TRUE), fixed = TRUE),
                variant = "chain")
-  expect_equal(coef(fr), coef(s3_fit(d, "chain", "free")), tolerance = 1e-8)
+  fc <- s3_fit(d, "chain", "free")
+  expect_equal(unname(s3_align_v(coef(fr), names(coef(fc)))), unname(coef(fc)), tolerance = 1e-8)
   # a labeled free exogenous covariance is a different (tied) statement and not admitted as a path
   e <- tryCatch(s3_fit(d, model = paste0(s3_model("saturated", "free"), "\nX ~~ c*Z\nX ~~ c*X")), error = identity)
   expect_s3_class(e, "medfit_sem_fiml_error")
@@ -560,7 +566,7 @@ test_that("the new k = 1 tables are frozen with identical() for S4, and the refu
   expect_identical(b3$models, b2$models)
   changed <- c("ser_sat1_zeros", "ser_chain1_zeros", "ser_chain_z_omitted", "ser_partial_exo_cov_sat1")
   for (nm in names(b3$models)) {
-    got <- b0_observe(b3$models[[nm]], b3$data)
+    got <- s3_observe(b3$models[[nm]], b3$data)
     expect_identical(got$class, b3$results[[nm]]$class, info = nm)
     expect_identical(got$message, b3$results[[nm]]$message, info = nm)
     if (nm %in% changed) {
