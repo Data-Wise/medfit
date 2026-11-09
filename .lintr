@@ -11,6 +11,15 @@ exclusions: list(
     "tests/sim/sem-constrained-gate.R" = list(object_usage_linter = Inf),
     "tests/sim/sem-parity-gate.R" = list(object_usage_linter = Inf),
     "tests/sim/oracle213.R" = list(object_usage_linter = Inf, line_length_linter = Inf, commented_code_linter = Inf,
-                                   object_name_linter = Inf)
+                                   object_name_linter = Inf),
+    # FIML helpers (gk_*, fo_*) are defined in other helper files, which object_usage_linter cannot see
+    "tests/testthat/helper-fiml-generic.R" = list(object_usage_linter = Inf),
+    "tests/testthat/helper-fiml-golden.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g1-covariate.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g1-two-covariates.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g2-parallel.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g2-residual-covariance.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-generic-kernel-fourvar.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-generic-kernel-oracle.R" = list(object_usage_linter = Inf)
   )
 encoding: "UTF-8"
