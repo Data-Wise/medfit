@@ -296,8 +296,9 @@ mediator disturbances written as `M1 ~~ 0*M2` (either order).
 - Consumers refuse the object as they refuse a simple FIML object: `pm()`, `glance()`, `quick()`,
   `confint(method = "boot")`, `bootstrap_mediation(mediation_data = )`. `print()` states the FIML context and
   `tidy()` carries `fit_context`.
-- The exact-origin rule (all `a_j = b_j = 0`, NIE SE `NA` for a zero delta gradient) is not extended to the parallel
-  class: the estimates are exact zeros only on constructed objects, and no fit reaches it.
+- The exact-origin rule (all `a_j = b_j = 0`, NIE SE `NA` for a zero delta gradient) covers the parallel class too (fixed
+  in #383, `25dd504c`, also with covariates): the estimates are exact zeros only on constructed objects, and no fit
+  reaches it.
 - Still refused at prepare, fit, extract and both `source_fit` methods: a free or implicit mediator residual
   covariance, mediators affecting each other (serial), a mediator that does not affect Y or is not affected by X, three
   or more mediators, any covariate with the parallel structure, interactions, ties, constraints, bounds, defined
