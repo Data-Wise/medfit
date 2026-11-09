@@ -97,13 +97,46 @@
 #' @section Bounded FIML:
 #' Explicit `missing = "fiml"` fits a joint Gaussian random-X model under ignorable
 #' missingness (for example, MAR with the usual ignorability conditions). It evaluates
-#' observed components, without imputing values. It supports exactly three numeric
-#' continuous observed variables in X -> M -> Y, with the X -> Y path free or fixed
-#' exactly at zero, independent disturbances and free intercepts. Names and labels
-#' are arbitrary. Extra predictors, latent variables, products, factors, correlated
-#' disturbances, parameter ties, bounds, general constraints, defined parameters and
-#' syntax-supplied starts are not supported. Input checks and local numerical gates
-#' do not establish global identification, a global optimum or inference coverage.
+#' observed components, without imputing values. It supports numeric continuous
+#' observed variables in four shapes: X -> M -> Y (three variables), the
+#' same model with one covariate `Z`, with two covariates `Z1` and `Z2`, and two
+#' parallel mediators (see below). The
+#' X -> Y path is free or fixed exactly at zero, intercepts are free, and
+#' disturbances are independent except the free mediator residual covariance of the
+#' parallel form. Names and labels are arbitrary.
+#'
+#' With covariates the regressions are `M ~ X + Z` and `Y ~ M + X + Z` (one
+#' covariate), or `M ~ X + Z1 + Z2` and `Y ~ M + X + Z1 + Z2` (two). Every
+#' exogenous variable needs a written path to `Y`, and every covariate path to `M`
+#' is free. The exogenous variables have a free joint covariance: write every pair
+#' (in either order) or none; a partial set is refused. Any variable may be
+#' incomplete. With no `Y` path fixed at zero, the first exogenous variable is the
+#' fit's treatment and [extract_mediation()] may name any exogenous variable as the
+#' treatment; with exactly one `Y` path fixed at zero, that variable is the
+#' treatment. Parameter counts are 8 or 9 (three variables), 13 or 14 (one
+#' covariate) and 19 or 20 (two covariates), without or with the direct path.
+#' Three or more covariates, a covariate on one equation only, residual
+#' covariances (other than the parallel mediator covariance), extra predictors beyond these, latent variables, products,
+#' factors, correlated disturbances, parameter ties, bounds, general constraints,
+#' defined parameters and syntax-supplied starts are not supported. The covariate
+#' fits are implemented and numerically verified against lavaan and an independent
+#' likelihood; their coverage has not been calibrated or statistically admitted.
+#' Input checks and local numerical gates do not establish global identification,
+#' a global optimum or inference coverage.
+#'
+#' Two parallel mediators (`M1 ~ X`, `M2 ~ X`, `Y ~ M1 + M2`, with or without
+#' `Y ~ X`, no covariates) are fitted in two forms. Independent residuals require
+#' the statement `M1 ~~ 0*M2` (either order): an omitted statement is refused
+#' because lavaan's default would free it. A free, label-less `M1 ~~ M2` fits the
+#' mediator residual covariance. A labeled, fixed nonzero, bounded, tied or
+#' otherwise constrained covariance is refused. The free-parameter count is 12 or
+#' 13 (independent residuals) and 13 or 14 (free covariance), without or with the
+#' direct path. [extract_mediation()] needs both mediators named and returns a
+#' `FIMLParallelMediationData` object with the full path covariance of `a1`, `a2`,
+#' `b1`, `b2` and `c_prime`, so the sum of the indirect effects keeps every
+#' cross-path term. Parallel mediation with covariates, serial mediation and three
+#' or more mediators stay refused. Extraction refusals for the parallel form have
+#' class `medfit_error_fiml_extract_unsupported`.
 #'
 #' Supply `fixed_x = FALSE` explicitly; omission, `TRUE` and named subsets are errors.
 #' Require `meanstructure = TRUE`, `information = "observed"`, `se_type = "model"`,
@@ -117,7 +150,8 @@
 #' all-empty rows. Singleton patterns and data with no complete rows are supported
 #' when the local identification and information checks pass. Original positional
 #' row IDs and pattern counts are retained. `logLik()` includes the full Gaussian
-#' constants, with its `df` attribute equal to the free-parameter count (8 or 9).
+#' constants, with its `df` attribute equal to the free-parameter count (8 or 9 for three variables; see above for
+#' covariates).
 #' AIC and BIC use that likelihood and retained row count. The discrepancy `f` and
 #' model-test `df` are `NA`: no saturated missing-data reference model is fitted.
 #'
@@ -133,8 +167,13 @@
 #' extracted-object `glance()`, `quick()`, `pm()`, extracted-object bootstrap, profiles,
 #' MBCO and fit tests remain unavailable. The [bootstrap_mediation()] `source_fit`
 #' intervals are implemented but withheld (refused with a classed error) until
-#' statistical admission is decided. Object-aware package guards precede
-#' package-controlled refits/RNG/workers; opaque user callbacks and external-first
+#' statistical admission is decided; a covariate fit is additionally refused with
+#' `medfit_error_fiml_covariate_source_fit` and a parallel fit with
+#' `medfit_error_fiml_parallel_source_fit`, so no source-fit interval exists for
+#' either. Delta-method Wald intervals stay available for these extracted objects;
+#' as for the three-variable model, the NIE standard error is `NA` only at the
+#' exact origin (every a and b path exactly zero).
+#' Object-aware package guards precede package-controlled refits/RNG/workers; opaque user callbacks and external-first
 #' dispatch remain outside that guarantee. Adapter/topology/numerical failures retain
 #' stage, reason, original parent and completed attempts; basic argument-type errors
 #' can occur earlier. A dedicated `fiml-1` ledger binds likelihood, rows, settings

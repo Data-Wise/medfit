@@ -17,7 +17,10 @@ This is the bounded FIML addition introduced in 0.16.0. Released 0.15.0
 does not supply it. The examples use exactly three continuous observed variables,
 Gaussian random-X mediation, free intercepts and independent disturbances. The
 direct X-to-Y path may be free or fixed at zero. More general models are outside
-this route. Read the [native guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
+this route. (The development version after 0.16.0 also fits one or two
+covariates and two parallel mediators; those variants are described in the native
+guide and are not used here.)
+Read the [native guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
 for the full setting restrictions and
 [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html#bounded-fiml)
 for the general likelihood and information definitions.
@@ -285,7 +288,8 @@ substituting another analysis.
 The supported route requires three numeric continuous observed variables,
 random X (`fixed_x = FALSE`), a mean structure, observed information, model-based
 standard errors and no weights. The free or exactly zero direct path is the only
-allowed topology variation. Latent variables, extra predictors, factors,
+allowed topology variation in 0.16.0; the development version adds one or two
+covariates and two parallel mediators (see the native guide). Latent variables, extra predictors, factors,
 products, constraints, ties and user-supplied bounds are outside this route.
 The validated start/control settings also apply; see the native guide.
 

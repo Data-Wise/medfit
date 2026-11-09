@@ -466,6 +466,7 @@ S7::method(te, ParallelMediationData) <- function(x, ...) {
 #' @describeIn pm Method for ParallelMediationData
 #' @noRd
 S7::method(pm, ParallelMediationData) <- function(x, ...) {
+  .sem_fiml_refuse(x, "pm()")
   indirect <- sum(x@a_paths * x@b_paths)
   total <- indirect + x@c_prime
 

@@ -108,6 +108,24 @@
   checkmate::assert_count(ncores, positive = TRUE, null.ok = TRUE, .var.name = "ncores")
   checkmate::assert_int(seed, null.ok = TRUE, .var.name = "seed")
   spec <- .sem_fiml_model(source@model)
+  if (!is.null(spec$covariate)) {
+    stop(structure(
+      class = c("medfit_error_fiml_covariate_source_fit", "error", "condition"),
+      list(message = paste0(
+        "bootstrap_mediation(source_fit = ...) is not available for covariate FIML fits: ",
+        "only the three-variable model has source-fit inference."
+      ), call = NULL)
+    ))
+  }
+  if (!is.null(spec$mediators)) {
+    stop(structure(
+      class = c("medfit_error_fiml_parallel_source_fit", "error", "condition"),
+      list(message = paste0(
+        "bootstrap_mediation(source_fit = ...) is not available for parallel FIML fits: ",
+        "only the three-variable model has source-fit inference."
+      ), call = NULL)
+    ))
+  }
   theta <- source@theta
   if (!setequal(names(theta), unname(spec$map)) || anyDuplicated(names(theta)) || any(!is.finite(theta))) {
     stop("source_fit must contain finite canonical free parameters", call. = FALSE)

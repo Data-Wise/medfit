@@ -428,6 +428,7 @@ S7::method(confint, ParallelMediationData) <- function(object,
                                                        method = c("normal", "boot"),
                                                        ...) {
   method <- match.arg(method)
+  if (.sem_fiml_is(object) && identical(method, "boot")) .sem_fiml_refuse(object, "bootstrap CI")
   if (identical(method, "boot")) {
     stop("Bootstrap CIs are computed via bootstrap_mediation(); ",
          "call it directly with the desired statistic.", call. = FALSE)
@@ -448,6 +449,8 @@ S7::method(confint, ParallelMediationData) <- function(object,
     coefs <- coef(object, type = "effects")      # indirect, direct, total
     se <- .effect_se(object, c("nie", "nde", "te"))
     names(se) <- names(coefs)
+    # exact origin: zero delta gradient, so the NIE interval is withheld (as for the single-mediator FIML object)
+    if (.sem_fiml_origin(object)) se[["indirect"]] <- NA_real_
   } else {
     stop("`parm` must be 'paths' or 'effects'.", call. = FALSE)
   }
@@ -457,6 +460,9 @@ S7::method(confint, ParallelMediationData) <- function(object,
     paste0(format(100 * alpha / 2, digits = 3), " %"),
     paste0(format(100 * (1 - alpha / 2), digits = 3), " %")
   )
+  if (.sem_fiml_origin(object) && identical(parm, "effects")) {
+    attr(ci_mat, "note") <- "NIE inference unavailable: zero delta gradient"
+  }
   ci_mat
 }
 
