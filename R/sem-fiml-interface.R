@@ -125,8 +125,8 @@
   )
 }
 
-# Number of covariates the parallel form admits (slice 3: one; slice 4 lifts it to two).
-.sem_fiml_par_cov_max <- function() 1L
+# Largest number of covariates the parallel form admits.
+.sem_fiml_par_cov_max <- function() 2L
 
 # Two parallel mediators (FI-G2): M1 ~ X, M2 ~ X and Y ~ M1 + M2 [+ X], independent disturbances. The independence of
 # the two mediator disturbances must be WRITTEN as `M1 ~~ 0*M2` (either order): an omitted statement is ambiguous with

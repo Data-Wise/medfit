@@ -695,3 +695,22 @@ test_that("the oracles catch planted extraction defects: swapped a, zeroed Cov(b
   wrong <- mutated("a_aliases <- map[paste0(\"a\", i)]", "a_aliases <- map[paste0(\"gm\", i, \"z1\")]")
   expect_gt(abs(as.numeric(nie(wrong)) - as.numeric(nie(m))), .05)
 })
+
+test_that("the oracles catch planted kernel defects with two covariates", {
+  skip_if_not_installed("lavaan")
+  fx_skip_covr()
+  k <- 2L
+  d <- p4_data(k)
+  ref <- p4_lavaan(d, p4_model(k, TRUE, "free"))
+  full <- .sem_fiml_tables_med(2L, TRUE, TRUE, k = k)
+  expect_lt(p4_kernel_gap(d, ref, full, k), 1e-5) # positive control
+  t1 <- full
+  t1$a <- t1$a[!(t1$a$row == "M1" & t1$a$col == "Z2"), ]
+  expect_gt(p4_kernel_gap(d, ref, t1, k), 1e-2)
+  t2 <- full
+  t2$s <- t2$s[!(t2$s$row == "Z1" & t2$s$col == "Z2"), ]
+  expect_gt(p4_kernel_gap(d, ref, t2, k), 1e-2)
+  t3 <- full
+  t3$a <- t3$a[t3$a$label != "gy2", ]
+  expect_gt(p4_kernel_gap(d, ref, t3, k), 1e-2)
+})
