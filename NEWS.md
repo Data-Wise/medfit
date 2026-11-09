@@ -3,6 +3,24 @@
 ## Added
 
 * Bounded Gaussian random-X FIML (`fit_sem(missing = "fiml", fixed_x = FALSE)`
+  and `extract_mediation()`) now also fits two parallel mediators without
+  covariates: `M1 ~ X`, `M2 ~ X`, `Y ~ M1 + M2` with a free or exactly zero direct
+  path. Independent residuals need `M1 ~~ 0*M2` written (an omitted statement is
+  refused, since lavaan's default would free it); a free, label-less `M1 ~~ M2`
+  fits the mediator residual covariance. The free-parameter count is 12 or 13
+  (independent) and 13 or 14 (free covariance). A labeled, fixed nonzero, bounded,
+  tied or constrained covariance is refused, as are parallel mediators with
+  covariates, serial mediators and three or more mediators. `extract_mediation()`
+  returns a `FIMLParallelMediationData` object with the full covariance of
+  `a1`, `a2`, `b1`, `b2` and `c_prime`, so the standard error of the sum of the
+  indirect effects keeps the cross-path terms. Extraction refusals for this form
+  have class `medfit_error_fiml_extract_unsupported`. The fits are numerically
+  verified, not calibrated for coverage or statistically admitted; delta-method
+  Wald intervals are available, while `bootstrap_mediation(source_fit = )` stays
+  withheld (`medfit_error_fiml_inference_unavailable`) and a parallel fit is also
+  refused with `medfit_error_fiml_parallel_source_fit`.
+
+* Bounded Gaussian random-X FIML (`fit_sem(missing = "fiml", fixed_x = FALSE)`
   and `extract_mediation()`) now also fits one covariate `Z` or two covariates
   `Z1`, `Z2` besides X, M and Y: `M ~ X + covariates`, `Y ~ M + X + covariates`,
   a free joint covariance among the exogenous variables (write every pair or
@@ -11,7 +29,8 @@
   required. With no fixed outcome path any exogenous variable may be the
   treatment in `extract_mediation()`; with exactly one fixed at zero, that variable
   is. Three or more covariates, a covariate on one equation only, residual
-  covariances, constraints, interactions, parallel and serial models stay refused.
+  covariances, constraints, interactions, serial models and covariates combined with
+  parallel mediators stay refused.
   The fits are implemented and numerically verified against lavaan and an
   independent likelihood; they are not calibrated for coverage or statistically
   admitted, and neither are their normal intervals. `bootstrap_mediation(source_fit = )`

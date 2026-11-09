@@ -229,7 +229,8 @@ The explicit opt-in below fits numeric continuous observed variables: X to M
 to Y (three variables) with a free or exactly zero direct path, independent
 Gaussian disturbances and free intercepts. After 0.16.0 the development version
 also fits the same model with one covariate or two covariates (see
-[covariates](#bounded-fiml-covariates)). It assumes ignorable missingness
+[covariates](#bounded-fiml-covariates)) and two parallel mediators (see
+[parallel mediators](#bounded-fiml-parallel)). It assumes ignorable missingness
 under that joint model; FIML does not impute the missing values.
 
 Generate continuous Gaussian X, M and Y with independent disturbances for this
@@ -292,7 +293,7 @@ back to listwise deletion or another engine, even on complete data.
 | `information`, `se_type` | `"observed"`, `"model"` |
 | Weights | No non-NULL vector, including unit weights or the deprecated alias |
 | `n_starts`, `control` | `NULL` or 3; empty control; no syntax-supplied starts |
-| Topology | X, M, Y, with at most two covariates; free or exactly zero direct path; no `:=`, constraints, ties, bounds, other extra predictors, latent variables, factors or products |
+| Topology | X, M, Y, with at most two covariates, or X, M1, M2, Y (two parallel mediators, no covariates); free or exactly zero direct path; no `:=`, constraints, ties, bounds, other extra predictors, latent variables, factors or products |
 
 The start/control restrictions preserve the initial validated protocol, rather
 than expressing mathematical limits of FIML. Three starts run for each solver;
@@ -312,7 +313,8 @@ parameter tidy and normal confidence intervals work on the SEMFit. Its
 `glance()` reports likelihood/IC fields, with model-test fields unavailable and
 an explicit reason. The discrepancy `f` and model-test `df` are `NA`; the separate
 free-parameter count is eight or nine (three variables; 13 or 14 and 19 or 20 with
-one and two covariates, without or with the direct path). There is no saturated missing-data fit.
+one and two covariates; 12 or 13 and 13 or 14 for parallel mediators with independent
+residuals and with a free residual covariance; without or with the direct path). There is no saturated missing-data fit.
 See [Methods and Formulas](methods.html#bounded-fiml) for the likelihood.
 
 ### Covariates {#bounded-fiml-covariates}
@@ -331,8 +333,8 @@ disturbances, and any variable may be incomplete. The rules:
   variable as the treatment. With exactly one `Y` path fixed at zero (`0*X`),
   that variable is the treatment.
 - Three or more covariates, a covariate on one equation only, residual
-  covariances, constraints, ties, products and parallel or serial mediators
-  remain refused.
+  covariances, constraints, ties, products and serial mediators
+  remain refused, as do covariates combined with parallel mediators.
 
 These fits are implemented and numerically verified against lavaan and an
 independent likelihood. They are not calibrated for coverage and not
@@ -340,6 +342,36 @@ statistically admitted, so the normal (delta-method) intervals carry the same
 caveat as the three-variable fit. `bootstrap_mediation(source_fit = )` is
 withheld for every FIML fit, and a covariate fit is additionally refused by its
 own error (`medfit_error_fiml_covariate_source_fit`).
+
+### Parallel mediators {#bounded-fiml-parallel}
+
+Development version only; not in 0.16.0. The opt-in also fits two parallel
+mediators, written `M1 ~ X`, `M2 ~ X` and `Y ~ M1 + M2` (the direct path
+`Y ~ X` is free, fixed at exactly zero, or omitted), with no covariates. Any
+variable may be incomplete. The rules:
+
+- Independent residuals need the statement `M1 ~~ 0*M2` (either order). Omitting
+  the statement is refused: lavaan's default would free that covariance, so
+  silence is ambiguous.
+- A free, label-less `M1 ~~ M2` fits the mediator residual covariance.
+  A labeled, fixed nonzero, bounded, tied or otherwise constrained covariance
+  is refused.
+- The free-parameter count is 12 or 13 with independent residuals and 13 or 14
+  with the free covariance, without or with a free direct path.
+- `extract_mediation(fit, treatment = , mediator = c("M1", "M2"))` names both
+  mediators and returns a `FIMLParallelMediationData` object. Its covariance is
+  the fitted full covariance of `a1`, `a2`, `b1`, `b2` and `c_prime`, so the
+  standard error of the sum of the indirect effects keeps the cross-path terms
+  (unlike separate regressions). A refused extraction has class
+  `medfit_error_fiml_extract_unsupported`.
+- Parallel mediators with covariates, serial mediators and three or more
+  mediators remain refused.
+
+Like the covariate fits, these are implemented and numerically verified but not
+calibrated for coverage or statistically admitted. Delta-method Wald intervals
+for paths and effects are available. `bootstrap_mediation(source_fit = )` is
+withheld by `medfit_error_fiml_inference_unavailable`; behind that guard a parallel
+fit has no source-fit route either (`medfit_error_fiml_parallel_source_fit`).
 
 Extraction preserves validated FIML context through copying and serialization.
 Original SEMFit labels/full covariance stay unchanged; extracted a/b/c_prime
@@ -350,7 +382,7 @@ confidence intervals. At a = b = 0 the NIE point value is retained but its
 inferential fields are unavailable. A fixed direct path of zero instead has
 known zero covariance; other valid effect inference remains available.
 
-Implemented but currently withheld (the call is refused pending admission; covariate fits have no source-fit route): `bootstrap_mediation(source_fit = fiml_fit, effect = "nie",
+Implemented but currently withheld (the call is refused pending admission; covariate and parallel fits have no source-fit route): `bootstrap_mediation(source_fit = fiml_fit, effect = "nie",
 method = "nonparametric")` uses the original accepted source fit for a retained-row
 FIML percentile interval. Explicit `method = "parametric"` instead gives a joint
 Gaussian parameter-draw percentile interval with no refits. Both use the original

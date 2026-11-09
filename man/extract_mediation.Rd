@@ -57,6 +57,10 @@ name any exogenous variable when no outcome path is fixed at zero; with
 exactly one outcome path fixed at zero, that variable is the treatment. The
 other exogenous variables are the covariates; three or more covariates, a
 covariate on one equation only and every other structure are refused.
+A fit with two parallel mediators extracts to a \code{FIMLParallelMediationData}
+object when \code{mediator} names both mediators (\code{structure = "parallel"} or
+\code{"auto"}); it carries the full covariance of the paths, and a refusal has
+class \code{medfit_error_fiml_extract_unsupported}.
 \item \strong{brmsfit}: Extract from Bayesian models (future)
 }
 

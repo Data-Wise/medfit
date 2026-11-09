@@ -527,7 +527,8 @@ the listwise path unless stated otherwise.
 The separate `missing = "fiml"` route supports only Gaussian
 random-X simple mediation with three continuous numeric observed variables
 (or the development-version variants with one or two covariates and a free joint
-exogenous covariance), independent disturbances, free intercepts and a free or exactly zero direct path. It assumes
+exogenous covariance, or with two parallel mediators), independent disturbances
+(the parallel form also allows a free mediator residual covariance), free intercepts and a free or exactly zero direct path. It assumes
 ignorable missingness under that model; choosing FIML does not validate MAR or
 protect against nonignorable missingness. See the
 [native guide](native-guide.html#bounded-fiml) for settings and API limits.

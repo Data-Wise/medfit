@@ -22,8 +22,8 @@ model, from one mediator to a latent variable.
 
 medfit 0.16.0 adds explicit `fit_sem(missing = "fiml", fixed_x = FALSE)` for
 three-variable Gaussian random-X mediation, preserving listwise defaults. The
-development version also fits one or two covariates (implemented and verified
-against lavaan, not calibrated for coverage). It is
+development version also fits one or two covariates and two parallel mediators
+(implemented and verified against lavaan, not calibrated for coverage). It is
 unavailable in 0.15.0 and earlier. Observed/model SEs and
 unstandardized effects and normal intervals are supported. The model requires
 continuous X, M and Y, a free or exactly zero direct path, independent Gaussian
