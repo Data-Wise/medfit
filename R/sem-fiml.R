@@ -72,10 +72,10 @@
 }
 # Two serial mediators (FI-G3): X -> M1 -> M2 -> Y with independent disturbances and k = 0, 1 or 2 observed covariates.
 # `shortcuts = TRUE` is the saturated forward graph (the rows M2 <- X, label a2, and Y <- M1, label b1, are free);
-# `shortcuts = FALSE` is the pure chain: those two rows are absent, not fixed at zero. `direct` frees or fixes at exactly
-# zero the Y <- X row. Every covariate has a path to M1, M2 and Y, and the exogenous variables are jointly Gaussian with
-# a free covariance for every pair. There is no free residual covariance among M1, M2 and Y. Kernel order X, [Z],
-# M1, M2, Y. Labels: a, a2, d1, b1, b, cp, gm1z<i> and gm2z<i> (covariate i -> M1, M2), gy (gy1, gy2) for the covariate
+# `shortcuts = FALSE` is the pure chain: those two rows are absent, not fixed at zero. `direct` frees or fixes at
+# exactly zero the Y <- X row. Every covariate has a path to M1, M2 and Y, and the exogenous variables are jointly
+# Gaussian with a free covariance for every pair. There is no free residual covariance among M1, M2 and Y. Kernel
+# order X, [Z], M1, M2, Y. Labels: a, a2, d1, b1, b, cp, gm1z<i> and gm2z<i> (covariate i -> M1, M2), gy (gy1, gy2) for the covariate
 # Y paths, vx, vz, vm1, vm2, vy, the exogenous covariances cxz (cxz1, cxz2, cz1z2), ix, iz, im1, im2, iy. The parameter
 # count is 13 + 5k + choose(k + 1, 2) + direct for the saturated graph and 11 + 5k + choose(k + 1, 2) + direct for the
 # chain.
@@ -93,7 +93,9 @@
   a <- rbind(
     path("M1", "X", "a"),
     if (shortcuts) path("M2", "X", "a2"),
-    if (k > 0L) path(rep(c("M1", "M2"), k), rep(z, each = 2L), paste0("gm", rep(1:2, k), "z", rep(seq_len(k), each = 2L))),
+    if (k > 0L) {
+      path(rep(c("M1", "M2"), k), rep(z, each = 2L), paste0("gm", rep(1:2, k), "z", rep(seq_len(k), each = 2L)))
+    },
     path("M2", "M1", "d1"),
     if (shortcuts) path("Y", "M1", "b1"),
     path("Y", "M2", "b"),

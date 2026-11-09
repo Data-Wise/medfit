@@ -108,7 +108,7 @@
   checkmate::assert_count(ncores, positive = TRUE, null.ok = TRUE, .var.name = "ncores")
   checkmate::assert_int(seed, null.ok = TRUE, .var.name = "seed")
   spec <- .sem_fiml_model(source@model)
-  # Serial fits come first: a serial fit with covariates (or with its two mediators) must get the serial class at every k.
+  # Serial fits come first: a serial fit with covariates (or two mediators) gets the serial class at every k.
   if (identical(spec$structure, "serial")) {
     stop(structure(
       class = c("medfit_error_fiml_serial_source_fit", "error", "condition"),

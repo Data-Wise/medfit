@@ -122,7 +122,7 @@ test_that("the chain's one variable absent from M2 is identified as the treatmen
   expect_true(sr_refused(m1, "pure chain|direct path"))
 })
 
-test_that("F6: variant detection counts every written term, fixed ones included, and checks the treatment's equations", {
+test_that("F6: variant detection counts every written term, fixed ones included, and checks the treatment", {
   # (b) a 0* shortcut term is a fixed shortcut, not a chain
   fixed_sc <- paste("M1 ~ X + Z", "M2 ~ M1 + 0*X + Z", "Y ~ M2 + X + Z", paste(sr_zeros, collapse = "\n"), sep = "\n")
   expect_true(sr_refused(fixed_sc, "shortcut paths are free or absent"))
@@ -143,7 +143,8 @@ test_that("F6: variant detection counts every written term, fixed ones included,
   b1_only <- paste("M1 ~ X", "M2 ~ M1", "Y ~ M1 + M2 + X", paste(sr_zeros, collapse = "\n"), sep = "\n")
   expect_true(sr_refused(x_only, "shortcut"))
   expect_true(sr_refused(b1_only, "shortcut"))
-  two_absent <- paste("M1 ~ X + Z1 + Z2", "M2 ~ M1 + Z2", "Y ~ M2 + X + Z1 + Z2", paste(sr_zeros, collapse = "\n"), sep = "\n")
+  two_absent <- paste("M1 ~ X + Z1 + Z2", "M2 ~ M1 + Z2", "Y ~ M2 + X + Z1 + Z2", paste(sr_zeros, collapse = "\n"),
+                      sep = "\n")
   expect_true(sr_refused(two_absent, "shortcut|absent"))
   # a refused variant is never classified as a chain
   for (m in c(fixed_sc, fixed_b1, x_only, b1_only, two_absent)) {
@@ -152,7 +153,7 @@ test_that("F6: variant detection counts every written term, fixed ones included,
   }
 })
 
-test_that("topology refusals: missing paths, a cycle, a third mediator, three covariates, interactions, stray regressions", {
+test_that("topology refusals: missing paths, a cycle, a third mediator, three covariates, interactions", {
   r <- sr_zeros
   txt <- function(...) paste(c(..., r), collapse = "\n")
   expect_true(sr_refused(txt("M1 ~ X", "M2 ~ M1 + X", "Y ~ M1 + X"), "topology"))           # no M2 -> Y
@@ -162,7 +163,8 @@ test_that("topology refusals: missing paths, a cycle, a third mediator, three co
   expect_true(sr_refused(txt("M1 ~ X", "M2 ~ M1 + X", "Y ~ M1 + M2 + X", "M1 ~ M2"), "topology|cycle", at_fit = TRUE))
   expect_true(sr_refused(txt("M1 ~ X + Z1 + Z2 + W", "M2 ~ M1 + X + Z1 + Z2 + W", "Y ~ M1 + M2 + X + Z1 + Z2 + W"),
                          "covariates"))
-  expect_true(sr_refused(txt("M1 ~ X + X:Z1", "M2 ~ M1 + X", "Y ~ M1 + M2 + X"), "interaction|topology|product", at_fit = TRUE))
+  expect_true(sr_refused(txt("M1 ~ X + X:Z1", "M2 ~ M1 + X", "Y ~ M1 + M2 + X"), "interaction|topology|product",
+                         at_fit = TRUE))
 })
 
 # ---- Q2: the three residual zeros must be written ----------------------------------------------------------------
@@ -229,11 +231,12 @@ test_that("Q2 at fit: the refusals are classed medfit_sem_fiml_error at stage in
   }
 })
 
-test_that("lavaan 0.7-3 frees no residual covariance among the observed serial variables (pins the installed version)", {
+test_that("lavaan 0.7-3 frees no residual covariance among the observed serial variables (version pin)", {
   skip_if_not_installed("lavaan")
   d <- sr_data(mar = FALSE)
   for (v in c("sat", "chain")) for (mt in c("listwise", "ml")) {
-    fit <- lavaan::sem(sub("\n.*~~.*", "", sr_model(v, 0L, "free", zeros = character())), d, missing = mt, fixed.x = FALSE)
+    mod <- sr_model(v, 0L, "free", zeros = character())
+    fit <- lavaan::sem(mod, d, missing = mt, fixed.x = FALSE)
     pe <- lavaan::parameterEstimates(fit)
     expect_identical(sum(pe$op == "~~" & pe$lhs != pe$rhs), 0L, info = paste(v, mt))
   }
@@ -263,7 +266,7 @@ test_that(".sem_fiml_tables_ser has the spec's parameter counts for both shortcu
   expect_identical(vapply(0:2, function(k) sr_ram_q(.sem_fiml_tables_ser(TRUE, k, FALSE)), 0L), c(12L, 18L, 25L))
   expect_identical(vapply(0:2, function(k) sr_ram_q(.sem_fiml_tables_ser(FALSE, k, FALSE)), 0L), c(11L, 17L, 24L))
 })
-test_that("the shortcuts flag adds exactly the M2 <- X and Y <- M1 rows, and the chain has no fixed-zero row for them", {
+test_that("the shortcuts flag adds exactly the M2 <- X and Y <- M1 rows; the chain has no fixed-zero row for them", {
   for (k in 0:2) for (d in c(TRUE, FALSE)) {
     s <- .sem_fiml_tables_ser(d, k, TRUE)
     ch <- .sem_fiml_tables_ser(d, k, FALSE)
@@ -272,7 +275,7 @@ test_that("the shortcuts flag adds exactly the M2 <- X and Y <- M1 rows, and the
     expect_true(all(setdiff(key(ch), key(s)) == character()))
     expect_identical(sort(setdiff(s$a$label, ch$a$label)), c("a2", "b1"))
     expect_false(any(c("a2", "b1") %in% ch$a$label))
-    # the chain has no value-0 row for an absent shortcut; the only fixed row in either variant is cp (when direct = FALSE)
+    # no value-0 row for an absent shortcut; the only fixed row in either variant is cp (when direct = FALSE)
     expect_identical(sum(!is.na(s$a$value)), as.integer(!d))
     expect_identical(sum(!is.na(ch$a$value)), as.integer(!d))
     # the exogenous covariance block is present for k >= 1
@@ -299,7 +302,7 @@ sr_solve <- function(d, tables) {
   z <- as.matrix(d[, tables$vars])
   .sem_fiml_solve(.sem_fiml_prepare_core(z, tables))
 }
-test_that("complete data: the serial tables reproduce equation-wise ML OLS, both variants, k = 0 to 2, both direct policies", {
+test_that("complete data: the serial tables reproduce equation-wise ML OLS (both variants, k = 0 to 2)", {
   for (i in seq_len(nrow(sr_cells))) {
     v <- sr_cells$variant[i]
     k <- sr_cells$k[i]
@@ -412,7 +415,8 @@ test_that("serial source-fit inference is refused with the serial class before a
   for (nm in names(fits)) for (m in c("parametric", "nonparametric")) {
     set.seed(99L)
     before <- .Random.seed
-    e <- tryCatch(bootstrap_mediation(source_fit = fits[[nm]], effect = "nie", method = m, n_boot = 3L), error = identity)
+    e <- tryCatch(bootstrap_mediation(source_fit = fits[[nm]], effect = "nie", method = m, n_boot = 3L),
+                  error = identity)
     expect_s3_class(e, "medfit_error_fiml_serial_source_fit")
     expect_false(inherits(e, "medfit_error_fiml_parallel_source_fit"), info = nm)
     expect_false(inherits(e, "medfit_error_fiml_covariate_source_fit"), info = nm)
@@ -544,7 +548,8 @@ test_that("planted defect D8: a serial fit built with the parallel tables is cau
   expect_true(built())
   # the parallel tables used for the serial specification: the free labels no longer match the serial parameter map
   fn <- sem_mutate(
-    .sem_fiml_syntax, "tables <- .sem_fiml_tables_ser(spec$direct, length(spec$covariate), identical(spec$variant, \"saturated\"))",
+    .sem_fiml_syntax,
+    "tables <- .sem_fiml_tables_ser(spec$direct, length(spec$covariate), identical(spec$variant, \"saturated\"))",
     "tables <- .sem_fiml_tables_med(2L, spec$direct, FALSE, length(spec$covariate))"
   )
   expect_false(testthat::with_mocked_bindings(built(), .sem_fiml_syntax = fn))

@@ -319,14 +319,17 @@
     .sem_fiml_diagnostic("in the pure chain only the direct path of the treatment may be fixed, exactly at zero")
   }
   z <- setdiff(e, x)
-  if (any(!written(m1, e))) .sem_fiml_diagnostic("unsupported FIML topology: every exogenous variable needs a path to M1")
+  if (any(!written(m1, e))) {
+    .sem_fiml_diagnostic("unsupported FIML topology: every exogenous variable needs a path to M1")
+  }
   ex <- c(x, z)
   # exogenous covariances in either written order are the one canonical pair
   pair <- tab$op == "~~" & tab$lhs %in% ex & tab$rhs %in% ex & tab$lhs != tab$rhs
   lo <- pmin(match(tab$lhs, ex), match(tab$rhs, ex))
   hi <- pmax(match(tab$lhs, ex), match(tab$rhs, ex))
   keys[pair] <- paste(ex[lo[pair]], "~~", ex[hi[pair]])
-  exo_cov <- if (k > 0L) paste(ex[utils::combn(k + 1L, 2L)[1L, ]], "~~", ex[utils::combn(k + 1L, 2L)[2L, ]]) else character()
+  cb <- utils::combn(k + 1L, 2L)
+  exo_cov <- if (k > 0L) paste(ex[cb[1L, ]], "~~", ex[cb[2L, ]]) else character()
   # the three disturbance pairs, in structural order
   pairs <- list(c(m1, m2), c(m1, y), c(m2, y))
   is_pair <- lapply(pairs, function(p) {
