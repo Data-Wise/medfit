@@ -74,13 +74,14 @@ Gaussian random-X FIML, stage-0 cell shapes.
 - [x] 6. registration: `tests/sim/gates.csv` row `fiml-ext` (`oracle` = lavaan raw-data FIML, `mutants` = `wrong_unit|no_offset|swap_b|dropped_cov|missing_guard|driver`); `tests/sim/structures.csv` rows "bounded random-X FIML with covariates" and "bounded random-X FIML with parallel mediators"; `run-gates.R` verdict, script map and driver self-test cases; `test-gate-coverage.R` passes; `R/sem-fiml.R` and `R/sem-fiml-interface.R` added to `tests/sim/risk-files.txt`; exit-criteria CSV names `fiml-ext`
 - [ ] 7. n/a: the OpenBLAS gates runner runs only on PRs to `main` and this PR targets `dev`, so no OpenBLAS run exists (not run); `fiml` and `fiml-ext` join the `gates (rest)` shard on the release PR, and dev is gated locally (suite, lint, `R CMD check` above)
 
-## Known open edge (reported, not changed here)
+## Known open edge (fixed in `25dd504c`)
 
-At an exact origin (all a and b paths equal to 0), `tidy()`/`confint(parm = "effects")` withhold the NIE interval for the
-single-mediator FIML object (NA plus the note "NIE inference unavailable: zero delta gradient") but report
-`std_error = 0` and the degenerate interval [0, 0] for the parallel FIML object, because `.sem_fiml_origin()` tests only
-`MediationData`. A real fit never reaches exactly 0 (a near-origin fit gives a finite SE near 5e-10 in both classes), and
-the public constructors refuse a forged zero object because the context hash binds the parameters; the exact origin was
-reached only by rebuilding that hash. Whether to extend the guard is the author's call.
+At an exact origin (all a and b paths equal to 0), `tidy()`/`confint(parm = "effects")` previously withheld the NIE
+interval for the single-mediator FIML object only; the parallel FIML object reported `std_error = 0` and the degenerate
+interval [0, 0], because `.sem_fiml_origin()` tested only `MediationData` (and the parallel `confint()` did not consult
+it). The predicate now covers `FIMLParallelMediationData` (all a and b paths exactly 0) and the parallel `confint()`
+applies it, so both classes give NA plus the note "NIE inference unavailable: zero delta gradient"; partly zero parallel
+objects keep finite SEs (`test-fiml-g2-origin.R`). A real fit never reaches exactly 0, and the public constructors refuse
+a forged zero object because the context hash binds the parameters; the test rebuilds that hash to reach the origin.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
