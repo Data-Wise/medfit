@@ -33,7 +33,7 @@ Local machine: macOS aarch64, R 4.6.2. Tree: worktree `feature/fiml-serial-s2`, 
 
 | Check | Command | Result |
 |---|---|---|
-| Full suite, at the final tip | `NOT_CRAN=true Rscript -e 'r <- as.data.frame(devtools::test(reporter="silent", stop_on_failure=FALSE))'` | <SUITE-FINAL-PLACEHOLDER> |
+| Full suite, at the final tip | `NOT_CRAN=true Rscript -e 'r <- as.data.frame(devtools::test(reporter="silent", stop_on_failure=FALSE))'` | 195 files, 2123 tests, 17113 expectations, 0 failed, 0 errors, 2 skipped, 4 warnings, measured at the final tip `fd4a07e6` (the two skips also skip on `dev`; the 4 warnings are the known cluster-boot, branches and lavaan "empty cases" ones) |
 | Full suite, implementer, at the docs commit `fa58edbc` | the same command | 2122 tests, 17090 expectations, 0 failed, 0 errors, 2 skipped, 4 warnings; the last commit `fd4a07e6` (lavaan agreement for every fitted never-jointly-observed chain cell) added one test after this run |
 | Lint | isolated source install of `git archive HEAD`, `R_LIBS=<lib> Rscript -e 'lintr::lint_package()'` with the repo `.lintr` | 0 findings at `fd4a07e6` |
 | R CMD check | `R CMD build --no-manual --no-build-vignettes`, then `_R_CHECK_FORCE_SUGGESTS_=false NOT_CRAN=false R CMD check --as-cran --no-manual --ignore-vignettes --no-tests` | Status: 1 NOTE (CRAN incoming feasibility: "Version jumps in minor (submitted: 0.16.0, existing: 0.3.2)"); 0 WARNING, 0 ERROR. Same NOTE as `dev`. Rd files, Rd metadata, Rd line widths, Rd cross-references, code/documentation mismatches, `\usage`, Rd contents, examples and `--run-donttest` examples all OK; tests skipped by option |
@@ -81,7 +81,20 @@ on the tip copy and passed.
 
 ## Independent QA
 
-`medfit-oracle-qa`: <QA-RESULT-PLACEHOLDER>
+`medfit-oracle-qa`: **PASS on all 10 items, no defect, no planted defect missed** (own code and mutants; scratch only).
+
+- lavaan raw-data FIML, 18 cells (c_prime free/zero/omitted x MCAR 30%, MAR, sparse masks with all-missing mediator pairs and all-NA rows; n = 500; 2 seeds): estimates 4.4e-7, logLik 3.3e-10, vcov 2.7e-9, `ind` and `te` 8e-8, delta SEs 9.7e-9; row counts match. OpenMx, 2 cells: estimates 8.6e-7, logLik 6e-10, vcov 4e-7.
+- Complete data equals equation-wise ML-OLS (estimates 9e-9, vcov 3.8e-11), vcov exactly block diagonal (cross-equation terms up to 2.4e-4 under MAR). The chain is overidentified: the LR against the saturated serial fit equals `lavTestLRT` to 1e-10 in 12 cells (df 2 free, 3 fixed), small on a true-chain DGP (0.1 to 5.6, p 0.06 to 0.94) and large with real shortcuts (11.6 to 69.6, p <= 3e-3); `logLik(chain) <= logLik(saturated)` in every cell including sparse masks.
+- `a2` and `b1` are truly absent (4x4 vcov over a, d1, b, c_prime; chain predictor lists; four path rows with `c_prime` always listed; effects `nie`, `nie_total`, `nde`, `te`); hand delta SEs (3x3 `nie`, 4x4 `te`, no `a2`/`b1` term) equal `tidy` and `confint` exactly.
+- Origin rule (forged exact zeros, hash rebound): `nie` and `nie_total` NA when any two of a, d1, b are 0, finite with one zero; `nde` and `te` finite; the saturated rule is unchanged (9 patterns identical to `dev`).
+- Routing: chain vs saturated detected correctly across syntax variants; half shortcuts, and fixed, labeled or tied shortcuts, refused; every k >= 1 serial syntax still "not yet available"; each omitted zero covariance named; extraction refusals classed.
+- Class validator: 34 forgeries rejected (predictor lists, variant/context mismatch, hash, alias vectors, a 6x6 vcov on a chain), real chain and saturated objects accepted: this closes the S1b gap.
+- Guards: source-fit gives `medfit_error_fiml_inference_unavailable` then (guard mocked open) `medfit_error_fiml_serial_source_fit`; `bootstrap_mediation(mediation_data =)`, `pm()`, `glance()`, `quick()`, `confint(method = "boot")` refuse; the base `SerialMediationData` is `identical()`.
+- Planted defects: all caught with a clean 9-check control (freed shortcut, chain parsed as saturated and the reverse, d1/b swap, dropped cross-equation block, wrong `te` gradient, origin rules, six-alias vector, weakened validator); the chain `nie` alone is invariant to a d1/b swap, as predicted.
+- V14 parity with `origin/dev` `c8d90aa5`: 12 models x 4 datasets (complete, MCAR, MAR, sparse) = 48 cells, `identical()` on theta, vcov, logLik, tidy, extract, confint, paths, coef.
+- Robustness and never-jointly-observed pairs: 12 chain fits (n 50 and 500, 0/30/50% missing, corr(M1, M2) up to 1.00) all match lavaan; most pairs fit and match lavaan (estimates 7e-6, logLik 2.1e-8); two cases where Y is observed only with M2 fail closed with a free direct path (rank deficient, `numerical` stage) and fit with the direct path fixed at 0; no silent wrong fit.
+
+Benign observations (identical on `c8d90aa5`, not S2 regressions): a user label on `c_prime` and an intercept label `M1 ~ i*1` are accepted.
 
 ## Known unverified items
 
