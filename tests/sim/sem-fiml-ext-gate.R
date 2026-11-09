@@ -103,7 +103,7 @@ for (structure in names(models)) {
     cell <- paste(structure, seed, sep = "-")
     mod <- models[[structure]]
     d <- make_data(structure, seed)
-    f <- fit_sem(mod$fit, d, missing = "fiml", fixed_x = FALSE)
+    f <- fit_sem(mod$fit, d, missing = "fiml", fixed_x = FALSE, meanstructure = TRUE)
     l <- lav(mod$fit, d)
     q <- coef(f)
     rc <- lavaan::coef(l)
@@ -148,7 +148,7 @@ refused <- c(
   parallel_fixed_cov = "M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X\nM1 ~~ 0.3*M2"
 )
 accepted <- vapply(refused, function(model) {
-  r <- tryCatch(fit_sem(model, big, missing = "fiml", fixed_x = FALSE), error = identity)
+  r <- tryCatch(fit_sem(model, big, missing = "fiml", fixed_x = FALSE, meanstructure = TRUE), error = identity)
   !inherits(r, "medfit_sem_fiml_error")
 }, logical(1))
 add("refusals", "unadmitted_accepted", sum(accepted), 0)
