@@ -10,6 +10,7 @@ Target: `planning/specs/SPEC-fiml-serial-FI-G3-2026-11-09.md` section 8. Interro
 | Q4 | Path rows reported | All estimated paths per variant (saturated: a, a2, d, b1, b, c_prime; chain: a, d, b, +c_prime if free) | as recommended | tidy() and confint(parm = "paths") both map every displayed row (Codex finding 1); alias vector varies by variant |
 | Q5 | Admission-target effects | nie (chain), nie_total, nde, te; per-path specific indirect effects deferred | as recommended | nie_total needs its own confint row (Codex second-pass finding); for the chain variant nie_total = nie |
 | Q6 | Covariate as treatment (k >= 1) | Allow, as FI-G1 and FI-G2 slices 3-4 | as recommended | Serial extraction tests for a covariate named as treatment |
+| Q6a | Covariate as treatment in the pure chain at k >= 1 (amendment of Q6, after the Claude adversarial review F7) | Allowed for the saturated variant; REFUSED for the chain | narrows Q6 | In the chain a covariate named as treatment has free paths to M2 and Y with M1 -> Y = 0, the one-shortcut graph Q1 refuses; the chain treatment is structural (the exogenous variable with no M2 path). One refusal test (`medfit_error_fiml_extract_unsupported`), planted defect D28 |
 | Q7 | Reversed mediator order in extract_mediation() | Refuse with a classed error naming the fitted order | as recommended | One refusal test |
 | Q8 | Exact-origin rule | Per effect: chain NIE NA when at least two of (a, d1, b) are exactly 0; nie_total NA when a = a2 = b = b1 = 0 | as recommended | Per-effect helper; avoids the [0,0] defect class fixed in #383 |
 | Q9 | Never-jointly-observed pairs | Keep the existing rank gate and document it | as recommended | No pre-check; a test pins the numerical-stage refusal; docs note the difference from parallel |
@@ -22,3 +23,7 @@ Target: `planning/specs/SPEC-fiml-serial-FI-G3-2026-11-09.md` section 8. Interro
 - Amend the plan's variant registry for the pure chain before slice work starts.
 - Spec sections 3-7 need the pure-chain variant added (tables, parameter counts, oracles, defects, gate rows); the agent's spec describes the saturated graph only.
 - Codex adversarial review, two passes (`.codex` agent file and spec): 5 findings, all fixed in the spec and `.codex/agents/medfit-gates.toml`; the tracked `.claude/agents/medfit-gates.md` twin still needs the package-check condition (PR to dev).
+
+## Claude adversarial review (2026-11-09, verdict fix then ship)
+
+All ten findings and two suspicions accepted by the maintainer and applied in spec revision 3: F1 quick() refusal; F2 serial source-fit check ahead of the covariate and parallel branches; F3 scalar origin helper kept, per-effect helper added; F4 coef/summary paths; F5 confint contract table; F6 variant detection hardening; F7 recorded as Q6a above; F8 router order and message fixture; F9 df qualification; F10 V16 wording and identified-mask restriction; S1 per-pair never-jointly-observed tests (UNVERIFIED whether the rank gate catches them); S2 slice split into S1a and S1b.

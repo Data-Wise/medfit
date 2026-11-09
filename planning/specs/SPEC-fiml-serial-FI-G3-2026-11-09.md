@@ -63,7 +63,7 @@ constrained shortcut; any fixed value other than exactly 0 on X -> Y; any start,
 Why both are coherent. The saturated graph with `cp` free has as many free parameters as the unrestricted multivariate
 normal has moments: `q = p + p(p+1)/2` for `p = 4 + k` variables. It is just identified (df 0): the FIML estimate is a
 one-to-one reparameterization of the unrestricted MVN MLE (recursive regressions on the moments). With `cp` fixed it has
-one restriction. It cannot fail on misfit, only on identification (section 2.3). The pure chain imposes `a2 = b1 = 0`:
+one restriction. With `cp` free it cannot fail on misfit (df 0), only on identification (section 2.3); with `cp` fixed (df 1, including the k = 0 omitted-`Y ~ X` case of Q3) it can misfit. The pure chain imposes `a2 = b1 = 0`:
 two restrictions with `cp` free (df 2), three with `cp` fixed at 0 (df 3). It is overidentified, so it can disagree with
 the data; that makes it the one serial variant whose likelihood is a real restriction, and its oracles cannot use the
 saturation identity (section 6).
@@ -296,6 +296,38 @@ Changes needed on inherited behavior (gaps found by reading the code; none of th
    bootstrap_mediation() directly"), which is wrong advice for FIML; the effects warning says "consider
    bootstrap_mediation()"; and there is no origin guard. Add the FIML branch (refuse boot through `.sem_fiml_refuse`,
    FIML warning text, origin NA, note attribute), as in the parallel and simple methods.
+3b. **`quick()` (review F1).** `quick()` dispatches serial objects to `.quick_serial_mediation_data` (`R/med.R`, line 284;
+   dispatch at line 221, read), which has no `.sem_fiml_refuse()` call and prints PM, so a FIML serial object would print a
+   PM point estimate. Add the refusal for both variants. Test: `quick()` on a saturated and a chain FIML serial object
+   errors with the same "not supported for bounded FIML objects" text as the simple and parallel methods. Planted defect
+   D24 (below).
+3c. **Confint contract (review F5).** The serial `confint()` (`R/methods-base.R`, line 285, read) has no `.sem_fiml_is`
+   branch, no origin guard, warns "Consider bootstrap_mediation()", and stops on `method = "boot"` with lm advice. The FIML
+   branch is specified by this table (tests assert every cell; the boot text is asserted verbatim):
+
+   | `parm` / `method` | Variant | Rows | Origin state | Result |
+   |---|---|---|---|---|
+   | `"effects"`, normal | saturated | `nie`, `nie_total`, `nde`, `te` | none zero | all four finite Wald rows |
+   | `"effects"`, normal | saturated | `nie` | at least two of a, d1, b exactly 0 | `nie` row NA, note attribute "NIE inference unavailable: zero delta gradient" |
+   | `"effects"`, normal | saturated | `nie_total` | `a = a2 = b = b1 = 0` | `nie_total` row NA with its own note; `nie` NA too (the chain gradient is also zero) |
+   | `"effects"`, normal | chain | `nie`, `nie_total`, `nde`, `te` | none | `nie_total` row identical to `nie` |
+   | `"effects"`, normal | chain | `nie` and `nie_total` | at least two of a, d1, b exactly 0 | both NA, notes for both |
+   | `"effects"`, any | both | `nde`, `te` | any | never NA from the origin rule |
+   | `"paths"`, normal | saturated | `a, a2, d, b1, b, c_prime` | n/a | six rows from the `@vcov` diagonal |
+   | `"paths"`, normal | chain | `a, d, b` (+ `c_prime`) | n/a | rows from the `@vcov` diagonal |
+   | any, `"boot"` | both | n/a | n/a | error through `.sem_fiml_refuse` ("... is not supported for bounded FIML objects"), not the lm/glm advice |
+   | normal warning text | both | n/a | n/a | the FIML text of the simple and parallel methods; the "consider bootstrap_mediation()" sentence is suppressed |
+
+   Tests: the boot refusal text, the suppressed warning, the note attribute per row, and each row against the delta
+   gradient built from the full extracted covariance (and against `tidy(conf_int = TRUE)`). D13 and D14 cover it.
+3d. **`coef(type = "paths")` and `summary()` (review F4; Q4 must reach them).** The serial `coef(type = "paths")`
+   (`R/methods-base.R`) returns only `a, d, b, c_prime`, and the serial summary (`R/classes.R`, line 960; the simple one
+   adds a FIML note at line 755, read) shows the same four with no `fit_context` note. Recommendation (added, not
+   deferred): the subclass `coef(type = "paths")` returns the per-variant path vector of item 5 (six saturated; three or
+   four chain), and `summary()` lists the same paths, adds the FIML note (as the simple method does) and the
+   `nie_total` line. Tests: first pin the current four-path behavior of the base class (so the base class stays
+   byte-identical), then test that the FIML saturated object returns all six names and values equal to `@estimates`, and
+   the chain its own set. Planted defect D25.
 4. `.sem_fiml_is()` must include the new class (read: it today tests `FIMLMediationData` or `FIMLParallelMediationData`
    plus the `SEMFit` branch); `bootstrap_mediation(mediation_data =)` then refuses it through the existing
    `.sem_fiml_refuse()` calls.
@@ -335,10 +367,16 @@ Fits never produce exact zeros; the rule is reachable on constructed objects onl
   exist there; applying it would withhold nothing at `a = d1 = 0`.)
 - `te` and `nde` are never withheld (`c'` has gradient 1).
 
-The helper `.sem_fiml_origin()` becomes per effect for the serial class: it returns a named logical `c(nie, nie_total)`
-chosen by `variant`, and the three call sites (`.tidy_paths_effects`, the two existing `confint()` methods plus the new
-serial one) apply the right key. Off-by-one-factor bugs are the expected defect (planted defects D12, D13, D22 below; the
-`[0,0]` interval defect class fixed in #383 is the precedent).
+`.sem_fiml_origin()` stays scalar and unchanged (review F3): it is used inside scalar `if (... && ...)` at
+`R/methods-tidy.R` lines 345 and 372 and `R/methods-base.R` lines 241, 260, 453, 463 (read), a length-2 return would
+error on R >= 4.3 (and warn on 4.1-4.2, the supported minimum), and changing it would risk the R2 byte parity of the
+simple and parallel objects. For the serial class a new helper `.sem_fiml_origin_effects(x)` returns a named logical over
+the effects the class reports (`nie`, `nie_total`; chosen by `variant`), used only in serial code paths. The three call
+sites (`.tidy_paths_effects`, the new serial `confint()` branch, the serial summary) apply the right key, and the tidy
+note is per effect (a row-specific note for `nie_total`, not only the NIE-only text at line 372). Off-by-one-factor bugs
+are the expected defect (planted defects D12, D13, D22 below; the `[0,0]` interval defect class fixed in #383 is the
+precedent). D13 plants "the `nie_total` row uses the `nie` rule"; D26 plants "the serial path calls the scalar helper
+(serial origin never fires)".
 
 ## 3.5 Inference scope and the stage-0 guard
 
@@ -355,19 +393,30 @@ interval exists for this family until its own admission.
 `.sem_fiml_model()` today routes by variable count: `length(x) %in% 1:3` with `length(roles$obs) == length(x) + 3L` goes
 to `.sem_fiml_model_par()`, whose first topology check refuses an `M ~ M` regression as "unsupported FIML topology or
 correlated disturbances" (router lines 17-70 and the parallel parser at line 140, read). The serial router goes in front
-of it, and the structure router change belongs to slice S1 (section 5):
+of it, and the structure router change belongs to slice S1a (section 5):
 
 1. Exactly one outcome (the only left-hand side that is never a right-hand side) and two other endogenous variables.
    A regression between those two endogenous variables selects the serial parser; no such regression selects the
    existing parallel parser unchanged; both directions present is a cycle and is refused.
-2. **Variant detection inside the serial parser.** Let `A` = the number of exogenous variables absent from M2's equation
-   and `S` = whether `Y ~ M1` is written.
+2. **Variant detection inside the serial parser (review F6).** Count every written term, including fixed ones (`0*X`,
+   `0*M1`), as written before deciding the variant, so `M2 ~ M1 + 0*X + Z` is classed as a fixed shortcut (refused, Q1)
+   and not as a chain. Let `A` = the number of exogenous variables absent from M2's equation and `S` = whether `Y ~ M1`
+   is written.
    - `A = 0` and `S` present: saturated.
-   - `A = 1` (k = 0: X absent from M2; k >= 1: exactly one exogenous variable absent, and it is X) and `S` absent: chain.
+   - `A = 1` and `S` absent: chain candidate. The one absent variable is the treatment X, and it must also appear in
+     M1's equation and in Y's equation as the direct term (free or `0*`); otherwise refuse with a classed error. (Without
+     this check, `M2 ~ M1 + X` with Z omitted would silently make Z the kernel X and fail only at extraction.)
    - every other combination (`A = 0` with `Y ~ M1` absent; `A = 1` with `Y ~ M1` present; `A >= 2`): refused with a
-     topology diagnostic naming the partial shortcut set. For k >= 1 in the chain, "X" is structurally the one
-     exogenous variable with no path to M2; the saturated `X` rule (fixed-zero Y path, else first by appearance) applies
-     only to the saturated variant.
+     topology diagnostic naming the partial shortcut set. For k >= 1 in the chain "X" is structurally the one exogenous
+     variable with no M2 path; the saturated `X` rule (fixed-zero Y path, else first by appearance) applies only to the
+     saturated variant.
+   Tests: (a) `M2 ~ M1 + X` with Z omitted (k = 1) is refused at fit; (b) a `0*` shortcut term is refused as a fixed
+   shortcut, not classified as a chain. Planted defect D27: detection ignores `0*` terms (or ignores the M1/Y presence
+   check).
+3. **Router order and existing messages (review F8).** The serial check runs before the `_par` and `_cov` routing (the
+   parallel parser would otherwise answer a serial syntax with a parallel-flavored error). Existing refusal messages for
+   non-serial near misses must stay byte-identical: before S1a, capture the current messages (class and text) of a fixed
+   set of near-miss parallel and covariate syntaxes as a fixture, and assert byte equality afterward (V13/V14).
 
 Names: kernel `X`, `Z`/`Z1 Z2`, `M1`, `M2`, `Y`; data names stay in the adapter's `spec$vars`, `spec$mediators`,
 `spec$covariate`. `M1` is the mediator with no mediator among its predictors, `M2` the other; this is structural, not
@@ -393,14 +442,13 @@ call is `.sem_fiml_tables_ser(direct, k, shortcuts = (variant == "saturated"))`.
   slices 3-4): with `cp` free any exogenous variable may be named the treatment (the kernel is symmetric in the exogenous
   block); a covariate named the treatment takes `a = gm1z_i`, `a2 = gm2z_i`, `c_prime = gy_i`, with `d1`, `b1`, `b`
   unchanged; with one Y path fixed at 0 that variable is the only valid treatment.
-- **Treatment, chain variant: provisional refusal, needs a maintainer decision (question 1).** The chain is not
-  symmetric in the exogenous block: X has no path to M2, but every covariate does (and to Y). Naming a covariate `Z` the
-  treatment would give it a free `Z -> M2` path (`gm2z`, an `a2`-type path that the chain does not contain for `X`) and
-  would silently change which effects `nie_total` stands for (`nie_total != nie` for `Z`) while the stored variant says
-  chain. Recommendation: the chain's treatment is structural (the exogenous variable with no M2 path); naming a
-  covariate is refused with `medfit_error_fiml_extract_unsupported`. This departs from the literal reading of Q6 for the
-  chain at k >= 1 only, and is flagged so the maintainer can overrule it (the alternative is to extract such a covariate
-  with `a2 = gm2z`, `b1 = 0` fixed, `variant = "chain-covariate-treatment"`, a third effect rule).
+- **Treatment, chain variant (Q6a, maintainer amendment of Q6): refused at k >= 1.** The chain is not symmetric in the
+  exogenous block: X has no path to M2, every covariate does (and to Y). Naming a covariate `Z` the treatment gives it a
+  free `Z -> M2` path and a free `Z -> Y` path while `M1 -> Y` is 0: exactly the effect structure of the one-shortcut
+  graph that Q1 refuses at fit. The treatment is therefore structural in the chain (the exogenous variable with no M2
+  path); naming a covariate is refused with `medfit_error_fiml_extract_unsupported`. Q6 stays "allow" for the saturated
+  variant. Test: chain k = 1 and k = 2, each covariate named as treatment, refused with the class; the structural X
+  accepted. Ledger amendment Q6a recorded.
 - Output `FIMLSerialMediationData`: `a_path`, `d_path` (scalar `d1`), `b_path`, `c_prime`; `@estimates` carries the alias
   names for the variant (saturated `a a2 d1 b1 b c_prime`, needed: `.serial_path_system()` returns "no coefficient ... is
   stored" and `te()` becomes `NA` with a warning if a present skip edge has no stored coefficient; chain `a d1 b`
@@ -445,11 +493,15 @@ the mediators only, so it is refused.
   `confint(method = "boot")`, `bootstrap_mediation(mediation_data =)`, `bootstrap_mediation(data =)`, `mbco_sem`,
   `compare_lr`, `anova`, AIC/BIC on the extracted object. `pm()` and `glance()` need the new `.sem_fiml_refuse()` calls
   (section 3.3).
-- Source fit: the order in `R/bootstrap-fiml.R` is unchanged: the stage-0 guard first, then the covariate refusal
-  (`medfit_error_fiml_covariate_source_fit`, which a serial fit with covariates still triggers by precedent), then a
-  structure refusal. New class `medfit_error_fiml_serial_source_fit` for a serial fit without covariates (either
-  variant), raised before any RNG draw or refit, for both methods (parametric and nonparametric). The existing parallel
-  refusal must not fire for a serial fit (it tests `spec$mediators`, which is set for serial too; section 4.1).
+- Source fit (review F2): `R/bootstrap-fiml.R` lines 111-127 (read) test `spec$covariate` first and
+  `!is.null(spec$mediators)` second (class `medfit_error_fiml_parallel_source_fit`, "parallel FIML fits"). Order after
+  this spec: the stage-0 guard first, then a NEW serial check (`identical(spec$structure, "serial")`) BEFORE both existing
+  branches, raising `medfit_error_fiml_serial_source_fit` before any RNG draw or refit, for k = 0, 1 and 2, both
+  variants and both methods (parametric and nonparametric). The covariate and parallel refusals keep their order and text
+  for non-serial fits. This reverses the earlier statement that the covariate refusal still fires for serial fits with
+  covariates: a serial fit gets the serial class at every k. Tests: one per k x variant x method (guard mocked open) asserting the
+  serial class and that the parallel and covariate classes do not fire; planted defect D17 includes the check placed
+  after the existing branches.
 - Merge condition R4: before any slice merges, tests show that every still-unadmitted topology, variant and policy is
   refused at fit, extract and both source-fit methods (including: slices not yet merged, for example the chain while only
   the saturated variant is public, and k = 1 and 2 while only k = 0 is public).
@@ -470,19 +522,20 @@ slice, the V14 parity run once per slice (Q10).
 | Slice | Public variants after the slice | q (direct free / fixed 0) | Notes |
 |---|---|---|---|
 | S0 | none | n/a | freeze fixture `fiml-tables-before-g3s1.rds` from the base commit: every table shape reachable through public entry points (the earlier fixtures hold 8 and 10 shapes; shape count to be taken from the code) |
-| S1 | saturated, k = 0 | 14 / 13 | the router change (section 4.1, including variant detection and the chain/partial-shortcut refusals), `.sem_fiml_tables_ser(direct, k, shortcuts)` with both values implemented but the chain not yet reachable from the public entry points, parser (`spec$structure`, `spec$variant`), class with the `variant` slot, extraction, per-effect origin helper, Q2 refusals, all section 3.3 edits |
+| S1a | none public (parser and refusals only) | n/a | serial router before `_par`/`_cov` (section 4.1, variant detection with the F6 checks, the F8 near-miss message fixture), the Q2 refusals, `.sem_fiml_tables_ser(direct, k, shortcuts)` with both values implemented, the serial source-fit refusal ordering (F2), the refusal probes; every serial syntax is refused at fit with its classed reason until S1b, and the never-jointly-observed probes run against the tables through the internals |
+| S1b | saturated, k = 0 | 14 / 13 | class with the `variant` slot, extraction, per-effect origin helper `.sem_fiml_origin_effects()`, all section 3.3 edits (pm, glance, quick, confint contract, coef/summary paths, `.sem_fiml_is`) |
 | S2 | + chain, k = 0 | 12 / 11 | chain parser branch enabled, chain extraction, chain effect rules and origin rule, chain oracles and planted defects; reuses S1 machinery, so the diff is small and the evidence is per-variant |
-| S3 | + saturated and chain, k = 1 | sat 20 / 19; chain 18 / 17 | `.sem_fiml_tables_ser(direct, 1L, shortcuts)`; FI-G1 exogenous-covariance rules; covariate-as-treatment mapping (saturated; chain per question 1) |
+| S3 | + saturated and chain, k = 1 | sat 20 / 19; chain 18 / 17 | `.sem_fiml_tables_ser(direct, 1L, shortcuts)`; FI-G1 exogenous-covariance rules; covariate-as-treatment mapping (saturated allowed; chain refused, Q6a) |
 | S4 | + saturated and chain, k = 2 | sat 27 / 26; chain 25 / 24 | same builder, `k = 2`, `.sem_fiml_par_cov_max()`-style limit for serial |
 
 Leaner order, and why. The task's reference order (S1 sat k = 0, S2 sat k = 1, S3 sat k = 2, S4-S6 chain k = 0..2) gives
-seven PRs. This spec proposes five (S0 plus four): the chain k = 0 immediately after the saturated k = 0, because the
-router, class and refusal logic change once in S1 and the second shortcut state is proven where it is cheapest to
+seven PRs. This spec proposes six (S0, S1a, S1b, S2, S3, S4): the chain k = 0 immediately after the saturated k = 0, because the
+router, class and refusal logic change once in S1a/S1b and the second shortcut state is proven where it is cheapest to
 debug (no covariates, df = 2, the one variant whose kernel path is already covered at the internals level); the
 covariate slices then add one covariate count for both variants, because the covariate code (exogenous covariance block,
 `gm1z gm2z gy` rows, transport) is the same code and is variant-independent by construction (the `shortcuts` flag only
 toggles two rows). Cost: S3 and S4 are larger PRs and need per-variant QA verdicts inside one slice; fallback: split
-S3 and S4 per variant (seven PRs) if QA finds the evidence too large to review. The parity run (V14) is once per slice,
+S3 and S4 per variant (eight PRs) if QA finds the evidence too large to review. The parity run (V14) is once per slice,
 about ten background minutes each (ledger Q10).
 
 One PR per slice, each to `dev` only on the maintainer's instruction (feature branch workflow; the Hopper freeze caveat:
@@ -504,14 +557,14 @@ Column "V" = variant: S saturated, C chain, both.
 | V6 | both | rowwise likelihood, independent Hessian and moment geometry | adapt the `gk_*` / `gk4_*` references with `a2`, `b1` (saturated) and without them (chain; the existing four-variable test is already the chain, k = 0) | value 1e-8, gradient 1e-6 |
 | V7 | both | OpenMx supporting cells | mxTryHard, status 0, at least: saturated k = 0 free, saturated k = 1 fixed-zero, chain k = 0 free, chain k = 2 MAR; est 1e-5, vcov relative 1e-3 | est 1e-5, vcov rel 1e-3 |
 | V8 | both | hand delta SEs | from extracted `@vcov`. Saturated: chain `nie` (3 x 3 block), `nie_total` (5 x 5), `te` (6 x 6). Chain: `nie` (3 x 3), `te` (4 x 4), `nie_total` row equal to the `nie` row; all equal to `tidy()` to 1e-12; path enumeration equals `[(I-B)^-1]_{Y,X}` to 1e-12 | 1e-12 |
-| V9 | both | covariate/path confusion | DGP with large, distinct covariate effects on M1, M2 and Y, treatment named as X and (saturated only) as each covariate, lavaan with the label moved; reversed-mediator extraction refused (Q7); chain: naming a covariate as treatment refused (question 1) | 1e-7 lm, 1e-5 lavaan |
-| V10 | both | near-boundary and identification | residual correlations or `M2 ~ M1` near deterministic, n = 25 to 500, complete and 20% MCAR, a pair never jointly observed (record, per variant, which pairs fail closed: expected saturated refuses more than chain, unverified), weak `a` with `d1`, `b` near 0: every outcome is a fit that agrees with lavaan where lavaan converges, or a classed `medfit_sem_fiml_error`; no silent boundary solution | fail-closed check |
+| V9 | both | covariate/path confusion | DGP with large, distinct covariate effects on M1, M2 and Y, treatment named as X and (saturated only) as each covariate, lavaan with the label moved; reversed-mediator extraction refused (Q7); chain: naming a covariate as treatment refused (Q6a) | 1e-7 lm, 1e-5 lavaan |
+| V10 | both | near-boundary and identification | residual correlations or `M2 ~ M1` near deterministic, n = 25 to 500, complete and 20% MCAR, a pair never jointly observed: one test per pair (X,M2), (M1,Y), (M2,Y), (X,M1), (M1,M2), (X,Y), each with `cp` fixed and free and per variant, recording which fail closed at stage `numerical` (expected saturated refuses more than chain; whether the flat direction survives the rank gate, in particular with `cp` fixed, is UNVERIFIED until probed), weak `a` with `d1`, `b` near 0: every outcome is a fit that agrees with lavaan where lavaan converges, or a classed `medfit_sem_fiml_error`; no silent boundary solution | fail-closed check |
 | V11 | both | refusals | every row of sections 2.2, 4.3 and 4.4 at fit, extract, both source-fit methods (guard closed, and guard mocked open for the structure class), per variant | class and condition exact |
 | V12 | both | exact origin | forged objects with the fit-context hash rebound. Saturated: `a = d1 = 0` withholds chain `nie` SE; `a = 0` only keeps it finite and equal to the hand value; `a = a2 = b = b1 = 0` withholds `nie_total`; near-origin controls keep finite SEs. **Chain: `a = d1 = 0`, `a = b = 0` and `d1 = b = 0` each withhold both `nie` and `nie_total`; `a = 0` alone keeps both finite and equal to the hand value; `te` never withheld.** Tampering without rebinding the hash is rejected by the validator | exact / 1e-12 |
-| V13 | both | frozen tables | fixture from S0: tables for every earlier shape `identical()` to the current builders and to the base-commit source | `identical()` |
+| V13 | both | frozen tables and messages | fixture from S0: tables for every earlier shape `identical()` to the current builders and to the base-commit source; plus a fixture of the current refusal messages (class and text) of near-miss parallel and covariate syntaxes captured before S1a, asserted byte-identical after it (F8) | `identical()` |
 | V14 | both | stage-0 simple model parity (R2), once per slice (Q10) | two installs (branch and `dev`), all earlier shapes x four datasets (MAR, MCAR 30%, MAR, complete), `identical()` on theta, vcov, logLik, nll, attempts, n, tidy effects, extracted vcov | bit identical |
 | V15 | both | `fiml-ext` gate rows | section 6.2 | section 6.2 |
-| V16 | C | chain restriction test | LR = 2 (logLik of the medfit saturated fit with `cp` free minus logLik of the chain fit) equals the lavaan chi-square of the chain fit with `missing = "ml"` (lavaan's baseline is its own unrestricted H1) with df 2 (free direct) or 3 (fixed-zero direct), the df taken from `q` against the moment count and equal to lavaan's df; the LR is nonnegative and equal for the two direct policies' nesting (`logLik(chain, cp free) >= logLik(chain, cp fixed)`). Also: with a DGP whose `a2` and `b1` are 0 the chain and saturated estimates agree up to sampling error; with a DGP whose `a2` is large the chain LR is large (the test can fail) | 1e-5 on the chi-square; exact df |
+| V16 | C | chain restriction test | LR = 2 (logLik of the medfit saturated fit with `cp` free minus logLik of the chain fit) equals the lavaan chi-square of the chain fit with `missing = "ml"` and df 2 (free direct) or 3 (fixed-zero direct), with df taken from `q` against the moment count and equal to lavaan's df. The equality is asserted only on mask sets where the saturated model is identified (otherwise lavaan's H1 and medfit's saturated fit are not the same unrestricted model); on other masks assert only the nesting `logLik(chain) <= logLik(saturated)`. Also: `logLik(chain, cp free) >= logLik(chain, cp fixed)`; with a DGP whose `a2` and `b1` are 0 the chain and saturated estimates agree up to sampling error; with a DGP whose `a2` is large the chain LR is large (the test can fail) | 1e-5 on the chi-square; exact df |
 | V17 | both | variant routing | the same data and the two syntaxes are routed to the two variants; a saturated syntax never produces a chain object and conversely; the `variant` slot matches the fitted `q` | exact |
 
 ## 6.1 Planted defects
@@ -537,9 +590,14 @@ variant-specific additions.
 | D12 | origin rule too broad: SE withheld when a single chain factor is 0 | |
 | D13 | origin rule too narrow or missing for `nie_total`; or `te` withheld | |
 | D14 | `pm()` or `glance()` not refused for the serial class; `confint(method = "boot")` giving the lm/glm advice | |
+| D24 | `quick()` not refused for the serial FIML class (prints PM), either variant | F1 |
+| D25 | `coef(type = "paths")` or `summary()` returns the four base-class paths for the saturated object (hides `a2`, `b1`) | F4 |
+| D26 | serial code calls the scalar `.sem_fiml_origin()` (serial origin never fires), or the note is NIE-only for the `nie_total` row | F3 |
+| D27 | variant detection ignores `0*` terms, or skips the check that the treatment appears in M1's equation and in Y's | F6 |
+| D28 | chain covariate-as-treatment accepted (Q6a refusal removed) | F7 |
 | D15 | serial source-fit not refused (guard mocked open) or refused with the parallel class | |
 | D16 | exogenous covariance block dropped from the tables | as FI-G1 |
-| D17 | variant routed wrongly: a chain syntax fitted as saturated, or conversely; `shortcuts` flag inverted | caught by V17, V16 and the `q` formula |
+| D17 | variant routed wrongly: a chain syntax fitted as saturated, or conversely; `shortcuts` flag inverted; the serial source-fit check placed after the covariate or parallel branches | caught by V17, V16 and the `q` formula |
 | D18 | pure chain with `a2` or `b1` accidentally freed (rows present, `variant = "chain"`) | the chain logLik equals the saturated logLik (LR = 0), df 0 instead of 2, `q` formula fails, V16 |
 | D19 | saturated variant with `a2` or `b1` wrongly fixed at 0 or dropped (a hidden chain) | V4 (saturation identity) and V1 fail: the logLik drops below the unrestricted one; chain-shaped tables with a saturated label |
 | D20 | chain `d1` and `b` rows swapped in the tables or in the alias vector (as D1 for the chain) | only the path rows and their SEs expose it; V3 equation-wise OLS catches it directly |
@@ -592,6 +650,8 @@ Ledger: `planning/GRILL-fiml-serial-FI-G3-2026-11-09.md`. Where this section con
 
 Revision 2 (this file) applies those decisions. Sections changed: scope and front matter; section 1 (rewritten: variant table, 1.1 admitted variants, new 1.2 registry amendment with exact wording); section 2.1 (both models), 2.2 (rewritten for Q2 with the version-pinned lavaan rationale), 2.3 (builder arguments, per-variant tables and parameter counts); section 3.1-3.5 (chain effects and gradients, per-variant covariance block, one class with a `variant` slot, per-variant path rows, per-effect origin rule); section 4.1-4.4 (router and variant detection, extraction including Q6 and Q7, refusals including Q2 and Q3, source-fit and gate probes); section 5 (slice plan, five PRs); section 6 (variant column, new V16 and V17, new D17-D23, new 6.2 gate arithmetic); section 7 (docs). Section 8 is kept below as the record of the questions, each marked resolved with its decision. Section 9 holds the questions that this revision raises.
 
+Revision 3 (Claude adversarial review, `scratchpad/adv-serial-spec.md`, verdict fix-then-ship; maintainer accepted all findings): F1 quick() refusal (3.3 item 3b, D24); F2 serial source-fit ordering (4.4, D17); F3 scalar `.sem_fiml_origin()` kept, new `.sem_fiml_origin_effects()` (3.4, D13, D26); F4 `coef(type = "paths")` and `summary()` (3.3 item 3d, D25); F5 confint contract table (3.3 item 3c); F6 variant detection with treatment-presence check and `0*` terms counted (4.1, D27); F7 Q6a recorded (4.2, ledger); F8 router order and message fixture (4.1, V13/V14); F9 df qualification (1.1); F10 V16 rewritten; S1 never-jointly-observed pair tests (V10, 2.3); S2 slice split S1a/S1b (section 5). Q6a (maintainer amendment): covariate-as-treatment is allowed for the saturated variant and refused for the pure chain at k >= 1.
+
 # 8. Open questions for the maintainer (all resolved; see 8a and the ledger)
 
 1. **Shortcut policy.** RESOLVED (Q1, overrides): saturated AND pure chain admitted. Registry amendment in section 1.2.
@@ -601,8 +661,7 @@ Revision 2 (this file) applies those decisions. Sections changed: scope and fron
 4. **Reporting the shortcut paths.** RESOLVED (Q4): all estimated paths per variant (section 3.3 item 5).
 5. **Which effects are admission targets.** RESOLVED (Q5): `nie`, `nie_total`, `nde`, `te`; per-path specific effects
    deferred.
-6. **Covariate as treatment in S2 and S3.** RESOLVED (Q6): allowed (saturated variant); the chain at k >= 1 is raised
-   again in question 1 of section 9.
+6. **Covariate as treatment in S2 and S3.** RESOLVED (Q6): allowed (saturated variant); the chain at k >= 1 is refused by Q6a.
 7. **Reversed mediator order in `extract_mediation()`.** RESOLVED (Q7): refused with a classed error naming the fitted
    order.
 8. **Origin rule scope.** RESOLVED (Q8): per effect; the chain variant has the single rule of section 3.4.
@@ -612,10 +671,7 @@ Revision 2 (this file) applies those decisions. Sections changed: scope and fron
 
 # 9. New open questions raised by revision 2
 
-1. **Chain with covariates: covariate as treatment.** The chain is asymmetric in the exogenous block (X has no M2 path;
-   covariates have one), so Q6 does not carry over unchanged. Recommendation: refuse a covariate as treatment in the
-   chain (treatment is structural); allow it in the saturated variant as Q6 says. Alternative: allow it with `a2 = gm2z`
-   and a third effect rule.
+1. (Resolved: Q6a, covariate-as-treatment refused for the chain at k >= 1, allowed for the saturated variant; see 8a and the ledger.)
 2. **`c_prime` row when the direct path is fixed at zero.** Q4 reads "chain: a, d, b, +c_prime if free"; existing
    simple and parallel FIML `paths()` list `c_prime` regardless (behavior with a fixed zero unverified). Recommendation:
    follow the existing behavior in both serial variants (always list `c_prime`, value 0, SE 0), so tidy shapes do not
@@ -624,8 +680,7 @@ Revision 2 (this file) applies those decisions. Sections changed: scope and fron
 3. **Gate rows per direct policy.** Free policy only (225 rows) or both policies (321 rows) for the six serial
    structures. Recommendation: free only, as every current structure, with fixed-zero in the V-tests; revisit at
    admission.
-4. **Slice order.** Five PRs (S0, S1 sat k = 0, S2 chain k = 0, S3 both k = 1, S4 both k = 2) versus seven (one variant and
-   covariate count per PR). Recommendation: five; fall back to seven if QA finds S3 or S4 too large.
+4. (Resolved: S1 is split into S1a and S1b, six PRs with a fallback of eight; section 5.)
 5. **`variant` as a class property mirrored in `fit_context`** versus only in `fit_context`. Recommendation: property
    plus context, the validator requires agreement, so a forged object cannot change the effect rule without breaking
    the hash.
@@ -634,4 +689,4 @@ Revision 2 (this file) applies those decisions. Sections changed: scope and fron
    in a scratch library) before the comment and the docs cite it; until then say "lavaan 0.7-3 frees none" only.
 7. **Refusal probes.** Relabel the `serial` and `parallel_covariate_serial` gate probes as Q2 probes and add the new ones
    of section 4.4 (the probe count changes from nine). Recommendation: yes, as section 4.4 lists; confirm the intended
-   final probe set at the S1 review.
+   final probe set at the S1a review.
