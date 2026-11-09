@@ -24,6 +24,14 @@ b0_may_change <- function(nm) startsWith(nm, "ser_") || identical(nm, "simple_se
 # rewritten. Every other entry must equal the post-S1a dump byte for byte.
 b1_changed <- c("ser_sat0_zeros", "ser_reversed_sat")
 
+# Slice S2 (the pure chain with k = 0 also becomes a public fit) changes the answer for exactly the entries below, again
+# from "not yet available" to an accepted fit. They are pinned against fiml-refusals-after-g3s2.rds (made by
+# make-fiml-after-g3s2.R); the frozen pre-serial, post-S1a and post-S1b files are never rewritten.
+b2_changed <- c(
+  "ser_chain0_zeros", "ser_chain0_direct_fixed_zeros", "ser_chain0_direct_omitted_zeros", "ser_reversed_mediators",
+  "ser_labeled_chain_paths"
+)
+
 b0_tables <- function() readRDS(test_path("fixtures", "fiml-tables-before-g3s1.rds"))
 b0_refusals <- function() readRDS(test_path("fixtures", "fiml-refusals-before-g3s1.rds"))
 b0_rebuild <- function() {
@@ -90,7 +98,7 @@ test_that("the entries S1a may change match the post-S1a fixture, and none of th
   after <- readRDS(test_path("fixtures", "fiml-refusals-after-g3s1a.rds"))
   expect_identical(after$models, before$models)
   expect_identical(after$data, before$data)
-  for (nm in setdiff(names(after$models), b1_changed)) {
+  for (nm in setdiff(names(after$models), c(b1_changed, b2_changed))) {
     got <- b0_observe(after$models[[nm]], after$data)
     expect_identical(got$class, after$results[[nm]]$class, info = nm)
     expect_identical(got$stage, after$results[[nm]]$stage, info = nm)
@@ -140,7 +148,8 @@ test_that("S1b: the post-S1b dump pins the entries that became fits and every ot
   b1 <- readRDS(test_path("fixtures", "fiml-refusals-after-g3s1b.rds"))
   expect_identical(b1$models, a1$models)
   expect_identical(b1$data, a1$data)
-  for (nm in names(b1$models)) {
+  # the entries S2 changed are compared with the live code in the S2 test below, not here
+  for (nm in setdiff(names(b1$models), b2_changed)) {
     got <- b0_observe(b1$models[[nm]], b1$data)
     expect_identical(got$class, b1$results[[nm]]$class, info = nm)
     expect_identical(got$stage, b1$results[[nm]]$stage, info = nm)
@@ -155,4 +164,29 @@ test_that("S1b: the post-S1b dump pins the entries that became fits and every ot
   nya <- names(b1$models)[vapply(b1$results, function(r) isTRUE(grepl("not yet available", r$message)), logical(1))]
   expect_true(all(c("ser_chain0_zeros", "ser_chain1_zeros", "ser_sat1_zeros", "ser_sat2_zeros") %in% nya))
   expect_false(any(c("ser_sat0_zeros", "ser_reversed_sat") %in% nya))
+})
+
+test_that("S2: the post-S2 dump pins the chain k = 0 entries that became fits and every other entry as after S1b", {
+  b1 <- readRDS(test_path("fixtures", "fiml-refusals-after-g3s1b.rds"))
+  b2 <- readRDS(test_path("fixtures", "fiml-refusals-after-g3s2.rds"))
+  expect_identical(b2$models, b1$models)
+  expect_identical(b2$data, b1$data)
+  for (nm in names(b2$models)) {
+    got <- b0_observe(b2$models[[nm]], b2$data)
+    expect_identical(got$class, b2$results[[nm]]$class, info = nm)
+    expect_identical(got$stage, b2$results[[nm]]$stage, info = nm)
+    expect_identical(got$message, b2$results[[nm]]$message, info = nm)
+    if (nm %in% b2_changed) {
+      expect_identical(b2$results[[nm]]$class, "<fit>", info = nm)
+      expect_match(b1$results[[nm]]$message, "serial FIML is not yet available", info = nm)
+    } else {
+      expect_identical(b2$results[[nm]], b1$results[[nm]], info = nm)
+    }
+  }
+  # every chain k = 0 entry is a fit now; the chain and saturated k >= 1 entries keep the not-yet-available reason
+  fits <- names(b2$models)[vapply(b2$results, function(r) identical(r$class, "<fit>"), logical(1))]
+  expect_true(all(c(b1_changed, b2_changed) %in% fits))
+  nya <- names(b2$models)[vapply(b2$results, function(r) isTRUE(grepl("not yet available", r$message)), logical(1))]
+  expect_true(all(c("ser_chain1_zeros", "ser_sat1_zeros", "ser_sat2_zeros") %in% nya))
+  expect_false(any(c("ser_chain0_zeros", "ser_sat0_zeros") %in% nya))
 })

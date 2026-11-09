@@ -2351,7 +2351,8 @@ FIMLParallelMediationData <- S7::new_class(
 # Internal subclass for two serial mediators (FI-G3): the ordinary serial effects, plus the likelihood provenance and a
 # `variant` that must agree with `fit_context` (a forged variant breaks the object). The saturated variant stores the
 # six paths a, a2, d1, b1, b, c_prime; the pure chain stores a, d1, b, c_prime and records the absent shortcuts in the
-# predictor lists (a skip edge whose source is not a predictor is a structural zero in `.serial_path_system()`).
+# predictor lists (a skip edge whose source is not a predictor is a structural zero in `.serial_path_system()`); the
+# predictor lists must equal the variant's sets exactly.
 FIMLSerialMediationData <- S7::new_class(
   "FIMLSerialMediationData", parent = SerialMediationData, package = "medfit",
   properties = list(fit_context = S7::class_list, variant = S7::class_character),
@@ -2365,13 +2366,21 @@ FIMLSerialMediationData <- S7::new_class(
     }
     alias <- if (variant == "saturated") c("a", "a2", "d1", "b1", "b", "c_prime") else c("a", "d1", "b", "c_prime")
     est <- self@estimates
-    # the stored alias vector, the path slots and the predictor lists must all describe the one variant
-    shortcut_x <- self@treatment %in% self@mediator_predictors[[2L]]
-    shortcut_m1 <- self@mediators[1L] %in% self@outcome_predictors
+    # The stored alias vector, the path slots and the predictor lists must all describe the one variant, and each
+    # predictor list must be EXACTLY the variant's set (order is free): M1 ~ X, then M2 ~ M1 [+ X] and Y ~ M2 [+ M1] + X
+    # (saturated with both shortcuts, chain with neither), plus the covariates of the fit.
+    x <- self@treatment
+    m <- self@mediators
+    z <- as.character(unlist(ctx$covariate))
+    sat <- variant == "saturated"
+    preds <- self@mediator_predictors
     if (!identical(names(est), alias) ||
           !identical(unname(est[["a"]]), self@a_path) || !identical(unname(est[["d1"]]), unname(self@d_path)) ||
           !identical(unname(est[["b"]]), self@b_path) || !identical(unname(est[["c_prime"]]), self@c_prime) ||
-          !identical(shortcut_x, variant == "saturated") || !identical(shortcut_m1, variant == "saturated")) {
+          length(m) != 2L || length(preds) != 2L ||
+          !identical(sort(as.character(preds[[1L]])), sort(c(x, z))) ||
+          !identical(sort(as.character(preds[[2L]])), sort(c(m[1L], if (sat) x, z))) ||
+          !identical(sort(as.character(self@outcome_predictors)), sort(c(if (sat) m[1L], m[2L], x, z)))) {
       return(msg)
     }
     source_hash <- rlang::hash(list(ctx$source_theta, ctx$source_vcov, ctx$source_roles))
