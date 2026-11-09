@@ -28,7 +28,8 @@
   if (length(x) %in% 2:3 && length(roles$obs) == length(x) + 2L && !any(grepl(":", roles$obs, fixed = TRUE))) {
     return(.sem_fiml_model_cov(parsed, tab, roles, reg))
   }
-  if (length(x) == 1L && length(roles$obs) == 4L && !any(grepl(":", roles$obs, fixed = TRUE))) {
+  # two mediators: one exogenous variable (X) and no covariate, or X and one or two covariates (FI-G2)
+  if (length(x) %in% 1:3 && length(roles$obs) == length(x) + 3L && !any(grepl(":", roles$obs, fixed = TRUE))) {
     return(.sem_fiml_model_par(parsed, tab, roles, reg))
   }
   y <- setdiff(unique(reg$lhs), reg$rhs)
@@ -124,25 +125,63 @@
   )
 }
 
+# Number of covariates the parallel form admits (slice 3: one; slice 4 lifts it to two).
+.sem_fiml_par_cov_max <- function() 1L
+
 # Two parallel mediators (FI-G2): M1 ~ X, M2 ~ X and Y ~ M1 + M2 [+ X], independent disturbances. The independence of
 # the two mediator disturbances must be WRITTEN as `M1 ~~ 0*M2` (either order): an omitted statement is ambiguous with
 # lavaan's default of a free residual covariance among such variables, so it is refused. Slice 2 also admits the free,
 # label-less statement `M1 ~~ M2` (either order); a labeled, bounded, tied or fixed nonzero one is refused.
 # The direct path may be free, fixed at exactly zero, or omitted. Mediators are `M1`, `M2` in order of appearance.
+# Slices 3 and 4 add one or two observed covariates with the FI-G1 rules: every exogenous variable has a free path to
+# both mediators and a written path to Y (free, or one fixed at exactly zero, which makes that variable the treatment
+# `X`; otherwise the first by appearance is `X`), the exogenous covariances are all written or none, and an omitted Y
+# path (ambiguous with a covariate acting on the mediators only) is refused. Every equation carries every covariate.
 .sem_fiml_model_par <- function(parsed, tab, roles, reg) {
-  x <- roles$ov_x
+  e <- roles$ov_x
+  k <- length(e) - 1L
   y <- setdiff(unique(reg$lhs), reg$rhs)
   m <- setdiff(unique(reg$lhs), y)
-  if (length(y) != 1L || length(m) != 2L || !setequal(roles$obs, c(x, m, y))) {
+  if (k > .sem_fiml_par_cov_max()) .sem_fiml_diagnostic("unsupported number of FIML covariates")
+  if (length(y) != 1L || length(m) != 2L || !setequal(roles$obs, c(e, m, y))) {
     .sem_fiml_diagnostic("unsupported FIML topology: parallel mediation needs M1 ~ X, M2 ~ X and Y ~ M1 + M2")
   }
   keys <- paste(tab$lhs, tab$op, tab$rhs)
+  # The treatment: with covariates the exogenous variable whose Y path is fixed at zero, else the first one.
+  x <- e
+  if (k > 0L) {
+    y_keys <- paste(y, "~", e)
+    fixed_y <- which(!is.na(tab$fixed) & keys %in% y_keys)
+    if (any(!y_keys %in% keys)) {
+      .sem_fiml_diagnostic(paste0(
+        "FIML with a covariate needs a Y path from each exogenous variable ",
+        "(free, or one fixed at 0)"
+      ))
+    }
+    if (length(fixed_y) > 1L) .sem_fiml_diagnostic("only one direct path may be fixed, exactly at zero, in FIML")
+    x <- if (length(fixed_y)) e[match(keys[fixed_y], y_keys)] else e[1L]
+  }
+  z <- setdiff(e, x)
+  ex <- c(x, z)
+  # exogenous covariances in either written order are the one canonical pair
+  pair <- tab$op == "~~" & tab$lhs %in% ex & tab$rhs %in% ex & tab$lhs != tab$rhs
+  lo <- pmin(match(tab$lhs, ex), match(tab$rhs, ex))
+  hi <- pmax(match(tab$lhs, ex), match(tab$rhs, ex))
+  keys[pair] <- paste(ex[lo[pair]], "~~", ex[hi[pair]])
+  exo_cov <- if (k > 0L) {
+    paste(ex[utils::combn(k + 1L, 2L)[1L, ]], "~~", ex[utils::combn(k + 1L, 2L)[2L, ]])
+  } else {
+    character()
+  }
   is_cov <- tab$op == "~~" & tab$lhs %in% m & tab$rhs %in% m & tab$lhs != tab$rhs
   covariance <- paste(m[1L], "~~", m[2L])
   keys[is_cov] <- covariance
-  required <- c(paste(m, "~", x), paste(y, "~", m), covariance)
+  required <- c(
+    paste(m, "~", x), if (k > 0L) paste(m, "~", rep(z, each = 2L)), paste(y, "~", m), if (k > 0L) paste(y, "~", z),
+    exo_cov, covariance
+  )
   cp <- paste(y, "~", x)
-  obs <- c(x, m, y)
+  obs <- c(x, z, m, y)
   allowed <- c(required, cp, paste(obs, "~~", obs), paste(obs, "~1", ""))
   if (anyDuplicated(keys) || any(!keys %in% allowed)) {
     .sem_fiml_diagnostic("unsupported FIML topology or correlated disturbances")
@@ -165,21 +204,27 @@
   }
   direct <- any(is_cp & is.na(tab$fixed))
   conv <- .sem_to_ram(tab)
-  if (conv$ram$q != (if (direct) 13L else 12L) + free_cov) {
+  if (conv$ram$q != 12L + 5L * k + choose(k + 1L, 2L) + direct + free_cov) {
     .sem_fiml_diagnostic("FIML does not support parameter ties")
   }
+  tables <- .sem_fiml_tables_med(2L, direct, free_cov, k)
+  # The canonical key of every free table entry, read off the kernel tables through the data names of the variables.
+  kernel <- stats::setNames(c(x, z, m, y), tables$vars)
+  free <- function(tb) is.na(tb$value)
   canonical <- c(
-    paste(m, "~", x), paste(y, "~", m), if (direct) cp, paste(obs, "~~", obs), if (free_cov) covariance,
-    paste(obs, "~1", "")
+    paste(kernel[tables$a$row[free(tables$a)]], "~", kernel[tables$a$col[free(tables$a)]]),
+    paste(kernel[tables$s$row], "~~", kernel[tables$s$col]),
+    paste(kernel[tables$m$row], "~1", "")
   )
-  tables <- .sem_fiml_tables_med(2L, direct, free_cov)
-  labels <- c(tables$a$label[is.na(tables$a$value)], tables$s$label, tables$m$label)
-  stopifnot(length(labels) == length(canonical))
+  labels <- c(tables$a$label[free(tables$a)], tables$s$label, tables$m$label)
+  stopifnot(length(labels) == length(canonical), all(canonical %in% keys))
   map <- stats::setNames(conv$ram$par_names[conv$par_map[match(canonical, keys)]], labels)
-  list(
-    parsed = parsed, conv = conv, vars = stats::setNames(c(x, m, y), tables$vars), direct = direct, map = map,
-    mediators = stats::setNames(m, c("M1", "M2")), residual_covariance = free_cov
+  out <- list(
+    parsed = parsed, conv = conv, vars = stats::setNames(c(x, m, y), c("X", "M1", "M2", "Y")), direct = direct,
+    map = map, mediators = stats::setNames(m, c("M1", "M2")), residual_covariance = free_cov
   )
+  if (k > 0L) out$covariate <- stats::setNames(z, .sem_fiml_cov_names(k)$z)
+  out
 }
 
 .sem_fiml_binding <- function(object) {
@@ -231,11 +276,11 @@
         ))
       }
       spec <- .sem_fiml_model(model)
-      # data columns in kernel order: X, [Z], M, Y
+      # data columns in kernel order: X, [Z], M, Y (M1, M2 for the parallel form)
       model_vars <- if (is.null(spec$covariate)) {
         spec$vars
       } else {
-        c(spec$vars["X"], spec$covariate, spec$vars[c("M", "Y")])
+        c(spec$vars["X"], spec$covariate, spec$vars[names(spec$vars) != "X"])
       }
       if (!all(model_vars %in% names(data))) .sem_fiml_diagnostic("FIML model variables are absent from data")
       d <- data[, model_vars, drop = FALSE]
@@ -245,7 +290,9 @@
       z <- as.matrix(d)
       colnames(z) <- names(model_vars)
       if (!is.null(spec$mediators)) {
-        tables <- .sem_fiml_tables_med(length(spec$mediators), spec$direct, isTRUE(spec$residual_covariance))
+        tables <- .sem_fiml_tables_med(
+          length(spec$mediators), spec$direct, isTRUE(spec$residual_covariance), length(spec$covariate)
+        )
         prepared <- .sem_fiml_prepare_core(z, tables, direct = spec$direct)
         stage <- "numerical"
         candidate <- .sem_fiml_solve(prepared)
@@ -416,7 +463,13 @@
   spec <- .sem_fiml_model(object@model)
   meds <- spec$mediators
   allowed <- c("outcome", "standardized", "structure", "decomposition")
-  if (length(setdiff(names(args), allowed)) || !identical(treatment, unname(v["X"])) ||
+  covariate <- ctx0$covariate
+  # As in the one-mediator covariate form, any exogenous variable may be the treatment unless a Y path is fixed at zero
+  # (that variable is the fit's treatment `X`; a covariate's outcome path must be complete).
+  treatment_ok <- identical(treatment, unname(v["X"])) ||
+    (!is.null(covariate) && spec$direct && is.character(treatment) && length(treatment) == 1L &&
+       treatment %in% covariate)
+  if (length(setdiff(names(args), allowed)) || !treatment_ok ||
         !is.character(mediator) || length(mediator) != length(meds) || !setequal(mediator, meds) ||
         (!is.null(args$outcome) && !identical(args$outcome, unname(v["Y"]))) ||
         (!is.null(args$standardized) && !identical(args$standardized, FALSE)) ||
@@ -434,10 +487,23 @@
   k <- length(i)
   a_aliases <- map[paste0("a", i)]
   b_aliases <- map[paste0("b", i)]
+  # A covariate named the treatment: its paths to the mediators and to Y take the roles of a_j and c_prime.
+  as_covariate <- !is.null(covariate) && !identical(treatment, unname(v["X"]))
+  iz <- match(treatment, covariate)
+  if (as_covariate) {
+    sfx <- .sem_fiml_cov_names(length(covariate))$sfx
+    a_aliases <- map[paste0("gm", i, "z", iz)]
+  }
   roles <- c(
     stats::setNames(unname(a_aliases), paste0("a", seq_len(k))),
     stats::setNames(unname(b_aliases), paste0("b", seq_len(k))),
-    c_prime = if (spec$direct) unname(map["cp"]) else NA_character_
+    c_prime = if (as_covariate) {
+      unname(map[paste0("gy", sfx[iz])])
+    } else if (spec$direct) {
+      unname(map["cp"])
+    } else {
+      NA_character_
+    }
   )
   idx <- stats::setNames(seq_along(object@theta), names(object@theta))
   idx[names(roles)] <- match(roles, names(object@theta))
@@ -450,6 +516,10 @@
   tb <- object@table
   sigma <- function(label) sqrt(unname(object@theta[map[[label]]]))
   ctx <- ctx0
+  if (as_covariate) {
+    ctx$variables["X"] <- treatment
+    ctx$covariate <- replace(covariate, iz, unname(v["X"]))
+  }
   ctx$mediators <- mediator
   ctx$source_theta <- object@theta
   ctx$source_vcov <- object@vcov

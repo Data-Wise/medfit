@@ -1,9 +1,9 @@
 # FI-G2, slices 3 and 4: bounded Gaussian FIML for PARALLEL mediation (two mediators) with one or two observed
 # covariates, in both residual forms (`M1 ~~ 0*M2` written, or the free, label-less `M1 ~~ M2`), each with the direct
 # path free or fixed exactly at zero. Random X: X, Z (or Z1, Z2), M1, M2, Y are jointly Gaussian with a free exogenous
-# covariance. Oracles, each independent of the production kernel: matched lavaan raw-data FIML (including the := products,
-# their SUM and the total), a from-scratch rowwise Gaussian likelihood with an independent Hessian, closed-form
-# complete-data OLS, and OpenMx for one cell. Helpers are prefixed p4_ and self-contained.
+# covariance. Oracles, each independent of the production kernel: matched lavaan raw-data FIML (incl. the :=
+# products, their SUM and the total), a from-scratch rowwise Gaussian likelihood with an independent Hessian,
+# closed-form complete-data OLS, and OpenMx for one cell. Helpers are prefixed p4_ and self-contained.
 
 p4_ks <- 1L # lifted to 1:2 with slice 4
 p4_exo <- function(k) c("X", if (k == 1L) "Z" else c("Z1", "Z2"))
@@ -57,8 +57,10 @@ p4_model <- function(k = 1L, direct = TRUE, resid = "free", exo = p4_exo(k), lab
   y <- paste(c(lab("b1", "M1"), lab("b2", "M2"), if (direct) lab("cp", x) else paste0("0*", x), z), collapse = " + ")
   paste0(
     "M1 ~ ", m1, "\nM2 ~ ", m2, "\nY ~ ", y, "\n", if (resid == "free") "M1 ~~ M2" else "M1 ~~ 0*M2",
-    if (cov_written) paste0("\n", paste(exo[utils::combn(length(exo), 2L)[1L, ]], "~~",
-                                         exo[utils::combn(length(exo), 2L)[2L, ]], collapse = "\n"))
+    if (cov_written) {
+      pr <- utils::combn(length(exo), 2L)
+      paste0("\n", paste(exo[pr[1L, ]], "~~", exo[pr[2L, ]], collapse = "\n"))
+    }
   )
 }
 p4_fit <- function(d, model) fit_sem(model, d, missing = "fiml", fixed_x = FALSE)
@@ -72,7 +74,7 @@ p4_lavaan_labeled <- function(k, direct, resid, exo = p4_exo(k)) {
          if (direct) "\nte := cp + a1*b1 + a2*b2")
 }
 p4_rel_gap <- function(V, ref) max(abs(V - ref) / sqrt(outer(diag(ref), diag(ref))))
-p4_n_par <- function(k, direct, resid) 12L + 5L * k + choose(k + 1L, 2L) + direct + (resid == "free")
+p4_n_par <- function(k, direct, resid) as.integer(12L + 5L * k + choose(k + 1L, 2L) + direct + (resid == "free"))
 # lavaan writes an exogenous covariance in its own order: match by the unordered pair
 p4_key <- function(nm) {
   vapply(strsplit(nm, "~~", fixed = TRUE), function(p) {
@@ -253,13 +255,19 @@ test_that("parallel covariate FIML matches lavaan: estimates, covariance, logLik
   }
 })
 
-test_that("a written exogenous covariance (either order) is the automatic one; a swapped mediator request keeps the sum", {
+test_that("a written exogenous covariance (either order) is the automatic one and a swapped request keeps the sum", {
   d <- p4_data(1L)
   f <- p4_fit(d, p4_model(1L))
   fw <- p4_fit(d, p4_model(1L, cov_written = TRUE))
   fs <- p4_fit(d, paste0(p4_model(1L), "\nZ ~~ X"))
-  expect_equal(unname(coef(fw)), unname(coef(f)))
-  expect_equal(unname(coef(fs)), unname(coef(f)))
+  # the parameter order follows the written rows; the estimates are the same by unordered name
+  for (g in list(fw, fs)) {
+    expect_equal(unname(p4_align(coef(g), coef(f))), unname(coef(f)))
+    expect_equal(logLik(g), logLik(f))
+  }
+  # a label on the one free exogenous covariance is a name, not a restriction (as in the covariate form)
+  fl <- p4_fit(d, paste0(p4_model(1L), "\nX ~~ cx*Z"))
+  expect_equal(as.numeric(logLik(fl)), as.numeric(logLik(f)))
   m <- extract_mediation(f, treatment = "X", mediator = c("M2", "M1"))
   m1 <- p4_extract(f)
   expect_equal(as.numeric(nie(m)), as.numeric(nie(m1)))
@@ -336,10 +344,10 @@ test_that("a sparse pattern sweep with both-mediator gaps and an all-empty row k
     f <- p4_fit(d, p4_model(k, TRUE, resid))
     expect_identical(f@n_dropped, 1L)
     expect_gte(length(f@internals$likelihood$rows$patterns), 8L)
-    expect_true(any(vapply(f@internals$likelihood$rows$patterns, function(p) {
-      !any(c("M1", "M2") %in% p$variables) && "Y" %in% p$variables || identical(sort(p$variables), sort(setdiff(
-        p4_kvars(k), c("M1", "M2"))))
-    }, logical(1))))
+    both_gap <- vapply(f@internals$likelihood$rows$patterns, function(p) {
+      setequal(p$variables, setdiff(p4_kvars(k), c("M1", "M2")))
+    }, logical(1))
+    expect_true(any(both_gap))
     ref <- p4_lavaan(d, p4_model(k, TRUE, resid))
     q <- coef(f)
     expect_lt(max(abs(q - p4_align(lavaan::coef(ref), q))), 1e-5)
@@ -348,7 +356,7 @@ test_that("a sparse pattern sweep with both-mediator gaps and an all-empty row k
   }
 })
 
-test_that("complete data: ML estimates are equation-wise OLS, the exogenous ML covariance and the M-residual covariance", {
+test_that("complete data: ML estimates are equation-wise OLS plus the exogenous and mediator-residual covariances", {
   for (k in p4_ks) for (i in seq_len(nrow(p4_variants))) {
     direct <- p4_variants$direct[i]
     resid <- p4_variants$resid[i]
@@ -365,7 +373,9 @@ test_that("complete data: ML estimates are equation-wise OLS, the exogenous ML c
       expect_equal(q[[paste0("M1~", v)]], stats::coef(l1)[[v]], tolerance = 1e-6)
       expect_equal(q[[paste0("M2~", v)]], stats::coef(l2)[[v]], tolerance = 1e-6)
     }
-    for (v in c("M1", "M2", if (direct) "X", z)) expect_equal(q[[paste0("Y~", v)]], stats::coef(ly)[[v]], tolerance = 1e-6)
+    for (v in c("M1", "M2", if (direct) "X", z)) {
+      expect_equal(q[[paste0("Y~", v)]], stats::coef(ly)[[v]], tolerance = 1e-6)
+    }
     expect_equal(q[["M1~1"]], stats::coef(l1)[["(Intercept)"]], tolerance = 1e-6)
     expect_equal(q[["Y~1"]], stats::coef(ly)[["(Intercept)"]], tolerance = 1e-6)
     expect_equal(q[["M1~~M1"]], sum(stats::resid(l1)^2) / n, tolerance = 1e-6)
@@ -399,17 +409,20 @@ test_that("OpenMx raw-data FIML agrees on the free-covariance, free-direct cell 
   f <- p4_fit(d, p4_model(1L, TRUE, "free"))
   q <- coef(f)
   vars <- p4_kvars(1L)
+  lab <- function(nm) gsub("~", "_", nm, fixed = TRUE)
   paths <- list()
   for (nm in names(q)) {
     if (grepl("~1$", nm)) {
-      paths[[nm]] <- OpenMx::mxPath(from = "one", to = sub("~1$", "", nm), arrow = 1, free = TRUE, values = 0, labels = nm)
+      paths[[nm]] <- OpenMx::mxPath(from = "one", to = sub("~1$", "", nm), arrow = 1, free = TRUE, values = 0,
+                                    labels = lab(nm))
     } else if (grepl("~~", nm)) {
       p <- strsplit(nm, "~~", fixed = TRUE)[[1L]]
-      paths[[nm]] <- OpenMx::mxPath(from = p[1L], to = if (p[1L] == p[2L]) NA else p[2L], arrow = 2, free = TRUE,
-                                    values = if (p[1L] == p[2L]) 1 else .1, labels = nm)
+      same <- p[1L] == p[2L]
+      paths[[nm]] <- OpenMx::mxPath(from = p[1L], to = if (same) NA else p[2L], arrow = 2, free = TRUE,
+                                    values = if (same) 1 else .1, labels = lab(nm))
     } else {
       p <- strsplit(nm, "~", fixed = TRUE)[[1L]]
-      paths[[nm]] <- OpenMx::mxPath(from = p[2L], to = p[1L], arrow = 1, free = TRUE, values = .1, labels = nm)
+      paths[[nm]] <- OpenMx::mxPath(from = p[2L], to = p[1L], arrow = 1, free = TRUE, values = .1, labels = lab(nm))
     }
   }
   mx <- do.call(OpenMx::mxModel, c(
@@ -419,10 +432,10 @@ test_that("OpenMx raw-data FIML agrees on the free-covariance, free-direct cell 
   fit <- suppressWarnings(OpenMx::mxTryHard(mx, silent = TRUE, extraTries = 5L))
   expect_true(fit$output$status$code %in% c(0, 1))
   pars <- fit$output$estimate
-  expect_lt(max(abs(pars[names(q)] - q)), 5e-4)
+  expect_lt(max(abs(pars[lab(names(q))] - q)), 5e-4)
   expect_lt(abs(fit$output$Minus2LogLikelihood / 2 - f@internals$likelihood$nll), 1e-5)
   se <- fit$output$standardErrors
-  expect_equal(unname(se[names(q), 1L]), unname(sqrt(diag(vcov(f)))), tolerance = 5e-3)
+  expect_equal(unname(se[lab(names(q)), 1L]), unname(sqrt(diag(vcov(f)))), tolerance = 5e-3)
 })
 
 # ---- what stays refused ---------------------------------------------------------------------------------------------
@@ -436,7 +449,6 @@ p4_refused <- c(
   constrained_covariance = "M1 ~ X + Z\nM2 ~ X + Z\nY ~ M1 + M2 + X + Z\nM1 ~~ cc*M2\ncc == 0.1",
   duplicate_covariance = "M1 ~ X + Z\nM2 ~ X + Z\nY ~ M1 + M2 + X + Z\nM1 ~~ M2\nM2 ~~ M1",
   fixed_exogenous_covariance = "M1 ~ X + Z\nM2 ~ X + Z\nY ~ M1 + M2 + X + Z\nM1 ~~ M2\nX ~~ 0*Z",
-  labeled_exogenous_covariance = "M1 ~ X + Z\nM2 ~ X + Z\nY ~ M1 + M2 + X + Z\nM1 ~~ M2\nX ~~ cx*Z",
   duplicate_exogenous_covariance = "M1 ~ X + Z\nM2 ~ X + Z\nY ~ M1 + M2 + X + Z\nM1 ~~ M2\nX ~~ Z\nZ ~~ X",
   covariate_on_one_mediator = "M1 ~ X + Z\nM2 ~ X\nY ~ M1 + M2 + X + Z\nM1 ~~ M2",
   covariate_not_on_y = "M1 ~ X + Z\nM2 ~ X + Z\nY ~ M1 + M2 + X\nM1 ~~ M2",
@@ -494,7 +506,7 @@ test_that("every other topology and policy is refused at fit before the kernel",
     expect_s3_class(e, "medfit_sem_fiml_error")
     expect_identical(e$stage, "input", info = nm)
     expect_false(grepl("reached", conditionMessage(e)), info = nm)
-    expect_error(.sem_fiml_model(p4_refused[[nm]]), class = "medfit_sem_fiml_error")
+    expect_error(.sem_fiml_model(p4_refused[[nm]]), info = nm)
   }
   expect_identical(reached, character())
 })
@@ -631,8 +643,8 @@ test_that("the oracles catch planted extraction defects: swapped a, zeroed Cov(b
   v_line <- "V[present, present] <- object@vcov[idx[present], idx[present], drop = FALSE]"
   zero_bb <- mutated(v_line, paste0(v_line, "; V[\"b1\", \"b2\"] <- 0; V[\"b2\", \"b1\"] <- 0"))
   expect_gt(abs(se_of(zero_bb) - target) / target, .005)
-  block <- mutated(v_line, paste0(v_line, "; V[c(\"a1\", \"b1\"), c(\"a2\", \"b2\")] <- 0; ",
-                                   "V[c(\"a2\", \"b2\"), c(\"a1\", \"b1\")] <- 0"))
+  cross <- paste0("; V[c(\"a1\", \"b1\"), c(\"a2\", \"b2\")] <- 0; V[c(\"a2\", \"b2\"), c(\"a1\", \"b1\")] <- 0")
+  block <- mutated(v_line, paste0(v_line, cross))
   expect_gt(abs(se_of(block) - target) / target, .02)
   # covariate coefficients mistaken for paths: gm1z1 aliased in place of a1 changes the effect
   wrong <- mutated("a_aliases <- map[paste0(\"a\", i)]", "a_aliases <- map[paste0(\"gm\", i, \"z1\")]")

@@ -368,7 +368,7 @@ p2_unadmitted <- c(
   one_mediator_only_to_y = "M1 ~ X\nM2 ~ X\nY ~ M1 + X\nM1 ~~ 0*M2",
   mediator_without_a_path = "M1 ~ X\nY ~ M1 + M2 + X\nM1 ~~ 0*M2",
   three_mediators = "M1 ~ X\nM2 ~ X\nM3 ~ X\nY ~ M1 + M2 + M3 + X",
-  covariate_with_parallel = "M1 ~ X + Z\nM2 ~ X + Z\nY ~ M1 + M2 + X + Z\nM1 ~~ 0*M2",
+  covariate_on_one_mediator = "M1 ~ X + Z\nM2 ~ X\nY ~ M1 + M2 + X + Z\nM1 ~~ 0*M2",
   mediator_outcome_covariance = "M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X\nM1 ~~ 0*M2\nM1 ~~ Y",
   mediator_outcome_covariance_2 = "M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X\nM1 ~~ 0*M2\nM2 ~~ Y",
   fixed_nonzero_direct = "M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + 0.5*X\nM1 ~~ 0*M2",
