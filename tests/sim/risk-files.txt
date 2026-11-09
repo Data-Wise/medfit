@@ -6,3 +6,5 @@ R/sem-parse.R
 R/sem-fit.R
 tests/sim/gates.csv
 R/fit-sem.R
+R/sem-fiml.R
+R/sem-fiml-interface.R

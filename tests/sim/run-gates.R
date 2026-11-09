@@ -147,6 +147,7 @@ verdict_gate <- function(gate, d, s) {
     "compare-lr" = c("engine", "version", "seed", "verdict", "all_converged", "ref_ok", "drop", "above", "warn_drop",
                      "warn_above", "mislabel", "pass"),
     fiml = c("cell", "check", "value", "limit", "pass"),
+    "fiml-ext" = c("cell", "check", "value", "limit", "pass"),
     restoration = c("check", "kind", "value", "limit", "pass", "detail"),
     "native-defaults" = c("cell", "combo", "quantity", "native", "oracle", "diff", "tol", "status", "reason"),
     semopy = c("param", "status", "est_gap", "se_rel", "sl_est_gap", "sl_se_rel", "reason")
@@ -472,6 +473,24 @@ verdict_gate <- function(gate, d, s) {
         chk("successful checks", all(d$pass %in% TRUE), "no failed or missing checks")
       )
     },
+    "fiml-ext" = {
+      checks <- c("estimates", "covariance", "likelihood", "retained", "provenance", "nie_estimate", "nie_se", "guard")
+      structures <- c("cov1", "cov2", "par_ind", "par_free")
+      cells <- as.vector(outer(structures, c(4111L, 7219L), paste, sep = "-"))
+      expected <- c(as.vector(outer(cells, checks, paste, sep = ":")), "refusals:unadmitted_accepted")
+      keys <- paste(d$cell, d$check, sep = ":")
+      limits <- c(estimates = 1e-5, covariance = 1e-3, likelihood = 1e-6, retained = 0, provenance = 0,
+                  nie_estimate = 1e-5, nie_se = 2e-3, guard = 0, unadmitted_accepted = 0)
+      rbind(
+        rows_chk(d, s),
+        chk("complete cells", identical(sort(keys), sort(expected)),
+            "four structures x two seeds x eight checks plus the refusal count, no duplicates"),
+        chk("numerical checks", all(is.finite(d$value) & d$value >= 0 & d$value <= d$limit),
+            "every recorded discrepancy satisfies its frozen limit"),
+        chk("frozen limits", all(d$limit == limits[d$check]), "limits cannot be widened in results"),
+        chk("successful checks", all(d$pass %in% TRUE), "no failed or missing checks")
+      )
+    },
     restoration = {
       # restoration-bound T5/T6 (G12): every check of the script is a row; the numeric verdicts are re-derived from the
       # recorded numbers, so a row that claims pass over a bad number cannot pass. tol_est is k, tol_se the margin.
@@ -629,7 +648,7 @@ mutate <- function(gate, kind, d) {
       d$mislabel[1:3] <- TRUE
       d$pass[1:3] <- FALSE
     }
-    if (gate == "fiml") d$value[1L] <- 1
+    if (gate %in% c("fiml", "fiml-ext")) d$value[1L] <- 1
     if (gate == "restoration") {
       # the recorded numbers say fail while the pass column still says TRUE
       d$value[grepl("^separation", d$check)] <- 100
@@ -667,7 +686,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "compare-lr") d$verdict[1] <- "error"
     if (gate == "native-defaults") d$status[1] <- "fail"
     if (gate == "semopy") d$status[1] <- "error"
-    if (gate %in% c("restoration", "fiml")) d$pass[1] <- FALSE
+    if (gate %in% c("restoration", "fiml", "fiml-ext")) d$pass[1] <- FALSE
   }
   if (kind == "all_flagged" && gate == "nonlinear-profile") d$note[d$fixture %in% "var-1e6-1e-6"] <- "flagged"
   if (kind == "floor_disproved_silent" && gate == "nonlinear-profile") {
@@ -707,7 +726,7 @@ mutate <- function(gate, kind, d) {
     new_gate <- gate %in% c(
       names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x",
       "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep", "compare-lr", "restoration",
-      "native-defaults", "semopy", "fiml"
+      "native-defaults", "semopy", "fiml", "fiml-ext"
     )
     # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
@@ -913,6 +932,7 @@ scripts <- c(
   "oracle-sweep" = "tests/sim/sem-oracle-sweep.R",
   "compare-lr" = "tests/sim/compare-lr-gate.R",
   fiml = "tests/sim/sem-fiml-gate.R",
+  "fiml-ext" = "tests/sim/sem-fiml-ext-gate.R",
   restoration = "tests/sim/sem-restoration-gate.R",
   "native-defaults" = "tests/sim/native-defaults-oracle.R",
   semopy = "tests/sim/semopy-oracle-gate.R"
