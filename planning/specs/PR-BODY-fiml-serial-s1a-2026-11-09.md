@@ -32,7 +32,7 @@ Local machine: macOS aarch64, R 4.6.2. Tree: worktree `feature/fiml-serial-s1a`,
 | Check | Command | Result |
 |---|---|---|
 | Full suite | `NOT_CRAN=true Rscript -e 'r <- as.data.frame(devtools::test(reporter="silent", stop_on_failure=FALSE))'` | 190 files, 2023 tests, 15149 expectations, 0 failed, 0 errors, 2 skipped (measured 2026-11-09 on the tip, by the implementer; not re-run by the gates pass) |
-| Lint | isolated source install of `git archive HEAD`, `R_LIBS=<lib> Rscript -e 'lintr::lint_package()'` | **1 finding** at `2587f718`: `tests/testthat/test-fiml-g3-serial-router.R:699:60 indentation_linter` (60 spaces, expected 59). `origin/dev` measured the same way: 0. Fix: dedent that continuation line by one space; pending |
+| Lint | isolated source install of `git archive HEAD`, `R_LIBS=<lib> Rscript -e 'lintr::lint_package()'` | 0 findings at the final tip (isolated install, `find.package` verified). The gates run at `2587f718` found 1 (`indentation_linter`, `tests/testthat/test-fiml-g3-serial-router.R:699`), fixed by a one-space dedent in the last commit. `origin/dev` measured the same way: 0 |
 | R CMD check | `R CMD build --no-manual --no-build-vignettes`, then `_R_CHECK_FORCE_SUGGESTS_=false NOT_CRAN=false R CMD check --as-cran --no-manual --ignore-vignettes --no-tests` | Status: 1 NOTE (CRAN incoming feasibility: "Version jumps in minor (submitted: 0.16.0, existing: 0.3.2)"); 0 WARNING, 0 ERROR. Same NOTE as `dev`. Examples and `--run-donttest` examples OK; tests skipped by option. A first attempt died on a CRAN-server timeout in the incoming check (network) and was re-run unchanged |
 | Gate verdicts | `Rscript tests/sim/run-gates.R --sim --only fiml,fiml-ext` | `fiml` PASS (24 rows of 24); `fiml-ext` PASS (129 rows of 129, 129 pass, `unadmitted_accepted` = 0); OVERALL PASS, 12 of 12 driver checks |
 | Gate planted defects | `MUTANT=<name> Rscript tests/sim/sem-fiml-ext-gate.R` for all nine registered names | all nine stop with a failing gate: `wrong_unit`, `no_offset`, `swap_b`, `dropped_cov` fail numeric rows; `missing_guard` fails the guard row (1 vs 0); `serial_admitted` makes `unadmitted_accepted` = 6 (limit 0); `serial_router_off` makes it 15 (limit 0); `parcov_drop_path` and `parcov_orthogonal` stop with `Error: subscript out of bounds` (a structural crash, not a numeric gap: caught fail-closed) |
@@ -55,7 +55,17 @@ the gates pass above re-ran both on the tip copy.
 
 ## Independent QA
 
-`medfit-oracle-qa`: <QA-RESULT-PLACEHOLDER>
+`medfit-oracle-qa` (own code, scripts and mutants; no tracked report file): **PASS on all 7 items, no blocking defect.**
+
+- Tables and kernel: for all 12 cells (k = 0, 1, 2 x direct free/fixed x saturated/chain) q matches an independent edge enumeration and the spec formula (saturated 14/20/27 free, 13/19/26 fixed; chain 12/18/25 free, 11/17/24 fixed; df 0/1 and 2/3). The existing kernel accepts all 12 on complete data (n = 400): estimates and ML variances match equation-wise OLS to 1.4e-8, saturated cells match the unrestricted MVN MLE to 6.2e-9 or better and the unrestricted logLik. Chain and saturated missing-data cells match lavaan raw-data FIML (estimates 3.7e-6, logLik 5.5e-9).
+- Router: 116 syntaxes (variant x k x direct free/fixed/omitted x zero sets x partial shortcuts x labeled/tied/fixed shortcuts x F6 cases) all refused at `fit_sem` with `medfit_sem_fiml_error` and the real reason named (each single omitted zero covariance is named, the variant is named); none reached a fit or the parallel or covariate parser.
+- Frozen fixtures (R2/R4): the pre-S1a fixtures are untouched; all 22 frozen table shapes are `identical()`; of 92 near-miss refusals 37 changed (36 `ser_*` plus the `serial` gate probe), each allowed by spec 4.4; no `par*`, `cov*` or other `simple_*` entry changed.
+- Source-fit order (F2): reachable by mocking `.fiml_serial_admitted`; 12 cells; guard closed gives `medfit_error_fiml_inference_unavailable`, guard open gives `medfit_error_fiml_serial_source_fit`; parallel and covariate classes unchanged (order guard, serial, covariate, parallel).
+- Planted defects: 9 of 9 caught with an unmutated positive control (freed chain shortcut, dropped saturated `b1`, wrong q, router order, F6 relabel, omitted zero accepted, first-missing-only, wrong source-fit class, serial check removed).
+- V14 parity with `origin/dev` `be232f57` (two installs): 16 shapes x 4 datasets (MAR, MCAR 30%, complete) = 64 cells, 576 fields, 0 differences.
+- V10 never-jointly-observed pairs (internals): saturated with a free direct path refuses all 6 pairs (rank-deficient moment Jacobian); with a fixed-zero direct path and in the chain, acceptance is data-dependent (some seeds refuse with "no accepted candidate"); every accepted fit matched lavaan, none silently wrong. UNVERIFIED: whether those acceptances are structurally or only generically identified. A robustness flag for S2.
+
+Observations, not blockers: three mediators keeps the pre-S1a message (real but not serial-specific); at k = 2 a missing exogenous covariance gets the generic serial message; `M2 ~ M1 + X` with Z omitted is a valid chain whose treatment is Z and is refused only by the blanket S1a gate, so S1b needs an explicit rule; the k = 1 covariate labels are `gm1z1`, `gm2z1` (labels are not contract).
 
 ## Known unverified items
 

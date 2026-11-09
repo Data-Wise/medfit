@@ -696,6 +696,6 @@ test_that("planted defect: d1 and b swapped in the table builder is caught by th
   # the count-based parser battery cannot see it: it only fails the map-to-RAM assertion
   spec <- testthat::with_mocked_bindings(sr_parse(sr_model("chain", 0L)), .sem_fiml_tables_ser = swapped)
   par <- spec$conv$ram$par_names[spec$conv$par_map[which(spec$conv$table$lhs == "M2" & spec$conv$table$rhs == "M1" &
-                                                            spec$conv$table$op == "~")]]
+                                                           spec$conv$table$op == "~")]]
   expect_false(identical(unname(spec$map[["d1"]]), par))
 })
