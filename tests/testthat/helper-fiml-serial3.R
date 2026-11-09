@@ -23,8 +23,8 @@ s3_model <- function(variant = "saturated", direct = "free", labels = FALSE, tr 
     )
   ), collapse = "\n")
 }
-# the data-generating values: every path distinct, and the covariate effects LARGE and distinct from the path values, so a
-# covariate coefficient mistaken for a path (or the reverse) cannot hide
+# the data-generating values: every path distinct, and the covariate effects LARGE and distinct from the path values,
+# so a covariate coefficient mistaken for a path (or the reverse) cannot hide
 s3_truth <- c(a = .9, a2 = .4, d1 = .7, b1 = .35, b = .6, cp = .25, gm1 = 1.4, gm2 = -.9, gy = 1.7)
 s3_data <- function(kind = "mar", n = 360L, seed = 9301L, cp = s3_truth[["cp"]], a2 = s3_truth[["a2"]],
                     b1 = s3_truth[["b1"]]) {
@@ -68,7 +68,9 @@ s3_data <- function(kind = "mar", n = 360L, seed = 9301L, cp = s3_truth[["cp"]],
 s3_fit <- function(d, variant = "saturated", direct = "free", model = s3_model(variant, direct)) {
   fit_sem(model, d, missing = "fiml", fixed_x = FALSE)
 }
-s3_extract <- function(f, treatment = "X", ...) extract_mediation(f, treatment = treatment, mediator = c("M1", "M2"), ...)
+s3_extract <- function(f, treatment = "X", ...) {
+  extract_mediation(f, treatment = treatment, mediator = c("M1", "M2"), ...)
+}
 # the `:=` and label roles of a lavaan reference
 s3_roles <- function(variant, direct) {
   r <- if (variant == "saturated") {
@@ -126,7 +128,10 @@ s3_ols <- function(d, variant, direct) {
   sv <- c(S[1, 1], S[1, 2], S[2, 2])
   ij <- list(c(1, 1), c(1, 2), c(2, 2))
   VS <- outer(seq_along(ij), seq_along(ij), Vectorize(function(u, v) {
-    i <- ij[[u]][1]; j <- ij[[u]][2]; k <- ij[[v]][1]; l <- ij[[v]][2]
+    i <- ij[[u]][1]
+    j <- ij[[u]][2]
+    k <- ij[[v]][1]
+    l <- ij[[v]][2]
     (S[i, k] * S[j, l] + S[i, l] * S[j, k]) / n
   }))
   dimnames(VS) <- list(prm, prm)
@@ -146,8 +151,8 @@ s3_ols <- function(d, variant, direct) {
     n / 2 * (log(2 * pi) + log(blocks[[i]]$s2) + 1)
   }, numeric(1))) - n / 2 * (2 * log(2 * pi) + log(det(S)) + 2))
 }
-# independent implied moments of the serial model (5 variables) from a named coefficient vector; a coefficient that is not
-# in the fit is 0
+# independent implied moments of the serial model (5 variables) from a named coefficient vector; a coefficient that is
+# not in the fit is 0
 s3_moments <- function(q, vars = c("X", "Z", "M1", "M2", "Y")) {
   p <- length(vars)
   g <- function(nm) if (nm %in% names(q)) q[[nm]] else 0

@@ -34,7 +34,9 @@ s3d_setup <- function() {
       z <- s3_extract(s3_fit(d, v, "free"))
       s3d_env[[paste0("forged_", v)]] <- list(
         m1 = forge(z, mediator_predictors = list("X", z@mediator_predictors[[2L]])),
-        m2 = forge(z, mediator_predictors = list(z@mediator_predictors[[1L]], setdiff(z@mediator_predictors[[2L]], "Z"))),
+        m2 = forge(z, mediator_predictors = list(
+          z@mediator_predictors[[1L]], setdiff(z@mediator_predictors[[2L]], "Z")
+        )),
         y = forge(z, outcome_predictors = setdiff(z@outcome_predictors, "Z")),
         wrong_treatment = forge(z, treatment = "Z")
       )
@@ -75,7 +77,9 @@ s3d_battery <- function() {
         q_count = length(f@theta) == if (sat) 20L else 18L,
         estimates = s3d_ok(max(abs(q - s3_align_v(plain, names(q)))) < 1e-5),
         loglik = s3d_ok(abs(as.numeric(logLik(f)) - ref$logl) < 1e-6),
-        vcov_full = s3d_ok(sb_rel_gap(unname(vcov(f)), unname(s3_align_m(lavaan::vcov(s3d_env[[v]]$plain_fit), names(q)))) < 2e-3),
+        vcov_full = s3d_ok(
+          sb_rel_gap(unname(vcov(f)), unname(s3_align_m(lavaan::vcov(s3d_env[[v]]$plain_fit), names(q)))) < 2e-3
+        ),
         extraction = !inherits(z, "error")
       )
       if (!inherits(z, "error")) {
@@ -83,6 +87,7 @@ s3d_battery <- function() {
         se <- stats::setNames(tb$std_error, tb$term)
         est <- stats::setNames(tb$estimate, tb$term)
         g <- s3_grad(z)
+        want_alias <- if (sat) c("a", "a2", "d1", "b1", "b", "c_prime") else c("a", "d1", "b", "c_prime")
         r <- c(
           r,
           alias_est = s3d_ok(max(abs(z@estimates[roles] - ref$est)) < 1e-5),
@@ -97,8 +102,7 @@ s3d_battery <- function() {
           covariate_recorded = s3d_ok(identical(z@fit_context$covariate, "Z")),
           covariate_everywhere = s3d_ok("Z" %in% z@mediator_predictors[[1L]] && "Z" %in% z@mediator_predictors[[2L]] &&
                                           "Z" %in% z@outcome_predictors),
-          alias_names = s3d_ok(identical(names(z@estimates), if (sat) c("a", "a2", "d1", "b1", "b", "c_prime") else
-            c("a", "d1", "b", "c_prime"))),
+          alias_names = s3d_ok(identical(names(z@estimates), want_alias)),
           path_rows = s3d_ok({
             tp <- suppressWarnings(generics::tidy(z, type = "paths"))
             nrow(tp) == length(roles) && max(abs(tp$std_error - sqrt(diag(z@vcov)[names(z@estimates)]))) < 1e-12
@@ -228,7 +232,7 @@ test_that("a wrong treatment mapping for a covariate treatment, or a chain that 
   expect_true("chain_chain_cov_refused" %in% r$failed)
 })
 
-test_that("extraction defects with a covariate: swapped paths, dropped covariance blocks, dropped covariate predictors", {
+test_that("extraction defects with a covariate: swapped paths, dropped covariance blocks and predictors", {
   fx_skip_covr()
   s3d_setup()
   r <- s3d_caught(
@@ -258,10 +262,12 @@ test_that("extraction defects with a covariate: swapped paths, dropped covarianc
   expect_true("saturated_extraction" %in% r$failed || "saturated_alias_names" %in% r$failed)
 })
 
-test_that("fit-level defects with a covariate: wrong covariance unit, dropped offsets, dropped exogenous covariance block", {
+test_that("fit-level defects with a covariate: wrong covariance unit, dropped offsets, dropped exogenous block", {
   fx_skip_covr()
   s3d_setup()
-  r <- s3d_caught(".sem_fiml_transport", "units[cv$par] <- scale[cv$row] * scale[cv$col]", "units[cv$par] <- scale[cv$row]^2")
+  r <- s3d_caught(
+    ".sem_fiml_transport", "units[cv$par] <- scale[cv$row] * scale[cv$col]", "units[cv$par] <- scale[cv$row]^2"
+  )
   expect_false(r$all_pass)
   expect_true(any(grepl("estimates|vcov_full|loglik", r$failed)))
   r <- s3d_caught(".sem_fiml_transport", "offset[i$par] <- center[i$var]", "offset[i$par] <- 0")
@@ -271,7 +277,10 @@ test_that("fit-level defects with a covariate: wrong covariance unit, dropped of
   r <- s3d_caught(
     ".sem_fiml_transport",
     "transport[layout$intercepts$par[r], path$par] <- -center[path$predictor] * units[path$par]",
-    "transport[layout$intercepts$par[r], path$par] <- -center[path$predictor] * units[path$par] * (path$predictor != \"Z\")"
+    paste0(
+      "transport[layout$intercepts$par[r], path$par] <- -center[path$predictor] * units[path$par] * ",
+      "(path$predictor != \"Z\")"
+    )
   )
   expect_false(r$all_pass)
   expect_true(any(grepl("estimates|vcov_full", r$failed)))
@@ -294,7 +303,9 @@ test_that("effect defects with a covariate: a total-indirect gradient replaced b
   r <- s3d_caught(".effect_gradients", "g_te[names(g_te) != \"c_prime\"]", "g_nie")
   expect_false(r$all_pass)
   expect_true(any(grepl("nie_total_se|hand_total_se", r$failed)))
-  r <- s3d_caught(".effect_gradients", "g_te <- .serial_te_gradient(x)", "g_te <- .serial_te_gradient(x)[c(\"a\", \"d1\", \"b\")]")
+  r <- s3d_caught(
+    ".effect_gradients", "g_te <- .serial_te_gradient(x)", "g_te <- .serial_te_gradient(x)[c(\"a\", \"d1\", \"b\")]"
+  )
   expect_false(r$all_pass)
   expect_true(any(grepl("te_se|hand_te_se", r$failed)))
 })

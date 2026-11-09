@@ -32,9 +32,9 @@ b2_changed <- c(
   "ser_labeled_chain_paths"
 )
 
-# Slice S3 (the k = 1 serial shapes, both variants, become public fits) changes the answer for exactly the entries below,
-# again from "not yet available" to an accepted fit; they are pinned against fiml-refusals-after-g3s3.rds (made by
-# make-fiml-after-g3s3.R) in test-fiml-g3-serial-covariate.R. The earlier dumps are never rewritten.
+# Slice S3 (the k = 1 serial shapes, both variants, become public fits) changes the answer for exactly the entries
+# below, again from "not yet available" to an accepted fit; they are pinned against fiml-refusals-after-g3s3.rds
+# (made by make-fiml-after-g3s3.R) in test-fiml-g3-serial-covariate.R. The earlier dumps are never rewritten.
 b3_changed <- c("ser_sat1_zeros", "ser_chain1_zeros", "ser_chain_z_omitted", "ser_partial_exo_cov_sat1")
 
 b0_tables <- function() readRDS(test_path("fixtures", "fiml-tables-before-g3s1.rds"))

@@ -233,10 +233,10 @@
 
 # Fail-closed admission of serial FIML fits (FI-G3). `.fiml_serial_admitted()` is the master switch that opens every
 # serial shape (always FALSE; tests mock it to exercise the downstream serial plumbing: tables, ledger, source-fit and
-# extract refusals). Each slice admits its own shapes through `.fiml_serial_shape_admitted()`: slices S1b, S2 and S3 admit
-# the saturated variant and the pure chain with no covariate or one covariate and nothing else (two covariates are S4), so the
-# predicate tests the variant AND the covariate count. Every other serial syntax is refused at fit with its classed
-# reason.
+# extract refusals). Each slice admits its own shapes through `.fiml_serial_shape_admitted()`: slices S1b, S2 and S3
+# admit the saturated variant and the pure chain with no covariate or one covariate and nothing else (two covariates
+# are S4), so the predicate tests the variant AND the covariate count. Every other serial syntax is refused at fit
+# with its classed reason.
 .fiml_serial_admitted <- function() FALSE
 .fiml_serial_shape_admitted <- function(variant, k) {
   isTRUE(.fiml_serial_admitted()) || (variant %in% c("saturated", "chain") && as.integer(k) %in% 0:1)
@@ -742,9 +742,9 @@
   )
 }
 
-# Two serial mediators, both variants, with no covariate or one (FI-G3 slices S1b, S2 and S3). Both mediators are named in
-# the fitted (structural) order; the reversed order asks for a different model (M2 -> M1) and is refused with the fitted
-# order named. The six (saturated) or four (pure chain) path estimates and their covariance are the fitted
+# Two serial mediators, both variants, with no covariate or one (FI-G3 slices S1b, S2 and S3). Both mediators are named
+# in the fitted (structural) order; the reversed order asks for a different model (M2 -> M1) and is refused with the
+# fitted order named. The six (saturated) or four (pure chain) path estimates and their covariance are the fitted
 # observed-information block, so every cross-path term (Cov(a, d1), Cov(d1, b), Cov(a2, d1), Cov(b1, b), ...) is kept,
 # unlike the separate-regression lm/glm route; a fixed-zero or omitted direct path is a zero row and column. A covariate
 # coefficient is never a path: the aliases are the treatment's coefficients. In the saturated variant with a free direct

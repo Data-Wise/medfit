@@ -2,9 +2,9 @@
 # variants (the saturated forward graph and the pure chain), each with the direct path free or fixed exactly at zero.
 # Random X: X, Z, M1, M2, Y are jointly Gaussian with a free exogenous covariance. Oracles, each independent of the
 # production kernel: matched lavaan raw-data FIML (estimates, logLik, the full covariance and the `:=` effects), the
-# closed-form complete-data equation-wise OLS with its block-diagonal covariance, a from-scratch rowwise likelihood with an
-# independent Hessian, the unrestricted multivariate-normal likelihood, and OpenMx for one cell per variant. Helpers:
-# helper-fiml-serial.R (sb_*) and helper-fiml-serial3.R (s3_*). The covariate effects in the data-generating process are
+# closed-form complete-data equation-wise OLS with its block-diagonal covariance, a from-scratch rowwise likelihood
+# with an independent Hessian, the unrestricted multivariate-normal likelihood, and OpenMx for one cell per variant.
+# Helpers: helper-fiml-serial.R (sb_*) and helper-fiml-serial3.R (s3_*). The covariate effects in the data-generating process are
 # large and distinct from the path values, so a covariate coefficient mistaken for a path cannot hide.
 
 s3_observe <- function(model, data) {
@@ -16,7 +16,7 @@ s3_cells <- expand.grid(variant = c("saturated", "chain"), direct = c("free", "z
 
 # ---- admission ------------------------------------------------------------------------------------------------------
 
-test_that("k = 1 is a public fit for both variants and both direct policies; the parameter counts are 20/19 and 18/17", {
+test_that("k = 1 is a public fit for both variants and direct policies; parameter counts 20/19 and 18/17", {
   d <- s3_data("mar")
   for (i in seq_len(nrow(s3_cells))) {
     v <- s3_cells$variant[i]
@@ -109,7 +109,7 @@ test_that("the extracted aliases, their covariance block and the effects agree w
   }
 })
 
-# ---- V2: complete-data closed form, block-diagonal covariance ---------------------------------------------------------
+# ---- V2: complete-data closed form, block-diagonal covariance --------------------------------------------------------
 
 test_that("complete data: equation-wise OLS with the ML exogenous moments and a block-diagonal covariance", {
   for (i in seq_len(nrow(s3_cells))) {
@@ -132,7 +132,7 @@ test_that("complete data: equation-wise OLS with the ML exogenous moments and a 
   }
 })
 
-test_that("saturated with a free direct path is the unrestricted multivariate-normal fit (df 0), and the chain restricts it", {
+test_that("saturated with a free direct path is the unrestricted multivariate normal (df 0); the chain restricts it", {
   d <- s3_data("complete")
   n <- nrow(d)
   S <- stats::cov(d) * (n - 1) / n
@@ -164,9 +164,9 @@ test_that("the chain's likelihood-ratio statistic against the saturated fit equa
   }
 })
 
-# ---- V6: rowwise likelihood and independent Hessian --------------------------------------------------------------------
+# ---- V6: rowwise likelihood and independent Hessian ------------------------------------------------------------------
 
-test_that("the objective is the rowwise likelihood and the covariance inverts an independent Hessian (two cells per variant)", {
+test_that("the objective is the rowwise likelihood and the covariance inverts an independent Hessian", {
   for (v in c("saturated", "chain")) {
     for (cell in list(c("mar", "free"), c("sparse", "zero"))) {
       kind <- cell[1L]
@@ -183,7 +183,7 @@ test_that("the objective is the rowwise likelihood and the covariance inverts an
   }
 })
 
-# ---- V7: OpenMx, one cell per variant ------------------------------------------------------------------------------------
+# ---- V7: OpenMx, one cell per variant --------------------------------------------------------------------------------
 
 test_that("OpenMx raw-data FIML agrees on the free-direct MAR cell of each variant", {
   skip_on_cran()
@@ -223,7 +223,7 @@ test_that("OpenMx raw-data FIML agrees on the free-direct MAR cell of each varia
   }
 })
 
-# ---- extraction -------------------------------------------------------------------------------------------------------
+# ---- extraction ------------------------------------------------------------------------------------------------------
 
 test_that("extraction keeps the variant's aliases, takes them from the treatment, and records the covariate", {
   for (v in c("saturated", "chain")) {
@@ -302,8 +302,8 @@ test_that("the path rows and intervals come from the extracted covariance: every
     ci <- confint(z, parm = "paths")
     expect_identical(nrow(ci), length(alias))
     expect_lt(max(abs((ci[, 2L] - ci[, 1L]) / 2 / stats::qnorm(.975) - sqrt(diag(z@vcov)[alias]))), 1e-10)
-    expect_identical(names(coef(z, type = "paths")), if (v == "saturated") c("a", "a2", "d", "b1", "b", "c_prime") else
-      c("a", "d", "b", "c_prime"))
+    want <- if (v == "saturated") c("a", "a2", "d", "b1", "b", "c_prime") else c("a", "d", "b", "c_prime")
+    expect_identical(names(coef(z, type = "paths")), want)
     ce <- suppressWarnings(confint(z, parm = "effects"))
     expect_identical(rownames(ce), c("nie", "nie_total", "nde", "te"))
   }
@@ -317,7 +317,7 @@ test_that("printing and summarizing the extracted objects with a covariate do no
   }
 })
 
-# ---- the treatment rule (Q6 and Q6a) ------------------------------------------------------------------------------------
+# ---- the treatment rule (Q6 and Q6a) ---------------------------------------------------------------------------------
 
 test_that("saturated: a covariate may be the treatment and takes a = gm1, a2 = gm2, c_prime = gy (lavaan, relabeled)", {
   skip_if_not_installed("lavaan")
@@ -390,7 +390,7 @@ test_that("chain: the variable absent from M2 is the treatment whatever its name
   expect_lt(max(abs(z@estimates[names(ref$est)] - ref$est)), 1e-5)
 })
 
-# ---- extraction refusals ----------------------------------------------------------------------------------------------
+# ---- extraction refusals ---------------------------------------------------------------------------------------------
 
 test_that("extraction refuses the reversed mediators, a covariate as mediator, standardized and unknown arguments", {
   f <- s3_obj("saturated", "free", "mar")$f
@@ -423,9 +423,9 @@ test_that("k = 2 extraction stays refused for a mock-opened fit, both variants",
   }
 })
 
-# ---- the validator ------------------------------------------------------------------------------------------------------
+# ---- the validator ---------------------------------------------------------------------------------------------------
 
-test_that("the validator rejects forgeries with a covariate: dropped from an equation, on some equations only, wrong treatment", {
+test_that("the validator rejects forgeries with a covariate: dropped, on some equations only, wrong treatment", {
   forge <- function(z, ...) {
     for (nm in names(list(...))) attr(z, nm) <- list(...)[[nm]]
     z
@@ -437,7 +437,9 @@ test_that("the validator rejects forgeries with a covariate: dropped from an equ
     sat <- v == "saturated"
     bad <- list(
       z_dropped_m1 = forge(z, mediator_predictors = list("X", z@mediator_predictors[[2L]])),
-      z_dropped_m2 = forge(z, mediator_predictors = list(z@mediator_predictors[[1L]], setdiff(z@mediator_predictors[[2L]], "Z"))),
+      z_dropped_m2 = forge(z, mediator_predictors = list(
+        z@mediator_predictors[[1L]], setdiff(z@mediator_predictors[[2L]], "Z")
+      )),
       z_dropped_y = forge(z, outcome_predictors = setdiff(z@outcome_predictors, "Z")),
       z_on_y_only = forge(z, mediator_predictors = list("X", setdiff(z@mediator_predictors[[2L]], "Z"))),
       z_extra_in_m1_only_listing = forge(z, mediator_predictors = list(c("X", "Z", "M2"), z@mediator_predictors[[2L]])),
@@ -452,7 +454,7 @@ test_that("the validator rejects forgeries with a covariate: dropped from an equ
   }
 })
 
-# ---- consumers ---------------------------------------------------------------------------------------------------------
+# ---- consumers -------------------------------------------------------------------------------------------------------
 
 test_that("the consumers refuse the k = 1 serial fit and its extracted object as for every FIML fit", {
   for (v in c("saturated", "chain")) {
@@ -465,7 +467,7 @@ test_that("the consumers refuse the k = 1 serial fit and its extracted object as
   }
 })
 
-test_that("source-fit inference: the stage-0 guard answers first, then the serial class at k = 1, before any RNG or refit", {
+test_that("source-fit inference: the stage-0 guard answers first, then the serial class, before any RNG or refit", {
   fx_skip_covr()
   refit_calls <- 0L
   testthat::local_mocked_bindings(.bootstrap_fiml_refit = function(...) {
@@ -498,7 +500,7 @@ test_that("other consumers of the k = 1 fit refuse it as for every FIML fit", {
   expect_identical(generics::glance(f)$npar, 20L)
 })
 
-# ---- what stays refused at fit -----------------------------------------------------------------------------------------
+# ---- what stays refused at fit ---------------------------------------------------------------------------------------
 
 s3_refused <- c(
   omitted_zero_m1m2 = "M1 ~ X + Z\nM2 ~ M1 + X + Z\nY ~ M1 + M2 + X + Z\nM1 ~~ 0*Y\nM2 ~~ 0*Y",
@@ -550,9 +552,9 @@ test_that("the tied-shortcut and the written exogenous-covariance forms behave a
   expect_s3_class(e, "medfit_sem_fiml_error")
 })
 
-# ---- frozen fixtures --------------------------------------------------------------------------------------------------
+# ---- frozen fixtures -------------------------------------------------------------------------------------------------
 
-test_that("the new k = 1 tables are frozen with identical() for S4, and the refusal dump pins the entries that became fits", {
+test_that("the k = 1 tables are frozen with identical() for S4; the refusal dump pins the entries that became fits", {
   tb <- readRDS(test_path("fixtures", "fiml-tables-after-g3s3.rds"))
   expect_length(tb, 4L)
   for (sc in c(TRUE, FALSE)) for (dr in c(TRUE, FALSE)) {

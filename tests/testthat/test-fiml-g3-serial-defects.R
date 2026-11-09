@@ -34,7 +34,8 @@ sb_chain_fit <- function() {
 }
 # the chain with two covariates: still refused at fit (slice S4), and refused at extract when the fit is mocked open
 sb_chain2_fit <- function() {
-  fit_sem(paste(c("M1 ~ X + Z1 + Z2", "M2 ~ M1 + Z1 + Z2", "Y ~ M2 + X + Z1 + Z2", sb_zeros), collapse = "\n"), sb_env$dz,
+  m <- c("M1 ~ X + Z1 + Z2", "M2 ~ M1 + Z1 + Z2", "Y ~ M2 + X + Z1 + Z2", sb_zeros)
+  fit_sem(paste(m, collapse = "\n"), sb_env$dz,
           missing = "fiml", fixed_x = FALSE)
 }
 sb_battery <- function() {
@@ -87,7 +88,8 @@ sb_battery <- function() {
                                       "medfit_error_fiml_extract_unsupported"),
     # admission: only the k = 0 and k = 1 shapes (saturated and, since S2, the pure chain) are public
     sat2_refused = sb_class_error(fit_sem(
-      paste(c("M1 ~ X + Z1 + Z2", "M2 ~ M1 + X + Z1 + Z2", "Y ~ M1 + M2 + X + Z1 + Z2", sb_zeros), collapse = "\n"), sb_env$dz,
+      paste(c("M1 ~ X + Z1 + Z2", "M2 ~ M1 + X + Z1 + Z2", "Y ~ M1 + M2 + X + Z1 + Z2", sb_zeros),
+            collapse = "\n"), sb_env$dz,
       missing = "fiml", fixed_x = FALSE
     ), "medfit_sem_fiml_error"),
     chain0_fits = sb_ok(identical(sb_extract(sb_chain_fit())@variant, "chain")),
@@ -133,8 +135,15 @@ test_that("extraction defects: swapped paths, aliased paths, dropped covariance 
   expect_false(r$all_pass)
   expect_true("paths" %in% r$failed)
   # D2: a and a2 swapped
-  r <- sb_caught(".sem_fiml_extract_serial", "a = if (as_covariate) par(paste0(\"gm1z\", iz)) else par(\"a\"), if (!chain) c(a2 = if (as_covariate) par(paste0(\"gm2z\", iz)) else par(\"a2\"))",
-                 "a = if (as_covariate) par(paste0(\"gm1z\", iz)) else par(\"a2\"), if (!chain) c(a2 = if (as_covariate) par(paste0(\"gm2z\", iz)) else par(\"a\"))")
+  swap_a <- c(
+    "a = if (as_covariate) par(paste0(\"gm1z\", iz)) else par(\"a\"), ",
+    "if (!chain) c(a2 = if (as_covariate) par(paste0(\"gm2z\", iz)) else par(\"a2\"))"
+  )
+  swap_b <- c(
+    "a = if (as_covariate) par(paste0(\"gm1z\", iz)) else par(\"a2\"), ",
+    "if (!chain) c(a2 = if (as_covariate) par(paste0(\"gm2z\", iz)) else par(\"a\"))"
+  )
+  r <- sb_caught(".sem_fiml_extract_serial", paste(swap_a, collapse = ""), paste(swap_b, collapse = ""))
   expect_false(r$all_pass)
   expect_true("paths" %in% r$failed)
   # D3: the shortcut b1 taken from the direct path

@@ -346,7 +346,9 @@ refused <- list(
   # S3 probes: a covariate serial syntax that breaks one of the covariate rules stays refused
   k1_omitted_y_path = list(paste0("M1 ~ X + Z1\nM2 ~ M1 + X + Z1\nY ~ M1 + M2 + Z1", zeros), "Y path"),
   k1_covariate_on_some_equations = list(paste0("M1 ~ X + Z1\nM2 ~ M1 + X\nY ~ M1 + M2 + X + Z1", zeros), "shortcut"),
-  k1_fixed_covariate_path = list(paste0("M1 ~ X + 0*Z1\nM2 ~ M1 + X + Z1\nY ~ M1 + M2 + X + Z1", zeros), "may be fixed"),
+  k1_fixed_covariate_path = list(
+    paste0("M1 ~ X + 0*Z1\nM2 ~ M1 + X + Z1\nY ~ M1 + M2 + X + Z1", zeros), "may be fixed"
+  ),
   k1_both_y_paths_fixed = list(paste0("M1 ~ X + Z1\nM2 ~ M1 + X + Z1\nY ~ M1 + M2 + 0*X + 0*Z1", zeros), "only one"),
   serial_saturated_k2 = list(paste0(sat2, zeros), omit), serial_chain_k2 = list(paste0(chn2, zeros), omit),
   parallel_covariate_on_one_mediator = list("M1 ~ X + Z1\nM2 ~ X\nY ~ M1 + M2 + X + Z1\nM1 ~~ 0*M2"),
@@ -376,7 +378,8 @@ accepted[["serial_chain_reversed_order_extraction"]] <-
 chain1_fit <- tryCatch(fit_sem(paste0(chn1, zeros), big, missing = "fiml", fixed_x = FALSE, meanstructure = TRUE),
                        error = identity)
 chain1_err <- tryCatch(extract_mediation(chain1_fit, treatment = "Z1", mediator = c("M1", "M2")), error = identity)
-accepted[["serial_chain_covariate_treatment_extraction"]] <- !inherits(chain1_err, "medfit_error_fiml_extract_unsupported")
+accepted[["serial_chain_covariate_treatment_extraction"]] <-
+  !inherits(chain1_err, "medfit_error_fiml_extract_unsupported")
 chain1_ok <- tryCatch(extract_mediation(chain1_fit, treatment = "X", mediator = c("M1", "M2")), error = identity)
 accepted[["serial_chain_structural_treatment_refused"]] <- inherits(chain1_ok, "error")
 # a pair of variables never jointly observed (saturated serial, direct path free): fails closed at the numerical stage

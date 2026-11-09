@@ -57,7 +57,8 @@ sc_class_error <- function(expr, class) {
   inherits(e, class)
 }
 sc_chain2_fit <- function() {
-  fit_sem(paste(c("M1 ~ X + Z1 + Z2", "M2 ~ M1 + Z1 + Z2", "Y ~ M2 + X + Z1 + Z2", sc_zeros), collapse = "\n"), sc_env$dz,
+  m <- c("M1 ~ X + Z1 + Z2", "M2 ~ M1 + Z1 + Z2", "Y ~ M2 + X + Z1 + Z2", sc_zeros)
+  fit_sem(paste(m, collapse = "\n"), sc_env$dz,
           missing = "fiml", fixed_x = FALSE)
 }
 sc_validator <- function() FIMLSerialMediationData@validator
