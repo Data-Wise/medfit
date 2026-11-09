@@ -1,7 +1,7 @@
-# FI-G2, slice 2: parallel FIML with a FREE residual covariance between the two mediators (`M1 ~~ M2` written, label-less,
-# either order), no covariates. Oracles independent of the production kernel: matched lavaan raw-data FIML, a from-scratch
-# rowwise likelihood with an independent Hessian, closed-form complete-data checks. Helpers are prefixed p3_; the slice-1
-# helpers (p2_*) come from test-fiml-g2-parallel.R when that file runs first, so they are redefined here as needed.
+# FI-G2, slice 2: parallel FIML with a FREE residual covariance between the two mediators (`M1 ~~ M2` written,
+# label-less, either order), no covariates. Oracles independent of the production kernel: matched lavaan raw-data
+# FIML, a from-scratch rowwise likelihood with an independent Hessian, closed-form complete-data checks. Helpers are
+# prefixed p3_ and self-contained.
 
 p3_vars <- c("X", "M1", "M2", "Y")
 p3_data <- function(kind = "mar", n = 450L, direct = TRUE, seed = 6131L, rho = .5) {
@@ -46,7 +46,9 @@ p3_lavaan <- function(d, model) {
                                information = "observed", control = list(rel.tol = 1e-10)))
 }
 p3_lavaan_labeled <- function(variant) {
-  y <- switch(variant, free = "Y ~ b1*M1 + b2*M2 + cp*X", zero = "Y ~ b1*M1 + b2*M2 + 0*X", omitted = "Y ~ b1*M1 + b2*M2")
+  y <- switch(variant,
+    free = "Y ~ b1*M1 + b2*M2 + cp*X", zero = "Y ~ b1*M1 + b2*M2 + 0*X", omitted = "Y ~ b1*M1 + b2*M2"
+  )
   paste0("M1 ~ a1*X\nM2 ~ a2*X\n", y, "\nM1 ~~ M2\nind1 := a1*b1\nind2 := a2*b2\ntot := a1*b1 + a2*b2",
          if (variant == "free") "\nte := cp + a1*b1 + a2*b2")
 }
@@ -392,7 +394,8 @@ test_that("extraction refusals still apply to a free-covariance fit", {
   f <- p3_fit()
   refused <- list(
     list(treatment = "X", mediator = "M1"), list(treatment = "M1", mediator = c("M1", "M2")),
-    list(treatment = "X", mediator = c("M1", "M1")), list(treatment = "X", mediator = c("M1", "M2"), standardized = TRUE),
+    list(treatment = "X", mediator = c("M1", "M1")),
+    list(treatment = "X", mediator = c("M1", "M2"), standardized = TRUE),
     list(treatment = "X", mediator = c("M1", "M2"), structure = "serial"),
     list(treatment = "X", mediator = c("M1", "M2"), decomposition = "four_way"),
     list(treatment = "X", mediator = c("M1", "M2"), outcome = "X")
