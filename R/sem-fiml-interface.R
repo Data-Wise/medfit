@@ -806,12 +806,14 @@
   b_path <- unname(estimates[["b"]])
   c_prime <- unname(estimates[["c_prime"]])
   ctx$parameter_hash <- rlang::hash(list(estimates, V, a_path, d_path, b_path, c_prime, ctx0$variant))
+  # the absent shortcuts of the chain are recorded as absent: X is not a predictor of M2, M1 is not a predictor of Y
+  mediator_predictors <- list(x, c(meds[1L], if (!chain) x))
+  outcome_predictors <- c(if (!chain) meds[1L], meds[2L], x)
   FIMLSerialMediationData(
     a_path = a_path, d_path = d_path, b_path = b_path, c_prime = c_prime, estimates = estimates, vcov = V,
     sigma_mediators = c(sigma("vm1"), sigma("vm2")), sigma_y = sigma("vy"),
     treatment = x, mediators = meds, outcome = y,
-    mediator_predictors = list(x, if (chain) meds[1L] else c(meds[1L], x)),
-    outcome_predictors = if (chain) c(meds[2L], x) else c(meds, x),
+    mediator_predictors = mediator_predictors, outcome_predictors = outcome_predictors,
     data = object@data, n_obs = object@n_obs, converged = TRUE, source_package = "medfit", fit_context = ctx,
     variant = ctx0$variant
   )

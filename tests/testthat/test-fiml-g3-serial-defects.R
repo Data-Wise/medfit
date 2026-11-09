@@ -164,8 +164,8 @@ test_that("extraction defects: swapped paths, aliased paths, dropped covariance 
   r <- sb_caught(".sem_fiml_extract", "identical(object@internals$likelihood$structure, \"serial\")", "FALSE")
   expect_false(r$all_pass)
   # an extraction that stores the chain predictor lists for a saturated fit is rejected by the validator
-  r <- sb_caught(".sem_fiml_extract_serial", "mediator_predictors = list(x, if (chain) meds[1L] else c(meds[1L], x))",
-                 "mediator_predictors = list(x, meds[1L])")
+  r <- sb_caught(".sem_fiml_extract_serial", "mediator_predictors <- list(x, c(meds[1L], if (!chain) x))",
+                 "mediator_predictors <- list(x, meds[1L])")
   expect_false(r$all_pass)
   expect_identical(r$failed, "extraction")
 })
