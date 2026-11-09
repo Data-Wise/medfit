@@ -358,23 +358,25 @@ test_that("incomplete data: the serial table solve agrees with lavaan FIML estim
 })
 
 # ---- every serial syntax is refused at fit until S1b -------------------------------------------------------------
-test_that("every serial syntax, in every policy cell, is refused at fit with the not-yet-available reason", {
+test_that("every serial syntax that is not public yet is refused at fit with the not-yet-available reason", {
   d <- sr_data()
   for (i in seq_len(nrow(sr_cells))) {
     v <- sr_cells$variant[i]
     k <- sr_cells$k[i]
     dr <- sr_cells$direct[i]
+    # slice S1b made the saturated k = 0 shape public (test-fiml-g3-serial-saturated.R); every other cell stays refused
+    if (v == "sat" && k == 0L) next
     e <- sr_fit(sr_model(v, k, sr_dir(dr)), d)
     info <- paste(v, k, dr)
     expect_s3_class(e, "medfit_sem_fiml_error")
     expect_identical(e$stage, "input", info = info)
     expect_match(conditionMessage(e), "serial FIML is not yet available", info = info)
   }
-  for (v in c("sat", "chain")) {
-    e <- sr_fit(sr_model(v, 0L, "omit"), d)
-    expect_s3_class(e, "medfit_sem_fiml_error")
-    expect_match(conditionMessage(e), "not yet available")
-  }
+  e <- sr_fit(sr_model("chain", 0L, "omit"), d)
+  expect_s3_class(e, "medfit_sem_fiml_error")
+  expect_match(conditionMessage(e), "not yet available")
+  # the saturated k = 0 shape is a fit in every direct policy
+  for (dr in c("free", "zero", "omit")) expect_s7_class(sr_fit(sr_model("sat", 0L, dr), d), SEMFit)
 })
 
 # ---- source fit: the serial class is raised before the covariate and parallel classes (F2) ------------------------
@@ -437,13 +439,10 @@ test_that("the existing covariate and parallel source-fit refusals keep their cl
                class = "medfit_error_fiml_covariate_source_fit")
 })
 
-test_that("a serial fit cannot be extracted yet: classed extract refusal, not the parallel extractor", {
+test_that("a serial fit outside the public shape cannot be extracted: classed extract refusal, not the parallel extractor", {
   fx_skip_covr()
-  f <- sr_open_fit("sat", 0L)
-  e <- tryCatch(extract_mediation(f, treatment = "X", mediator = c("M1", "M2")), error = identity)
-  expect_s3_class(e, "medfit_error_fiml_extract_unsupported")
-  for (v in c("sat", "chain")) {
-    g <- sr_open_fit(v, 1L)
+  for (sh in list(c("chain", 0L), c("sat", 1L), c("chain", 1L), c("chain", 2L))) {
+    g <- sr_open_fit(sh[[1L]], as.integer(sh[[2L]]))
     expect_s3_class(tryCatch(extract_mediation(g, treatment = "X", mediator = c("M1", "M2")), error = identity),
                     "medfit_error_fiml_extract_unsupported")
   }
