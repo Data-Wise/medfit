@@ -14,6 +14,8 @@
 # simple_serial_chain_bare (the gate probe `serial`: M1 ~ X, M2 ~ M1, Y ~ M2 + X, refused afterward for the omitted
 # zeros of Q2); the same applies to `parallel_covariate_serial`, which is ser_sat1_m1m2_zero here. All par*, cov* and
 # other simple_* entries are non-serial near misses and must not change (F8).
+# S1a never rewrites the frozen pre-serial files: fiml-refusals-after-g3s1a.rds and fiml-tables-after-g3s1a.rds
+# (made by make-fiml-after-g3s1a.R) pin the post-S1a answers and the 12 serial table cells.
 b0_may_change <- function(nm) startsWith(nm, "ser_") || identical(nm, "simple_serial_chain_bare")
 
 b0_tables <- function() readRDS(test_path("fixtures", "fiml-tables-before-g3s1.rds"))
@@ -67,12 +69,49 @@ test_that("the near-miss refusals keep their class, stage and message byte for b
   fx <- b0_refusals()
   expect_gte(length(fx$models), 90L)
   expect_identical(names(fx$models), names(fx$results))
-  for (nm in names(fx$models)) {
+  # Slice S1a (the serial router) changes the answer for serial syntax by design: those entries are pinned against
+  # the post-S1a fixture below; every other entry still matches the frozen pre-serial dump byte for byte.
+  for (nm in setdiff(names(fx$models), names(fx$models)[vapply(names(fx$models), b0_may_change, logical(1))])) {
     got <- b0_observe(fx$models[[nm]], fx$data)
     expect_identical(got$class, fx$results[[nm]]$class, info = nm)
     expect_identical(got$stage, fx$results[[nm]]$stage, info = nm)
     expect_identical(got$message, fx$results[[nm]]$message, info = nm)
   }
+})
+
+test_that("the entries S1a may change match the post-S1a fixture, and none of them is an accepted fit", {
+  before <- b0_refusals()
+  after <- readRDS(test_path("fixtures", "fiml-refusals-after-g3s1a.rds"))
+  expect_identical(after$models, before$models)
+  expect_identical(after$data, before$data)
+  for (nm in names(after$models)) {
+    got <- b0_observe(after$models[[nm]], after$data)
+    expect_identical(got$class, after$results[[nm]]$class, info = nm)
+    expect_identical(got$stage, after$results[[nm]]$stage, info = nm)
+    expect_identical(got$message, after$results[[nm]]$message, info = nm)
+    # outside the declared set the post-S1a dump is the frozen pre-serial one
+    if (!b0_may_change(nm)) expect_identical(after$results[[nm]], before$results[[nm]], info = nm)
+    if (b0_may_change(nm)) expect_false(identical(after$results[[nm]]$class, "<fit>"), info = nm)
+  }
+  # serial syntax is now answered by the serial parser: no serial entry still carries the parallel-flavored message
+  # unless it is not a serial syntax by the router's rule (one outcome, two other endogenous variables, a mediator-
+  # to-mediator regression)
+  moved <- names(after$models)[vapply(names(after$models), function(nm) {
+    b0_may_change(nm) && !identical(after$results[[nm]]$message, before$results[[nm]]$message)
+  }, logical(1))]
+  expect_gte(length(moved), 25L)
+  expect_true(all(c("ser_sat0_zeros", "simple_serial_chain_bare", "ser_chain1_zeros") %in% moved))
+})
+
+test_that("the serial tables of the 12 policy cells are frozen with identical() for S2 to S4", {
+  fx <- readRDS(test_path("fixtures", "fiml-tables-after-g3s1a.rds"))
+  expect_length(fx, 12L)
+  for (sc in c(TRUE, FALSE)) for (k in 0:2) for (d in c(TRUE, FALSE)) {
+    nm <- paste0(if (sc) "sat" else "chain", k, if (d) "free" else "fixed")
+    expect_identical(.sem_fiml_tables_ser(d, k, sc), fx[[nm]], info = nm)
+  }
+  # the pre-serial tables are not the serial ones: no builder answers for the other
+  expect_false(identical(.sem_fiml_tables_ser(TRUE, 0L, FALSE), .sem_fiml_tables_med(1L, TRUE)))
 })
 
 test_that("the refusal fixture covers the entries S1a may change and the ones it must not", {

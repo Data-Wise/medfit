@@ -507,3 +507,45 @@ test_that("planted parser defects: only the first missing zero reported, 0* term
   r <- testthat::with_mocked_bindings(sr_battery(), .sem_fiml_ser_detect = function(...) FALSE)
   expect_false(all(r))
 })
+
+test_that("planted defects in the source-fit order and the fit entry are caught (positive control first)", {
+  fx_skip_covr()
+  fits <- list(sat0 = sr_open_fit("sat", 0L), chain1 = sr_open_fit("chain", 1L), sat2 = sr_open_fit("sat", 2L))
+  testthat::local_mocked_bindings(.fiml_source_inference_admitted = function() TRUE)
+  classes <- function() {
+    vapply(fits, function(f) {
+      e <- tryCatch(bootstrap_mediation(source_fit = f, effect = "nie", method = "parametric", n_boot = 3L),
+                    error = identity)
+      class(e)[1L]
+    }, character(1))
+  }
+  expect_true(all(classes() == "medfit_error_fiml_serial_source_fit"))
+  # D15: the serial source fit is not refused (check removed): the parallel and covariate classes answer instead
+  gone <- sem_mutate(.bootstrap_fiml, "identical(spec$structure, \"serial\")", "FALSE")
+  got <- testthat::with_mocked_bindings(classes(), .bootstrap_fiml = gone)
+  expect_false(all(got == "medfit_error_fiml_serial_source_fit"))
+  # D17: the serial check placed after the covariate and parallel branches never fires
+  late <- sem_mutate(
+    .bootstrap_fiml, "identical(spec$structure, \"serial\")",
+    "identical(spec$structure, \"serial\") && is.null(spec$covariate) && is.null(spec$mediators)"
+  )
+  got <- testthat::with_mocked_bindings(classes(), .bootstrap_fiml = late)
+  expect_false(all(got == "medfit_error_fiml_serial_source_fit"))
+  expect_identical(unname(got[["chain1"]]), "medfit_error_fiml_covariate_source_fit")
+  expect_identical(unname(got[["sat0"]]), "medfit_error_fiml_parallel_source_fit")
+})
+
+test_that("planted defect D8: a serial fit built with the parallel tables is caught", {
+  fx_skip_covr()
+  built <- function() {
+    f <- tryCatch(sr_open_fit("sat", 1L), error = identity)
+    !inherits(f, "error") && identical(f@internals$likelihood$structure, "serial") && length(f@theta) == 20L
+  }
+  expect_true(built())
+  # the parallel tables used for the serial specification: the free labels no longer match the serial parameter map
+  fn <- sem_mutate(
+    .sem_fiml_syntax, "tables <- .sem_fiml_tables_ser(spec$direct, length(spec$covariate), identical(spec$variant, \"saturated\"))",
+    "tables <- .sem_fiml_tables_med(2L, spec$direct, FALSE, length(spec$covariate))"
+  )
+  expect_false(testthat::with_mocked_bindings(built(), .sem_fiml_syntax = fn))
+})
