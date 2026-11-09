@@ -19,7 +19,8 @@ sc_setup <- function() {
     sc_env$z <- sb_extract(sc_env$f)
     sc_env$ll_sat <- as.numeric(logLik(sb_fit(sc_env$d)))
     dz <- sc_env$d
-    dz$Z <- stats::rnorm(nrow(dz))
+    dz$Z1 <- stats::rnorm(nrow(dz))
+    dz$Z2 <- stats::rnorm(nrow(dz))
     sc_env$dz <- dz
     # forged objects for the validator battery: built without the validator, then judged by it
     forge <- function(z, ...) {
@@ -55,8 +56,8 @@ sc_class_error <- function(expr, class) {
   }, error = identity)
   inherits(e, class)
 }
-sc_chain1_fit <- function() {
-  fit_sem(paste(c("M1 ~ X + Z", "M2 ~ M1 + Z", "Y ~ M2 + X + Z", sc_zeros), collapse = "\n"), sc_env$dz,
+sc_chain2_fit <- function() {
+  fit_sem(paste(c("M1 ~ X + Z1 + Z2", "M2 ~ M1 + Z1 + Z2", "Y ~ M2 + X + Z1 + Z2", sc_zeros), collapse = "\n"), sc_env$dz,
           missing = "fiml", fixed_x = FALSE)
 }
 sc_validator <- function() FIMLSerialMediationData@validator
@@ -125,10 +126,10 @@ sc_battery <- function() {
                                       "medfit_error_fiml_extract_unsupported"),
     # the saturated variant is not turned into a chain (and conversely, through the validator)
     sat_routed = sc_ok(identical(sb_extract(sb_fit(sc_env$d))@variant, "saturated")),
-    # admission: the chain at k = 1 stays refused, at fit and (mock-opened) at extract; half shortcuts are refused
-    chain1_refused = sc_class_error(sc_chain1_fit(), "medfit_sem_fiml_error"),
-    chain1_extract_refused = sc_ok(testthat::with_mocked_bindings(
-      sc_class_error(extract_mediation(sc_chain1_fit(), treatment = "X", mediator = c("M1", "M2")),
+    # admission: the chain at k = 2 stays refused, at fit and (mock-opened) at extract; half shortcuts are refused
+    chain2_refused = sc_class_error(sc_chain2_fit(), "medfit_sem_fiml_error"),
+    chain2_extract_refused = sc_ok(testthat::with_mocked_bindings(
+      sc_class_error(extract_mediation(sc_chain2_fit(), treatment = "X", mediator = c("M1", "M2")),
                      "medfit_error_fiml_extract_unsupported"),
       .fiml_serial_admitted = function() TRUE
     )),
@@ -207,8 +208,8 @@ test_that("extraction defects: swapped paths, dropped covariance blocks, the six
   expect_true("paths" %in% r$failed)
   expect_false("nie_estimate" %in% r$failed) # the product a * d1 * b is invariant to the swap, as the spec says
   # the direct path taken from the b slot
-  r <- sc_caught(".sem_fiml_extract_serial", "c_prime = if (spec$direct) par(\"cp\") else NA_character_",
-                 "c_prime = if (spec$direct) par(\"b\") else NA_character_")
+  r <- sc_caught(".sem_fiml_extract_serial", "else if (spec$direct) par(\"cp\") else NA_character_",
+                 "else if (spec$direct) par(\"b\") else NA_character_")
   expect_false(r$all_pass)
   expect_true("paths" %in% r$failed)
   # D5: the cross-equation covariance blocks zeroed (lm-style), invisible on complete data, caught by the MAR cell
@@ -227,12 +228,12 @@ test_that("extraction defects: swapped paths, dropped covariance blocks, the six
   expect_false(r$all_pass)
   expect_true("vcov" %in% r$failed)
   # D23: shortcut edges recorded in the predictor lists of a chain (storage says saturated, estimates say chain)
-  r <- sc_caught(".sem_fiml_extract_serial", "outcome_predictors <- c(if (!chain) meds[1L], meds[2L], x)",
-                 "outcome_predictors <- c(meds, x)")
+  r <- sc_caught(".sem_fiml_extract_serial", "outcome_predictors <- c(if (!chain) meds[1L], meds[2L], x, zz)",
+                 "outcome_predictors <- c(meds, x, zz)")
   expect_false(r$all_pass)
   expect_identical(r$failed, "extraction")
-  r <- sc_caught(".sem_fiml_extract_serial", "mediator_predictors <- list(x, c(meds[1L], if (!chain) x))",
-                 "mediator_predictors <- list(x, c(meds[1L], x))")
+  r <- sc_caught(".sem_fiml_extract_serial", "mediator_predictors <- list(c(x, zz), c(meds[1L], if (!chain) x, zz))",
+                 "mediator_predictors <- list(c(x, zz), c(meds[1L], x, zz))")
   expect_false(r$all_pass)
   expect_identical(r$failed, "extraction")
   # Q7 removed: the reversed order silently accepted

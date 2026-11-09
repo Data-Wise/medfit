@@ -366,7 +366,7 @@ test_that("every serial syntax that is not public yet is refused at fit with the
     dr <- sr_cells$direct[i]
     # slices S1b and S2 made the k = 0 shapes public (test-fiml-g3-serial-saturated.R and -chain.R); every other cell
     # stays refused
-    if (k == 0L) next
+    if (k <= 1L) next
     e <- sr_fit(sr_model(v, k, sr_dir(dr)), d)
     info <- paste(v, k, dr)
     expect_s3_class(e, "medfit_sem_fiml_error")
@@ -376,6 +376,10 @@ test_that("every serial syntax that is not public yet is refused at fit with the
   # the k = 0 shapes (saturated and pure chain) are fits in every direct policy
   for (v in c("sat", "chain")) for (dr in c("free", "zero", "omit")) {
     expect_s7_class(sr_fit(sr_model(v, 0L, dr), d), SEMFit)
+  }
+  # slice S3 made the k = 1 shapes public (free and fixed-zero direct path; an omitted Y path is refused at k >= 1)
+  for (v in c("sat", "chain")) for (dr in c("free", "zero")) {
+    expect_s7_class(sr_fit(sr_model(v, 1L, dr), d), SEMFit)
   }
 })
 
@@ -441,7 +445,7 @@ test_that("the existing covariate and parallel source-fit refusals keep their cl
 
 test_that("a serial fit outside the public shape cannot be extracted (classed refusal, not the parallel extractor)", {
   fx_skip_covr()
-  for (sh in list(c("sat", 1L), c("chain", 1L), c("chain", 2L))) {
+  for (sh in list(c("sat", 2L), c("chain", 2L))) {
     g <- sr_open_fit(sh[[1L]], as.integer(sh[[2L]]))
     expect_s3_class(tryCatch(extract_mediation(g, treatment = "X", mediator = c("M1", "M2")), error = identity),
                     "medfit_error_fiml_extract_unsupported")

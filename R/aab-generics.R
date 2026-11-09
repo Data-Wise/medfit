@@ -56,8 +56,8 @@
 #'   `"auto"`); it carries the full covariance of the paths, and a refusal has
 #'   class `medfit_error_fiml_extract_unsupported`. With one or two covariates
 #'   the same rules as for the one-mediator covariate fits choose the treatment.
-#'   A two-mediator serial fit (the saturated graph or the pure chain, no
-#'   covariates) extracts to a `FIMLSerialMediationData` object when `mediator`
+#'   A two-mediator serial fit (the saturated graph or the pure chain, with no
+#'   covariate or one covariate) extracts to a `FIMLSerialMediationData` object when `mediator`
 #'   names both mediators in the fitted order (a reversed order is refused with
 #'   the same class); it carries the full covariance of `a`, `a2`, `d1`, `b1`, `b`
 #'   and `c_prime` (saturated) or of `a`, `d1`, `b` and `c_prime` (chain).

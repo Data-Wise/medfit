@@ -37,14 +37,13 @@ test_that("every other serial shape stays refused at fit with the not-yet-availa
   d$Z2 <- stats::rnorm(nrow(d))
   z <- paste(sb_zeros, collapse = "\n")
   shapes <- c(
-    sat1 = "M1 ~ X + Z\nM2 ~ M1 + X + Z\nY ~ M1 + M2 + X + Z",
-    chain1 = "M1 ~ X + Z\nM2 ~ M1 + Z\nY ~ M2 + X + Z",
+    # the k = 1 shapes became public in slice S3 (test-fiml-g3-serial-covariate.R); two covariates stay refused until S4
     sat2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + X + Z1 + Z2\nY ~ M1 + M2 + X + Z1 + Z2",
-    chain2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + Z1 + Z2\nY ~ M2 + X + Z1 + Z2",
-    # F6: `M2 ~ M1 + X` with Z omitted is a chain whose treatment is Z; it is not the saturated k = 0 shape
-    z_treatment = "M1 ~ X + Z\nM2 ~ M1 + X\nY ~ M2 + X + Z"
+    chain2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + Z1 + Z2\nY ~ M2 + X + Z1 + Z2"
   )
-  for (nm in names(shapes)) {
+  # F6: `M2 ~ M1 + X` with Z omitted is a chain whose treatment is Z; it is a public k = 1 fit since slice S3
+  shapes <- c(shapes, z_treatment = "M1 ~ X + Z\nM2 ~ M1 + X\nY ~ M2 + X + Z")
+  for (nm in setdiff(names(shapes), "z_treatment")) {
     e <- tryCatch(fit_sem(paste(shapes[[nm]], z, sep = "\n"), d, missing = "fiml", fixed_x = FALSE), error = identity)
     expect_s3_class(e, "medfit_sem_fiml_error")
     expect_identical(e$stage, "input", info = nm)
@@ -57,11 +56,11 @@ test_that("every other serial shape stays refused at fit with the not-yet-availa
   expect_identical(length(spec$covariate), 1L)
 })
 
-test_that("the admission predicate is true for the k = 0 shapes only; the switch opens the rest", {
-  expect_true(.fiml_serial_shape_admitted("saturated", 0L))
-  expect_true(.fiml_serial_shape_admitted("chain", 0L)) # slice S2
-  for (k in 1:2) expect_false(.fiml_serial_shape_admitted("saturated", k))
-  for (k in 1:2) expect_false(.fiml_serial_shape_admitted("chain", k))
+test_that("the admission predicate is true for the k = 0 and k = 1 shapes only; the switch opens the rest", {
+  for (k in 0:1) expect_true(.fiml_serial_shape_admitted("saturated", k))
+  for (k in 0:1) expect_true(.fiml_serial_shape_admitted("chain", k)) # slices S2 and S3
+  expect_false(.fiml_serial_shape_admitted("saturated", 2L))
+  expect_false(.fiml_serial_shape_admitted("chain", 2L))
   testthat::local_mocked_bindings(.fiml_serial_admitted = function() TRUE)
   for (k in 0:2) for (v in c("saturated", "chain")) expect_true(.fiml_serial_shape_admitted(v, k))
 })
@@ -447,7 +446,7 @@ test_that("extraction of the shapes that are not public stays refused with the c
   d$Z2 <- stats::rnorm(nrow(d))
   z <- paste(sb_zeros, collapse = "\n")
   shapes <- c(
-    sat1 = "M1 ~ X + Z\nM2 ~ M1 + X + Z\nY ~ M1 + M2 + X + Z",
+    sat2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + X + Z1 + Z2\nY ~ M1 + M2 + X + Z1 + Z2",
     chain2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + Z1 + Z2\nY ~ M2 + X + Z1 + Z2"
   )
   for (nm in names(shapes)) {
