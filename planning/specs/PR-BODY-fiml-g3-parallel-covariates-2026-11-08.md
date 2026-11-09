@@ -37,7 +37,7 @@ Local machine: macOS aarch64, R 4.6.2. Tree: worktree `feature/fiml-g2-covariate
 | Check | Command | Result |
 |---|---|---|
 | Full suite | `NOT_CRAN=true Rscript -e 'r <- as.data.frame(devtools::test(reporter="silent", stop_on_failure=FALSE))'` | 188 files, 1986 tests, 13037 expectations, 0 failed, 0 errors, 2 skipped, warnings: see run (run on the rebased tip) |
-| Lint | install `git archive HEAD` into an isolated library, then `R_LIBS=<lib> Rscript -e 'lintr::lint_package()'` (verified `find.package("medfit")` is the isolated lib) | PLACEHOLDER: 5 findings at `5623420d` (3 `line_length_linter`: `tests/sim/run-gates.R:478`, `tests/sim/sem-fiml-ext-gate.R:1` and `:3`; 2 `object_usage_linter`: `tests/testthat/test-fiml-g3-parallel-covariates.R:106` and `:112`, helpers defined in other helper files). `origin/dev` measured the same way: 0 findings. Replace with the re-measured result after the fix |
+| Lint | install `git archive HEAD` into an isolated library, then `R_LIBS=<lib> Rscript -e 'lintr::lint_package()'` (verified `find.package("medfit")` is the isolated lib) | 0 findings at `e4c90b05` (isolated install, `find.package` verified). The first measurement at `5623420d` had 5 (3 `line_length_linter` in `tests/sim`, 2 `object_usage_linter` in the new test file); fixed in `e4c90b05` by wrapping the lines and adding the sibling-style `.lintr` exclusion. `origin/dev` measured the same way: 0 |
 | R CMD check | `R CMD build --no-manual --no-build-vignettes` then `_R_CHECK_FORCE_SUGGESTS_=false NOT_CRAN=false R CMD check --no-manual --ignore-vignettes --no-tests --as-cran` on a `git archive HEAD` copy, isolated library | Status: 1 NOTE (CRAN incoming feasibility: "Version jumps in minor (submitted: 0.16.0, existing: 0.3.2)"); 0 WARNING, 0 ERROR. Same NOTE as `dev` (version unchanged, 0.16.0). Examples and `--run-donttest` examples OK; tests skipped by option |
 | New gate rows | `Rscript tests/sim/sem-fiml-ext-gate.R` (re-run on a `git archive HEAD` copy) | 129 rows, 129 pass: 8 structures x 2 seeds x 8 checks plus the refusal count (9 probes, 0 accepted) |
 | Planted defects in the gate | `MUTANT=parcov_drop_path Rscript tests/sim/sem-fiml-ext-gate.R` and `MUTANT=parcov_orthogonal ...` (re-run on the same copy) | both stop with `Error: subscript out of bounds` (a structural crash at the parameter map, not a numeric gap): caught fail-closed, but not by a numeric comparison. The five earlier defects (`wrong_unit`, `no_offset`, `swap_b`, `dropped_cov`, `missing_guard`) were not re-run for this body |
@@ -61,7 +61,16 @@ Hopper run; the OpenBLAS runner was not used.
 
 ## Independent QA
 
-PENDING: independent QA running. Verdict, oracle gaps and mutant counts to be filled in here: `<QA-RESULT-PLACEHOLDER>`
+`medfit-oracle-qa` (own oracles and mutants; report `_agents_workspace/qa-g3-parallel-covariates.md`, git-ignored): **PASS on all 9 items**, no numeric defect, no planted defect missed.
+
+- lavaan raw-data FIML, 24 cells (1 and 2 covariates x both residual forms x free/zero direct; MCAR 30%, MAR, sparse patterns with all-missing mediator pairs and an all-NA row; n = 500, fresh seeds): parameters <= 7.1e-6, full vcov <= 2.0e-7, logLik <= 9.2e-9, path covariance <= 8.7e-8, indirect-sum SE 9.1e-8, total SE 2.8e-8.
+- OpenMx, 4 cells (including 2 covariates): logLik <= 6e-10, vcov relative <= 6.3e-4 (OpenMx numerical Hessian). One OpenMx cell (seed 8804) failed to converge from the QA start values; another seed converged.
+- Complete data equals equation-wise OLS, exogenous ML covariance and M-residual covariance (<= 2.3e-8). Covariate coefficients are not confused with paths (large distinct covariate effects; treatment named as a covariate, including a fixed-zero Y path).
+- Planted defects: 12 of 12 caught with an unmutated positive control; 3 are caught by a structural "subscript out of bounds" crash (dropped covariate, dropped exogenous covariance block, dropped `M1 ~~ M2`), not a numeric gap.
+- About 35 refusals classed `medfit_sem_fiml_error` at fit; extraction refusals classed `medfit_error_fiml_extract_unsupported`; source fit blocked by the stage-0 guard and, with the guard mocked open, by `medfit_error_fiml_covariate_source_fit`; forged a = b = 0 origin gives NIE SE NA with a note.
+- Near the boundary (residual correlation .9 to .9995, n = 25 to 500): 45 of 80 cells fit and match lavaan, 35 raise the classed error; none silent.
+- Frozen fixtures: 18 shapes identical to current tables and to tables regenerated at `64c17b2e`. Parity with `origin/dev` for 6 model shapes x 4 datasets: bit-identical in two separate installs.
+- Observations, not blockers: labels on `X ~~ ex*Z` and `M1 ~ ic*1` are accepted and inert, while `Z ~~ q*Z` is refused; Wald intervals on extracted objects stay available (only source-fit bootstrap is withheld); `print()` of the extracted object does not list the covariates.
 
 ## Known unverified items
 
