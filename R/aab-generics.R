@@ -56,6 +56,10 @@
 #'   `"auto"`); it carries the full covariance of the paths, and a refusal has
 #'   class `medfit_error_fiml_extract_unsupported`. With one or two covariates
 #'   the same rules as for the one-mediator covariate fits choose the treatment.
+#'   A saturated two-mediator serial fit (no covariates) extracts to a
+#'   `FIMLSerialMediationData` object when `mediator` names both mediators in the
+#'   fitted order (a reversed order is refused with the same class); it carries
+#'   the full covariance of `a`, `a2`, `d1`, `b1`, `b` and `c_prime`.
 #' - **brmsfit**: Extract from Bayesian models (future)
 #'
 #' Note: OpenMx extraction is planned for a future release.

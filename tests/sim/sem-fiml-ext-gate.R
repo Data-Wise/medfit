@@ -1,8 +1,12 @@
-# Extended bounded FIML gate (FI-G1 covariates, FI-G2 parallel mediators with zero, one or two covariates).
+# Extended bounded FIML gate (FI-G1 covariates, FI-G2 parallel mediators with zero, one or two covariates, FI-G3 slice
+# S1b the saturated serial variant with no covariates).
 # Oracle: matched lavaan raw-data FIML with observed information (estimates, covariance, logLik, defined indirect
-# effect and its delta SE). Two seeds each.
+# effect and its delta SE). Two seeds each. For the serial structure `nie_estimate` and `nie_se` are the WORST of the
+# chain NIE (a*d1*b), the total indirect effect and the total effect against lavaan's `:=` values: the chain NIE and
+# its SE are invariant to a consistent d1/b swap, so a check on the chain alone could not catch that defect.
 # MUTANT= wrong_unit, no_offset, swap_b, dropped_cov, missing_guard, parcov_drop_path, parcov_orthogonal,
-# serial_admitted, serial_router_off alter production functions in memory only.
+# serial_admitted, serial_router_off, ser_swap_db, ser_drop_cross, ser_total_gradient, ser_drop_shortcut alter
+# production functions in memory only.
 suppressMessages(pkgload::load_all(quiet = TRUE))
 source("tests/testthat/helper-sem.R")
 ns <- asNamespace("medfit")
@@ -48,6 +52,25 @@ if (mutant == "wrong_unit") {
 } else if (mutant == "serial_router_off") {
   # serial detection disabled: serial syntax falls to the parallel parser and loses its Q2 and shortcut reasons
   swap(".sem_fiml_ser_detect", "length(outcome) == 1L", "FALSE && length(outcome) == 1L")
+} else if (mutant == "ser_swap_db") {
+  # the serial extraction reads d1 and b from each other's parameter
+  swap(
+    ".sem_fiml_extract_serial", "d1 = par(\"d1\"), b1 = par(\"b1\"), b = par(\"b\")",
+    "d1 = par(\"b\"), b1 = par(\"b1\"), b = par(\"d1\")"
+  )
+} else if (mutant == "ser_drop_cross") {
+  # the cross-equation covariance blocks of the extracted path block zeroed (the lm/glm-style covariance)
+  swap(
+    ".sem_fiml_extract_serial", "V[present, present] <- object@vcov[roles[present], roles[present], drop = FALSE]",
+    paste0("V[present, present] <- object@vcov[roles[present], roles[present], drop = FALSE] * ",
+           "outer(c(1, 2, 2, 3, 3, 3)[present], c(1, 2, 2, 3, 3, 3)[present], \"==\")")
+  )
+} else if (mutant == "ser_total_gradient") {
+  # the total-indirect gradient replaced by the chain gradient
+  swap(".effect_gradients", "g_te[names(g_te) != \"c_prime\"]", "g_nie")
+} else if (mutant == "ser_drop_shortcut") {
+  # the saturated tables lose the M1 -> Y shortcut (a hidden chain under the saturated label)
+  swap(".sem_fiml_tables_ser", "path(\"Y\", \"M1\", \"b1\")", "NULL")
 } else if (mutant == "missing_guard") {
   swap(".sem_fiml_refuse", "if (.sem_fiml_is(x))", "if (FALSE)")
 } else if (nzchar(mutant)) {
@@ -69,7 +92,14 @@ lav <- function(model, d) {
 make_data <- function(structure, seed, n = 300L) {
   set.seed(seed)
   x <- .5 + stats::rnorm(n)
-  if (structure %in% c("cov1", "cov2")) {
+  if (structure == "ser_sat0") {
+    x <- .5 + stats::rnorm(n)
+    m1 <- .3 + .9 * x + stats::rnorm(n, sd = .7)
+    m2 <- -.2 + .7 * m1 + .4 * x + stats::rnorm(n, sd = .8)
+    y <- .2 + .6 * m2 + .35 * m1 + .25 * x + stats::rnorm(n, sd = .9)
+    d <- data.frame(X = x, M1 = m1, M2 = m2, Y = y)
+    vars <- names(d)
+  } else if (structure %in% c("cov1", "cov2")) {
     z1 <- 1 + .4 * x + stats::rnorm(n, sd = 1.2)
     z2 <- -.5 + .3 * x - .35 * z1 + stats::rnorm(n, sd = 1.1)
     m <- .3 + .5 * x + .4 * z1 - (if (structure == "cov2") .25 * z2 else 0) + stats::rnorm(n, sd = .8)
@@ -119,6 +149,13 @@ models <- list(
     med = c("M1", "M2")
   )
 )
+zeros3 <- "\nM1 ~~ 0*M2\nM1 ~~ 0*Y\nM2 ~~ 0*Y"
+models$ser_sat0 <- list(
+  fit = paste0("M1 ~ X\nM2 ~ M1 + X\nY ~ M1 + M2 + X", zeros3),
+  lab = paste0("M1 ~ a*X\nM2 ~ d1*M1 + a2*X\nY ~ b1*M1 + b*M2 + cp*X", zeros3,
+               "\nnie := a*d1*b\nnie_tot := a*d1*b + a2*b + a*b1\nte := a*d1*b + a2*b + a*b1 + cp"),
+  med = c("M1", "M2"), serial = TRUE
+)
 for (kk in 1:2) {
   zs <- paste0("Z", seq_len(kk), collapse = " + ")
   for (resid in c("ind", "free")) {
@@ -156,10 +193,32 @@ for (structure in names(models)) {
     empty <- sum(rowSums(!is.na(d)) == 0L) # the appended row, plus any row the missingness mechanism emptied
     add(cell, "retained", abs(nobs(f) - (nrow(d) - empty)) + abs(f@n_dropped - empty), 0)
     z <- extract_mediation(f, treatment = "X", mediator = mod$med)
-    ok_class <- S7::S7_inherits(z, if (length(mod$med) == 1L) ns$FIMLMediationData else ns$FIMLParallelMediationData)
+    ok_class <- S7::S7_inherits(z, if (isTRUE(mod$serial)) {
+      ns$FIMLSerialMediationData
+    } else if (length(mod$med) == 1L) {
+      ns$FIMLMediationData
+    } else {
+      ns$FIMLParallelMediationData
+    })
     add(cell, "provenance", as.numeric(!ok_class), 0)
     pe <- lavaan::parameterEstimates(lav(mod$lab, d))
     nie_ref <- pe[pe$label == "nie", ]
+    if (isTRUE(mod$serial)) {
+      tb <- generics::tidy(z, type = "effects")
+      est <- stats::setNames(tb$estimate, tb$term)
+      se <- stats::setNames(tb$std_error, tb$term)
+      lab <- c("nie", "nie_tot", "te")
+      eff_key <- c(nie = "nie", nie_tot = "nie_total", te = "te")
+      worst_est <- max(vapply(lab, function(l) abs(est[[eff_key[[l]]]] - pe$est[pe$label == l]), numeric(1)))
+      worst_se <- max(vapply(lab, function(l) {
+        abs(se[[eff_key[[l]]]] - pe$se[pe$label == l]) / pe$se[pe$label == l]
+      }, numeric(1)))
+      add(cell, "nie_estimate", worst_est, 1e-5)
+      add(cell, "nie_se", worst_se, 2e-3)
+      err <- tryCatch(pm(z), error = identity)
+      add(cell, "guard", as.numeric(!inherits(err, "error")), 0)
+      next
+    }
     if (length(mod$med) == 1L) {
       se_nie <- generics::tidy(z, type = "effects")
       se_nie <- se_nie$std_error[se_nie$term == "nie"]
@@ -205,8 +264,9 @@ refused <- list(
   partial_shortcut_m1_to_y = list(paste0("M1 ~ X\nM2 ~ M1\nY ~ M1 + M2 + X", zeros), "shortcut"),
   fixed_shortcut = list(paste0("M1 ~ X + Z1\nM2 ~ M1 + 0*X + Z1\nY ~ M2 + X + Z1", zeros), "free or absent"),
   labeled_shortcut = list(paste0("M1 ~ X\nM2 ~ M1 + a2*X\nY ~ M1 + M2 + X", zeros), "free or absent"),
-  # valid serial syntax is not public until its slice: each variant stays refused (S1b to S4 remove their own entries)
-  serial_saturated_k0 = list(paste0(sat0, zeros), omit), serial_chain_k0 = list(paste0(chn0, zeros), omit),
+  # valid serial syntax is not public until its slice: each shape stays refused (S2 to S4 remove their own entries;
+  # the saturated k = 0 shape became public in S1b and is a gate structure now)
+  serial_chain_k0 = list(paste0(chn0, zeros), omit),
   serial_saturated_k1 = list(paste0(sat1, zeros), omit), serial_chain_k1 = list(paste0(chn1, zeros), omit),
   serial_saturated_k2 = list(paste0(sat2, zeros), omit), serial_chain_k2 = list(paste0(chn2, zeros), omit),
   parallel_covariate_on_one_mediator = list("M1 ~ X + Z1\nM2 ~ X\nY ~ M1 + M2 + X + Z1\nM1 ~~ 0*M2"),
@@ -216,11 +276,24 @@ refused <- list(
   parallel_tied_paths = list("M1 ~ a*X\nM2 ~ a*X\nY ~ M1 + M2 + X\nM1 ~~ 0*M2"),
   parallel_fixed_cov = list("M1 ~ X\nM2 ~ X\nY ~ M1 + M2 + X\nM1 ~~ 0.3*M2")
 )
-# deferred to slice S1b (no fit exists to extract from): the reversed-order extraction probe of spec 4.4
 accepted <- vapply(refused, function(p) {
   r <- tryCatch(fit_sem(p[[1L]], big, missing = "fiml", fixed_x = FALSE, meanstructure = TRUE), error = identity)
   !inherits(r, "medfit_sem_fiml_error") || (length(p) > 1L && !grepl(p[[2L]], conditionMessage(r)))
 }, logical(1))
+# the reversed-order extraction probe of spec 4.4 (a real saturated serial fit exists since S1b): refused with the class
+rev_fit <- tryCatch(fit_sem(paste0(sat0, zeros), big, missing = "fiml", fixed_x = FALSE, meanstructure = TRUE),
+                    error = identity)
+rev_err <- tryCatch(extract_mediation(rev_fit, treatment = "X", mediator = c("M2", "M1")), error = identity)
+accepted[["serial_reversed_order_extraction"]] <- !inherits(rev_err, "medfit_error_fiml_extract_unsupported")
+# a pair of variables never jointly observed (saturated serial, direct path free): fails closed at the numerical stage
+never <- big[, c("X", "M1", "M2", "Y")]
+never$M2 <- .5 * never$M1 + stats::rnorm(nrow(never))
+never[1:100, "Y"] <- NA_real_
+never[101:200, "M2"] <- NA_real_
+never_err <- tryCatch(fit_sem(paste0(sat0, zeros), never, missing = "fiml", fixed_x = FALSE, meanstructure = TRUE),
+                      error = identity)
+accepted[["serial_never_jointly_observed"]] <- !(inherits(never_err, "medfit_sem_fiml_error") &&
+                                                   identical(never_err$stage, "numerical"))
 add("refusals", "unadmitted_accepted", sum(accepted), 0)
 results <- do.call(rbind, records$rows)
 dir.create("tests/sim/results", recursive = TRUE, showWarnings = FALSE)

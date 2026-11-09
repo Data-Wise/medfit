@@ -958,6 +958,7 @@ S7::method(print, SerialMediationData) <- function(x, ...) {
 #' @param ... Additional arguments (ignored)
 #' @noRd
 S7::method(summary, SerialMediationData) <- function(object, ...) {
+  if (S7::S7_inherits(object, FIMLSerialMediationData)) return(.sem_fiml_ser_summary(object))
   n_mediators <- length(object@mediators)
   indirect <- object@a_path * prod(object@d_path) * object@b_path
 
@@ -1009,6 +1010,7 @@ S7::method(summary, SerialMediationData) <- function(object, ...) {
 #' @noRd
 print_summary_serial_mediation_data <- function(x, ...) {
   cat("Summary of SerialMediationData\n")
+  if (identical(x$fit_context$method, "fiml")) cat("FIML, random X; retained partial rows\n")
   cat("==============================\n\n")
 
   cat("Serial Chain:\n")
@@ -2341,6 +2343,49 @@ FIMLParallelMediationData <- S7::new_class(
           !setequal(vars[2:3], self@mediators) || !identical(ctx$mediators, self@mediators) ||
           !identical(ctx$data_hash, rlang::hash(self@data)) || !identical(ctx$parameter_hash, parameter_hash)) {
       return("FIML fit_context must match the retained rows and extracted parameters")
+    }
+    NULL
+  }
+)
+
+# Internal subclass for two serial mediators (FI-G3): the ordinary serial effects, plus the likelihood provenance and a
+# `variant` that must agree with `fit_context` (a forged variant breaks the object). The saturated variant stores the
+# six paths a, a2, d1, b1, b, c_prime; the pure chain stores a, d1, b, c_prime and records the absent shortcuts in the
+# predictor lists (a skip edge whose source is not a predictor is a structural zero in `.serial_path_system()`).
+FIMLSerialMediationData <- S7::new_class(
+  "FIMLSerialMediationData", parent = SerialMediationData, package = "medfit",
+  properties = list(fit_context = S7::class_list, variant = S7::class_character),
+  validator = function(self) {
+    msg <- "FIML fit_context must match the retained rows and extracted parameters"
+    ctx <- self@fit_context
+    vars <- unname(ctx$variables)
+    variant <- self@variant
+    if (length(variant) != 1L || !variant %in% c("saturated", "chain") || !identical(ctx$variant, variant)) {
+      return(msg)
+    }
+    alias <- if (variant == "saturated") c("a", "a2", "d1", "b1", "b", "c_prime") else c("a", "d1", "b", "c_prime")
+    est <- self@estimates
+    # the stored alias vector, the path slots and the predictor lists must all describe the one variant
+    shortcut_x <- self@treatment %in% self@mediator_predictors[[2L]]
+    shortcut_m1 <- self@mediators[1L] %in% self@outcome_predictors
+    if (!identical(names(est), alias) ||
+          !identical(unname(est[["a"]]), self@a_path) || !identical(unname(est[["d1"]]), unname(self@d_path)) ||
+          !identical(unname(est[["b"]]), self@b_path) || !identical(unname(est[["c_prime"]]), self@c_prime) ||
+          !identical(shortcut_x, variant == "saturated") || !identical(shortcut_m1, variant == "saturated")) {
+      return(msg)
+    }
+    source_hash <- rlang::hash(list(ctx$source_theta, ctx$source_vcov, ctx$source_roles))
+    parameter_hash <- rlang::hash(list(
+      self@estimates, self@vcov, self@a_path, self@d_path, self@b_path, self@c_prime, variant
+    ))
+    if (!identical(ctx$source_hash, source_hash) ||
+          !identical(ctx$method, "fiml") || !identical(ctx$x_policy, "random") ||
+          !identical(ctx$structure, "serial") ||
+          !identical(ctx$n_obs, self@n_obs) || !identical(self@source_package, "medfit") ||
+          length(vars) != 4L || !identical(vars[c(1L, 4L)], c(self@treatment, self@outcome)) ||
+          !identical(vars[2:3], self@mediators) || !identical(unname(ctx$mediators), self@mediators) ||
+          !identical(ctx$data_hash, rlang::hash(self@data)) || !identical(ctx$parameter_hash, parameter_hash)) {
+      return(msg)
     }
     NULL
   }

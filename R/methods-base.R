@@ -88,6 +88,7 @@ S7::method(coef, SerialMediationData) <- function(object, type = c("paths", "eff
 
   switch(type,
     paths = {
+      if (S7::S7_inherits(object, FIMLSerialMediationData)) return(.sem_fiml_ser_coef_paths(object))
       n_mediators <- length(object@mediators)
       paths <- c(a = object@a_path)
 
@@ -288,18 +289,29 @@ S7::method(confint, SerialMediationData) <- function(object,
                                                      method = c("normal", "boot"),
                                                      ...) {
   method <- match.arg(method)
+  fiml <- .sem_fiml_is(object)
+  if (fiml && identical(method, "boot")) .sem_fiml_refuse(object, "bootstrap CI")
   if (identical(method, "boot")) {
     stop("Bootstrap CIs are computed via bootstrap_mediation(); ",
          "call it directly with the desired statistic.", call. = FALSE)
   }
   checkmate::assert_choice(parm, c("paths", "effects"), .var.name = "parm")
   checkmate::assert_number(level, lower = 0, upper = 1, .var.name = "level")
+  withheld <- NULL
 
   if (identical(parm, "paths")) {
     coefs <- paths(object)            # a, d (or d21, d32, ...), b, c_prime
-    # paths() names the d paths by mediator pair; @vcov aliases them d1..dk
-    alias <- c("a", paste0("d", seq_along(object@d_path)), "b", "c_prime")
+    # paths() names the d paths by mediator pair; @vcov aliases them d1..dk (a serial FIML object lists every path)
+    alias <- .serial_tidy_alias(object)
     se <- .path_se(object, alias)
+  } else if (fiml) {
+    # serial FIML: the total indirect effect has its own row, each effect its own exact-origin rule, no bootstrap advice
+    warning("Normal approximation for NIE may be inaccurate. ",
+            "Bootstrap intervals for FIML fits are unavailable pending statistical admission.", call. = FALSE)
+    coefs <- .sem_fiml_ser_effect_estimates(object)
+    se <- .effect_se(object, names(coefs))
+    withheld <- .sem_fiml_origin_effects(object)
+    se[intersect(names(withheld)[withheld], names(se))] <- NA_real_
   } else {
     warning("Normal approximation for NIE may be inaccurate. ",
             "Consider bootstrap_mediation() for robust inference.", call. = FALSE)
@@ -316,6 +328,7 @@ S7::method(confint, SerialMediationData) <- function(object,
     paste0(format(100 * alpha / 2, digits = 3), " %"),
     paste0(format(100 * (1 - alpha / 2), digits = 3), " %")
   )
+  if (!is.null(withheld) && any(withheld)) attr(ci_mat, "note") <- .sem_fiml_origin_notes(withheld)
   ci_mat
 }
 

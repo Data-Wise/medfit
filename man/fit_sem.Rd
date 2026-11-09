@@ -177,9 +177,29 @@ free (write every pair or none), and any variable may be incomplete. With no \co
 path fixed at zero, \code{\link[=extract_mediation]{extract_mediation()}} may name any exogenous variable as the
 treatment; with one fixed at zero that variable is the treatment. The
 free-parameter count is 18 to 20 (one covariate) and 25 to 27 (two), without or
-with the direct path and the free residual covariance. Serial mediation, three
-or more mediators, three or more covariates and a covariate on only some of the
-equations stay refused.
+with the direct path and the free residual covariance. Three or more mediators,
+three or more covariates and a covariate on only some of the equations stay
+refused.
+
+Two serial mediators are fitted in one form so far, the saturated forward graph
+with no covariates: \code{M1 ~ X}, \code{M2 ~ M1 + X} and \code{Y ~ M1 + M2 + X} (the direct
+path \code{Y ~ X} is free, \code{0*X}, or omitted), with the independence of all three
+disturbance pairs written as \code{M1 ~~ 0*M2}, \code{M1 ~~ 0*Y} and \code{M2 ~~ 0*Y}
+(either order within a pair; an omitted or free statement is refused). The
+model has 14 free parameters (13 with the direct path fixed) and is just
+identified with the direct path free, so a pair of variables that is never
+observed together makes the fit fail closed (\code{medfit_sem_fiml_error} at the
+numerical stage). \code{\link[=extract_mediation]{extract_mediation()}} needs both mediators named in the fitted
+order (the reversed order is refused) and returns a \code{FIMLSerialMediationData}
+object with the full covariance of \code{a}, \code{a2} (X to M2), \code{d1} (M1 to M2), \code{b1}
+(M1 to Y), \code{b} and \code{c_prime}; \code{nie()} is the chain effect \code{a * d1 * b},
+\code{nie(type = "total")} adds \code{a2 * b + a * b1}, and \code{paths()}, \code{tidy()},
+\code{coef(type = "paths")} and \code{summary()} list all six paths. Its normal intervals
+are available; \code{pm()}, \code{quick()}, \code{glance()} and bootstrap intervals are not
+(\code{bootstrap_mediation(source_fit = )} stays withheld, and behind that guard a
+serial fit raises \code{medfit_error_fiml_serial_source_fit}). The pure chain (no
+\code{X -> M2} and \code{M1 -> Y}), serial models with covariates and every other serial
+shape stay refused.
 
 Supply \code{fixed_x = FALSE} explicitly; omission, \code{TRUE} and named subsets are errors.
 Require \code{meanstructure = TRUE}, \code{information = "observed"}, \code{se_type = "model"},

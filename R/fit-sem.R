@@ -145,9 +145,29 @@
 #' path fixed at zero, [extract_mediation()] may name any exogenous variable as the
 #' treatment; with one fixed at zero that variable is the treatment. The
 #' free-parameter count is 18 to 20 (one covariate) and 25 to 27 (two), without or
-#' with the direct path and the free residual covariance. Serial mediation, three
-#' or more mediators, three or more covariates and a covariate on only some of the
-#' equations stay refused.
+#' with the direct path and the free residual covariance. Three or more mediators,
+#' three or more covariates and a covariate on only some of the equations stay
+#' refused.
+#'
+#' Two serial mediators are fitted in one form so far, the saturated forward graph
+#' with no covariates: `M1 ~ X`, `M2 ~ M1 + X` and `Y ~ M1 + M2 + X` (the direct
+#' path `Y ~ X` is free, `0*X`, or omitted), with the independence of all three
+#' disturbance pairs written as `M1 ~~ 0*M2`, `M1 ~~ 0*Y` and `M2 ~~ 0*Y`
+#' (either order within a pair; an omitted or free statement is refused). The
+#' model has 14 free parameters (13 with the direct path fixed) and is just
+#' identified with the direct path free, so a pair of variables that is never
+#' observed together makes the fit fail closed (`medfit_sem_fiml_error` at the
+#' numerical stage). [extract_mediation()] needs both mediators named in the fitted
+#' order (the reversed order is refused) and returns a `FIMLSerialMediationData`
+#' object with the full covariance of `a`, `a2` (X to M2), `d1` (M1 to M2), `b1`
+#' (M1 to Y), `b` and `c_prime`; `nie()` is the chain effect `a * d1 * b`,
+#' `nie(type = "total")` adds `a2 * b + a * b1`, and `paths()`, `tidy()`,
+#' `coef(type = "paths")` and `summary()` list all six paths. Its normal intervals
+#' are available; `pm()`, `quick()`, `glance()` and bootstrap intervals are not
+#' (`bootstrap_mediation(source_fit = )` stays withheld, and behind that guard a
+#' serial fit raises `medfit_error_fiml_serial_source_fit`). The pure chain (no
+#' `X -> M2` and `M1 -> Y`), serial models with covariates and every other serial
+#' shape stay refused.
 #'
 #' Supply `fixed_x = FALSE` explicitly; omission, `TRUE` and named subsets are errors.
 #' Require `meanstructure = TRUE`, `information = "observed"`, `se_type = "model"`,
