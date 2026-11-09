@@ -74,6 +74,10 @@ Branch `feature/fiml-g1-covariates` (worktree `~/.git-worktrees/medfit/feature-f
 
 QA (`medfit-oracle-qa`, own code, report in the session scratchpad `qa-g1/REPORT.md`) on branch `feature/fiml-g1-covariates` @ `7f61b813` (rebased on `origin/dev`, backup branch `backup/fiml-g1-pre-rebase`): PASS in all six areas. 90 lavaan cells (coef 4.8e-6, SE 1.4e-6, logLik 1e-9), 12 OpenMx cells, independent EM/Hessian check, delta-method SEs for every treatment, 49 of 49 unadmitted topologies refused (R4 evidence, guard on and open), edge cases, and 3-variable results `identical()` to `origin/dev` in 24 cells. 4 of 5 planted defects caught; the fifth is refused by another layer. Full suite on the rebased branch: 1932 tests, 11530 expectations, 0 failures. Not covered: `R CMD check`, OpenBLAS runner, admission checklist, statistical coverage. Not pushed, no PR.
 
+## FI-G2 parallel, parity proof and PR #383, 2026-11-08
+
+Slices 1 (independent residuals, `M1 ~~ 0*M2` required) and 2 (free label-less `M1 ~~ M2`) are on `feature/fiml-g1-covariates`. Independent QA PASS (lavaan 12 cells, OpenMx 3, OLS, hand SE of the indirect sum, 9 of 9 planted defects, refusals, near-boundary fails closed). R2 parity proof PASS: the stage-0 simple model is bit-identical to the pinned `ba50f998` on 72 of 72 datasets (reduced B, local BLAS, not Hopper). Decisions: delta Wald intervals stay available; extract refusals are classed (`medfit_error_fiml_extract_unsupported`); the parallel exact-origin NIE guard is fixed in the PR. Gates: new `fiml-ext` gate (65 rows), full suite 187 files / 12,388 expectations / 0 failed at tip `369b1533`, `R CMD check` 1 NOTE (version jump, same on dev). PR [#383](https://github.com/Data-Wise/medfit/pull/383) to `dev` is open; nothing merged; merge needs the maintainer's yes after CI. Freeze caveat: cut the Hopper harness commit on `ba50f998`, not on a later dev. Remaining: parallel x covariates (six variants), serial FI-G3, the Hopper queue above.
+
 ## Critical path and open decisions (2026-11-08)
 
 Status: Hopper environment install running (46 packages at last check; the first attempt
