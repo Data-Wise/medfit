@@ -12,6 +12,7 @@ s3_observe <- function(model, data) {
   if (!inherits(e, "error")) return(list(class = "<fit>", message = NA_character_, stage = NA_character_))
   list(class = class(e), message = conditionMessage(e), stage = if (is.null(e$stage)) NA_character_ else e$stage)
 }
+s3_note_total <- "NIE total inference unavailable: zero delta gradient"
 s3_cells <- expand.grid(variant = c("saturated", "chain"), direct = c("free", "zero"), stringsAsFactors = FALSE)
 
 # ---- admission ------------------------------------------------------------------------------------------------------
@@ -340,7 +341,7 @@ test_that("the per-effect exact-origin rules hold for k = 1 objects in both vari
       if (v == "chain") {
         # the pure chain's total indirect row is the same effect and is withheld with it
         expect_true(na_row(w, "nie_total"))
-        expect_identical(unname(notes(w)["nie_total"]), sb_note_total)
+        expect_identical(unname(notes(w)["nie_total"]), s3_note_total)
       }
     }
     # one zero factor keeps every SE finite and no note
@@ -357,7 +358,7 @@ test_that("the per-effect exact-origin rules hold for k = 1 objects in both vari
   w <- sb_forge(z, list(a = 0, a2 = 0, b = 0, b1 = 0))
   expect_true(na_row(w, "nie_total") && na_row(w, "nie"))
   expect_true(ci_na(w, "nie_total"))
-  expect_identical(notes(w), c(nie = sb_note_nie, nie_total = sb_note_total))
+  expect_identical(notes(w), c(nie = sb_note_nie, nie_total = s3_note_total))
   expect_false(na_row(w, "te"))
   expect_false(na_row(w, "nde"))
 })
