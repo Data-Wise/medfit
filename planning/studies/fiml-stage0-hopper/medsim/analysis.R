@@ -21,7 +21,11 @@ stage0_returned <- function(L) L$status %in% "complete" & is.finite(L$lo) & is.f
 # Expected-record ledger for an arbitrary set of cells (stage0_check() hard-codes cells 1..nc). Row-level checks are
 # reused from stage0_check(); only its key-ledger problem is replaced by a subset-aware one.
 stage0_integrity <- function(L, cells, nd) {
-  res <- stage0_check(L, nc = max(cells), nd = nd)
+  # check-complete.R lists only four failure statuses, so a medfit "withheld"/"incomplete" call (a legitimate outcome:
+  # NA interval, status from the inference object) would be reported as an inconsistent success. Those rows are presented to
+  # it as `error` rows: still in the ledger, still unavailable. A "complete" row with an unusable interval stays flagged.
+  Lc <- L; Lc$status[Lc$status %in% c("withheld", "incomplete")] <- "error"
+  res <- stage0_check(Lc, nc = max(cells), nd = nd)
   problems <- res$problems[!grepl("^ledger keys:", res$problems)]
   ek <- with(expand.grid(cell = cells, dataset = seq_len(nd), effect = EFFECTS, method = c("nonparametric", "parametric"),
                          stringsAsFactors = FALSE), paste(cell, dataset, effect, method))
@@ -83,4 +87,22 @@ stage0_coverage <- function(L, cells, nd, denominator = c("attempted", "complete
       stringsAsFactors = FALSE)
   }
   do.call(rbind, rows)
+}
+
+# Truth table (medsim's scenario-level $truth) and the per-record truth against cells.R. A swapped or shifted column in
+# either place is a problem; the row-level check in stage0_check() alone would not see a wrong scenario table.
+stage0_truth_check <- function(truth, W) {
+  problems <- character(); cl <- stage0_cells()
+  cell <- as.integer(sub("^cell", "", truth$scenario))
+  for (e in EFFECTS) {
+    want <- cl[[paste0("truth_", e)]][cell]
+    if (!isTRUE(all(abs(truth[[e]] - want) < 1e-12))) problems <- c(problems, sprintf("truth table column %s differs from cells.R", e))
+    wcell <- as.integer(sub("^cell", "", W$scenario))
+    for (m in c("nonparametric", "parametric")) {
+      v <- W[[.s0_col(e, m, "truth")]]; ok <- !is.na(v)
+      if (!isTRUE(all(abs(v[ok] - cl[[paste0("truth_", e)]][wcell[ok]]) < 1e-12)))
+        problems <- c(problems, sprintf("per-record truth %s/%s differs from cells.R", e, m))
+    }
+  }
+  list(ok = !length(problems), problems = problems)
 }
