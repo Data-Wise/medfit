@@ -294,7 +294,10 @@ icc_hand <- function(f) {
 rbind(hand = icc_hand(fit), adapter = td@icc[vars])
 ```
 
-To make the treatment's between variance vanish, center it within clusters:
+To make the treatment's between variance vanish, center it within clusters. This fit uses lavaan's default
+`fixed.x = TRUE`, as the model page does: with `fixed.x = FALSE` on the same centered data the fit did not
+converge in this chapter's run and the adapter stopped with `medfit_error_twolevel_unusable`. The reason was not
+investigated.
 
 ```{r}
 #| label: within-only
@@ -323,7 +326,10 @@ returning a half object.
 
 The adapter trusts lavaan's fit. To check lavaan against something that shares no code with it, this section
 writes the two-level Gaussian likelihood from the multivariate normal density, in base R, and compares it with
-`logLik()`. The same construction is the test `test-twolevel-likelihood-oracle.R` (oracle O8).
+`logLik()`. The same construction is the test `test-twolevel-likelihood-oracle.R` (oracle O8), whose helpers
+`tl_loglik()`, `tl_o8_closed_form()` and `tl_o8_fit()` (the last maximizes the hand likelihood with no lavaan
+code) are in `tests/testthat/helper-twolevel-likelihood.R`; the test that guards this chapter ties its numbers to
+`tl_loglik()` and `tl_o8_closed_form()`.
 
 For cluster $j$ with $n_j$ rows, stack the $n_j p$ values; their covariance is
 $I_{n_j} \otimes \Sigma_W + J_{n_j} \otimes \Sigma_B$ with $J$ the matrix of ones. Reducing that density by the
@@ -453,8 +459,8 @@ ll_closed_gap <- loglik_hand(st, closed$sw, closed$sb, closed$mu) - ll_lavaan
 ll_closed_gap
 ```
 
-The closed-form estimates differ from lavaan's by the size of lavaan's optimizer tolerance (a few $10^{-6}$),
-and the likelihood at the closed form is lavaan's to about the same relative size.
+The closed-form estimates differ from lavaan's by the size of lavaan's optimizer tolerance (a few $10^{-6}$ in
+this fit), and the log likelihood at the closed form is within $10^{-8}$ of lavaan's in absolute value.
 
 ### What the oracle does not prove
 
