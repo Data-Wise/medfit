@@ -82,6 +82,10 @@ Slices 1 (independent residuals, `M1 ~~ 0*M2` required) and 2 (free label-less `
 
 PR [#384](https://github.com/Data-Wise/medfit/pull/384) squash-merged into `dev` as `c5389f6d` on the maintainer's yes (lint, pkgdown and risk-tier green on head `f704ab02`; one lint run failed on a Quarto download 504 and passed on rerun). Four new variants (1 or 2 covariates x `M1 ~~ 0*M2` or free `M1 ~~ M2`), 8 policy cells. Independent QA PASS on 9 items (lavaan 24 cells, OpenMx 4, 12 of 12 planted defects, parity with dev bit-identical). Full suite on the rebased tip: 188 files, 13,037 expectations, 0 failed. `fiml-ext` gate: 8 structures, 129 rows. Unverified: independent Hessian on 2 of 8 cells, OpenMx on 1 cell, no Hopper or OpenBLAS run. Remaining model structure: serial FI-G3. Parity caveat for the Hopper freeze still stands (cut the harness commit on `ba50f998`).
 
+## FI-G3 serial mediation (slices S0-S4), merged 2026-11-09
+
+Spec `planning/specs/SPEC-fiml-serial-FI-G3-2026-11-09.md` (sections 8a and 9 win), ledger `planning/GRILL-fiml-serial-FI-G3-2026-11-09.md`. Squash-merged into `dev` on green CI (lint, pkgdown, risk-tier), each with independent QA PASS: S0 [#385](https://github.com/Data-Wise/medfit/pull/385) `be232f57` (frozen baselines), S1a [#386](https://github.com/Data-Wise/medfit/pull/386) `cd0d0317` (router, tables, refusals), S1b [#387](https://github.com/Data-Wise/medfit/pull/387) `c8d90aa5` (saturated serial, k = 0), S2 [#388](https://github.com/Data-Wise/medfit/pull/388) `15d946b1` (pure chain, k = 0), S3 [#389](https://github.com/Data-Wise/medfit/pull/389) `8bae2e17` (one covariate, both variants), S4 [#390](https://github.com/Data-Wise/medfit/pull/390) `60dcd007` (two covariates, both variants). Six variants public (saturated and chain x 0, 1, 2 covariates); `fiml-ext` gate 14 structures, 225 rows; full suite at S4: 199 files, 2196 tests, 18978 expectations, 0 failed. Decisions of note: chain covariate-as-treatment refused at extraction (Q6a); `M2 ~ M1 + X` with Z omitted is accepted as a chain whose structural treatment is Z (F6 deviation, QA accepted as a documented limitation); equivalent gate mutant `serial_admitted` retired. Bootstrap intervals stay withheld by the guard. Unverified or open: lavaan 0.6.x recheck (Q15), `print()` for the serial class (Q11), chain at k >= 1 refuses never-jointly-observed (X,M1) and (M2,Y) pairs although lavaan finds an optimum (fail-closed), no Hopper or OpenBLAS run, `.claude/agents/medfit-gates.md` lacks the package-check final-PASS condition.
+
 ## Critical path and open decisions (2026-11-08)
 
 Status: Hopper environment install running (46 packages at last check; the first attempt
@@ -319,10 +323,10 @@ required verification; the maintainer owns scope, authorization and admission.
 
 ### 4. FI-G3: serial mediation
 
-- [ ] **Implementer:** Add the two-mediator serial graph in both shortcut states
+- [x] **Implementer (merged, S0-S4):** Add the two-mediator serial graph in both shortcut states
   (saturated and pure chain) and the zero/one/two-covariate variants of each; enumerate every directed path
   for indirect and total effects and retain the complete covariance.
-- [ ] **Independent QA:** Independently enumerate path products and gradients,
+- [x] **Independent QA (PASS per slice):** Independently enumerate path products and gradients,
   compare fitting and extraction with matched oracles, and plant/detect an
   omitted-shortcut defect, and, for the pure chain, a freed shortcut (and, for the saturated graph, a wrongly dropped shortcut). Verify each variant's two inference methods and
   failures; correlated serial disturbances remain outside this scope.
