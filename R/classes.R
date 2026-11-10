@@ -882,6 +882,14 @@ S7::method(show, BootstrapResult) <- function(object) {
 #' @param x A SerialMediationData object
 #' @param ... Additional arguments (ignored)
 #' @noRd
+# One line for the serial FIML prints (Q11): the variant (are the shortcut paths estimated?) and the covariates.
+.sem_fiml_ser_context_line <- function(ctx) {
+  cov <- ctx$covariate
+  variant <- if (identical(ctx$variant, "chain")) "pure chain (no shortcut paths)" else
+    "saturated (both shortcut paths estimated)"
+  paste0("  ", variant, "; covariates: ", if (length(cov)) paste(cov, collapse = ", ") else "none")
+}
+
 S7::method(print, SerialMediationData) <- function(x, ...) {
   cat("SerialMediationData object\n")
   cat("==========================\n\n")
@@ -896,6 +904,7 @@ S7::method(print, SerialMediationData) <- function(x, ...) {
               x@treatment,
               paste(x@mediators, collapse = " -> "),
               x@outcome))
+  if (S7::S7_inherits(x, FIMLSerialMediationData)) cat(.sem_fiml_ser_context_line(x@fit_context), "\n", sep = "")
   cat("\n")
 
   cat("Path coefficients:\n")
@@ -1018,6 +1027,7 @@ print_summary_serial_mediation_data <- function(x, ...) {
               x$variables["treatment"],
               paste(x$mediators, collapse = " -> "),
               x$variables["outcome"]))
+  if (identical(x$fit_context$method, "fiml")) cat(.sem_fiml_ser_context_line(x$fit_context), "\n", sep = "")
   cat("\n")
 
   cat("Path Coefficients:\n")

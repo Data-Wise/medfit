@@ -2,6 +2,10 @@
 
 ## Added
 
+* `print()` and `summary()` of a serial FIML object (`FIMLSerialMediationData`) now name
+  the variant (saturated, or the pure chain without shortcut paths) and the covariates
+  on the line under the chain. The printed numbers are unchanged.
+
 * Bounded Gaussian random-X FIML now also fits the two serial forms (the saturated
   graph and the pure chain) with TWO observed covariates `Z1` and `Z2`, both predicting
   `M1`, `M2` and `Y`, with the same three disturbance zeros written. The three
