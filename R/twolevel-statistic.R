@@ -21,9 +21,11 @@
 #' A refit that errors, does not converge, warns, or leaves the between level unidentified (a treatment
 #' or mediator ICC below `getOption("medfit.between_icc_error", 0.01)`, for a between effect or the
 #' contrast) is a failed replicate: [bootstrap_mediation()] excludes it and reports the count in a
-#' warning. The covariance checks of the point-estimate extraction are not repeated per refit (no standard
-#' errors are computed). Refits skip standard errors and the model test (`se = "none"`, `test = "none"`), which do
-#' not change the maximum likelihood estimates; everything else comes from the fit's own call.
+#' warning. An inadmissible refit (a negative variance) is kept, as the point estimate keeps it. The
+#' covariance checks of the point-estimate extraction are not repeated per refit (no standard errors are
+#' computed). Refits skip standard errors, the model test and lavaan's post-check (`se = "none"`,
+#' `test = "none"`, `check.post = FALSE`), which do not change the maximum likelihood estimates;
+#' everything else comes from the fit's own call.
 #'
 #' The contrast is `NA` by constraint when `a` or `b` is equated across levels and a between effect is
 #' `NA` when the between level is not identified, so asking for either raises a classed error here
@@ -171,6 +173,9 @@ twolevel_statistic <- function(x,
   }
   call$se <- "none"
   call$test <- "none"
+  # An inadmissible refit (a negative variance) is kept, as the point-estimate extraction keeps it and flags it;
+  # lavaan's post-check warning would otherwise make the cluster loop drop the replicate.
+  call$check.post <- FALSE
   needs_between <- grepl("between|contrast", effect)
   rm(fit)   # the callback keeps the call, not the (large) fit
 

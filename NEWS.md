@@ -12,7 +12,7 @@
   definite between covariance) the object is within-only and warns with
   `medfit_between_unidentified`; a non-converged fit without a usable within block errors
   with `medfit_error_twolevel_unusable`. Three-level and multigroup fits are still refused.
-  Bootstrap helpers follow in a later change (#394).
+  Bootstrap callbacks are `twolevel_statistic()` (below).
 
 * `TwoLevelMediationData` has effects and inference. `nie()`, `nde()`, `te()` and `pm()` take
   `level = "within"` (the default), `"between"` or `"both"`; `nie(level = "contrast")` is the
