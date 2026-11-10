@@ -94,7 +94,7 @@ evidence above (27% `post.check` failures, coverage 0.908). The **error below 10
   SEs: 1e-3 relative **only** against `fixed.x = FALSE` at the same information; against a default (`fixed.x = TRUE`) fit the
   documented gap is 3-4% by design and is *not* a tolerance.
 - **Native comparison convention.** Native fits are compared with lavaan `fixed.x = FALSE` (full ML, no fixed between moment) until the
-  second grill defines a two-level fixed-moment convention (0.8, question 2).
+  second grill defines a two-level fixed-moment convention (0.8, S1-Q2: native defaults to `fixed_x = FALSE`).
 - **Independent oracles added to S2 (not only lavaan):** the balanced saturated closed form (`Sigma_W = S_PW`, `Sigma_B = (S_B - S_PW)/n`;
   verified here to 1e-5 against lavaan) for a balanced saturated model; `lm()` on cluster-centered data for the within paths and
   `lm()` on cluster means for a manifest between check (labeled approximate); lavaan `se = "robust.huber.white"`, `missing =
@@ -124,29 +124,28 @@ cluster variable (verified here). The native route needs a decision before S4 (a
 | Slice | Verdict | Condition |
 |---|---|---|
 | S0 guard | **GO** | `nlevels > 1` or `ngroups > 1`; regression tests of 0.3 |
-| S1 grill | **REOPEN** | second grill below (0.8) |
+| S1 grill | **CLOSED** | second grill decided (0.8) |
 | S2 adapter | **conditional GO** | after findings 1-6 are in the spec (0.3, 0.5); **budget 8-12 days** (the 2-1-1 module took five PRs) |
 | S3 oracle harness | **GO** | closed-form oracle scheduled with S2 (before S2 merges) |
-| S4 native observed ML | **NO-GO as written** | until tolerances (0.5) and the `fixed_x` convention (0.8) are defined |
+| S4 native observed ML | **NO-GO as written** | until tolerances (0.5) and the native `fixed_x` oracle (0.8, S1-Q2) exist |
 | S5 latent mediators, shared loadings | **NO-GO** | until the identification literature (Jak et al.; Heywood evidence) is read |
 | S6, S7 | unchanged | later milestones |
 
-### 0.8 S1 second grill: four undecided items (recommendation first)
+### 0.8 S1 second grill: DECIDED (all four recommended options, 2026-11-10)
 
-1. **Degenerate between X (or M).** *Recommendation: return a within-only result with `between_identified = FALSE`, `NA` between
-   paths and contrast and a classed condition (`medfit_between_unidentified`), triggered by an ICC below 0.01, an `NA` between SE, a non-PD vcov or
-   non-convergence; a warning band at ICC below 0.05.* Alternative: always error (loses the valid within effects, and a fit with
-   `post.check` TRUE and SE 0.731 would still slip through at 0.05). Evidence: three fixtures in 0.2 row 1.
-2. **`fixed.x` convention, adapter and native.** *Recommendation: the adapter reports the lavaan setting it was given and stores
-   it; native two-level defaults to `fixed_x = FALSE` (full ML, comparable with lavaan `fixed.x = FALSE`) until a fixed-between-moment convention is
-   derived and has an oracle; the docs state that contrast SEs from a `fixed.x = TRUE` fit are conditional-on-X and 3-4% narrower for the between
-   paths.* Alternative: mirror lavaan (`fixed.x = TRUE` default) in native, which makes native and lavaan agree by default but ties medfit to
-   lavaan's undocumented between-moment choice.
-3. **Cross-level label policy.** *Recommendation: detect cross-level equality from the parameter table (shared free index), record
-   `cross_level_equal`, report the contrast as `NA` (constrained), keep within and between effects and key vcov rows by free index.* Alternative: refuse any
-   cross-level shared label (simpler, but blocks the legitimate shared-loading case of S5, where sharing is intended).
-4. **`standardized = TRUE`.** *Recommendation: refuse for two-level fits with a classed error.* Alternative: standardize each level with
-   its own SDs and label the result "level-specific", which is a new estimand with no oracle in this plan.
+Ledger: `planning/GRILL-multilevel-mediation-2026-11-10.md` on `claude/restore-b0bd19`, section "S1 second grill". The S0 guard is **merged**
+(PR #395, `ca4b247f`: `medfit_error_lavaan_multilevel` for `nlevels > 1`, `medfit_error_lavaan_multigroup` for `ngroups > 1`). The implementable
+spec for S2 is `SPEC-twolevel-adapter-S2-2026-11-10.md`.
+
+| # | Question | Decision |
+|---|---|---|
+| S1-Q1 | Degenerate between X or M | **DECIDED.** Within-only result: `between_identified = FALSE`, `NA` between paths and contrast, classed condition `medfit_between_unidentified`. Triggers: ICC < 0.01, `NA` between SE, non-PD vcov, non-convergence. Warning band ICC < 0.05 |
+| S1-Q2 | `fixed.x` convention | **DECIDED.** Adapter reports and stores lavaan's setting; native two-level defaults to `fixed_x = FALSE` until a fixed-between-moment convention has an oracle; docs state the 3-4% narrower between SEs under `fixed.x = TRUE` |
+| S1-Q3 | Label shared across levels | **DECIDED.** Detect cross-level equality from the parameter table (shared free index), record `cross_level_equal`, contrast `NA` (constrained), key vcov rows by free index, never by name |
+| S1-Q4 | `standardized = TRUE` | **DECIDED.** Refuse for two-level fits with a classed error |
+
+Slice status: S1 closed; S2 conditional GO (spec written); S4 NO-GO until tolerances and a native fixed-moment convention have an oracle; S5 NO-GO
+until the identification literature is read.
 
 ---
 
@@ -365,7 +364,7 @@ The adapter (S2) needs only the lavaan, hand-delta and bootstrap rows (the boots
 - Each error message the new page quotes needs a test that triggers it (house rule, `test-guide-*.R`).
 - Cross-references to `ClusterMediationData` and the lavaan comparison article (`test-lavaan-comparison.R`).
 
-## 9. Open questions for the maintainer (grill agenda) [superseded by section 0: Q1-Q11 are decided there; items 12-13 and the four items of 0.8 remain open]
+## 9. Open questions for the maintainer (grill agenda) [superseded by section 0: Q1-Q11 are decided there; items 12-13 remain open (the four items of 0.8 are decided)]
 
 1. **Order:** adapter first (recommended) or native first? Is a lavaan-dependent first release acceptable to the ecosystem
    (lavaan is Suggests; the native engine avoids that)?
