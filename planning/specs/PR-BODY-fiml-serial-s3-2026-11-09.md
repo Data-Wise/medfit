@@ -41,7 +41,7 @@ Local machine: macOS aarch64, R 4.6.2. Tree: worktree `feature/fiml-serial-s3`, 
 
 | Check | Command | Result |
 |---|---|---|
-| Full suite, at the final tip | `NOT_CRAN=true Rscript -e 'r <- as.data.frame(devtools::test(reporter="silent", stop_on_failure=FALSE))'` | `<SUITE-FINAL-PLACEHOLDER>` |
+| Full suite, at the final tip | `NOT_CRAN=true Rscript -e 'r <- as.data.frame(devtools::test(reporter="silent", stop_on_failure=FALSE))'` | 197 files, 2161 tests, 18001 expectations, 0 failed, 0 errors, 2 skipped (tip `403f41bb`) |
 | Full suite, implementer, before the last two test-only commits | the same command | 2161 tests, 17976 expectations, 0 failed, 1 error (in the implementer's own new test, fixed and the file re-run alone); the last two commits (`e20a142e` exact-origin rules for k = 1 objects, `403f41bb` the serial total-indirect note defined in the covariate test file) are test-only and came after this run |
 | Lint | isolated source install of `git archive HEAD`, `R_LIBS=<lib> Rscript -e 'lintr::lint_package()'` with the repo `.lintr` | 0 findings at `403f41bb` (includes the two line-length fixes in `test-fiml-g3-serial-covariate.R` the implementer did not re-lint) |
 | R CMD check | `R CMD build --no-manual --no-build-vignettes`, then `_R_CHECK_FORCE_SUGGESTS_=false NOT_CRAN=false R CMD check --as-cran --no-manual --ignore-vignettes --no-tests` | Status: 1 NOTE (CRAN incoming feasibility: "Version jumps in minor (submitted: 0.16.0, existing: 0.3.2)"); 0 WARNING, 0 ERROR. Same NOTE as `dev`. Rd files, Rd metadata, Rd line widths, Rd cross-references, missing documentation entries, code/documentation mismatches, `\usage`, Rd contents, examples and `--run-donttest` examples all OK; tests skipped by option |
@@ -102,7 +102,7 @@ the gate on the tip copy and passed.
 
 ## Independent QA
 
-`medfit-oracle-qa`: `<QA-RESULT-PLACEHOLDER>`
+`medfit-oracle-qa`: PASS (independent run, own code, installs of `git archive` of the tip and of dev `15d946b1`). lavaan raw-data FIML and OpenMx: 20 cells (2 variants x free/fixed direct x MCAR, MAR, sparse, covariate-only missing, all-missing mediator pairs), theta <= 2.8e-6, vcov <= 9.7e-8, logLik <= 1.6e-9, delta SEs <= 7.3e-7; complete-data OLS, MVN saturation identity and chain-vs-saturated LR agree (<= 2e-8); hand delta SEs equal `tidy()` to 1.4e-17; origin rule 40 forged-zero cells, 0 mismatches; 15 own planted defects all caught with a clean control (34/34); V14 two-install parity identical in 40 of 40 cells; robustness grid fits match lavaan or fail closed. F6 deviation (`M2 ~ M1 + X` with Z omitted fits as a chain with structural treatment Z, naming X refused): accepted as a documented design limitation, not a defect (agrees with lavaan on relabeled data to 1e-7). Non-blocking findings: (1) the extraction refusal for a wrong treatment with a fixed-zero Y path in the saturated variant uses the generic message; (2) at k = 2 a partial exogenous covariance gets the generic refusal (k = 2 is not admitted here); (3) chain at k = 1 with a never-jointly-observed (X,M1) or (M2,Y) pair is refused ("no accepted candidate") although lavaan finds an identified optimum: fail-closed coverage limit; the saturated variant refuses all never-jointly-observed pairs, correctly (unidentified).
 
 ## Known unverified items
 
