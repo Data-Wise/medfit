@@ -6,6 +6,18 @@ is overwritten. Task state lives in this file's checkboxes; GitHub PRs are only 
 branch `claude/plan-multilevel-394-f40512`, `PLAN-docs-completion-2026-11-10.md`, `GOALS-2026-11-10.md` (authorizations,
 out of scope, stop conditions: they apply to every task here).
 
+## Progress (updated 2026-11-10, afternoon)
+
+| Task | State | Evidence |
+|---|---|---|
+| 1 PR3 bootstrap helper | done | #404 merged `76120d96`; full suite on its install 208 files / 2313 tests / 0 failed; decision recorded: inadmissible refits kept, oracle on percentile half-width (maintainer, 2026-11-10) |
+| 2 PR4 docs | done | #403 merged `cac3e38f`; full suite on its install 210 files / 2327 tests / 19663 expectations / 0 failed; version bump deliberately not in this PR (dev keeps the released version under "(development version)"; bump belongs to release-prep) |
+| 3 lavaan floor | done | #405 merged `b5490aa7`; floor `lavaan (>= 0.7-3)` = oldest version in CI; 0.7-2 passed locally, 0.6-19 and 0.6-12 fail (no multilevel cluster bootstrap); 0.7-0 and 0.7-1 unverified |
+| 4 D2 book audit | in progress | worker on `docs/book-contract-audit-d2` |
+| 5-8, Checkpoints A and B | pending | Checkpoint A runs after Task 4 merges (full suite, lint, risk-tier on `dev`) |
+
+Also merged this session outside the task list: #402 (helper-name clash fix, `ce898ac7`), docs D1 #398, D3 #399, D5 #401.
+
 ## Overview
 
 Land the last two slices of the lavaan two-level adapter (issue #394: PR3 bootstrap helper, PR4 docs and 0.17.0), then
@@ -26,16 +38,16 @@ class, extraction, O8 oracle, effects) and #398, #399, #401 (docs D1, D3, D5).
 ### Task 1: PR3 bootstrap helper reviewed and merged
 **Description:** `twolevel_statistic(fit, what)` and the public-call bootstrap tests (branch `feature/twolevel-pr3-bootstrap`).
 **Acceptance criteria:**
-- [ ] The exact public parametric and cluster-nonparametric calls run end to end and the PR body quotes both transcripts.
-- [ ] Independent hand cluster bootstrap (O4) agrees on the same resamples; parametric SE agrees with the PR2 delta SE within
+- [x] The exact public parametric and cluster-nonparametric calls run end to end and the PR body quotes both transcripts.
+- [x] Independent hand cluster bootstrap (O4) agrees on the same resamples; parametric SE agrees with the PR2 delta SE within
       Monte Carlo error.
-- [ ] Planted defects (no duplicate-cluster relabeling, resampling rows, swapped levels) each fail a test.
-- [ ] Failed or between-unidentified replicates are counted and reported, not dropped silently.
+- [x] Planted defects (no duplicate-cluster relabeling, resampling rows, swapped levels) each fail a test.
+- [x] Failed or between-unidentified replicates are counted and reported, not dropped silently.
 **Verification:**
-- [ ] Touched tests pass in the PR's tree; full suite on the PR head: 0 failures except the two known order-dependent
+- [x] Touched tests pass in the PR's tree; full suite on the PR head: 0 failures except the two known order-dependent
       `tidy()` deprecation tests (judge against the `dev` baseline).
-- [ ] Lint 0 findings on an isolated install; `Rscript tests/sim/risk-tier.R` low or normal.
-- [ ] Hosted checks (lint, pkgdown, risk-tier) green on the exact head; leak scan clean; mergeable.
+- [x] Lint 0 findings on an isolated install; `Rscript tests/sim/risk-tier.R` low or normal.
+- [x] Hosted checks (lint, pkgdown, risk-tier) green on the exact head; leak scan clean; mergeable.
 **Dependencies:** none (#396, #397, #400, #402 merged). **Files:** `R/` bootstrap helper, `NAMESPACE`, `man/`, one refcard row,
 one `_pkgdown.yml` entry, `test-twolevel-bootstrap.R`, `test-refcard-coverage.R`, dependents-contract table, `NEWS.md`.
 **Size:** M. **Action:** review, merge with `--match-head-commit`, verify ancestry on `origin/dev`, remove its worktree.
@@ -44,21 +56,21 @@ one `_pkgdown.yml` entry, `test-twolevel-bootstrap.R`, `test-refcard-coverage.R`
 **Description:** `model-twolevel.qmd`, cookbook recipe 23, refcard/glossary/methods/troubleshooting/guide-changes rows, NEWS,
 `CLAUDE.md` lines, version 0.17.0 (branch `feature/twolevel-pr4-docs`).
 **Acceptance criteria:**
-- [ ] `dev` merged in (PR3 included); conflicts in `NEWS.md`, `_pkgdown.yml`, refcard resolved; `twolevel_statistic()` documented as shipped.
-- [ ] The page states: fixed-slope estimand (differs from `ab + sigma_ab`), latent versus manifest means, contrast is descriptive,
+- [x] `dev` merged in (PR3 included); conflicts in `NEWS.md`, `_pkgdown.yml`, refcard resolved; `twolevel_statistic()` documented as shipped.
+- [x] The page states: fixed-slope estimand (differs from `ab + sigma_ab`), latent versus manifest means, contrast is descriptive,
       the 50-cluster warning is a judgment; no SE-gap number.
-- [ ] Every quoted message has a `test-guide-*` check; the worked example's transcript is in the PR body and can fail.
-- [ ] Version string consistent everywhere (`grep` the repo for the old string).
+- [x] Every quoted message has a `test-guide-*` check; the worked example's transcript is in the PR body and can fail.
+- [x] Version string consistent everywhere (`grep` the repo for the old string).
 **Verification:**
-- [ ] Doc-tier tests (`guide-|model-pages|refcard|cookbook|methods|twolevel|dependents`) 0 failures; spelling; `pkgdown::check_pkgdown()`.
-- [ ] Rendered page and changed articles checked for broken internal links (quarto, if available; otherwise state not run).
-- [ ] Hosted checks green on the exact head; leak scan clean; mergeable.
+- [x] Doc-tier tests (`guide-|model-pages|refcard|cookbook|methods|twolevel|dependents`) 0 failures; spelling; `pkgdown::check_pkgdown()`.
+- [x] Rendered page and changed articles checked for broken internal links (quarto, if available; otherwise state not run).
+- [x] Hosted checks green on the exact head; leak scan clean; mergeable.
 **Dependencies:** Task 1. **Size:** L (docs, many small edits; split into two PRs if the diff exceeds about 15 files).
 
 ### Task 3: lavaan floor (spec Q6)
 **Description:** set the minimum lavaan version for the two-level adapter in `DESCRIPTION`.
 **Acceptance criteria:**
-- [ ] Two-level tests were run on the oldest lavaan in the CI matrix, and the floor equals that version or the PR states it as unverified.
+- [x] Two-level tests were run on the oldest lavaan in the CI matrix, and the floor equals that version or the PR states it as unverified.
 **Verification:** [ ] the run's version and test counts quoted; [ ] hosted checks green. **Dependencies:** Task 2. **Size:** XS.
 If the oldest lavaan cannot be installed locally, record "floor unverified" in `NEWS.md` and stop on this task only.
 
@@ -109,5 +121,5 @@ If the oldest lavaan cannot be installed locally, record "floor unverified" in `
 ## Open questions (not decided here; do not decide unattended)
 
 - Contrast when only `a` or `b` is equated across levels (currently `NA`); algebraic cross-level equalities (`a1 - a2 == 0`).
-- Whether a 0.17.0 release (tag, GitHub release, `main`) follows; a separate release goal, not part of this plan.
+- Whether a 0.17.0 release (tag, GitHub release, `main`) follows; a separate release goal, not part of this plan. The version bump to 0.17.0 was not made in PR4 (see Progress).
 - FIML admission, Hopper, medsim P0: unauthorized, out of scope.
