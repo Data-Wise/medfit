@@ -572,6 +572,45 @@ c(discrepancy = fit_zero_product@f, smaller_refit = min(refit_a@f, refit_b@f))
 stopifnot(abs(fit_zero_product@f - min(refit_a@f, refit_b@f)) < 1e-10)
 ```
 
+**The same statistic from another program: `compare_lr()`.** A program that solves `a*b == 0` directly can stop on the
+wrong branch and report a statistic above the true minimum, or drop the constraint. `compare_lr()` (since 0.12.0) runs
+the product-null likelihood-ratio test in lavaan or OpenMx from two starts and judges each run against medfit's
+$T$ (the reference above). A run is `agree` when its statistic is within `1e-4 * max(1, T)` of $T$ and the returned fit
+satisfies the constraint; otherwise its status is `above_reference`, `below_reference`, `constraint_violated`, or, when
+nothing can be judged, `failed`, `unchecked` or `unresolved`. The verdict is `agree`, `disagree` or `unresolved`. It
+warns only on observed evidence (`medfit_warning_engine_constraint_dropped`, `medfit_warning_engine_statistic_above_max`),
+never because a statistic is zero, and when medfit has no accepted reference the verdict is `unresolved` and neither side is
+blamed. It handles observed-variable models; it accepts a saturated mean structure and `fixed_x` (the fixed exogenous
+moments are written to the engine as fixed parameters at their sample values), so fits under the 0.15.0 defaults work, and
+it refuses latent variables, products, weights and constrained intercepts by name (see `?compare_lr`).
+
+```{r}
+#| label: compare-lr
+cmp <- compare_lr(fit_full, c("a", "b"), engine = "lavaan")
+cmp
+lv_a0 <- lavaan::sem(paste0(full, "a == 0\n"), d, fixed.x = FALSE)
+c(medfit_reference = cmp$reference$lr, smaller_hand_statistic = min(by_hand),
+  lavaan_chisq_a0 = unname(lavaan::fitMeasures(lv_a0, "chisq")))
+compare_lr(medfit::fit_sem(full, d), c("a", "b"), engine = "lavaan")$verdict
+```
+
+```{r}
+#| label: compare-lr-check
+#| include: false
+stopifnot(identical(cmp$verdict, "agree"), isTRUE(cmp$reference$accepted), all(cmp$runs$status == "agree"),
+          nrow(cmp$runs) == 2L,
+          abs(cmp$reference$lr - min(by_hand)) < 1e-6,
+          abs(cmp$reference$lr - unname(lavaan::fitMeasures(lv_a0, "chisq"))) < 1e-4,
+          max(abs(cmp$runs$lr - cmp$reference$lr)) < 1e-3, max(cmp$runs$residual) < 1e-4,
+          identical(compare_lr(medfit::fit_sem(full, d), c("a", "b"), engine = "lavaan")$verdict, "agree"))
+```
+
+The reference is the smaller hand statistic, which is also lavaan's chi-square for the single restriction `a == 0`, and both
+lavaan starts reach it with the product constraint satisfied to about $10^{-9}$. The last line repeats the comparison on a fit
+made with the unpinned 0.15.0 defaults. lavaan may print its own note that a residual-based test could not be computed with a
+nonlinear equality constraint; it concerns a test the comparison does not use. An engine that stopped on the larger branch would instead be reported as
+`above_reference`, with the warning above; `?compare_lr` states its known limit on a simulated design.
+
 A refit that cannot be fitted does not turn into a smaller statistic. If the optimizer cannot bring one of the
 refits to an accepted solution, `mbco_sem()` keeps going and returns that row with `converged = FALSE`, an `NA`
 discrepancy and the failure text in `note`; the statistic and the p-value are `NA`, with a warning and

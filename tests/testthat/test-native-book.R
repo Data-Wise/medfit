@@ -203,3 +203,26 @@ test_that("the constrained covariance teaching distinguishes curvature and bound
   expect_false(grepl('stop("injected covariance failure")', ch5, fixed = TRUE))
   expect_false(grepl('stop("injected null covariance failure")', ch5, fixed = TRUE))
 })
+
+test_that("chapters 3 and 5 carry the post-0.13 contracts (branch map, sign branches, pinned SE, floor, compare_lr)", {
+  ch3 <- read_text(file.path(book_dir(), "chapters", "03-constraints.qmd"))
+  ch5 <- read_text(file.path(book_dir(), "chapters", "05-inference.qmd"))
+  needles3 <- c("branch_map", "raw_count", "unique_count", "search_evidence", 'coverage = "charted"', "proved_empty",
+                "label: pinned-se-mean", "label: slope-floor", "10^{-10}\\,\\lVert g\\rVert")
+  for (s in needles3) expect_match(ch3, s, fixed = TRUE)
+  needles5 <- c("compare_lr(fit_full", "above_reference", "medfit_warning_engine_statistic_above_max",
+                "label: compare-lr-check")
+  for (s in needles5) expect_match(ch5, s, fixed = TRUE)
+  # planted: a chapter without the section does not pass the same needle
+  expect_false(grepl("proved_empty", gsub("proved_empty", "excluded", ch3, fixed = TRUE), fixed = TRUE))
+  # the slope floor the chapter states is the constant the code uses
+  expect_identical(medfit:::.sem_slope_tol_rel, 1e-10)
+  # chapter 3's hand count: two product rows of two factors give 4 raw combinations and 3 distinct sets
+  raw <- expand.grid(r1 = c("a", "b"), r2 = c("a", "b"), stringsAsFactors = FALSE)
+  hand_sets <- apply(raw, 1, function(r) paste(sort(unique(r)), collapse = ","))
+  expect_identical(c(nrow(raw), length(unique(hand_sets))), c(4L, 3L))
+  fit <- fit_sem("mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment\na*b == 0\na*b == 0\n",
+                 mediation_demo, fixed_x = FALSE, meanstructure = NULL)
+  map <- fit@diagnostics$ledger$branch_map
+  expect_identical(c(map$raw_count, map$unique_count), c(4L, 3L))
+})
