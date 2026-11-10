@@ -112,6 +112,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | `bootstrap_mediation(f, "nonparametric", data = d)` | Resampled rows, refit |
 | `bootstrap_mediation(f, "nonparametric", data = d, cluster = "id")` | Resampled clusters, refit |
 | `bootstrap_mediation(f, "plugin", mediation_data = x)` | Point estimate only |
+| `twolevel_statistic(td_or_fit, "nie_between", ...)` | The `f` for a two-level fit: parametric from the object, cluster refit from the `lavaan` fit |
 
 Every call returns a `BootstrapResult`: use `print()`, `summary()`, `coef()`, `confint()`, `tidy()`.
 
