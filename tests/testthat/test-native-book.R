@@ -1,6 +1,7 @@
-# Consistency guard for the native-engine book (book/chapters/01..08): the chapters exist and are listed in
-# book/_quarto.yml in order, every chapter link resolves, the book is off the package website, and the identities
-# chapters 5, 6 and 7 teach hold.
+# Consistency guard for the repository-only book (book/chapters/01..09): the chapters exist and are listed in
+# book/_quarto.yml in order, every chapter link resolves, the book is off the package website, the identities
+# chapters 5, 6 and 7 teach hold, and chapter 9 (the lavaan two-level adapter) runs from its setup chunk alone and
+# reproduces its oracles.
 
 root_path <- function(...) testthat::test_path("..", "..", ...)
 
@@ -14,10 +15,10 @@ book_chapters <- function() list.files(file.path(book_dir(), "chapters"), patter
 
 read_text <- function(p) paste(readLines(p, warn = FALSE), collapse = "\n")
 
-test_that("the eight chapters exist, numbered 1 to 8, and are listed in _quarto.yml in order", {
+test_that("the nine chapters exist, numbered 1 to 9, and are listed in _quarto.yml in order", {
   ch <- book_chapters()
-  expect_length(ch, 8L)
-  expect_identical(as.integer(sub("^0([0-9])-.*$", "\\1", ch)), 1:8)
+  expect_length(ch, 9L)
+  expect_identical(as.integer(sub("^0([0-9])-.*$", "\\1", ch)), 1:9)
   yml <- read_text(file.path(book_dir(), "_quarto.yml"))
   pos <- vapply(ch, function(g) regexpr(paste0("chapters/", g), yml, fixed = TRUE)[[1]], numeric(1))
   expect_true(all(pos > 0))
@@ -225,4 +226,103 @@ test_that("chapters 3 and 5 carry the post-0.13 contracts (branch map, sign bran
                  mediation_demo, fixed_x = FALSE, meanstructure = NULL)
   map <- fit@diagnostics$ledger$branch_map
   expect_identical(c(map$raw_count, map$unique_count), c(4L, 3L))
+})
+
+# --- chapter 9: the lavaan two-level adapter and TwoLevelMediationData ---
+
+# Evaluate every non-`eval: false` R chunk of a chapter in order, in a fresh environment whose parent is the test
+# environment (so the package under test, not an installed copy, supplies medfit's functions). `library(medfit)` is
+# dropped for that reason; the setup chunk's other statements run unchanged. Returns the environment.
+run_chapter_chunks <- function(txt) {
+  lines <- strsplit(txt, "\n", fixed = TRUE)[[1]]
+  starts <- grep("^```\\{r\\}", lines)
+  ends <- grep("^```$", lines)
+  env <- new.env(parent = parent.frame())
+  for (s in starts) {
+    code <- lines[(s + 1L):(ends[ends > s][1L] - 1L)]
+    if (any(grepl("^#\\| eval: false", code))) next
+    code <- code[!grepl("^library\\(medfit\\)$", code)]
+    for (ex in parse(text = code)) eval(ex, env)
+  }
+  env
+}
+
+ch9_path <- function() file.path(book_dir(), "chapters", "09-twolevel.qmd")
+
+test_that("chapter 9 is listed in _quarto.yml, linked from the preface, and the book is retitled", {
+  expect_true(file.exists(ch9_path()))
+  yml <- read_text(file.path(book_dir(), "_quarto.yml"))
+  expect_match(yml, "    - chapters/09-twolevel.qmd", fixed = TRUE)
+  expect_match(yml, 'title: "The medfit engines and model classes"', fixed = TRUE)
+  expect_match(read_text(file.path(book_dir(), "index.qmd")),
+               "9. The lavaan two-level adapter and `TwoLevelMediationData`", fixed = TRUE)
+  expect_false(grepl("fit_sem\\s*<-\\s*function", read_text(ch9_path())))
+  # the thresholds the chapter states are the constants the adapter uses
+  expect_identical(medfit:::.twolevel_defaults$icc_error, 0.01)
+  expect_identical(medfit:::.twolevel_defaults$icc_warn, 0.05)
+  expect_identical(medfit:::.twolevel_defaults$min_clusters, 50L)
+})
+
+test_that("chapter 9 runs from its setup chunk alone and its hand computations hold", {
+  skip_if_not_installed("lavaan")
+  skip_on_cran()
+  env <- run_chapter_chunks(read_text(ch9_path()))
+  # contrast SE: the hand delta method equals tidy() and lavaan's own defined parameter
+  expect_equal(env$se_hand, env$tidy_se, tolerance = 1e-8)
+  expect_equal(env$se_hand, env$lav_se, tolerance = 1e-4)
+  expect_gt(abs(env$se_hand - env$se_no_cross), 1e-4)
+  # the sub-block by free index is the object's covariance; names are not safe keys
+  expect_equal(unname(env$v6), unname(env$td@vcov), tolerance = 1e-12)
+  expect_true(anyDuplicated(rownames(env$v_eq)) > 0)
+  # equated paths: both detection routes, correlation 1, contrast NA
+  expect_identical(env$td_eq@cross_level_equal, "a")
+  expect_identical(env$td_eq2@cross_level_equal, "a")
+  expect_equal(abs(env$v_pair[1, 2]) / sqrt(env$v_pair[1, 1] * env$v_pair[2, 2]), 1, tolerance = 1e-8)
+  expect_false(medfit:::.twolevel_contrast_available(env$td_eq))
+  # ICC rule: hand ICC equals the stored one, and the within-only object has no between rows
+  expect_equal(unname(env$icc_hand(env$fit)), unname(env$td@icc[c("X", "M", "Y")]), tolerance = 1e-10)
+  expect_lt(env$td0@icc[["X"]], medfit:::.twolevel_defaults$icc_error)
+  expect_false(env$td0@between_identified)
+  expect_identical(dim(env$td0@vcov), c(3L, 3L))
+  # the two-level likelihood oracle: reduced = stacked, both equal lavaan, balanced and unbalanced
+  expect_equal(env$ll_hand, env$ll_stacked, tolerance = 1e-10)
+  expect_lt(env$ll_rel_diff, 1e-10)
+  expect_lt(env$ll_rel_diff_unbalanced, 1e-10)
+  expect_lt(max(env$closed_gap), 1e-4)
+  expect_lt(abs(env$ll_closed_gap), 1e-6)
+  # the chapter's likelihood is the test helper's (oracle O8)
+  expect_equal(env$ll_hand, tl_loglik(tl_stats(env$d), env$h$sw, env$h$sb, env$h$mu), tolerance = 1e-10)
+  cf <- tl_o8_closed_form(env$d)
+  expect_equal(unname(env$closed$sw), unname(cf$sw), tolerance = 1e-10)
+  expect_equal(unname(env$closed$sb), unname(cf$sb), tolerance = 1e-10)
+  # bootstrap: the callback is the product, the relabeled refit has all 60 clusters, the interval is percentile
+  expect_equal(env$stat_between(env$td@estimates), env$td@a_between * env$td@b_between, tolerance = 1e-12)
+  expect_identical(length(unique(env$relabeled$cluster)), 60L)
+  expect_lt(length(unique(env$kept_ids$cluster)), 60L)
+  expect_gt(abs(env$cb(env$relabeled) - env$cb(env$kept_ids)), 1e-6)
+  expect_identical(env$b_cl@n_boot, 20L)
+  expect_equal(c(env$b_cl@ci_lower, env$b_cl@ci_upper),
+               unname(stats::quantile(env$b_cl@boot_estimates, c(0.025, 0.975))), tolerance = 1e-12)
+  # a fixed path has a zero row and column and is listed
+  fixed <- suppressWarnings(lavaan::sem(
+    "level: 1\n M ~ X\n Y ~ M + 0*X\nlevel: 2\n M ~ X\n Y ~ M + X\n", env$d, cluster = "cluster", fixed.x = FALSE
+  ))
+  tdf <- extract_mediation(fixed, treatment = "X", mediator = "M", outcome = "Y")
+  expect_identical(tdf@fixed_paths, "c_prime_within")
+  expect_true(all(tdf@vcov["c_prime_within", ] == 0))
+})
+
+test_that("chapter 9: planted defects in the chapter's hand likelihood are caught", {
+  skip_if_not_installed("lavaan")
+  skip_on_cran()
+  txt <- read_text(ch9_path())
+  defects <- list(
+    nj_free = c("v <- sw + s$n * sb", "v <- sw + sb"),
+    no_mean = c("dev <- s$zbar - mu", "dev <- s$zbar")
+  )
+  for (nm in names(defects)) {
+    expect_true(grepl(defects[[nm]][1], txt, fixed = TRUE), info = nm)
+    env <- run_chapter_chunks(sub(defects[[nm]][1], defects[[nm]][2], txt, fixed = TRUE))
+    expect_gt(env$ll_rel_diff, 1e-6, label = paste("relative gap with defect", nm))
+  }
 })

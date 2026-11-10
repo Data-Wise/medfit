@@ -3,8 +3,8 @@ project:
   output-dir: _book
 
 book:
-  title: "The medfit native engine"
-  subtitle: "Matrices, solver and inference, step by step"
+  title: "The medfit engines and model classes"
+  subtitle: "Matrices and inference, step by step"
   author: "medfit development team"
   chapters:
     - index.qmd
@@ -16,6 +16,7 @@ book:
     - chapters/06-product-term.qmd
     - chapters/07-four-way.qmd
     - chapters/08-fiml.qmd
+    - chapters/09-twolevel.qmd
 
 format:
   html:
