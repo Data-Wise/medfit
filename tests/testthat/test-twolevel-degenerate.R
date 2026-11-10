@@ -9,6 +9,7 @@ test_that("a cluster-mean centered treatment gives a within-only result and a cl
   expect_match(conditionMessage(r$warning), "treatment", fixed = TRUE)
   expect_true(tl_within_only_ok(r$td))
   expect_lt(r$td@icc[["X"]], 0.01)
+  expect_true(all(is.na(r$td@parameter_table$est[4:6])))
   # the within paths are the ordinary within estimates
   expect_equal(r$td@a_within, tl_lm_within(tl_sim(x_mode = "centered"))[["a"]], tolerance = 1e-3)
 })

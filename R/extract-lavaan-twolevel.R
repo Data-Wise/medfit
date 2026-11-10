@@ -256,8 +256,8 @@
   invisible(NULL)
 }
 
-.twolevel_find_outcome <- function(pt, mediator) {
-  cand <- setdiff(unique(pt$lhs[pt$op == "~" & pt$level == 1L]), mediator)
+.twolevel_find_outcome <- function(pt, treatment, mediator) {
+  cand <- setdiff(unique(pt$lhs[pt$op == "~" & pt$level == 1L]), c(treatment, mediator))
   if (length(cand) != 1L) {
     .twolevel_abort(
       "Could not determine the outcome: pass `outcome` (the within level has more than one candidate).",
@@ -275,7 +275,7 @@
   # --- Arguments and design the adapter cannot honor ---
   .twolevel_check_args(pt, treatment, mediator, outcome, standardized, interaction, structure,
                        decomposition, m_star, a_label, b_label, cp_label)
-  if (is.null(outcome)) outcome <- .twolevel_find_outcome(pt, mediator)
+  if (is.null(outcome)) outcome <- .twolevel_find_outcome(pt, treatment, mediator)
   .twolevel_check_levels(pt, c(treatment, mediator))
 
   # --- Keyed rows, joint covariance sub-block ---
@@ -306,9 +306,8 @@
 
   if (n_clusters < .twolevel_option("min_clusters")) {
     .twolevel_warn(
-      sprintf(paste0("The fit has %d clusters (fewer than %d). Two-level estimates are unreliable with few ",
-                     "clusters: simulations with 20 clusters gave 27%% non-admissible fits and about 91%% ",
-                     "coverage of the between indirect effect."),
+      sprintf(paste0("The fit has %d clusters (fewer than %d). Two-level estimates and between-level ",
+                     "standard errors are unreliable with few clusters; the adapter still returns them."),
               n_clusters, .twolevel_option("min_clusters")),
       "medfit_warning_twolevel_few_clusters"
     )
@@ -339,9 +338,12 @@
   rows <- if (identified) seq_len(6L) else within
   est <- stats::setNames(key$est[rows], key$path[rows])
   se <- suppressWarnings(sqrt(diag(V6)))
+  # A within-only object keeps the audit rows but not between numbers it says do not exist
+  shown <- if (identified) rep(TRUE, 6L) else key$level == "within"
   table <- data.frame(
     path = key$path, level = key$level, lhs = key$lhs, op = key$op, rhs = key$rhs, label = key$label,
-    free = key$free, est = key$est, se = unname(se), stringsAsFactors = FALSE
+    free = key$free, est = ifelse(shown, key$est, NA_real_), se = ifelse(shown, unname(se), NA_real_),
+    stringsAsFactors = FALSE
   )
   opts <- lavaan::lavInspect(object, "options")
   paths <- stats::setNames(key$est, key$path)
