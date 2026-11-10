@@ -755,15 +755,16 @@
 }
 
 # Two serial mediators, both variants, with zero, one or two covariates (FI-G3 slices S1b, S2, S3 and S4). Both
-# mediators are named in the fitted (structural) order; the reversed order asks for a different model (M2 -> M1) and is refused with the
-# fitted order named. The six (saturated) or four (pure chain) path estimates and their covariance are the fitted
-# observed-information block, so every cross-path term (Cov(a, d1), Cov(d1, b), Cov(a2, d1), Cov(b1, b), ...) is kept,
-# unlike the separate-regression lm/glm route; a fixed-zero or omitted direct path is a zero row and column. A covariate
-# coefficient is never a path: the aliases are the treatment's coefficients. In the saturated variant with a free direct
-# path a covariate may be named the treatment (it then takes a = gm1, a2 = gm2, c_prime = gy, the exogenous block being
-# symmetric; with a fixed-zero direct path only the variable carrying the fixed zero is valid and naming another one
-# says so); in the pure chain the treatment is structural (the variable with no path to M2) and naming a covariate is
-# refused (Q6a): its free Z -> M2 and Z -> Y paths would be the one-shortcut graph that is not admitted.
+# mediators are named in the fitted (structural) order; the reversed order asks for a different model (M2 -> M1) and is
+# refused with the fitted order named. The six (saturated) or four (pure chain) path estimates and their covariance are
+# the fitted observed-information block, so every cross-path term (Cov(a, d1), Cov(d1, b), Cov(a2, d1), Cov(b1, b),
+# ...) is kept, unlike the separate-regression lm/glm route; a fixed-zero or omitted direct path is a zero row and
+# column. A covariate coefficient is never a path: the aliases are the treatment's coefficients. In the saturated
+# variant with a free direct path a covariate may be named the treatment (it then takes a = gm1, a2 = gm2, c_prime =
+# gy, the exogenous block being symmetric; with a fixed-zero direct path only the variable carrying the fixed zero is
+# valid and naming another one says so); in the pure chain the treatment is structural (the variable with no path to
+# M2) and naming a covariate is refused (Q6a): its free Z -> M2 and Z -> Y paths would be the one-shortcut graph that
+# is not admitted.
 .sem_fiml_extract_serial <- function(object, treatment, mediator, args) {
   ctx0 <- object@internals$likelihood
   v <- ctx0$variables

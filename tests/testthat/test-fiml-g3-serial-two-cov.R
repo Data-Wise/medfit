@@ -613,7 +613,7 @@ test_that("the complete written exogenous-covariance set, in any pair order, is 
 
 # ---- frozen fixtures -------------------------------------------------------------------------------------------------
 
-test_that("the k = 2 tables are frozen with identical() for later slices; the refusal dump pins the entries that became fits", {
+test_that("the k = 2 tables are frozen with identical(); the refusal dump pins the entries that became fits", {
   tb <- readRDS(test_path("fixtures", "fiml-tables-after-g3s4.rds"))
   expect_length(tb, 4L)
   for (sc in c(TRUE, FALSE)) for (dr in c(TRUE, FALSE)) {

@@ -195,4 +195,6 @@ s4_obj <- local({
 })
 # a model body (three equations and the tail lines) with each equation replaceable
 s4_body <- function(m1 = "M1 ~ X + Z1 + Z2", m2 = "M2 ~ M1 + X + Z1 + Z2", y = "Y ~ M1 + M2 + X + Z1 + Z2",
-                    tail = s4_zeros) paste(c(m1, m2, y, tail), collapse = "\n")
+                    tail = s4_zeros) {
+  paste(c(m1, m2, y, tail), collapse = "\n")
+}
