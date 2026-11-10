@@ -62,5 +62,6 @@ nie(x)
 
 ## Related
 
+[Missing data: bounded FIML](model-fiml.html) |
 [Serial mediation](model-serial.html) | [Joint mediation](model-joint.html) |
 [Cookbook recipe 6](cookbook.html#two-mediators-side-by-side) | [Model Extraction](extraction.html)

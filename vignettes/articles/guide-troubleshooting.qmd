@@ -163,6 +163,23 @@ err$ledger$children              # per-branch outcome and feasibility
 err$best_survivor                # only for `medfit_error_no_convergence` with a survivor
 ```
 
+## Bounded FIML refusals
+
+The bounded FIML opt-in ([Missing data: bounded FIML](model-fiml.html)) refuses
+anything outside its validated scope rather than fitting something close. It never
+falls back to listwise deletion or another engine. The condition class says
+which case you hit:
+
+| Class | Meaning | What to do |
+|---|---|---|
+| `medfit_sem_fiml_error` | the model, data or settings are outside the validated scope: a required disturbance covariance (`M1 ~~ 0*M2`, `M1 ~~ 0*Y`, `M2 ~~ 0*Y` in a serial model) not written, a covariate missing from some equations, an incomplete set of exogenous covariances, three or more covariates, a fixed or labeled shortcut path, or a pair of variables never observed together in the saturated serial graph. The message names the reason | write the missing statements, fit the nearest supported model, or use the default listwise path |
+| `medfit_error_fiml_extract_unsupported` | `extract_mediation()` was given names the fit cannot use: the mediators in the reverse of the fitted order, or, in the pure serial chain, a covariate named as the treatment | name the mediators in the fitted order; in the pure chain use the variable with no path to the second mediator |
+| `medfit_error_fiml_inference_unavailable` | `bootstrap_mediation(source_fit = ...)` was called; source-fit intervals are withheld until statistical admission | use the delta-method intervals from `tidy()` and `confint()` |
+| `medfit_error_fiml_serial_source_fit` | a serial FIML fit was passed as the source of a bootstrap (reached only if the guard above is lifted) | not available for serial fits |
+
+An extracted FIML object also refuses `quick()`, `pm()` and `glance()`; see the
+[native guide](native-guide.html#bounded-fiml) for the full list.
+
 ## Messages that are not errors
 
 | You see | Meaning |
