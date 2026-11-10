@@ -41,3 +41,32 @@ test_that("a single-level lavaan fit still extracts as before", {
 test_that("the level check falls back to the parameter table and never blocks on its own failure", {
   expect_false(.lavaan_is_multilevel(structure(list(), class = "not_lavaan")))
 })
+
+test_that("single-level fits with cluster-robust SEs and plain fits extract identically", {
+  skip_if_not_installed("lavaan")
+  plain <- lavaan::sem(.sl_model, lavaan::Demo.twolevel)
+  clus <- lavaan::sem(.sl_model, lavaan::Demo.twolevel, cluster = "cluster")
+  expect_false(.lavaan_is_multilevel(clus))
+  r0 <- extract_mediation(plain, treatment = "x1", mediator = "y2", outcome = "y1")
+  r1 <- extract_mediation(clus, treatment = "x1", mediator = "y2", outcome = "y1")
+  expect_s3_class(r1, "medfit::MediationData")
+  # lavaan adds intercepts under `cluster =`, so compare the mediation paths, not the whole vector
+  expect_equal(r1@a_path, r0@a_path)
+  expect_equal(r1@b_path, r0@b_path)
+  expect_equal(r1@c_prime, r0@c_prime)
+  expect_equal(r1@n_obs, r0@n_obs)
+})
+
+test_that("a multigroup lavaan fit is refused with a classed error", {
+  skip_if_not_installed("lavaan")
+  d <- lavaan::Demo.twolevel
+  d$g <- as.integer(d$cluster) %% 2L
+  fit <- lavaan::sem("y1 ~ x1 + y2\n y2 ~ x1", d, group = "g")
+  err <- tryCatch(
+    extract_mediation(fit, treatment = "x1", mediator = "y2", outcome = "y1"),
+    error = function(e) e
+  )
+  expect_s3_class(err, "medfit_error_lavaan_multigroup")
+  expect_match(conditionMessage(err), "more than one group", fixed = TRUE)
+  expect_false(.lavaan_is_multigroup(structure(list(), class = "not_lavaan")))
+})

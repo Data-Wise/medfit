@@ -196,7 +196,9 @@
   return an ordinary `MediationData` built from the within block alone, with `n_obs` equal
   to the total number of rows. This is a correctness fix (behavior change, no deprecation
   period): fit a single-level model, or use the two-level adapter planned in #394.
-  Single-level fits are unchanged.
+  A multigroup lavaan fit (`group =`) is likewise refused, with
+  `medfit_error_lavaan_multigroup`; it used to return the first group's paths with the total
+  sample size. Single-level, single-group fits (also with `cluster =` robust SEs) are unchanged.
 
 * Generic help and the README now distinguish bounded FIML normal summaries
   from deferred bootstrap, proportion-mediated and comparison operations, including
