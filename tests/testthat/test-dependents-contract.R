@@ -58,7 +58,9 @@
   # missingmed R/methods-output.R:43-56.
   "nie",
   # RMediation tests/testthat/test-mbco-semfit.R:77-102,151-152.
-  "fit_sem"
+  "fit_sem",
+  # no dependent reads it yet (#394 S2 PR3); listed so a rename or removal is caught.
+  "twolevel_statistic"
 )
 
 # Version guards: RMediation R/mbco_semfit.R:22 (>= 0.8.0),
