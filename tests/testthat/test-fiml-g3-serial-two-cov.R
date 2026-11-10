@@ -1,5 +1,6 @@
-# FI-G3 slice S4: bounded Gaussian FIML for two SERIAL mediators with TWO observed covariates Z1 and Z2, in both shortcut
-# variants (the saturated forward graph and the pure chain), each with the direct path free or fixed exactly at zero.
+# FI-G3 slice S4: bounded Gaussian FIML for two SERIAL mediators with TWO observed covariates Z1 and Z2, in both
+# shortcut variants (the saturated forward graph and the pure chain), each with the direct path free or fixed exactly
+# at zero.
 # Random X: X, Z1, Z2, M1, M2, Y are jointly Gaussian with a free exogenous covariance (three pairs). Oracles, each
 # independent of the production kernel: matched lavaan raw-data FIML (estimates, logLik, the full covariance and the
 # `:=` effects), the closed-form complete-data equation-wise OLS with its block-diagonal covariance, a from-scratch
@@ -353,7 +354,7 @@ test_that("the per-effect exact-origin rules hold for k = 2 objects in both vari
 
 # ---- the treatment rule (Q6 and Q6a) ---------------------------------------------------------------------------------
 
-test_that("saturated: either covariate may be the treatment and takes a = gm1, a2 = gm2, c_prime = gy (lavaan, relabeled)", {
+test_that("saturated: either covariate may be the treatment: a = gm1, a2 = gm2, c_prime = gy (lavaan relabeled)", {
   skip_if_not_installed("lavaan")
   for (kind in c("mar", "sparse")) {
     d <- s4_data(kind)
@@ -538,8 +539,6 @@ test_that("other consumers of the k = 2 fit refuse it as for every FIML fit", {
 
 # ---- what stays refused at fit ---------------------------------------------------------------------------------------
 
-s4_body <- function(m1 = "M1 ~ X + Z1 + Z2", m2 = "M2 ~ M1 + X + Z1 + Z2", y = "Y ~ M1 + M2 + X + Z1 + Z2",
-                    tail = s4_zeros) paste(c(m1, m2, y, tail), collapse = "\n")
 s4_refused <- c(
   omitted_zero_m1m2 = s4_body(tail = c("M1 ~~ 0*Y", "M2 ~~ 0*Y")),
   omitted_zero_m2y = s4_body(tail = c("M1 ~~ 0*M2", "M1 ~~ 0*Y")),
@@ -591,7 +590,8 @@ test_that("a partial exogenous covariance set is refused with a reason that name
       e <- tryCatch(fit_sem(body, d, missing = "fiml", fixed_x = FALSE), error = identity)
       expect_s3_class(e, "medfit_sem_fiml_error")
       expect_identical(e$stage, "input")
-      expect_match(conditionMessage(e), "exogenous covariance", info = paste(variant, paste(tail[-(1:3)], collapse = " ")))
+      info <- paste(variant, paste(tail[-(1:3)], collapse = " "))
+      expect_match(conditionMessage(e), "exogenous covariance", info = info)
       expect_no_match(conditionMessage(e), "serial mediation needs M1 ~ X")
     }
   }
@@ -603,8 +603,8 @@ test_that("the complete written exogenous-covariance set, in any pair order, is 
     f0 <- s4_fit(d, v, "free")
     fa <- s4_fit(d, model = s4_model(v, "free", exo_cov = "all"))
     expect_equal(unname(s4_align_v(coef(fa), names(coef(f0)))), unname(coef(f0)), tolerance = 1e-8, info = v)
-    swapped <- gsub("X ~~ Z2", "Z2 ~~ X", gsub("X ~~ Z1", "Z1 ~~ X", s4_model(v, "free", exo_cov = "all"), fixed = TRUE),
-                    fixed = TRUE)
+    swapped <- gsub("X ~~ Z1", "Z1 ~~ X", s4_model(v, "free", exo_cov = "all"), fixed = TRUE)
+    swapped <- gsub("X ~~ Z2", "Z2 ~~ X", swapped, fixed = TRUE)
     expect_false(identical(swapped, s4_model(v, "free", exo_cov = "all")))
     fs <- s4_fit(d, model = swapped)
     expect_equal(unname(s4_align_v(coef(fs), names(coef(f0)))), unname(coef(f0)), tolerance = 1e-8, info = v)
@@ -613,7 +613,7 @@ test_that("the complete written exogenous-covariance set, in any pair order, is 
 
 # ---- frozen fixtures -------------------------------------------------------------------------------------------------
 
-test_that("the k = 2 tables are frozen with identical() for S5; the refusal dump pins the entries that became fits", {
+test_that("the k = 2 tables are frozen with identical() for later slices; the refusal dump pins the entries that became fits", {
   tb <- readRDS(test_path("fixtures", "fiml-tables-after-g3s4.rds"))
   expect_length(tb, 4L)
   for (sc in c(TRUE, FALSE)) for (dr in c(TRUE, FALSE)) {

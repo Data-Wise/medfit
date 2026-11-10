@@ -358,28 +358,26 @@ test_that("incomplete data: the serial table solve agrees with lavaan FIML estim
 })
 
 # ---- every serial syntax is refused at fit until S1b -------------------------------------------------------------
-test_that("every serial syntax that is not public yet is refused at fit with the not-yet-available reason", {
+test_that("every serial cell with zero, one or two covariates is a public fit; a third covariate is refused at fit", {
   d <- sr_data()
+  # slices S1b, S2, S3 and S4 made the k = 0, 1 and 2 shapes public (free and fixed-zero direct path; an omitted Y
+  # path is refused at k >= 1)
   for (i in seq_len(nrow(sr_cells))) {
-    v <- sr_cells$variant[i]
-    k <- sr_cells$k[i]
-    dr <- sr_cells$direct[i]
-    # slices S1b and S2 made the k = 0 shapes public (test-fiml-g3-serial-saturated.R and -chain.R); every other cell
-    # stays refused
-    if (k <= 1L) next
-    e <- sr_fit(sr_model(v, k, sr_dir(dr)), d)
-    info <- paste(v, k, dr)
-    expect_s3_class(e, "medfit_sem_fiml_error")
-    expect_identical(e$stage, "input", info = info)
-    expect_match(conditionMessage(e), "serial FIML is not yet available", info = info)
+    expect_s7_class(sr_fit(sr_model(sr_cells$variant[i], sr_cells$k[i], sr_dir(sr_cells$direct[i])), d), SEMFit)
   }
-  # the k = 0 shapes (saturated and pure chain) are fits in every direct policy
   for (v in c("sat", "chain")) for (dr in c("free", "zero", "omit")) {
     expect_s7_class(sr_fit(sr_model(v, 0L, dr), d), SEMFit)
   }
-  # slice S3 made the k = 1 shapes public (free and fixed-zero direct path; an omitted Y path is refused at k >= 1)
-  for (v in c("sat", "chain")) for (dr in c("free", "zero")) {
-    expect_s7_class(sr_fit(sr_model(v, 1L, dr), d), SEMFit)
+  d$Z3 <- d$Z2
+  for (v in c("sat", "chain")) {
+    m <- paste(c(
+      "M1 ~ X + Z1 + Z2 + Z3", paste("M2 ~ M1 +", if (v == "sat") "X + " else "", "Z1 + Z2 + Z3"),
+      paste("Y ~", if (v == "sat") "M1 + " else "", "M2 + X + Z1 + Z2 + Z3"), sr_zeros
+    ), collapse = "\n")
+    e <- sr_fit(m, d)
+    expect_s3_class(e, "medfit_sem_fiml_error")
+    expect_identical(e$stage, "input")
+    expect_match(conditionMessage(e), "number of FIML covariates")
   }
 })
 
@@ -443,12 +441,18 @@ test_that("the existing covariate and parallel source-fit refusals keep their cl
                class = "medfit_error_fiml_covariate_source_fit")
 })
 
-test_that("a serial fit outside the public shape cannot be extracted (classed refusal, not the parallel extractor)", {
+test_that("a third covariate is refused by the parser even with the serial switch open", {
   fx_skip_covr()
-  for (sh in list(c("sat", 2L), c("chain", 2L))) {
-    g <- sr_open_fit(sh[[1L]], as.integer(sh[[2L]]))
-    expect_s3_class(tryCatch(extract_mediation(g, treatment = "X", mediator = c("M1", "M2")), error = identity),
-                    "medfit_error_fiml_extract_unsupported")
+  d <- sr_data()
+  d$Z3 <- d$Z2
+  testthat::local_mocked_bindings(.fiml_serial_admitted = function() TRUE)
+  for (v in c("sat", "chain")) {
+    m <- paste(c(
+      "M1 ~ X + Z1 + Z2 + Z3", paste("M2 ~ M1 +", if (v == "sat") "X + " else "", "Z1 + Z2 + Z3"),
+      paste("Y ~", if (v == "sat") "M1 + " else "", "M2 + X + Z1 + Z2 + Z3"), sr_zeros
+    ), collapse = "\n")
+    expect_s3_class(sr_fit(m, d), "medfit_sem_fiml_error")
+    expect_false(.fiml_serial_extract_supported(if (v == "sat") "saturated" else "chain", 3L))
   }
 })
 

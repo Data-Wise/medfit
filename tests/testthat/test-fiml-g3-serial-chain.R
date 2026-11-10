@@ -37,7 +37,7 @@ test_that("the chain syntax with k = 0 is a public fit in every direct policy, w
   expect_identical(sc_fit(d, model = sc_model("free", zeros = rev))@theta, sc_fit(d)@theta)
 })
 
-test_that("every other serial shape except the saturated k = 0 stays refused with the not-yet-available reason (R4)", {
+test_that("the k = 2 serial shapes are public fits since slice S4 (R4)", {
   d <- sc_data("mar")
   d$Z <- d$Z1 <- stats::rnorm(nrow(d))
   d$Z2 <- stats::rnorm(nrow(d))
@@ -47,10 +47,7 @@ test_that("every other serial shape except the saturated k = 0 stays refused wit
     chain2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + Z1 + Z2\nY ~ M2 + X + Z1 + Z2"
   )
   for (nm in names(shapes)) {
-    e <- tryCatch(fit_sem(paste(shapes[[nm]], z, sep = "\n"), d, missing = "fiml", fixed_x = FALSE), error = identity)
-    expect_s3_class(e, "medfit_sem_fiml_error")
-    expect_identical(e$stage, "input", info = nm)
-    expect_match(conditionMessage(e), "serial FIML is not yet available", info = nm)
+    expect_s7_class(fit_sem(paste(shapes[[nm]], z, sep = "\n"), d, missing = "fiml", fixed_x = FALSE), SEMFit)
   }
 })
 
@@ -80,19 +77,21 @@ test_that("a half shortcut at k = 0 is refused as a partial set, a fixed or labe
   expect_identical(spec$variant, "saturated")
 })
 
-test_that("the admission predicates: the chain joins the saturated variant at k = 0 and nothing else", {
+test_that("the admission predicates: the chain joins the saturated variant at k = 0, 1 and 2 and nothing else", {
   for (v in c("saturated", "chain")) {
     expect_true(.fiml_serial_shape_admitted(v, 0L))
     expect_true(.fiml_serial_extract_supported(v, 0L))
-    # slice S3 opened k = 1 for both variants; two covariates stay closed until S4
+    # slice S3 opened k = 1 and slice S4 k = 2 for both variants; a third covariate stays closed
     expect_true(.fiml_serial_shape_admitted(v, 1L))
     expect_true(.fiml_serial_extract_supported(v, 1L))
-    expect_false(.fiml_serial_shape_admitted(v, 2L))
-    expect_false(.fiml_serial_extract_supported(v, 2L))
+    expect_true(.fiml_serial_shape_admitted(v, 2L))
+    expect_true(.fiml_serial_extract_supported(v, 2L))
+    expect_false(.fiml_serial_shape_admitted(v, 3L))
+    expect_false(.fiml_serial_extract_supported(v, 3L))
   }
   expect_false(.fiml_serial_shape_admitted("bogus", 0L))
   testthat::local_mocked_bindings(.fiml_serial_admitted = function() TRUE)
-  for (k in 0:2) for (v in c("saturated", "chain")) expect_true(.fiml_serial_shape_admitted(v, k))
+  for (k in 0:3) for (v in c("saturated", "chain")) expect_true(.fiml_serial_shape_admitted(v, k))
 })
 
 # ---- V1/V2: lavaan raw-data FIML -----------------------------------------------------------------------------------
@@ -469,20 +468,16 @@ test_that("Q7 and the chain extract refusals: reversed order, wrong sets and uns
   }
 })
 
-test_that("the chain extraction of a shape that is not public stays refused (mock-opened fits at k = 1, 2)", {
+test_that("the chain with a third covariate is refused by the parser even mock-opened; extraction is closed", {
   testthat::local_mocked_bindings(.fiml_serial_admitted = function() TRUE)
   d <- sc_data("mar")
-  d$Z <- d$Z1 <- stats::rnorm(nrow(d))
+  d$Z1 <- stats::rnorm(nrow(d))
   d$Z2 <- stats::rnorm(nrow(d))
-  z <- paste(sc_zeros, collapse = "\n")
-  shapes <- c(
-    chain2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + Z1 + Z2\nY ~ M2 + X + Z1 + Z2"
-  )
-  for (nm in names(shapes)) {
-    f <- fit_sem(paste(shapes[[nm]], z, sep = "\n"), d, missing = "fiml", fixed_x = FALSE)
-    expect_error(extract_mediation(f, treatment = "X", mediator = c("M1", "M2")),
-                 class = "medfit_error_fiml_extract_unsupported", info = nm)
-  }
+  d$Z3 <- stats::rnorm(nrow(d))
+  m <- paste(c("M1 ~ X + Z1 + Z2 + Z3", "M2 ~ M1 + Z1 + Z2 + Z3", "Y ~ M2 + X + Z1 + Z2 + Z3", sc_zeros),
+             collapse = "\n")
+  expect_error(fit_sem(m, d, missing = "fiml", fixed_x = FALSE), class = "medfit_sem_fiml_error")
+  expect_false(.fiml_serial_extract_supported("chain", 3L))
 })
 
 test_that("D9: the chain's mediators are structural, not in order of appearance, at extraction too", {

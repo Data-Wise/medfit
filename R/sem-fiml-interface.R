@@ -131,6 +131,9 @@
 
 # Largest number of covariates the parallel form admits.
 .sem_fiml_par_cov_max <- function() 2L
+# Largest number of covariates the serial form admits (the same limit, kept as its own function so that the two forms
+# can differ).
+.sem_fiml_ser_cov_max <- function() 2L
 
 # Two parallel mediators (FI-G2): M1 ~ X, M2 ~ X and Y ~ M1 + M2 [+ X], independent disturbances. The independence of
 # the two mediator disturbances must be WRITTEN as `M1 ~~ 0*M2` (either order): an omitted statement is ambiguous with
@@ -233,17 +236,17 @@
 
 # Fail-closed admission of serial FIML fits (FI-G3). `.fiml_serial_admitted()` is the master switch that opens every
 # serial shape (always FALSE; tests mock it to exercise the downstream serial plumbing: tables, ledger, source-fit and
-# extract refusals). Each slice admits its own shapes through `.fiml_serial_shape_admitted()`: slices S1b, S2 and S3
-# admit the saturated variant and the pure chain with no covariate or one covariate and nothing else (two covariates
-# are S4), so the predicate tests the variant AND the covariate count. Every other serial syntax is refused at fit
-# with its classed reason.
+# extract refusals). Each slice admits its own shapes through `.fiml_serial_shape_admitted()`: slices S1b, S2, S3 and S4
+# admit the saturated variant and the pure chain with no, one or two covariates and nothing else (the covariate limit of
+# the parallel form, `.sem_fiml_par_cov_max()`; a third covariate is refused by the parser), so the predicate tests the
+# variant AND the covariate count. Every other serial syntax is refused at fit with its classed reason.
 .fiml_serial_admitted <- function() FALSE
 .fiml_serial_shape_admitted <- function(variant, k) {
-  isTRUE(.fiml_serial_admitted()) || (variant %in% c("saturated", "chain") && as.integer(k) %in% 0:1)
+  isTRUE(.fiml_serial_admitted()) || (variant %in% c("saturated", "chain") && as.integer(k) %in% 0:2)
 }
 # The shapes `.sem_fiml_extract_serial()` implements (a mocked-open fit of any other shape is refused at extract).
 .fiml_serial_extract_supported <- function(variant, k) {
-  variant %in% c("saturated", "chain") && as.integer(k) %in% 0:1
+  variant %in% c("saturated", "chain") && as.integer(k) %in% 0:2
 }
 
 # Serial syntax: exactly one outcome, exactly two other endogenous variables, and a regression of one of them on the
@@ -277,7 +280,7 @@
   y <- setdiff(unique(reg$lhs), reg$rhs)
   m <- setdiff(unique(reg$lhs), y)
   if (any(grepl(":", roles$obs, fixed = TRUE))) .sem_fiml_diagnostic("unsupported FIML topology: interactions")
-  if (k > .sem_fiml_par_cov_max()) .sem_fiml_diagnostic("unsupported number of FIML covariates")
+  if (k > .sem_fiml_ser_cov_max()) .sem_fiml_diagnostic("unsupported number of FIML covariates")
   if (k < 0L || !setequal(roles$obs, c(e, m, y))) {
     .sem_fiml_diagnostic("unsupported FIML topology: serial mediation needs M1 ~ X, M2 ~ M1 and Y ~ M2")
   }
@@ -375,6 +378,15 @@
   allowed <- c(required, cp, "disturbance", paste(obs, "~~", obs), paste(obs, "~1", ""))
   if (anyDuplicated(keys[keys != "disturbance"]) || any(!keys %in% allowed)) {
     .sem_fiml_diagnostic("unsupported FIML topology or correlated disturbances")
+  }
+  # the exogenous covariances are all written or none (an omitted set is added in full by the parser): a partial set is
+  # named as such, not reported as a missing regression
+  if (any(!exo_cov %in% keys)) {
+    .sem_fiml_diagnostic(paste0(
+      "FIML serial mediation with covariates needs the complete exogenous covariance set written (all of ",
+      paste(exo_cov, collapse = ", "), ") or none; a partial set is refused, missing ",
+      paste(exo_cov[!exo_cov %in% keys], collapse = ", ")
+    ))
   }
   if (!all(required %in% keys)) {
     .sem_fiml_diagnostic("unsupported FIML topology: serial mediation needs M1 ~ X, M2 ~ M1 and Y ~ M2")
@@ -742,14 +754,15 @@
   )
 }
 
-# Two serial mediators, both variants, with no covariate or one (FI-G3 slices S1b, S2 and S3). Both mediators are named
-# in the fitted (structural) order; the reversed order asks for a different model (M2 -> M1) and is refused with the
+# Two serial mediators, both variants, with zero, one or two covariates (FI-G3 slices S1b, S2, S3 and S4). Both
+# mediators are named in the fitted (structural) order; the reversed order asks for a different model (M2 -> M1) and is refused with the
 # fitted order named. The six (saturated) or four (pure chain) path estimates and their covariance are the fitted
 # observed-information block, so every cross-path term (Cov(a, d1), Cov(d1, b), Cov(a2, d1), Cov(b1, b), ...) is kept,
 # unlike the separate-regression lm/glm route; a fixed-zero or omitted direct path is a zero row and column. A covariate
 # coefficient is never a path: the aliases are the treatment's coefficients. In the saturated variant with a free direct
 # path a covariate may be named the treatment (it then takes a = gm1, a2 = gm2, c_prime = gy, the exogenous block being
-# symmetric); in the pure chain the treatment is structural (the variable with no path to M2) and naming a covariate is
+# symmetric; with a fixed-zero direct path only the variable carrying the fixed zero is valid and naming another one
+# says so); in the pure chain the treatment is structural (the variable with no path to M2) and naming a covariate is
 # refused (Q6a): its free Z -> M2 and Z -> Y paths would be the one-shortcut graph that is not admitted.
 .sem_fiml_extract_serial <- function(object, treatment, mediator, args) {
   ctx0 <- object@internals$likelihood
@@ -783,8 +796,15 @@
       "mediator and the outcome would make the graph the one-shortcut graph that is refused"
     ))
   }
-  # With a free direct path any exogenous variable may be the saturated treatment; a fixed-zero direct path belongs to
-  # the fit's treatment `X` (a covariate's outcome path must be complete).
+  # A saturated fit with a fixed-zero direct path has one valid treatment: the variable with the fixed-zero path (the
+  # fit's `X`). Naming another exogenous variable says so (a covariate's outcome path must be complete).
+  if (!chain && !spec$direct && named_cov) {
+    refuse(paste0(
+      "FIML extraction of a serial fit with a fixed-zero direct path needs the treatment to be the variable with the ",
+      "fixed-zero direct path (", x0, "); a covariate cannot be named the treatment"
+    ))
+  }
+  # With a free direct path any exogenous variable may be the saturated treatment.
   treatment_ok <- identical(treatment, x0) || (named_cov && !chain && spec$direct)
   allowed <- c("outcome", "standardized", "structure", "decomposition")
   if (length(setdiff(names(args), allowed)) || !treatment_ok || !ok_mediators ||

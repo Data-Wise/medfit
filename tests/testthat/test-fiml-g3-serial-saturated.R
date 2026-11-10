@@ -31,23 +31,21 @@ test_that("the saturated serial syntax with k = 0 is a public fit in every direc
   expect_identical(fz@vcov, fo@vcov)
 })
 
-test_that("every other serial shape stays refused at fit with the not-yet-available reason (R4)", {
+test_that("the k = 2 serial shapes are public fits (S4); the F6 syntax is the chain with treatment Z (R4)", {
   d <- sb_data("mar")
   d$Z <- d$Z1 <- stats::rnorm(nrow(d))
   d$Z2 <- stats::rnorm(nrow(d))
   z <- paste(sb_zeros, collapse = "\n")
   shapes <- c(
-    # the k = 1 shapes became public in slice S3 (test-fiml-g3-serial-covariate.R); two covariates stay refused until S4
+    # the k = 1 shapes became public in slice S3 (test-fiml-g3-serial-covariate.R), the k = 2 shapes in slice S4
+    # (test-fiml-g3-serial-two-cov.R)
     sat2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + X + Z1 + Z2\nY ~ M1 + M2 + X + Z1 + Z2",
     chain2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + Z1 + Z2\nY ~ M2 + X + Z1 + Z2"
   )
   # F6: `M2 ~ M1 + X` with Z omitted is a chain whose treatment is Z; it is a public k = 1 fit since slice S3
   shapes <- c(shapes, z_treatment = "M1 ~ X + Z\nM2 ~ M1 + X\nY ~ M2 + X + Z")
   for (nm in setdiff(names(shapes), "z_treatment")) {
-    e <- tryCatch(fit_sem(paste(shapes[[nm]], z, sep = "\n"), d, missing = "fiml", fixed_x = FALSE), error = identity)
-    expect_s3_class(e, "medfit_sem_fiml_error")
-    expect_identical(e$stage, "input", info = nm)
-    expect_match(conditionMessage(e), "serial FIML is not yet available", info = nm)
+    expect_s7_class(fit_sem(paste(shapes[[nm]], z, sep = "\n"), d, missing = "fiml", fixed_x = FALSE), SEMFit)
   }
   # the F6 syntax parses as the chain with k = 1 and the treatment `Z`
   spec <- .sem_fiml_model(paste(shapes[["z_treatment"]], z, sep = "\n"))
@@ -56,13 +54,13 @@ test_that("every other serial shape stays refused at fit with the not-yet-availa
   expect_identical(length(spec$covariate), 1L)
 })
 
-test_that("the admission predicate is true for the k = 0 and k = 1 shapes only; the switch opens the rest", {
-  for (k in 0:1) expect_true(.fiml_serial_shape_admitted("saturated", k))
-  for (k in 0:1) expect_true(.fiml_serial_shape_admitted("chain", k)) # slices S2 and S3
-  expect_false(.fiml_serial_shape_admitted("saturated", 2L))
-  expect_false(.fiml_serial_shape_admitted("chain", 2L))
+test_that("the admission predicate is true for the k = 0, 1 and 2 shapes only; the switch opens the rest", {
+  for (k in 0:2) expect_true(.fiml_serial_shape_admitted("saturated", k))
+  for (k in 0:2) expect_true(.fiml_serial_shape_admitted("chain", k)) # slices S2, S3 and S4
+  expect_false(.fiml_serial_shape_admitted("saturated", 3L))
+  expect_false(.fiml_serial_shape_admitted("chain", 3L))
   testthat::local_mocked_bindings(.fiml_serial_admitted = function() TRUE)
-  for (k in 0:2) for (v in c("saturated", "chain")) expect_true(.fiml_serial_shape_admitted(v, k))
+  for (k in 0:3) for (v in c("saturated", "chain")) expect_true(.fiml_serial_shape_admitted(v, k))
 })
 
 # ---- V1/V2: lavaan raw-data FIML -----------------------------------------------------------------------------------
@@ -439,21 +437,18 @@ test_that("Q7 and the extract refusals: reversed order, wrong sets and unsupport
   }
 })
 
-test_that("extraction of the shapes that are not public stays refused with the classed error (mock-opened fits)", {
+test_that("the extraction predicate is closed for a third covariate, which the parser refuses even mock-opened", {
   testthat::local_mocked_bindings(.fiml_serial_admitted = function() TRUE)
   d <- sb_data("mar")
-  d$Z <- d$Z1 <- stats::rnorm(nrow(d))
+  d$Z1 <- stats::rnorm(nrow(d))
   d$Z2 <- stats::rnorm(nrow(d))
-  z <- paste(sb_zeros, collapse = "\n")
-  shapes <- c(
-    sat2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + X + Z1 + Z2\nY ~ M1 + M2 + X + Z1 + Z2",
-    chain2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + Z1 + Z2\nY ~ M2 + X + Z1 + Z2"
-  )
-  for (nm in names(shapes)) {
-    f <- fit_sem(paste(shapes[[nm]], z, sep = "\n"), d, missing = "fiml", fixed_x = FALSE)
-    expect_error(extract_mediation(f, treatment = "X", mediator = c("M1", "M2")),
-                 class = "medfit_error_fiml_extract_unsupported", info = nm)
-  }
+  d$Z3 <- stats::rnorm(nrow(d))
+  m <- paste(c(
+    "M1 ~ X + Z1 + Z2 + Z3", "M2 ~ M1 + X + Z1 + Z2 + Z3", "Y ~ M1 + M2 + X + Z1 + Z2 + Z3", sb_zeros
+  ), collapse = "\n")
+  expect_error(fit_sem(m, d, missing = "fiml", fixed_x = FALSE), class = "medfit_sem_fiml_error")
+  expect_false(.fiml_serial_extract_supported("saturated", 3L))
+  expect_false(.fiml_serial_extract_supported("chain", 3L))
 })
 
 test_that("D9: the mediators are structural, not in order of appearance, at extraction too", {
