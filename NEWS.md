@@ -2,6 +2,11 @@
 
 ## Documentation
 
+* The native-engine book (repository only) now teaches the contracts added since the 2026-10-20 audit that it lacked:
+  `compare_lr()` with a live check against lavaan (chapter 5), nonzero-product sign branches and `search_evidence`, the
+  branch map, the exact-zero standard error of a pinned parameter under a mean structure, and the bound-slope floor
+  (chapter 3). The audit is `planning/specs/AUDIT-minibook-coverage-2026-11-10.md`.
+
 * New model page "Two-level mediation (1-1-1)" (`model-twolevel`), cookbook recipe 23, a methods section
   (the estimand, the delta method with the cross-level covariance, the caveats), troubleshooting rows for the
   two-level conditions, and glossary terms. The page states the estimand's limits: fixed slopes (the average

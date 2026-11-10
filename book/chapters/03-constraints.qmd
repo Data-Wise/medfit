@@ -341,6 +341,135 @@ stopifnot(identical(mixed@internals$branch, "b == 0"),
 *What to remember:* unresolved means unknown, not infeasible. Only a literal syntax contradiction certifies a branch
 empty, and a complete enumeration is not a global-optimum certificate.
 
+#### What a repeated product counts: the branch map
+
+The cap of 64 counts raw combinations, so it is worth seeing how the engine counts them. A node whose constraints hold
+zero-product rows carries `branch_map` (since 0.14.1): `raw_count` (the product of the factor counts), `factor_counts`
+(one per product row), `unique_count` and, for each raw combination, an ID of the restriction set it asks for. We write the
+same product twice. By hand there are $2 \times 2 = 4$ raw combinations, one factor choice per row:
+$(a, a)$, $(a, b)$, $(b, a)$, $(b, b)$, which ask for the sets $\{a\}$, $\{a, b\}$, $\{a, b\}$ and $\{b\}$, so three
+distinct sets.
+
+```{r}
+#| label: branch-map
+dup <- fit_sem(paste0(model, "a*b == 0\na*b == 0\n"), d)
+bm <- dup@diagnostics$ledger$branch_map
+bm[c("state", "raw_count", "factor_counts", "unique_count")]
+raw <- expand.grid(row1 = c("a", "b"), row2 = c("a", "b"), stringsAsFactors = FALSE)
+hand_sets <- apply(raw, 1, function(r) paste(sort(unique(r)), collapse = ","))
+c(raw = nrow(raw), distinct = length(unique(hand_sets)))
+```
+
+```{r}
+#| label: branch-map-check
+#| include: false
+stopifnot(identical(bm$state, "complete"), bm$raw_count == nrow(raw), identical(bm$factor_counts, c(2L, 2L)),
+          bm$unique_count == length(unique(hand_sets)), bm$unique_count == 3L,
+          identical(bm$raw_to_canonical[2], bm$raw_to_canonical[3]),
+          dup@diagnostics$ledger$enumeration$required == 4L)
+```
+
+The map is a structural count, not an equivalence certificate: the engine does no algebra, so two rows that ask for the same
+set because of an affine relation between labels are not merged. It changes nothing about execution either: every raw
+combination is still fitted, in the written order, and a tie goes to the first. The map is rebuilt from each node's own
+constraints when the ledger is validated, so a forged ID or count makes `mbco_sem()` refuse the fit with
+`medfit_error_ledger`.
+
+#### A product set to a nonzero value
+
+`a*b == q` with a nonzero `q` is a different shape. The set where it holds is a hyperbola in two pieces (for `q > 0`
+$a$ and $b$ share a sign, for `q < 0` they differ), and no point of it has a zero gradient, so there is no crossing to fall
+into. A local solver still follows the piece nearest its start. Since 0.16.0 a fit with exactly one such equality (distinct free labels, finite
+nonzero constants, no other row involving either label) fits both signs of $a$, each with the other label's sign forced by
+bounds, from clean starts and the usual acceptance gate, and keeps the lower discrepancy. The target below is negative, so
+the pieces are ($a > 0$, $b < 0$) and ($a < 0$, $b > 0$). The fit warns because the two pieces end at different minima,
+which is the start-disagreement warning of Section 2 applied to the branches:
+
+```{r}
+#| label: nonzero-product
+q <- -0.3
+nz <- fit_sem(paste0(model, "a*b == ", q, "\n"), d)
+ev <- nz@internals$search_evidence
+branches <- data.frame(
+  sign_a = vapply(ev$branches, function(b) b$signs[1], 0),
+  sign_b = vapply(ev$branches, function(b) b$signs[2], 0),
+  state = vapply(ev$branches, function(b) b$state, ""),
+  discrepancy = vapply(ev$branches, function(b) if (is.null(b$f)) NA_real_ else b$f, 0)
+)
+branches
+c(coverage = ev$coverage, selected = ev$selected, a = rd(coef(nz)[["a"]]), b = rd(coef(nz)[["b"]]))
+```
+
+The hand check profiles the problem to one dimension. With $a$ given, $b = q/a$; the treatment path to the outcome and the
+three variances then concentrate out, and the discrepancy of a recursive model with free residual variances is
+$\log(s_1 / s_1^{\text{full}}) + \log(s_2 / s_2^{\text{full}})$, where $s_1$ and $s_2$ are the maximum-likelihood residual variances of the
+two equations and "full" is the unrestricted fit (here saturated, with discrepancy 0). We minimize over $a$ on each sign
+with `optimize()`:
+
+```{r}
+#| label: nonzero-product-hand
+n_obs <- nrow(d)
+cx <- d$treatment - mean(d$treatment)
+cm <- d$mediator1 - mean(d$mediator1)
+cy <- d$outcome - mean(d$outcome)
+ml_var <- function(r) sum(r^2) / n_obs
+s1_full <- ml_var(resid(lm(cm ~ cx - 1)))
+s2_full <- ml_var(resid(lm(cy ~ cm + cx - 1)))
+profile_f <- function(a) {
+  b <- q / a
+  log(ml_var(cm - a * cx) / s1_full) + log(ml_var(resid(lm((cy - b * cm) ~ cx - 1))) / s2_full)
+}
+hand <- c(`a > 0` = optimize(profile_f, c(1e-3, 5))$objective,
+          `a < 0` = optimize(profile_f, c(-5, -1e-3))$objective)
+hand
+```
+
+```{r}
+#| label: nonzero-product-check
+#| include: false
+stopifnot(identical(ev$coverage, "charted"), identical(ev$reason, "two_sign_branches"),
+          identical(branches$state, c("accepted", "accepted")),
+          max(abs(branches$discrepancy - unname(hand))) < 1e-6,
+          abs(nz@f - min(hand)) < 1e-6, coef(nz)[["a"]] < 0, coef(nz)[["b"]] > 0,
+          abs(coef(nz)[["a"]] * coef(nz)[["b"]] - q) < 1e-6,
+          abs(nz@diagnostics$optimum$spread - diff(range(hand))) < 1e-4,
+          identical(nz@diagnostics$optimum$status, "disagreed"))
+```
+
+The two sign discrepancies equal the hand profile to six decimals, the engine keeps the lower one, and the start spread of the
+optimum diagnostic is the gap between them (`r rd(nz@diagnostics$optimum$spread)`). `search_evidence` (in `fit@internals`, not in
+the ledger) records which signs were searched and how each ended. `coverage = "charted"` says both sign pieces were
+searched, each by a local solve. It is not a certificate of a global optimum within a piece, and the optimum status
+`disagreed` keeps its usual meaning.
+
+Bounds can remove a piece. With `a > 0` written as a bound, the ($a < 0$) piece contradicts it, and the search records that
+branch as `proved_empty` instead of fitting it; the fit then equals the hand profile on the remaining sign. If a required
+piece cannot be resolved, the call stops with `medfit_error_no_convergence`, as with zero products. An unsupported shape,
+as a second row that involves `a` (`a == b` below), gets no sign search: its coverage is `local`, the reason is named, and
+the ordinary multi-start rules apply.
+
+```{r}
+#| label: nonzero-product-bounds
+nz_bound <- fit_sem(paste0(model, "a*b == ", q, "\na > 0\n"), d)
+ev_bound <- nz_bound@internals$search_evidence
+nz_coupled <- fit_sem(paste0(model, "a*b == 0.3\na == b\n"), d)
+rbind(
+  bound = c(coverage = ev_bound$coverage, states = paste(vapply(ev_bound$branches, function(b) b$state, ""), collapse = ", "),
+            discrepancy = format(rd(nz_bound@f, 6))),
+  coupled = c(coverage = nz_coupled@internals$search_evidence$coverage,
+              states = nz_coupled@internals$search_evidence$reason, discrepancy = format(rd(nz_coupled@f, 6)))
+)
+```
+
+```{r}
+#| label: nonzero-product-bounds-check
+#| include: false
+stopifnot(identical(vapply(ev_bound$branches, function(b) b$state, ""), c("accepted", "proved_empty")),
+          abs(nz_bound@f - hand[["a > 0"]]) < 1e-6, coef(nz_bound)[["a"]] > 0,
+          identical(nz_coupled@internals$search_evidence$coverage, "local"),
+          identical(nz_coupled@internals$search_evidence$reason, "coupled_constraint"))
+```
+
 ### Counting what a constraint removes
 
 An equality removes one free parameter when its gradient is independent of the others'.
@@ -557,7 +686,16 @@ convention, a negative multiplier does **not** mean that loosening the upper
 limit lowers the optimal $F$; it means releasing the claim that this boundary
 must stay active allows an improving feasible move. medfit checks inequality
 signs as a warning, with an active-bound inward-slope rejection
-(`R/sem-constraints.R`).
+(`R/sem-constraints.R`). The rejection ignores a slope that is only roundoff: a bound's inward slope must exceed
+$\max(10^{-12},\, 10^{-10}\,\lVert g\rVert)$, with $g$ the gradient in natural units, before it counts as a wrong sign
+(since 0.12.0, #238). Before that the floor was the fixed $10^{-12}$, which a gradient of large norm can leave
+below the roundoff of the slope it cancels against.
+
+```{r}
+#| label: slope-floor
+#| include: false
+stopifnot(medfit:::.sem_slope_tol_rel == 1e-10)
+```
 
 *What to remember:* for $c\leq0$, an active minimum needs a nonnegative inequality multiplier.
 
@@ -1032,6 +1170,26 @@ stopifnot(independent$convergence == 0L,
 The same tangent basis includes active inequalities, user bounds and the optimizer's effective variance
 floors. Inactive inequalities impose no restriction. A coordinate pinned by an active row has an exactly
 zero covariance row and column; if every coordinate is pinned, the entire named covariance is zero.
+This holds under a mean structure too, where the engine works in centered coordinates and maps the covariance back
+(Chapter 1): since 0.14.0 a pinned parameter has a standard error of exactly 0 there, not roundoff, so `tidy()` reports
+`NA` for its statistic and p-value instead of a huge $z$.
+
+```{r}
+#| label: pinned-se-mean
+pinned <- fit_sem(paste0(model, "b == 0\n"), d, meanstructure = TRUE)
+pinned_tidy <- generics::tidy(pinned)
+pinned_tidy[pinned_tidy$term %in% c("a", "b"), c("term", "std_error", "statistic", "p_value")]
+```
+
+```{r}
+#| label: pinned-se-mean-check
+#| include: false
+pinned_se <- sqrt(diag(vcov(pinned)))
+stopifnot(any(grepl("~1", names(coef(pinned)), fixed = TRUE)),
+          pinned_se[["b"]] == 0, pinned_se[["a"]] > 0,
+          is.na(pinned_tidy$statistic[pinned_tidy$term == "b"]), is.na(pinned_tidy$p_value[pinned_tidy$term == "b"]),
+          !is.na(pinned_tidy$statistic[pinned_tidy$term == "a"]))
+```
 If information is singular within the remaining tangent space, the engine emits one warning and returns
 a full named `NA` covariance matrix. It does not substitute zero standard errors.
 
