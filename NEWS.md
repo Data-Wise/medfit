@@ -19,6 +19,14 @@
   objects it accepts (a feature table whose statuses a test checks against live calls into probmed 0.4.1 and
   RMediation 1.11.1, skipped when they are absent), and one worked example each.
 
+## Changes
+
+* The Suggests floor for `lavaan` is now `>= 0.7-3` (was `>= 0.6-0`), set by the two-level adapter. The two-level and
+  `extract-lavaan-multilevel` tests pass on lavaan 0.7-3 (the version every hosted CI leg installs) and 0.7-2, and fail on 0.6-19
+  and 0.6-12: those versions refuse a cluster bootstrap in a multilevel fit (`se = "bootstrap"` must be `"none"`, `"standard"`
+  or `"robust.huber.white"`), and 0.6-12 also differs at about 1e-8 on single-level cluster-robust paths. Whether the adapter
+  works on 0.7-0 and 0.7-1 is unverified (neither is on CRAN).
+
 ## Added
 
 * `extract_mediation()` on a two-level `lavaan` fit (`level:` blocks, `cluster =`) now returns
