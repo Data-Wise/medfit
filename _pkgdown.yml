@@ -96,6 +96,8 @@ navbar:
         href: articles/model-native-multi.html
       - text: "Native: categorical covariates"
         href: articles/model-native-factors.html
+      - text: "Missing data: bounded FIML"
+        href: articles/model-fiml.html
     guides:
       text: Guides
       menu:
@@ -309,6 +311,7 @@ articles:
       - '`articles/model-native-constraints`'
       - '`articles/model-native-multi`'
       - '`articles/model-native-factors`'
+      - '`articles/model-fiml`'
   - title: "Guides"
     desc: "Upgrading, errors, intervals and terms"
     contents:

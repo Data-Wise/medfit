@@ -72,5 +72,6 @@ c(chain = unname(nie(x)), every_path = unname(nie(x, type = "total")),
 
 ## Related
 
+[Missing data: bounded FIML](model-fiml.html) |
 [Parallel mediation](model-parallel.html) | [Joint mediation](model-joint.html) |
 [Cookbook recipe 5](cookbook.html#two-mediators-in-a-chain) | [Model Extraction](extraction.html)
