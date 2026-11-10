@@ -12,11 +12,11 @@ execute:
   echo: true
 ---
 
-Twenty-one task-sized recipes. Each says when to use it, runs on `mediation_demo`
+Twenty-two task-sized recipes. Each says when to use it, runs on `mediation_demo`
 (except the cluster and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference Card](refcard.html).
 
-These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, and recipe 21 needs 0.11.0). CRAN has 0.3.2, which lacks
+These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, recipe 21 needs 0.11.0, and recipe 22 needs 0.16.0). CRAN has 0.3.2, which lacks
 `mediation_demo` and the native, joint and cluster functions; install from
 GitHub or r-universe (see the [home page](https://data-wise.github.io/medfit/#install)).
 
@@ -36,6 +36,7 @@ covs <- c("covariate1", "covariate2")
 res <- med(mediation_demo, treatment = "treatment", mediator = "mediator1",
            outcome = "outcome", covariates = covs)
 quick(res)
+nde(res)   # one effect at a time: nie(), nde(), te(), pm()
 ```
 
 More: [Getting Started](getting-started.html).
@@ -406,6 +407,18 @@ rbind(reduced = glance(reduced)[, c("npar", "chisq", "AIC", "BIC")],
 The restricted model is the one with more degrees of freedom. A small chi-square
 difference says dropping `cp` costs little.
 
+To check a constrained likelihood ratio (the product null of an indirect effect) against an
+independent fit in lavaan or OpenMx, use `compare_lr()`. It needs one of those packages and
+refits the null from two starts, so this chunk is not run here; the
+[lavaan comparison](lavaan-comparison.html#checking-a-constrained-lr-against-lavaan-or-openmx)
+article runs it live.
+
+```{r}
+#| label: r14-compare-lr
+#| eval: false
+compare_lr(full, paths = c("a", "b"), engine = "lavaan")
+```
+
 ## 15. A defined parameter and its interval
 
 *When:* you want the indirect effect, the total effect or the proportion mediated
@@ -680,3 +693,50 @@ changes the reference level.
 
 More: [Native engine, paths and defined parameters](model-native.html), `?"medfit-syntax"`
 (section Factor covariates).
+
+## 22. Missing data: bounded FIML
+
+*When:* some rows are missing a value on the mediator or the outcome and you want to keep them rather than
+delete them listwise. The opt-in is narrow (continuous Gaussian variables, `fixed_x = FALSE`, a mean structure,
+observed information, model-based standard errors, no weights) and never falls back to listwise deletion. The chunk
+simulates X, M and Y and blanks every seventh mediator value. Statistically it is not admitted: it assumes the
+missingness is ignorable and its intervals are not calibrated for coverage.
+
+```{r}
+#| label: r22-fiml
+d <- withr::with_seed(271L, {
+  n <- 400L
+  x <- .8 + stats::rnorm(n, sd = 1.1)
+  m <- -.4 + .5 * x + stats::rnorm(n, sd = .8)
+  y <- .7 + .6 * m + .25 * x + stats::rnorm(n, sd = .9)
+  data.frame(treatment = x, mediator1 = m, outcome = y)
+})
+d$mediator1[seq(1, nrow(d), by = 7)] <- NA_real_
+syntax <- "mediator1 ~ a*treatment
+outcome ~ b*mediator1 + cp*treatment"
+fit <- fit_sem(syntax, d, missing = "fiml", fixed_x = FALSE,
+               meanstructure = TRUE, information = "observed", se_type = "model")
+c(rows_kept = nobs(fit), rows_complete = sum(stats::complete.cases(d)))
+z <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1")
+tidy(z, type = "effects")
+```
+
+Any setting outside the validated scope stops with a classed error that says why (see
+[Troubleshooting](guide-troubleshooting.html#bounded-fiml-refusals)). More: [Bounded FIML](model-fiml.html).
+
+## Which recipe returns which object
+
+Every exported class and function appears in a recipe, or the table says why not.
+
+| Object | Recipe |
+|---|---|
+| `MediationData` | 1, 2, 3, 4 |
+| `SerialMediationData` | 5 |
+| `ParallelMediationData` | 6 |
+| `InteractionMediationData` | 7, 20 |
+| `JointMediationData` | 8 |
+| `ClusterMediationData` | 9 |
+| `SEMFit` | 11 to 21 |
+| `BootstrapResult` | 9 and 20 (returned by `bootstrap_mediation()`) |
+| `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | 22 (the simple model; the parallel and serial forms are in [Bounded FIML](model-fiml.html)) |
+| `TwoLevelMediationData` | no recipe yet: the class is returned by `extract_mediation()` on a two-level `lavaan` fit, and its effects and inference are not released |

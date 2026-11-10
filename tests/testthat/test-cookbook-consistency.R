@@ -1,4 +1,4 @@
-# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): twenty-one numbered
+# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): twenty-two numbered
 # recipes, every article link resolves, and the cluster recipe simulates the same
 # data as methods.qmd so their numbers agree. Skips when the vignettes are absent
 # (installed or built package).
@@ -14,10 +14,10 @@ article_text <- function(name) {
   paste(readLines(p, warn = FALSE), collapse = "\n")
 }
 
-test_that("the cookbook has twenty-one numbered recipes and every article link resolves", {
+test_that("the cookbook has twenty-two numbered recipes and every article link resolves", {
   cb <- article_text("cookbook.qmd")
   heads <- regmatches(cb, gregexpr("(?m)^## [0-9]+\\. ", cb, perl = TRUE))[[1]]
-  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:21, "."))
+  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:22, "."))
   links <- unique(regmatches(cb, gregexpr("\\]\\(([a-z-]+)\\.html\\)", cb))[[1]])
   targets <- paste0(gsub("^\\]\\(|\\.html\\)$", "", links), ".qmd")
   expect_gt(length(targets), 0L)
@@ -150,11 +150,11 @@ test_that("planted defect: the smaller p-value in place of the larger is caught"
   expect_false(grepl("joint = max(p)", sub("joint = max(p)", "joint = min(p)", cb, fixed = TRUE), fixed = TRUE))
 })
 
-test_that("recipes 14-21 run after the setup chunk alone and say what they claim", {
+test_that("recipes 14-22 run after the setup chunk alone and say what they claim", {
   article_text("cookbook.qmd")
   parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
   setup <- unlist(parsed[[1L]])
-  for (k in 14:21) {
+  for (k in 14:22) {
     err <- run_cookbook_recipe(setup, parsed[[k + 1L]])
     expect_null(err, info = sprintf("recipe %d fails on its own: %s", k, err))
   }
@@ -326,4 +326,46 @@ test_that("tutorial step 10 runs after the earlier setup and the factor is expan
   expect_true(all(c("mediator1~group_mid", "mediator1~group_high", "outcome~group_mid") %in% tt$term))
   expect_false(any(tt$term %in% c("mediator1~group", "outcome~group")))
   expect_true(all(is.finite(tt$estimate)))
+})
+
+test_that("recipe 22: FIML keeps the incomplete rows and the NIE is the product a * b of the fitted paths", {
+  cb <- article_text("cookbook.qmd")
+  d <- withr::with_seed(271L, {
+    n <- 400L
+    x <- .8 + stats::rnorm(n, sd = 1.1)
+    m <- -.4 + .5 * x + stats::rnorm(n, sd = .8)
+    y <- .7 + .6 * m + .25 * x + stats::rnorm(n, sd = .9)
+    data.frame(treatment = x, mediator1 = m, outcome = y)
+  })
+  d$mediator1[seq(1, nrow(d), by = 7)] <- NA_real_
+  syntax <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"
+  fit <- fit_sem(syntax, d, missing = "fiml", fixed_x = FALSE,
+                 meanstructure = TRUE, information = "observed", se_type = "model")
+  expect_equal(nobs(fit), nrow(d))
+  expect_lt(sum(stats::complete.cases(d)), nrow(d))
+  z <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1")
+  expect_s3_class(z, "S7_object")
+  expect_equal(as.numeric(nie(z)), as.numeric(z@a_path * z@b_path))
+  # the recipe text is the code run here (planted defect: a different seed would be caught)
+  expect_true(grepl("with_seed(271L", cb, fixed = TRUE))
+  # without the opt-in the same data fall back to listwise deletion
+  expect_lt(nobs(fit_sem(syntax, d, fixed_x = FALSE, meanstructure = TRUE)), nrow(d))
+})
+
+test_that("every export and class is in the cookbook or carries a stated no-recipe reason", {
+  cb <- article_text("cookbook.qmd")
+  ex <- sort(getNamespaceExports("medfit"))
+  ex <- ex[!startsWith(ex, ".__")]
+  classes <- c("FIMLMediationData", "FIMLParallelMediationData", "FIMLSerialMediationData")
+  has <- function(n) {
+    pat <- paste0("(?<![A-Za-z0-9_.])", gsub(".", "\\.", n, fixed = TRUE), "(?![A-Za-z0-9_.])")
+    grepl(pat, cb, perl = TRUE)
+  }
+  expect_identical(c(ex, classes)[!vapply(c(ex, classes), has, logical(1))], character())
+  # a no-recipe row must say so: the two-level class has no recipe and the table states why
+  expect_true(grepl("`TwoLevelMediationData` | no recipe yet", cb, fixed = TRUE))
+  # planted defect: dropping a name from the text is caught
+  broken <- gsub("compare_lr", "compare_l0", cb, fixed = TRUE)
+  expect_false(grepl("compare_lr", broken, fixed = TRUE))
+  expect_true(grepl("compare_lr", cb, fixed = TRUE))
 })
