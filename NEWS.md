@@ -12,7 +12,18 @@
   definite between covariance) the object is within-only and warns with
   `medfit_between_unidentified`; a non-converged fit without a usable within block errors
   with `medfit_error_twolevel_unusable`. Three-level and multigroup fits are still refused.
-  Effects, inference and bootstrap helpers follow in later changes (#394).
+  Bootstrap helpers follow in a later change (#394).
+
+* `TwoLevelMediationData` has effects and inference. `nie()`, `nde()`, `te()` and `pm()` take
+  `level = "within"` (the default), `"between"` or `"both"`; `nie(level = "contrast")` is the
+  within minus between indirect effect (descriptive, not a test; no contrast exists for
+  `nde()`, `te()` or `pm()`, which error with `medfit_error_twolevel_level`). `paths()`,
+  `decompose()`, `coef()`, `vcov()`, `nobs()`, `confint()`, `tidy()`, `glance()` and
+  `summary()` work through the one delta-method gradient builder, over the joint covariance
+  of the paths, so the cross-level covariance enters the contrast SE. Between effects of a
+  within-only object are `NA` with `medfit_between_unidentified`; the contrast is `NA` with
+  `medfit_warning_twolevel_constrained` when a or b is equated across levels. Intervals are
+  Wald (no small-sample correction).
 
 * `print()` and `summary()` of a serial FIML object (`FIMLSerialMediationData`) now name
   the variant (saturated, or the pure chain without shortcut paths) and the covariates

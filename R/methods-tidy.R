@@ -22,8 +22,12 @@
 #'
 #' @param x A [MediationData], [SerialMediationData], [ParallelMediationData],
 #'   [InteractionMediationData], [JointMediationData], [ClusterMediationData],
-#'   [BootstrapResult], or [SEMFit] object (a `SEMFit` has its own columns; see
-#'   [SEMFit-methods]).
+#'   [TwoLevelMediationData], [BootstrapResult], or [SEMFit] object (a `SEMFit`
+#'   has its own columns; see [SEMFit-methods]). A `TwoLevelMediationData` has
+#'   within and between rows (`nie_within`, `nie_between`, `nie_contrast`, ...);
+#'   the between effect rows and the contrast are `NA` with a classed warning
+#'   when the between level is unidentified or a path is equated across levels
+#'   (between path rows are `NA` without one).
 #' @param ... Passed to the class method: `type` (`"all"`, `"paths"`,
 #'   `"effects"`, and for interaction objects `"components"`), `conf_int`
 #'   (logical, add `conf_low`/`conf_high`), and `conf_level` (default 0.95).
@@ -111,6 +115,9 @@ tidy_s7_object <- function(x, ...) {
   if (S7::S7_inherits(x, ClusterMediationData)) {
     return(.tidy_cluster_mediation_data(x, ...))
   }
+  if (S7::S7_inherits(x, TwoLevelMediationData)) {
+    return(.tidy_twolevel_mediation_data(x, ...))
+  }
   if (S7::S7_inherits(x, BootstrapResult)) {
     return(.tidy_bootstrap_result(x, ...))
   }
@@ -141,6 +148,9 @@ glance_s7_object <- function(x, ...) {
   }
   if (S7::S7_inherits(x, ClusterMediationData)) {
     return(.glance_cluster_mediation_data(x, ...))
+  }
+  if (S7::S7_inherits(x, TwoLevelMediationData)) {
+    return(.glance_twolevel_mediation_data(x, ...))
   }
   if (S7::S7_inherits(x, BootstrapResult)) {
     return(.glance_bootstrap_result(x, ...))
@@ -591,6 +601,60 @@ glance_s7_object <- function(x, ...) {
     n_clusters = x@n_clusters,
     nobs = nobs(x),
     converged = x@converged,
+    stringsAsFactors = FALSE
+  )
+
+  if (requireNamespace("tibble", quietly = TRUE)) {
+    result <- tibble::as_tibble(result)
+  }
+
+  result
+}
+
+
+#' Tidy a TwoLevelMediationData Object
+#'
+#' @param x A TwoLevelMediationData object
+#' @param type `"all"` (default), `"paths"` (the six paths), or `"effects"` (per level nie, nde, te, pm, then the
+#'   NIE contrast)
+#' @param conf_int Logical: add normal-approximation CIs from `std_error`?
+#' @param conf_level Confidence level (default 0.95)
+#' @param ... Additional arguments (ignored)
+#' @return A tibble with `term`, `estimate`, `std_error` (and `conf_low`, `conf_high` when `conf_int = TRUE`).
+#'   Between rows of a within-only object, and the contrast when a or b is equated across levels, are `NA` with
+#'   a classed warning (between path rows are `NA` without one).
+#' @noRd
+.tidy_twolevel_mediation_data <- function(x, type = c("all", "paths", "effects"),
+                                          conf_int = FALSE, conf_level = 0.95, ...) {
+  type <- match.arg(type)
+  path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
+  effect_vec <- if (type %in% c("all", "effects")) {
+    .twolevel_signal_na(x, .twolevel_effect_keys)
+    .twolevel_effect_vec(x)
+  }
+  .tidy_paths_effects(x, path_vec, effect_vec, conf_int, conf_level)
+}
+
+
+#' Glance at a TwoLevelMediationData Object
+#'
+#' @param x A TwoLevelMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return A one-row tibble: nie_within, nie_between, nie_contrast, n_clusters, nobs, converged,
+#'   between_identified, admissible. The effects are `NA` (with no warning; `between_identified` says why) when
+#'   the between level is unidentified or the contrast is constrained.
+#' @noRd
+.glance_twolevel_mediation_data <- function(x, ...) {
+  eff <- .twolevel_effect_vec(x)
+  result <- data.frame(
+    nie_within = eff[["nie_within"]],
+    nie_between = eff[["nie_between"]],
+    nie_contrast = eff[["nie_contrast"]],
+    n_clusters = x@n_clusters,
+    nobs = nobs(x),
+    converged = x@converged,
+    between_identified = x@between_identified,
+    admissible = x@admissible,
     stringsAsFactors = FALSE
   )
 

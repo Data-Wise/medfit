@@ -20,7 +20,10 @@
 #'   estimate (with a warning if the statistic was not an NIE).
 #' @param ... Additional arguments passed to methods. For a
 #'   `SerialMediationData`, `type = c("chain", "total")` selects the
-#'   chain-specific (default) or the total indirect effect (see Details).
+#'   chain-specific (default) or the total indirect effect (see Details). For a
+#'   `TwoLevelMediationData`, `level = c("within", "between", "contrast", "both")`
+#'   selects the level (within is the default; the contrast, within minus
+#'   between, is descriptive and exists for `nie()` only).
 #'
 #' @return A numeric scalar of class `mediation_effect` carrying a `type`
 #'   attribute. For intervals use [confint()] or [bootstrap_mediation()].
@@ -70,7 +73,8 @@ nie <- S7::new_generic("nie", "x")
 #'
 #' @param x A [MediationData], [SerialMediationData], [ParallelMediationData],
 #'   [InteractionMediationData], or [JointMediationData] object.
-#' @param ... Additional arguments passed to methods
+#' @param ... Additional arguments passed to methods. For a `TwoLevelMediationData`,
+#'   `level = c("within", "between", "both")` selects the level (within by default).
 #'
 #' @return A numeric scalar of class `mediation_effect` carrying a `type`
 #'   attribute.
@@ -112,7 +116,8 @@ nde <- S7::new_generic("nde", "x")
 #'
 #' @param x A [MediationData], [SerialMediationData], [ParallelMediationData],
 #'   [InteractionMediationData], or [JointMediationData] object.
-#' @param ... Additional arguments passed to methods
+#' @param ... Additional arguments passed to methods. For a `TwoLevelMediationData`,
+#'   `level = c("within", "between", "both")` selects the level (within by default).
 #'
 #' @return A numeric scalar of class `mediation_effect` carrying a `type`
 #'   attribute.
@@ -159,7 +164,8 @@ te <- S7::new_generic("te", "x")
 #'
 #' @param x A [MediationData], [SerialMediationData], [ParallelMediationData],
 #'   [InteractionMediationData], or [JointMediationData] object.
-#' @param ... Additional arguments passed to methods
+#' @param ... Additional arguments passed to methods. For a `TwoLevelMediationData`,
+#'   `level = c("within", "between", "both")` selects the level (within by default).
 #'
 #' @return A numeric scalar of class `mediation_effect`, usually between 0 and
 #'   1 (negative or greater than 1 in cases of suppression effects), or
@@ -755,6 +761,127 @@ S7::method(decompose, ClusterMediationData) <- function(x, ...) {
 }
 
 
+# --- Methods for TwoLevelMediationData ---
+
+# The effect keys in canonical order: per level nie, nde, te, pm, then the NIE contrast.
+.twolevel_effect_keys <- c(
+  "nie_within", "nde_within", "te_within", "pm_within",
+  "nie_between", "nde_between", "te_between", "pm_between", "nie_contrast"
+)
+
+# PM = NIE / TE is defined only for a finite TE away from zero; the one place the rule lives.
+.twolevel_te_defined <- function(te) is.finite(te) & abs(te) >= .Machine$double.eps
+
+# All effects as a named vector, with no condition signaled: NA where the between level is unidentified, where
+# |TE| is below machine epsilon (PM) and for a contrast that is zero by constraint.
+.twolevel_effect_vec <- function(x) {
+  per_level <- function(level) {
+    a <- S7::prop(x, paste0("a_", level))
+    b <- S7::prop(x, paste0("b_", level))
+    cp <- S7::prop(x, paste0("c_prime_", level))
+    te <- a * b + cp
+    pm <- if (.twolevel_te_defined(te)) a * b / te else NA_real_
+    stats::setNames(c(a * b, cp, te, pm), paste0(c("nie", "nde", "te", "pm"), "_", level))
+  }
+  out <- c(per_level("within"), per_level("between"), nie_contrast = NA_real_)
+  if (.twolevel_contrast_available(x)) out[["nie_contrast"]] <- out[["nie_within"]] - out[["nie_between"]]
+  out[.twolevel_effect_keys]
+}
+
+# Signal why the requested effects are NA: the between level is unidentified (a within-only object), or the
+# contrast is zero by constraint. Classed warnings, suppressible per class (PLAN Q2).
+.twolevel_signal_na <- function(x, terms) {
+  if (!isTRUE(x@between_identified) && any(grepl("between|contrast", terms))) {
+    .twolevel_warn(
+      paste0("The between level of this two-level fit is not identified (a within-only result), so the ",
+             "between effects and the contrast are NA."),
+      "medfit_between_unidentified"
+    )
+  } else if ("nie_contrast" %in% terms && !.twolevel_contrast_available(x)) {
+    .twolevel_warn(
+      paste0("The contrast NIE_within - NIE_between is NA: a or b is equated across levels, so the two ",
+             "levels are not compared freely. The within and between effects are still reported."),
+      "medfit_warning_twolevel_constrained"
+    )
+  }
+  invisible(NULL)
+}
+
+# One effect type at the requested level(s) as a `mediation_effect`; `both` gives a length-2 named vector.
+.twolevel_effect <- function(x, type, level) {
+  if (identical(level, "contrast") && !identical(type, "nie")) {
+    .twolevel_abort(
+      sprintf("`level = \"contrast\"` is defined only for nie(); %s() has no first-class contrast. Use tidy().",
+              type),
+      "medfit_error_twolevel_level"
+    )
+  }
+  levels <- switch(level, both = c("within", "between"), level)
+  terms <- if (identical(level, "contrast")) "nie_contrast" else paste0(type, "_", levels)
+  .twolevel_signal_na(x, terms)
+  eff <- .twolevel_effect_vec(x)
+  value <- eff[terms]
+  if (identical(type, "pm")) {
+    te <- eff[paste0("te_", levels)]
+    if (any(is.finite(te) & abs(te) < .Machine$double.eps)) {
+      warning("Total effect is approximately zero; proportion mediated is undefined.", call. = FALSE)
+    }
+  }
+  names(value) <- if (identical(level, "both")) levels else NULL
+  class(value) <- c("mediation_effect", "numeric")
+  attr(value, "type") <- type
+  attr(value, "level") <- level
+  value
+}
+
+#' @describeIn nie Method for TwoLevelMediationData; `level` is `"within"` (default), `"between"`,
+#'   `"contrast"` (within minus between, descriptive) or `"both"`
+#' @noRd
+S7::method(nie, TwoLevelMediationData) <- function(x, level = c("within", "between", "contrast", "both"),
+                                                   ...) {
+  .twolevel_effect(x, "nie", match.arg(level))
+}
+
+#' @describeIn nde Method for TwoLevelMediationData (c' at the level)
+#' @noRd
+S7::method(nde, TwoLevelMediationData) <- function(x, level = c("within", "between", "both", "contrast"),
+                                                   ...) {
+  .twolevel_effect(x, "nde", match.arg(level))
+}
+
+#' @describeIn te Method for TwoLevelMediationData (a * b + c' at the level)
+#' @noRd
+S7::method(te, TwoLevelMediationData) <- function(x, level = c("within", "between", "both", "contrast"),
+                                                  ...) {
+  .twolevel_effect(x, "te", match.arg(level))
+}
+
+#' @describeIn pm Method for TwoLevelMediationData (NIE / TE at the level)
+#' @noRd
+S7::method(pm, TwoLevelMediationData) <- function(x, level = c("within", "between", "both", "contrast"),
+                                                  ...) {
+  .twolevel_effect(x, "pm", match.arg(level))
+}
+
+#' @describeIn paths Method for TwoLevelMediationData (six paths; between entries `NA` when within-only)
+#' @noRd
+S7::method(paths, TwoLevelMediationData) <- function(x, ...) {
+  c(a_within = x@a_within, b_within = x@b_within, c_prime_within = x@c_prime_within,
+    a_between = x@a_between, b_between = x@b_between, c_prime_between = x@c_prime_between)
+}
+
+#' @describeIn decompose Method for TwoLevelMediationData: the within and between NIE and their contrast,
+#'   without a standard error (descriptive; the contrast is not a test)
+#' @noRd
+S7::method(decompose, TwoLevelMediationData) <- function(x, ...) {
+  .twolevel_signal_na(x, c("nie_between", "nie_contrast"))
+  eff <- .twolevel_effect_vec(x)
+  out <- c(within = eff[["nie_within"]], between = eff[["nie_between"]], contrast = eff[["nie_contrast"]])
+  attr(out, "label") <- "descriptive; the contrast is not a test"
+  out
+}
+
+
 # --- Methods for BootstrapResult ---
 
 #' @describeIn nie Method for BootstrapResult (extracts estimate)
@@ -785,6 +912,15 @@ print_mediation_effect <- function(x, ...) {
     "Effect"
   )
 
-  cat(type_label, ": ", format(unclass(x), digits = 4), "\n", sep = "")
+  level <- attr(x, "level")
+  if (!is.null(level) && !identical(level, "within")) {
+    type_label <- paste0(
+      type_label, ", ",
+      switch(level, contrast = "within - between contrast", both = "both levels", paste(level, "level"))
+    )
+  }
+  shown <- format(unclass(x), digits = 4)
+  if (!is.null(names(x))) shown <- paste(paste0(names(x), " = ", shown), collapse = ", ")
+  cat(type_label, ": ", shown, "\n", sep = "")
   invisible(x)
 }

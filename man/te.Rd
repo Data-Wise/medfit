@@ -10,7 +10,8 @@ te(x, ...)
 \item{x}{A \link{MediationData}, \link{SerialMediationData}, \link{ParallelMediationData},
 \link{InteractionMediationData}, or \link{JointMediationData} object.}
 
-\item{...}{Additional arguments passed to methods}
+\item{...}{Additional arguments passed to methods. For a \code{TwoLevelMediationData},
+\code{level = c("within", "between", "both")} selects the level (within by default).}
 }
 \value{
 A numeric scalar of class \code{mediation_effect} carrying a \code{type}

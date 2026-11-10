@@ -266,3 +266,110 @@ S7::method(print, TwoLevelMediationData) <- function(x, ...) {
   if (!isTRUE(x@admissible)) cat("  Warning: the fit is not admissible (lavaan post.check is FALSE)\n")
   invisible(x)
 }
+
+
+# The "Estimand and assumptions" block shared by summary(): fixed slopes, latent cluster means, the model
+# the effects are read from, and the `fixed_x` note (stated without a number: the size of the SE gap depends
+# on the data).
+.twolevel_assumptions_block <- function(x) {
+  items <- c(
+    sprintf(paste0("Design: treatment `%s`, mediator `%s` and outcome `%s` measured on level-1 units in %d ",
+                   "clusters (`%s`); the paths are estimated separately at the within and the between ",
+                   "level."),
+            x@treatment, x@mediator, x@outcome, x@n_clusters, x@cluster),
+    "Fixed slopes (no random slopes); between effects are through latent cluster means.",
+    "Linear paths with no mediator-by-treatment product; no confounding of the paths beyond the model.",
+    "Per level NIE = a * b, NDE = c', TE = NIE + c'; the contrast is within minus between NIE.",
+    "No cross-level total effect or proportion mediated is defined.",
+    "Intervals are Wald (delta method); there is no small-sample correction."
+  )
+  if (isTRUE(x@fixed_x)) {
+    items <- c(items, paste0(
+      "fixed_x is TRUE: the between-path standard errors are conditional on the sample between-level ",
+      "moments of the treatment; refit with fixed.x = FALSE for the unconditional ones."
+    ))
+  }
+  wrap <- function(txt, first) strwrap(txt, width = 88, initial = first, prefix = "", exdent = 4)
+  c("Estimand and assumptions:", wrap(items[1], "  "), unlist(lapply(items[-1], wrap, first = "  - ")))
+}
+
+#' Summary Method for TwoLevelMediationData
+#'
+#' @param object A TwoLevelMediationData object
+#' @param level Confidence level for the Wald intervals.
+#' @param ... Additional arguments (ignored)
+#' @noRd
+S7::method(summary, TwoLevelMediationData) <- function(object, level = 0.95, ...) {
+  checkmate::assert_number(level, lower = 0, upper = 1, .var.name = "level")
+  est <- .twolevel_effect_vec(object)
+  se <- .effect_se_or_na(object, names(est))
+  z <- stats::qnorm(1 - (1 - level) / 2)
+  effects <- data.frame(estimate = unname(est), std_error = unname(se),
+                        conf_low = unname(est - z * se), conf_high = unname(est + z * se),
+                        row.names = names(est))
+  p <- paths(object)
+  p_se <- sqrt(diag(object@vcov)[match(names(p), rownames(object@vcov))])
+  structure(
+    list(
+      effects = effects,
+      level = level,
+      paths = data.frame(estimate = unname(p), std_error = unname(p_se), row.names = names(p)),
+      block = .twolevel_assumptions_block(object),
+      variables = c(treatment = object@treatment, mediator = object@mediator,
+                    outcome = object@outcome, cluster = object@cluster),
+      n_obs = object@n_obs,
+      n_clusters = object@n_clusters,
+      cluster_sizes = range(object@cluster_sizes),
+      icc = object@icc,
+      provenance = c(
+        source = object@source, lavaan_version = object@lavaan_version, estimator = object@estimator,
+        fixed_x = as.character(object@fixed_x), information = object@information,
+        h1_information = object@h1_information, se = object@se_type, missing = object@missing
+      ),
+      flags = c(
+        if (!object@between_identified) "Between level not identified: within-only result",
+        if (length(object@cross_level_equal) > 0L) {
+          paste0("Paths equated across levels: ", paste(object@cross_level_equal, collapse = ", "))
+        },
+        if (length(object@fixed_paths) > 0L) {
+          paste0("Paths fixed: ", paste(object@fixed_paths, collapse = ", "))
+        },
+        if (!isTRUE(object@admissible)) "The fit is not admissible (lavaan post.check is FALSE)",
+        if (!isTRUE(object@converged)) "The fit did not converge"
+      )
+    ),
+    class = "summary_TwoLevelMediationData"
+  )
+}
+
+#' Print Summary for TwoLevelMediationData
+#'
+#' @param x A summary_TwoLevelMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return Invisibly returns `x`. Called for its side effect of printing the formatted summary.
+#' @noRd
+print_summary_twolevel_mediation_data <- function(x, ...) {
+  cat("Summary of TwoLevelMediationData\n")
+  cat("================================\n\n")
+  cat(sprintf("%s -> %s -> %s, clusters `%s`\n", x$variables["treatment"], x$variables["mediator"],
+              x$variables["outcome"], x$variables["cluster"]))
+  cat("\nPath coefficients:\n")
+  print(round(x$paths, 4))
+  cat("\nEffects (unit contrast 0 -> 1):\n")
+  print(round(x$effects, 4))
+  cat(sprintf("  %g%% Wald intervals (delta method over the joint covariance).\n", 100 * x$level))
+  cat("  The contrast (within - between NIE) is descriptive, not a test.\n")
+  cat(sprintf("\nSample Size: %d in %d clusters (sizes %d to %d)\n", x$n_obs, x$n_clusters,
+              x$cluster_sizes[1], x$cluster_sizes[2]))
+  cat("ICC:        ", paste(sprintf("%s %.3f", names(x$icc), x$icc), collapse = ", "), "\n")
+  cat(sprintf(
+    "Fit:         %s %s (estimator %s, fixed_x %s, information %s, h1_information %s, se %s, missing %s)\n",
+    x$provenance[["source"]], x$provenance[["lavaan_version"]], x$provenance[["estimator"]],
+    x$provenance[["fixed_x"]], x$provenance[["information"]], x$provenance[["h1_information"]],
+    x$provenance[["se"]], x$provenance[["missing"]]
+  ))
+  if (length(x$flags) > 0L) cat(paste0("  ", x$flags, "\n"), sep = "")
+  cat("\n")
+  cat(paste0(x$block, "\n"), sep = "")
+  invisible(x)
+}
