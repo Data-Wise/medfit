@@ -188,6 +188,23 @@ An extracted FIML object also refuses `quick()`, `pm()` and `glance()`; see the
 | ``fit_sem(): the `fixed_x` default leaves`` | with `fixed_x` unset, the named variables carry a `~~` or `~1` statement, so they stay free and the other exogenous variables are fixed. Shown on each fit. Pass `fixed_x` explicitly to choose |
 | the estimates use fewer rows than your data has | the model fits drop rows with missing values on their variables. Since 0.8.0 `nobs()` and `n_obs` report the rows used; 0.7.0 and earlier reported every row of `data`, so there, count them with `complete.cases()` |
 
+### Silence one message or warning
+
+medfit's notes and warnings carry a class, so you can silence one kind without hiding the rest. Muffle by class
+with `withCallingHandlers()`, never with `suppressMessages()` or `suppressWarnings()`, which hide every condition
+in the call. The lenient `fixed_x` note has the class `medfit_message_fixed_x_lenient`:
+
+```r
+fit <- withCallingHandlers(
+  fit_sem(model, data),
+  medfit_message_fixed_x_lenient = function(m) invokeRestart("muffleMessage")
+)
+```
+
+A warning is muffled the same way with `invokeRestart("muffleWarning")` and the warning's own class. Name the class from the message's own `class(cnd)`: a handler for a class the
+condition does not carry does nothing, and the note still prints. Prefer passing `fixed_x` explicitly, which
+removes the cause instead of the message.
+
 ## Still stuck?
 
 Run the failing call on `mediation_demo` with the same arguments. If that works,

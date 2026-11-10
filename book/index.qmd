@@ -2,7 +2,8 @@
 
 This book opens the native maximum-likelihood engine of the medfit R package
 (`fit_sem()`, `fit_mediation(engine = "native")`, `SEMFit`) and shows every
-matrix it works with. It documents medfit 0.16.0. It is reference material kept
+matrix it works with. It documents the native engine as of medfit 0.16.0, with the bounded FIML scope
+of the development version noted below. It is reference material kept
 in the package repository (`book/`); it is not part of the package website.
 
 Chapters, in order:
@@ -14,6 +15,7 @@ Chapters, in order:
 5. Inference: information, the sandwich, MBCO and `anova()`.
 6. The product term: `x:m`, rules 8 and 9, the model test.
 7. The four-way decomposition: CDE, INTref, INTmed, PIE.
+8. Bounded FIML: learning from partially observed rows.
 
 How the optimizer is tested, and the decisions behind its solver, are on the package website:
 [Quality control of the optimizer](https://data-wise.github.io/medfit/articles/quality-control.html).
@@ -53,6 +55,13 @@ limits, see the package website's
 [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html#bounded-fiml)
 and detailed [`fit_sem()` help](https://data-wise.github.io/medfit/reference/fit_sem.html).
 Released 0.15.0 does not provide this option.
+
+The development version after 0.16.0 widens the bounded route. It also fits one or two
+observed covariates, two parallel mediators, and the two serial forms (the saturated graph
+and the pure chain, with up to two covariates). The chapters here keep to the three-variable
+route above; the variants are described in the native guide, and none of them is statistically
+admitted: the numerical checks against lavaan, OpenMx and independent oracles do not establish
+coverage or calibration.
 
 For a partial-row likelihood calculation, executable fit and checked exercise,
 continue to [Bounded FIML: learning from partially observed rows](chapters/08-fiml.qmd).

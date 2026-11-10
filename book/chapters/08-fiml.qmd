@@ -18,7 +18,7 @@ does not supply it. The examples use exactly three continuous observed variables
 Gaussian random-X mediation, free intercepts and independent disturbances. The
 direct X-to-Y path may be free or fixed at zero. More general models are outside
 this route. (The development version after 0.16.0 also fits one or two
-covariates, two parallel mediators and one two-mediator serial form; those
+covariates, two parallel mediators and the two-mediator serial forms; those
 variants are described in the native guide and are not used here.)
 Read the [native guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
 for the full setting restrictions and
