@@ -686,7 +686,7 @@ Revision 3 (Claude adversarial review, `scratchpad/adv-serial-spec.md`, verdict 
 5. **`variant` as a class property mirrored in `fit_context`** versus only in `fit_context`. Recommendation: property
    plus context, the validator requires agreement, so a forged object cannot change the effect rule without breaking
    the hash.
-6. **Recheck lavaan 0.6.x residual-covariance behavior.** The claim in the parallel parser comments (lavaan "would free"
+6. **Recheck lavaan 0.6.x residual-covariance behavior. DONE 2026-11-09: confirmed (lavaan 0.6-19 from the CRAN archive, isolated library; serial saturated model with one covariate, raw-data FIML on MAR-missing data: with the three zero statements omitted or written the free-parameter count is 20 in both 0.6-19 and 0.7-3, no residual covariance among M1, M2 and Y is freed by default, and the estimates and logLik agree across the two versions to 1.5e-6 and 1.2e-9; medfit's logLik matches lavaan's to 1e-9). The claim holds for 0.6-19 as well as 0.7-3.** The claim in the parallel parser comments (lavaan "would free"
    the covariance) is false on 0.7-3 and unverified on 0.6.x. Recommendation: a one-off recheck on 0.6.x (installable
    in a scratch library) before the comment and the docs cite it; until then say "lavaan 0.7-3 frees none" only.
 7. **Refusal probes.** Relabel the `serial` and `parallel_covariate_serial` gate probes as Q2 probes and add the new ones
