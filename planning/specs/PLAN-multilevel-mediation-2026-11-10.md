@@ -70,13 +70,28 @@ Validator: finite paths; `vcov` symmetric PSD-ish with matching alias names; `n_
 
 ## 4. API
 
-- **Effects (existing generics, new methods):**
-  `nie(x, level = c("within", "between"))` (default: both, as a named numeric); `nde()`, `te()`, `pm()` per level;
-  `decompose(x)` returns a `contrast` row = within minus between with the joint-covariance SE; `paths(x)` returns the six
-  level-qualified paths. The contrast sign (within minus between, as in the issue) is a grill decision.
-- **Inference:** a new `.effect_se()` gradient builder for the class in `R/effect-se.R`: gradient of `a_w b_w`, `a_b b_b`,
-  `a_w b_w - a_b b_b` taken over the joint `vcov` (verified identical to lavaan's `:=` SE; research 2.1). `tidy()`, `confint()`,
-  `summary()`, `print()` follow the existing pattern (`R/methods-tidy.R`, `R/methods-base.R`).
+- **Effects (existing generics, new methods; revised against `R/generics-effects.R`).** `nie()`, `nde()`, `te()`, `pm()` are
+  documented to return a **scalar** of class `mediation_effect` with a `type` attribute (`.glance_*` reads `unclass(nie(x))[[1]]`),
+  so the new methods keep that contract: `nie(x, level = c("within", "between", "contrast"))` returns one scalar, and calling
+  `nie(x)` with `level` missing is a classed error naming the three choices (no silent default: the two levels are different
+  estimands). The extra argument is allowed because the generic is `function(x, ...)`. `nde(x, level = c("within", "between"))`
+  returns `c_w` or `c_b`; `te()`/`pm()` take the same `level`. `paths(x)` returns a named numeric of the six level-qualified paths
+  (as `paths()` does for `ClusterMediationData`). `decompose(x)` returns a **named numeric with a `label` attribute and no SE**
+  (the `ClusterMediationData` method does exactly that): `c(within = a_w b_w, between = a_b b_b, contrast = within - between)`.
+  Standard errors are not returned by `decompose()`; they come from `tidy()`/`confint()`/`summary()` (earlier text of this plan
+  said `decompose()` returns the contrast with its SE; corrected).
+- **Inference (checked against current signatures).** The internal builders are dispatched on the class: add a branch for the new
+  class to `.effect_se()` / `.effect_se_or_na()` / `.path_se()` in `R/effect-se.R` (the `ClusterMediationData` branch is at
+  `R/effect-se.R:184`) with the gradients of `a_w b_w`, `a_b b_b` and `a_w b_w - a_b b_b` over the joint `@vcov` (verified
+  identical to lavaan's `:=` SE; research 2.1). Public calls and what each needs:
+  `confint(object, parm = c("paths", "effects"), level = 0.95)` returns a two-column matrix (new `S7::method(confint, <class>)`
+  in `R/methods-base.R`, mirroring `confint` for `ClusterMediationData`); `tidy(x, type = c("all", "paths", "effects"),
+  conf_int = FALSE, conf_level = 0.95)` is routed by the S7_inherits chain in `tidy_s7_object()` (`R/methods-tidy.R:92`), so a
+  new `.tidy_two_level_mediation_data()` and a branch there are required, plus `glance()`; `coef(object, ...)`, `vcov(object, ...)`,
+  `nobs(object, ...)` get methods in `R/methods-base.R`; `print(x, ...)` and `summary(object, level = 0.95, ...)` go in
+  `R/classes.R` with a `registerS3method("print", "summary_<class>", ...)` line in `R/zzz.R` (as for the cluster class), and
+  `S7::S4_register(<class>)` goes in `.onLoad()` before `methods_register()`. `.assert_param_mediation_data()`
+  (`R/bootstrap.R:680`) gets the class added (a one-line change).
 - **Bootstrap (revised after adversarial review).** `bootstrap_mediation()` is *not* object-based: it takes a `statistic_fn`
   callback, raw `data` and `cluster = "<column>"` (nonparametric resampling draws whole clusters and gives each draw a fresh
   cluster id, so a cluster drawn twice is refit as two clusters; `R/bootstrap.R:251`, doc lines 32-36). The new class stores
@@ -86,26 +101,40 @@ Validator: finite paths; `vcov` symmetric PSD-ish with matching alias names; `n_
      `nie(extract_mediation(fit, ...), level = )` or the contrast. The recipe lives on the model page and in the cookbook;
      an internal helper `.two_level_refit_stat(model, treatment, mediator, outcome, effect)` builds the closure so users do not
      hand-write it.
-  2. **Parametric route.** `bootstrap_mediation(mediation_data = x, method = "parametric")` draws from the joint `@vcov`; needs a
-     branch for the new class (check in S2 how `.bootstrap_parametric()` reads the object; if it only knows the existing
-     classes, add the branch). Its draws keep the cross-level covariance.
+  2. **Parametric route (revised; confirmed against `R/bootstrap.R`).** `bootstrap_mediation()` asserts `statistic_fn` is a function
+     before dispatch (line 275) and `.bootstrap_parametric()` calls it on every draw (`statistic_fn(boot_params[i, ])`, a **named
+     numeric vector** over `names(@estimates)`; it also calls `statistic_fn(mu)` for the point estimate) and needs scalar returns
+     (`vapply(..., numeric(1))`). So `bootstrap_mediation(mediation_data = x, method = "parametric")` with no callback **cannot
+     work** and is not promised. The public call is
+     `bootstrap_mediation(statistic_fn = function(p) p[["a_w"]] * p[["b_w"]] - p[["a_b"]] * p[["b_b"]], method = "parametric",
+     mediation_data = x, n_boot = B, seed = s)`, which needs only (i) the class added to `.assert_param_mediation_data()`, and
+     (ii) `@estimates` and `@vcov` carrying the alias rows `a_w, b_w, c_w, a_b, b_b, c_b` in matching order (the class validator
+     enforces it). Draws come from `MASS::mvrnorm(mu, Sigma)` over the **joint** vcov, so cross-level covariance is kept.
+     The documentation recipe lists ready callbacks for within, between and contrast. This is the recommended design (option a).
+     Object-based effect dispatch (option b) is costed separately as optional slice S2c in section 10 and is not promised.
   3. **Object-based refitting (optional, S2b or with S4).** The class retains *fit provenance*: `@call` (the `extract_mediation`
      call), `@model` (lavaan or medfit syntax string), `@cluster` (column name), `@refit_args` (estimator, `se`, constraints) and,
      for the adapter, a reference to the raw data only when the user passes `data =` (never silently pulled from the lavaan
      object). With provenance, a `source_fit =`-style route (precedent: the FIML `source_fit` route, `R/bootstrap.R:264`) can
      refit without a callback. Decision for the grill (question 12); until it is taken, only routes 1 and 2 exist.
-  Test (required, through the exact public call): `bootstrap_mediation(statistic_fn, method = "nonparametric", data = d,
-  cluster = "id", seed = s, n_boot = B)` where `statistic_fn` records, per refit, the number of distinct cluster ids and the
-  row count, with a seed that draws at least one cluster twice (asserted from the recorded sizes: some refit data have more rows
-  than a draw of J distinct clusters would allow only if relabeling failed). Assertions: every refit sees J distinct ids;
-  the duplicated cluster appears as two clusters; the bootstrap SE of the contrast is within Monte Carlo error of the
-  hand-built delta-method SE. Planted defect: mock the relabel helper (`.relabel_clusters()`, the 2-1-1 plan's P2 device) to
-  the identity and require the test to fail (duplicated ids collapse into one larger cluster, the refit sees fewer clusters).
-- **Entry points:**
+  Tests (required, each through the exact public call, written before the code):
+  (i) *parametric*: `bootstrap_mediation(statistic_fn = <contrast callback>, method = "parametric", mediation_data = x, n_boot = 4000,
+  seed = s)` returns a `BootstrapResult` whose `estimate` equals `unclass(nie(x, level = "contrast"))[[1]]` and whose
+  `sd(boot_estimates)` is within Monte Carlo error of the delta-method SE from `tidy()`; planted defect: draw from
+  `diag(diag(vcov))` (cross-level covariance zeroed) and require the SE comparison to fail on the nonzero-covariance fixture;
+  also a call with `mediation_data = x` and no `statistic_fn` must error with the existing "argument statistic_fn is missing"
+  style message (documented, so users are told the callback is needed);
+  (ii) *nonparametric with clusters*: `bootstrap_mediation(statistic_fn, method = "nonparametric", data = d, cluster = "id",
+  seed = s, n_boot = B)` where `statistic_fn` records, per refit, the number of distinct cluster ids and the row count, with a
+  seed that draws at least one cluster twice; assert every refit sees J distinct ids and that the duplicated cluster appears
+  as two clusters, and that the bootstrap SE of the contrast is within Monte Carlo error of the hand-built delta-method SE;
+  planted defect: mock the relabel helper (`.relabel_clusters()`, the 2-1-1 plan's P2 device) to the identity and require the
+  test to fail.
+- **Entry points (signatures checked):**
   - S2: `extract_mediation(<lavaan>, treatment, mediator, outcome)` detects a two-level fit (`lavInspect(fit, "nclusters")`
     non-null / two blocks) and builds the class; no new arguments except optional `level_names`.
-  - S4: `fit_sem(model, data, cluster = "id", ...)` accepts `level:` blocks only when `cluster` is given;
-    `fit_mediation(engine = "native", model = , cluster = )` forwards; the error message in `R/sem-fit.R:97` becomes the
+  - S4: `fit_sem()` has no `cluster` argument today (`R/fit-sem.R:354`: `model, data, information, n_starts, control, weights, se_type, meanstructure, fixed_x, sampling_weights, missing`), so adding `cluster = NULL` is a signature change (an additive argument; it joins the API-freeze table in `tests/testthat/test-api-freeze.R`). `fit_sem(model, data, cluster = "id", ...)` accepts `level:` blocks only when `cluster` is given;
+    `fit_mediation(engine = "native", model = , cluster = )` already has a `cluster` argument (used by the lmer engine, `R/fit-glm.R:238`); the native branch `.fit_mediation_native()` does not take it yet and must forward it, with a guard that today's native route errors on `cluster` without `level:` blocks; the error message in `R/sem-fit.R:97` becomes the
     "cluster missing" message when `cluster` is absent. `fit_mediation(formula-based, engine = "lmer")` is unchanged (it is the
     2-1-1 route).
 - **Syntax:** reuse the existing parser (`level: <int>` is already parsed into `parameters$level`). Grill: whether to add
@@ -213,8 +242,13 @@ The adapter (S2) needs only the lavaan, hand-delta and bootstrap rows (the boots
 9. **S0 guard:** ship the `extract_mediation(<lavaan>)` guard immediately, independent of the grill? (A silent wrong-level
    extraction is a correctness bug; the CLAUDE.md "correctness fixes" exemption from the deprecation period applies.)
 10. **Release target** and whether this displaces the FIML admission work currently queued (`planning/PLAN-FIML-statistical-admission-2026-11-01.md`).
-11. **Bootstrap API:** callback + parametric only (recommended for S2) or also object-based refitting through retained provenance (route 3)?
-    Storing the model string and refit arguments is cheap; storing data is a memory and privacy decision.
+11. **Bootstrap API (revised):** recommend (a): explicit scalar `statistic_fn` callbacks in the public call for both the parametric
+    and the nonparametric/cluster routes (no change to `bootstrap_mediation()` beyond one supported-class entry). Option (b),
+    object-based effect dispatch, would add a generic (working name `effect_fn(x, effect = c("within", "between", "contrast"))`
+    returning a closure over the named parameter vector, plus a branch in `bootstrap_mediation()` that builds `statistic_fn`
+    when it is missing for these classes, and a refit recipe for the nonparametric route (retained provenance, route 3). It
+    touches the public generic set and every existing mediation class, so it is a separate slice (S2c, 4-6 days, grill first).
+    Do you want (a) now and (b) deferred?
 12. **logLik convention with cluster-only covariates:** lavaan's reported `logLik()` differs from the exact Gaussian density by a
     parameter-free constant (170.5453 in the fixture, identical for two nested fits; research 2.5). Which convention does medfit
     report (recommended: the exact density, documented, with absolute AIC/BIC not comparable to lavaan when cluster-only variables
@@ -230,6 +264,7 @@ The adapter (S2) needs only the lavaan, hand-delta and bootstrap rows (the boots
 | S0 | lavaan two-level guard | 0.5 day | normal |
 | S1 | grill + spec | 1 session | n/a |
 | S2 | adapter, class, generics, methods, docs | 5-7 days | normal |
+| S2c | optional: object-based effect dispatch for `bootstrap_mediation()` (generic, branch, provenance refit) | 4-6 days, grill first | normal |
 | S3 | oracle harness (incl. cluster-only covariate fixture) and simulation helpers | ~3-4 days | normal (tests/sim only) |
 | S4 | native observed-variable two-level ML, `cluster =`, gates | 3-4 weeks | **high** |
 | S5 | latent mediators, shared loadings | ~2 weeks | high |
