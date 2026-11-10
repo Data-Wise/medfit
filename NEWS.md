@@ -3,6 +3,27 @@
 ## Added
 
 * Bounded Gaussian random-X FIML now also fits the two serial forms (the saturated
+  graph and the pure chain) with TWO observed covariates `Z1` and `Z2`, both predicting
+  `M1`, `M2` and `Y`, with the same three disturbance zeros written. The three
+  exogenous covariances (`X ~~ Z1`, `X ~~ Z2`, `Z1 ~~ Z2`) are all written or none:
+  a partial set is refused with a reason that names it, and every exogenous variable
+  needs a written `Y` path (free, or at most one fixed at exactly zero). The saturated
+  model has 27 free parameters (26 with the direct path fixed) and is just identified
+  with a free direct path; the chain has 25 (24), with 2 (3) degrees of freedom. The
+  extracted paths are the treatment's coefficients, never a covariate's. In the
+  saturated graph with a free direct path either covariate may be named the
+  treatment; with a fixed-zero direct path the variable carrying the fixed zero is the
+  only valid treatment and naming another one says so (a classed
+  `medfit_error_fiml_extract_unsupported`). In the pure chain the treatment is
+  structural, the exogenous variable with no path to `M2`: leaving a variable out of
+  the equation of `M2` makes it the treatment (exactly one variable may be left out),
+  and naming a covariate is refused. Three or more covariates stay refused. Verified
+  against lavaan (estimates, covariance, logLik, `:=` effects, the relabeled
+  treatment for each covariate), a closed-form equation-wise OLS oracle, an
+  independent rowwise likelihood and Hessian, and OpenMx; not calibrated for coverage
+  or statistically admitted.
+
+* Bounded Gaussian random-X FIML now also fits the two serial forms (the saturated
   graph and the pure chain) with ONE observed covariate `Z`: `M1 ~ X + Z`,
   `M2 ~ M1 + X + Z` (saturated) or `M2 ~ M1 + Z` (chain), `Y ~ ... + X + Z`, with the
   same three disturbance zeros written, a free covariance of `X` and `Z`, and every
@@ -17,8 +38,8 @@
   covariate may be named the treatment; in the pure chain the treatment is the
   structural variable with no path to `M2` and naming a covariate is refused with
   `medfit_error_fiml_extract_unsupported`. Effects, per-effect origin rules and
-  consumer refusals are those of the no-covariate forms. Two or more covariates stay
-  refused. Verified against lavaan (estimates, covariance, logLik, `:=` effects,
+  consumer refusals are those of the no-covariate forms. A second covariate is the
+  entry above; three or more stay refused. Verified against lavaan (estimates, covariance, logLik, `:=` effects,
   the relabeled covariate treatment), a closed-form equation-wise OLS oracle, an
   independent rowwise likelihood and Hessian, and OpenMx; not calibrated for
   coverage or statistically admitted.

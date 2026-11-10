@@ -24,7 +24,7 @@ medfit 0.16.0 adds explicit `fit_sem(missing = "fiml", fixed_x = FALSE)` for
 three-variable Gaussian random-X mediation, preserving listwise defaults. The
 development version also fits one or two covariates, two parallel mediators
 (with zero, one or two covariates) and two-mediator serial models (the saturated graph
-or the pure chain, with no covariate or one covariate; implemented and verified against lavaan, not calibrated for coverage). It is
+or the pure chain, with up to two covariates; implemented and verified against lavaan, not calibrated for coverage). It is
 unavailable in 0.15.0 and earlier. Observed/model SEs and
 unstandardized effects and normal intervals are supported. The model requires
 continuous X, M and Y, a free or exactly zero direct path, independent Gaussian

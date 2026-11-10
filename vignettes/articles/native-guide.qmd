@@ -231,7 +231,7 @@ Gaussian disturbances and free intercepts. After 0.16.0 the development version
 also fits the same model with one covariate or two covariates (see
 [covariates](#bounded-fiml-covariates)), two parallel mediators (see
 [parallel mediators](#bounded-fiml-parallel)) and the two-mediator serial forms, saturated or
-pure chain, with no covariate or one covariate (see [serial mediators](#bounded-fiml-serial)). It assumes ignorable missingness
+pure chain, with up to two covariates (see [serial mediators](#bounded-fiml-serial)). It assumes ignorable missingness
 under that joint model; FIML does not impute the missing values.
 
 Generate continuous Gaussian X, M and Y with independent disturbances for this
@@ -294,7 +294,7 @@ back to listwise deletion or another engine, even on complete data.
 | `information`, `se_type` | `"observed"`, `"model"` |
 | Weights | No non-NULL vector, including unit weights or the deprecated alias |
 | `n_starts`, `control` | `NULL` or 3; empty control; no syntax-supplied starts |
-| Topology | X, M, Y, with at most two covariates, or X, M1, M2, Y (two parallel mediators, with at most two covariates, or the saturated serial graph or the pure chain, with no covariate or one covariate); free or exactly zero direct path; no `:=`, constraints, ties, bounds, other extra predictors, latent variables, factors or products |
+| Topology | X, M, Y, with at most two covariates, or X, M1, M2, Y (two parallel mediators, with at most two covariates, or the saturated serial graph or the pure chain, with up to two covariates); free or exactly zero direct path; no `:=`, constraints, ties, bounds, other extra predictors, latent variables, factors or products |
 
 The start/control restrictions preserve the initial validated protocol, rather
 than expressing mathematical limits of FIML. Three starts run for each solver;
@@ -376,8 +376,8 @@ incomplete. The rules:
   any exogenous variable as the treatment otherwise. The free-parameter count is 18
   to 20 with one covariate and 25 to 27 with two (without or with the direct path
   and the free residual covariance).
-- Serial mediators, three or more mediators, three or more covariates and a
-  covariate on only some of the equations remain refused.
+- Three or more mediators, three or more covariates and a covariate on only some of
+  the equations remain refused (serial mediators have [their own section](#bounded-fiml-serial)).
 
 Like the covariate fits, these are implemented and numerically verified but not
 calibrated for coverage or statistically admitted. Delta-method Wald intervals
@@ -389,7 +389,7 @@ covariates `medfit_error_fiml_covariate_source_fit`).
 ### Serial mediators {#bounded-fiml-serial}
 
 Development version only; not in 0.16.0. The opt-in also fits two serial
-mediators in two forms, each with no covariate or one covariate: the saturated forward
+mediators in two forms, each with no, one or two covariates: the saturated forward
 graph `M1 ~ X`, `M2 ~ M1 + X` and `Y ~ M1 + M2 + X`, and the pure chain
 `M1 ~ X`, `M2 ~ M1` and `Y ~ M2` (in both the direct path `Y ~ X` is free, fixed
 at exactly zero, or omitted). The rules:
@@ -441,7 +441,15 @@ at exactly zero, or omitted). The rules:
   named the treatment (it takes `a = Z -> M1`, `a2 = Z -> M2`, `c_prime = Z -> Y`);
   in the pure chain the treatment is structural, the one exogenous variable with no
   path to `M2`, and naming a covariate is refused.
-- Serial models with two or more covariates remain refused, as do three or more
+- With two covariates `Z1` and `Z2` both predict every equation, the three exogenous
+  covariances (`X ~~ Z1`, `X ~~ Z2`, `Z1 ~~ Z2`) are all written or none (a partial
+  set is refused with a reason that names it), and the saturated model has 27 free
+  parameters (26) and the chain 25 (24). Either covariate may be the saturated
+  treatment when the direct path is free; with a fixed-zero direct path only the
+  variable carrying the fixed zero is valid and naming another one is refused with a
+  message saying so. In the chain, leaving a variable out of the equation of `M2`
+  makes it the treatment, and exactly one variable may be left out.
+- Serial models with three or more covariates remain refused, as do three or more
   mediators.
 
 Like the other bounded fits, this one is implemented and numerically verified but
