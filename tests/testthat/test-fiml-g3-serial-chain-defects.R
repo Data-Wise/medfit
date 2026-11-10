@@ -56,11 +56,6 @@ sc_class_error <- function(expr, class) {
   }, error = identity)
   inherits(e, class)
 }
-sc_chain2_fit <- function() {
-  m <- c("M1 ~ X + Z1 + Z2", "M2 ~ M1 + Z1 + Z2", "Y ~ M2 + X + Z1 + Z2", sc_zeros)
-  fit_sem(paste(m, collapse = "\n"), sc_env$dz,
-          missing = "fiml", fixed_x = FALSE)
-}
 sc_validator <- function() FIMLSerialMediationData@validator
 sc_battery <- function() {
   ref <- sc_env$ref
@@ -127,13 +122,10 @@ sc_battery <- function() {
                                       "medfit_error_fiml_extract_unsupported"),
     # the saturated variant is not turned into a chain (and conversely, through the validator)
     sat_routed = sc_ok(identical(sb_extract(sb_fit(sc_env$d))@variant, "saturated")),
-    # admission: the chain at k = 2 stays refused, at fit and (mock-opened) at extract; half shortcuts are refused
-    chain2_refused = sc_class_error(sc_chain2_fit(), "medfit_sem_fiml_error"),
-    chain2_extract_refused = sc_ok(testthat::with_mocked_bindings(
-      sc_class_error(extract_mediation(sc_chain2_fit(), treatment = "X", mediator = c("M1", "M2")),
-                     "medfit_error_fiml_extract_unsupported"),
-      .fiml_serial_admitted = function() TRUE
-    )),
+    # admission: the chain with a third covariate stays closed (the parser refuses its fit outright); half shortcuts
+    # are refused
+    chain3_shape_closed = !.fiml_serial_shape_admitted("chain", 3L),
+    chain3_extract_closed = !.fiml_serial_extract_supported("chain", 3L),
     half_refused = sc_class_error(
       fit_sem(paste(c("M1 ~ X", "M2 ~ M1 + X", "Y ~ M2 + X", sc_zeros), collapse = "\n"), sc_env$d,
               missing = "fiml", fixed_x = FALSE), "medfit_sem_fiml_error"

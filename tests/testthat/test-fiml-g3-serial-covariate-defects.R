@@ -1,6 +1,6 @@
 # FI-G3 slice S3: planted defects in the serial FIML code with ONE covariate (both variants). A battery of independent
 # checks (lavaan values, the relabeled-treatment reference, hand gradients, predictor lists, validator forgeries, the
-# chain's covariate-as-treatment refusal, the k = 2 admission) is run on the unmutated code first (the positive control:
+# chain's covariate-as-treatment refusal, the k = 3 admission) is run on the unmutated code first (the positive control:
 # it passes) and then on one deliberately broken copy of one function at a time; every defect must fail at least one
 # check. The data are incomplete (cross-equation covariance defects are invisible on complete data) and the covariate
 # effects are large and distinct from the paths (a covariate coefficient taken for a path cannot hide). Helpers:
@@ -21,10 +21,6 @@ s3d_setup <- function() {
       s3d_env[[v]]$plain <- lavaan::coef(s3d_env[[v]]$plain_fit)
     }
     s3d_env$ref_z <- s3_reference(d, "saturated", "free", tr = "Z", cv = "X")
-    dd <- d
-    dd$Z1 <- dd$Z
-    dd$Z2 <- stats::rnorm(nrow(dd))
-    s3d_env$d2 <- dd
     # forged objects for the validator battery: built without the validator, then judged by it
     forge <- function(z, ...) {
       for (nm in names(list(...))) attr(z, nm) <- list(...)[[nm]]
@@ -51,14 +47,6 @@ s3d_class_error <- function(expr, class) {
     NULL
   }, error = identity)
   inherits(e, class)
-}
-s3d_k2_fit <- function(v) {
-  sat <- v == "saturated"
-  m <- paste(c(
-    "M1 ~ X + Z1 + Z2", paste("M2 ~ M1 +", if (sat) "X + " else "", "Z1 + Z2"),
-    paste("Y ~", if (sat) "M1 + " else "", "M2 + X + Z1 + Z2"), s3_zeros
-  ), collapse = "\n")
-  fit_sem(m, s3d_env$d2, missing = "fiml", fixed_x = FALSE)
 }
 s3d_battery <- function() {
   out <- c()
@@ -134,14 +122,11 @@ s3d_battery <- function() {
         )
       }
     }
-    # admission: two covariates stay refused at fit and (mock-opened) at extract
+    # admission: a third covariate stays closed in both predicates (the parser refuses its fit outright)
     r <- c(
       r,
-      k2_refused = s3d_class_error(s3d_k2_fit(v), "medfit_sem_fiml_error"),
-      k2_extract_refused = s3d_ok(testthat::with_mocked_bindings(
-        s3d_class_error(s3_extract(s3d_k2_fit(v)), "medfit_error_fiml_extract_unsupported"),
-        .fiml_serial_admitted = function() TRUE
-      ))
+      k3_shape_closed = !.fiml_serial_shape_admitted(v, 3L),
+      k3_extract_closed = !.fiml_serial_extract_supported(v, 3L)
     )
     names(r) <- paste0(v, "_", names(r))
     out <- c(out, r)
@@ -310,13 +295,13 @@ test_that("effect defects with a covariate: a total-indirect gradient replaced b
   expect_true(any(grepl("te_se|hand_te_se", r$failed)))
 })
 
-test_that("admission defects: the predicates ignoring the covariate count open k = 2", {
+test_that("admission defects: the predicates ignoring the covariate count open k = 3", {
   fx_skip_covr()
   s3d_setup()
-  r <- s3d_caught(".fiml_serial_shape_admitted", "as.integer(k) %in% 0:1", "TRUE")
+  r <- s3d_caught(".fiml_serial_shape_admitted", "as.integer(k) %in% 0:2", "TRUE")
   expect_false(r$all_pass)
-  expect_true(any(grepl("k2_refused", r$failed)))
-  r <- s3d_caught(".fiml_serial_extract_supported", "as.integer(k) %in% 0:1", "TRUE")
+  expect_true(any(grepl("k3_shape_closed", r$failed)))
+  r <- s3d_caught(".fiml_serial_extract_supported", "as.integer(k) %in% 0:2", "TRUE")
   expect_false(r$all_pass)
-  expect_true(any(grepl("k2_extract_refused", r$failed)))
+  expect_true(any(grepl("k3_extract_closed", r$failed)))
 })

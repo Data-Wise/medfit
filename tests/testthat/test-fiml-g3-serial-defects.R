@@ -32,12 +32,6 @@ sb_chain_fit <- function() {
   fit_sem(paste(c("M1 ~ X", "M2 ~ M1", "Y ~ M2 + X", sb_zeros), collapse = "\n"), sb_env$d,
           missing = "fiml", fixed_x = FALSE)
 }
-# the chain with two covariates: still refused at fit (slice S4), and refused at extract when the fit is mocked open
-sb_chain2_fit <- function() {
-  m <- c("M1 ~ X + Z1 + Z2", "M2 ~ M1 + Z1 + Z2", "Y ~ M2 + X + Z1 + Z2", sb_zeros)
-  fit_sem(paste(m, collapse = "\n"), sb_env$dz,
-          missing = "fiml", fixed_x = FALSE)
-}
 sb_battery <- function() {
   f <- sb_env$f
   ref <- sb_env$ref
@@ -86,21 +80,11 @@ sb_battery <- function() {
     # reversed order is refused with the class
     reversed_refused = sb_class_error(extract_mediation(f, treatment = "X", mediator = c("M2", "M1")),
                                       "medfit_error_fiml_extract_unsupported"),
-    # admission: only the k = 0 and k = 1 shapes (saturated and, since S2, the pure chain) are public
-    sat2_refused = sb_class_error(fit_sem(
-      paste(c("M1 ~ X + Z1 + Z2", "M2 ~ M1 + X + Z1 + Z2", "Y ~ M1 + M2 + X + Z1 + Z2", sb_zeros),
-            collapse = "\n"), sb_env$dz,
-      missing = "fiml", fixed_x = FALSE
-    ), "medfit_sem_fiml_error"),
+    # admission: the k = 0, 1 and 2 shapes are public; a third covariate stays closed in both predicates
+    sat3_shape_closed = !.fiml_serial_shape_admitted("saturated", 3L),
     chain0_fits = sb_ok(identical(sb_extract(sb_chain_fit())@variant, "chain")),
-    chain2_refused = sb_class_error(sb_chain2_fit(), "medfit_sem_fiml_error"),
-    chain2_extract_refused = sb_ok(testthat::with_mocked_bindings(
-      sb_class_error(
-        extract_mediation(sb_chain2_fit(), treatment = "X", mediator = c("M1", "M2")),
-        "medfit_error_fiml_extract_unsupported"
-      ),
-      .fiml_serial_admitted = function() TRUE
-    ))
+    chain3_shape_closed = !.fiml_serial_shape_admitted("chain", 3L),
+    chain3_extract_closed = !.fiml_serial_extract_supported("chain", 3L)
   )
 }
 mut <- function(name, pattern, replacement) {
@@ -277,17 +261,17 @@ test_that("consumer defects: quick, pm, glance, bootstrap advice, coef/summary p
 test_that("admission defects: the predicate ignoring k or dropping the chain, the extract predicate ignoring k", {
   fx_skip_covr()
   sb_setup()
-  r <- sb_caught(".fiml_serial_shape_admitted", "as.integer(k) %in% 0:1", "TRUE")
+  r <- sb_caught(".fiml_serial_shape_admitted", "as.integer(k) %in% 0:2", "TRUE")
   expect_false(r$all_pass)
-  expect_true(all(c("sat2_refused", "chain2_refused") %in% r$failed))
+  expect_true(all(c("sat3_shape_closed", "chain3_shape_closed") %in% r$failed))
   # the chain dropped from the admitted set (a regression of slice S2)
   r <- sb_caught(".fiml_serial_shape_admitted", "variant %in% c(\"saturated\", \"chain\")",
                  "identical(variant, \"saturated\")")
   expect_false(r$all_pass)
   expect_true("chain0_fits" %in% r$failed)
-  r <- sb_caught(".fiml_serial_extract_supported", "as.integer(k) %in% 0:1", "TRUE")
+  r <- sb_caught(".fiml_serial_extract_supported", "as.integer(k) %in% 0:2", "TRUE")
   expect_false(r$all_pass)
-  expect_true("chain2_extract_refused" %in% r$failed)
+  expect_true("chain3_extract_closed" %in% r$failed)
 })
 
 test_that("fit-level defects: a transport offset dropped and a hidden chain (b1 removed from the saturated tables)", {
