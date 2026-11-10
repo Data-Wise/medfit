@@ -49,7 +49,7 @@ verified to point at the isolated library for lint).
 
 | Check | Command | Result |
 |---|---|---|
-| Full suite, at the final tip | `NOT_CRAN=true Rscript -e 'r <- as.data.frame(devtools::test(reporter="silent", stop_on_failure=FALSE))'` | <SUITE-FINAL-PLACEHOLDER> |
+| Full suite, at the final tip | `NOT_CRAN=true Rscript -e 'r <- as.data.frame(devtools::test(reporter="silent", stop_on_failure=FALSE))'` | 199 files, 2196 tests, 18978 expectations, 0 failed, 0 errors, 2 skipped, 4 warnings (tip `0362e3c3`; later commits change only the gate registry, the gate script and docs; the 2 skips and 4 warnings were not examined) |
 | Full suite, implementer | the same command | 2196 tests, 18978 expectations, 0 failed, 0 errors, 2 skipped, 4 warnings (implementer-run; the names of the 2 skips and 4 warnings were not recorded in the logs, so they are not examined) |
 | Lint | isolated source install of `git archive HEAD`, `R_LIBS=<lib> Rscript -e 'lintr::lint_package()'` with the repo `.lintr` | 0 findings at `0362e3c3` |
 | R CMD check | `R CMD build --no-manual --no-build-vignettes`, then `_R_CHECK_FORCE_SUGGESTS_=false NOT_CRAN=false R CMD check --as-cran --no-manual --ignore-vignettes --no-tests` | Status: 1 NOTE (CRAN incoming feasibility: "Version jumps in minor (submitted: 0.16.0, existing: 0.3.2)"); 0 WARNING, 0 ERROR. Same NOTE as `dev`. Rd files, Rd metadata, Rd line widths, Rd cross-references, missing documentation entries, code/documentation mismatches, `\usage`, Rd contents, examples and `--run-donttest` examples all OK; tests skipped by option |
@@ -103,7 +103,7 @@ the gate on the tip copy and agrees with it.
 
 ## Independent QA
 
-<QA-RESULT-PLACEHOLDER>
+PASS (independent run, own code, installs of `git archive` of tip `0362e3c3` and dev `8bae2e17`; later commits touch only docs, the PR body, `gates.csv` and the gate script). lavaan raw-data FIML: 16 cells (2 variants x free/fixed direct x MCAR30, MAR, sparse, covariate-only missing; n = 500; large distinct covariate effects): estimates <= 3.2e-7, vcov <= 4e-7, logLik <= 2e-10, effects <= 2.4e-7, delta SEs <= 1.2e-8; OpenMx 4 cells: estimates <= 9e-7, logLik <= 1e-9 (OpenMx numerical-Hessian vcov agrees only to ~1e-4: OpenMx precision). Complete-data OLS, saturation identity and chain-vs-saturated LR agree (theta 4e-8, logLik 1e-11, LR exact vs `lavTestLRT`). Treatment cases (X, Z1, Z2 each as saturated treatment; fixed-zero path on each; chain structural; chain covariate-as-treatment refused for every covariate) match lavaan; a wrong treatment names the fixed-zero variable. Hand delta SEs equal `tidy()` to 2e-16; origin rule on 40 forged-zero patterns exact. 50 validator forgeries rejected. Planted defects (own battery, clean control 25/25): all behavior-changing mutants caught; two equivalent redundant-guard mutants noted. V14 parity vs dev identical in 68 of 68 cells. Robustness: 11 of 12 grid cells match lavaan, the rest fail closed; never-jointly-observed pairs at k = 2: saturated refuses, chain fits except X/M1, matching lavaan where fitted. Low-severity observation: `ctx$covariate` is not hash-covered, so a consistent drop of a covariate from ctx and all predictor lists would pass the validator (detecting it needs the fit).
 
 ## Known unverified items
 
