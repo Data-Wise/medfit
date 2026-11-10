@@ -30,3 +30,17 @@ or sandwich behavior; lavaan 0.7.3 already runs robust SE, FIML and a cluster bo
 - Add to the S2 oracle list: lavaan `se = "robust.huber.white"`, `missing = "fiml"` and the cluster bootstrap as exposed options and as oracles.
 - Add the cluster-only covariate fixture to S3 (Codex review 1) and the public-call bootstrap acceptance test to S2.
 - Shared loadings across levels (Jak et al.) remain a testable restriction, not a default; needs a read before S5.
+
+## S1 second grill (reopened after the Fable 5.2 adversarial review), 2026-11-10
+
+All four answers were the recommended option (plan section 0.8 on branch `claude/plan-multilevel-394-f40512`).
+
+| # | Question | Decision | Why |
+|---|---|---|---|
+| S1-Q1 | Degenerate between-level X or M | Within-only result: `between_identified = FALSE`, between paths and contrast `NA`, classed condition `medfit_between_unidentified`; triggers on ICC < 0.01, `NA` between SE, non-PD vcov or non-convergence; warning band at ICC < 0.05 | Centered or within-randomized X gives NA/huge between SEs or non-convergence; always erroring loses the valid within effects and a near-zero between variance would still slip through |
+| S1-Q2 | `fixed.x` convention | Adapter reports and stores lavaan's setting; native two-level defaults to `fixed_x = FALSE` until a fixed-between-moment convention has an oracle; docs state the 3-4% narrower between SEs under `fixed.x = TRUE` | lavaan's between x variance under `fixed.x = TRUE` is not the ML estimate (0.681 vs 0.648 in one fixture) |
+| S1-Q3 | Label shared across levels | Detect cross-level equality from the parameter table (shared free index), record `cross_level_equal`, contrast `NA` (constrained), keep within/between effects, key vcov rows by free index never by name | A shared label silently imposes equality (contrast 0 +/- 0, duplicate vcov names); refusing would block the intended shared loadings of S5 |
+| S1-Q4 | `standardized = TRUE` | Refuse for two-level fits with a classed error | lavaan standardizes per level (0.312 vs 0.670 against raw 0.321, 0.690); a level-specific standardized estimand has no oracle |
+
+Slice status after the second grill: S1 closed; S2 conditional GO once the review findings 1-6 are in the spec; S4 stays NO-GO until
+tolerances and the fixed_x definition are in the spec; S5 stays NO-GO until the identification literature is read.
