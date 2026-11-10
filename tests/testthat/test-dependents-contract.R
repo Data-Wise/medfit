@@ -35,6 +35,19 @@
   )
 )
 
+# Classes no dependent reads yet (#394 slice S2): the property names the spec fixes, so a rename is caught
+# before a dependent adopts the class. No sibling reads them; there is no evidence list to cite.
+.dependent_new_classes <- list(
+  TwoLevelMediationData = c(
+    "a_within", "b_within", "c_prime_within", "a_between", "b_between", "c_prime_between",
+    "estimates", "vcov", "parameter_table", "treatment", "mediator", "outcome", "cluster",
+    "n_obs", "n_clusters", "cluster_sizes", "icc", "between_identified", "admissible",
+    "converged", "cross_level_equal", "fixed_paths", "source", "fixed_x", "information",
+    "h1_information", "se_type", "estimator", "missing", "lavaan_version", "call",
+    "between_parameterization", "data", "source_package"
+  )
+)
+
 .dependent_exports <- c(
   # probmed R/methods-pmed.R:149; tests/testthat/helper-parallel.R:61,83;
   # RMediation tests/testthat/test-serial-medfit-integration.R:32,77;
@@ -67,6 +80,17 @@ testthat::test_that("dependent S7 class properties remain available", {
     if (name %in% exports) {
       class <- getExportedValue("medfit", name)
       .expect_dependent_properties(class, .dependent_classes[[name]])
+    }
+  }
+})
+
+testthat::test_that("new classes keep the property names their specs fix", {
+  exports <- getNamespaceExports("medfit")
+  for (name in names(.dependent_new_classes)) {
+    testthat::expect_true(name %in% exports, info = name)
+    if (name %in% exports) {
+      class <- getExportedValue("medfit", name)
+      .expect_dependent_properties(class, .dependent_new_classes[[name]])
     }
   }
 })

@@ -32,7 +32,8 @@ test_that("the refcard names every export and every class", {
   text <- paste(readLines(p, warn = FALSE), collapse = "\n")
   classes <- c(
     "MediationData", "SerialMediationData", "ParallelMediationData",
-    "InteractionMediationData", "JointMediationData", "ClusterMediationData"
+    "InteractionMediationData", "JointMediationData", "ClusterMediationData",
+    "TwoLevelMediationData"
   )
   expect_identical(refcard_missing(text, c(refcard_exports(), classes, "tidy(", "glance(")),
                    character())
