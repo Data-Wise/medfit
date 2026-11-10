@@ -48,6 +48,52 @@
   )
 }
 
+# TRUE when a lavaan fit has more than one level. `lavInspect(, "nlevels")` is the public API; the parameter
+# table's `level` column is the fallback. When neither can be read the fit is treated as single-level, so the
+# guard can never block an ordinary fit on its own failure.
+.lavaan_is_multilevel <- function(object) {
+  nl <- tryCatch(as.integer(lavaan::lavInspect(object, "nlevels")), error = function(e) NA_integer_)
+  if (length(nl) == 1L && !is.na(nl)) return(nl > 1L)
+  lev <- tryCatch(lavaan::parTable(object)$level, error = function(e) NULL)
+  !is.null(lev) && length(unique(lev[!is.na(lev)])) > 1L
+}
+
+.assert_lavaan_single_level <- function(object) {
+  if (!.lavaan_is_multilevel(object)) return(invisible(object))
+  stop(structure(
+    class = c("medfit_error_lavaan_multilevel", "error", "condition"),
+    list(
+      message = paste0(
+        "The lavaan fit has two levels (within and between). extract_mediation() would silently use the ",
+        "within level only, with N equal to the total number of rows, so it refuses. Fit a single-level ",
+        "model instead; a two-level adapter is planned (issue #394)."
+      ),
+      call = NULL
+    )
+  ))
+}
+
+# TRUE when a lavaan fit has more than one group; an unreadable fit counts as single-group (fail safe).
+.lavaan_is_multigroup <- function(object) {
+  ng <- tryCatch(as.integer(lavaan::lavInspect(object, "ngroups")), error = function(e) NA_integer_)
+  length(ng) == 1L && !is.na(ng) && ng > 1L
+}
+
+.assert_lavaan_single_group <- function(object) {
+  if (!.lavaan_is_multigroup(object)) return(invisible(object))
+  stop(structure(
+    class = c("medfit_error_lavaan_multigroup", "error", "condition"),
+    list(
+      message = paste0(
+        "The lavaan fit has more than one group (a multi-group fit is not supported): extract_mediation() would ",
+        "silently return the first group's paths with the total number of rows. Fit each group as its own ",
+        "single-group model."
+      ),
+      call = NULL
+    )
+  ))
+}
+
 # An accessor list passes through; anything else is taken to be a lavaan fit.
 .sem_as_accessors <- function(object) {
   if (inherits(object, "sem_accessors")) object else .sem_accessors_lavaan(object)

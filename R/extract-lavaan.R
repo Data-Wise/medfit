@@ -113,6 +113,13 @@
 #' }
 #' }
 #'
+#' @section Limits:
+#' Fits with more than one level (`lavaan::sem(..., cluster = )` with `level:` blocks) are refused with the
+#' classed error `medfit_error_lavaan_multilevel`; extraction would otherwise read the within level only.
+#' Multigroup fits (`group =`) are refused with `medfit_error_lavaan_multigroup`; extraction would otherwise
+#' return the first group's paths with the total sample size.
+#' Fit a single-level model, or wait for the two-level adapter planned in issue #394.
+#'
 #' @keywords internal
 extract_mediation_lavaan <- function(object,
                                      treatment,
@@ -132,6 +139,11 @@ extract_mediation_lavaan <- function(object,
   # A lavaan fit is wrapped (and lavaan's availability checked) by the lavaan
   # accessor; a ready-made accessor list passes through, so a native fit can be
   # extracted with lavaan absent.
+  # A multi-level lavaan fit is refused before anything is read (#394): the workers would use the within block.
+  if (inherits(object, "lavaan")) {
+    .assert_lavaan_single_level(object)
+    .assert_lavaan_single_group(object)
+  }
   acc <- .sem_as_accessors(object)
 
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
