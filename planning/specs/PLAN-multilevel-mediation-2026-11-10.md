@@ -60,6 +60,7 @@ Properties (sketch):
 | `source` | character | `"lavaan"` or `"native"` |
 | `estimator`, `se_type`, `converged`, `admissible` | character/logical | `admissible` is **not** `converged`: reads post-check and level-specific variances (research 2.2) |
 | `diagnostics` | list | per-level variance diagnostics, shared-loading flag, Heywood flag |
+| `call`, `model`, `cluster_var`, `refit_args` | call / character / character / list | fit provenance for optional object-based refitting (bootstrap route 3); no raw data stored by default |
 | `parameterization` | character | `"latent_cluster_mean"` (joint ML) vs a manifest-mean parameterization if a lavaan model used one |
 
 Validator: finite paths; `vcov` symmetric PSD-ish with matching alias names; `n_clusters >= 2`; sum of `cluster_sizes` = `n_obs`.
@@ -76,8 +77,30 @@ Validator: finite paths; `vcov` symmetric PSD-ish with matching alias names; `n_
 - **Inference:** a new `.effect_se()` gradient builder for the class in `R/effect-se.R`: gradient of `a_w b_w`, `a_b b_b`,
   `a_w b_w - a_b b_b` taken over the joint `vcov` (verified identical to lavaan's `:=` SE; research 2.1). `tidy()`, `confint()`,
   `summary()`, `print()` follow the existing pattern (`R/methods-tidy.R`, `R/methods-base.R`).
-- **Bootstrap:** `bootstrap_mediation(x, cluster = ...)` for the new class reuses the existing cluster resampling; parametric
-  bootstrap draws from the joint `vcov`.
+- **Bootstrap (revised after adversarial review).** `bootstrap_mediation()` is *not* object-based: it takes a `statistic_fn`
+  callback, raw `data` and `cluster = "<column>"` (nonparametric resampling draws whole clusters and gives each draw a fresh
+  cluster id, so a cluster drawn twice is refit as two clusters; `R/bootstrap.R:251`, doc lines 32-36). The new class stores
+  neither data nor a refit recipe, so `bootstrap_mediation(x, cluster = ...)` does **not** work and is not promised. S2 ships:
+  1. **Callback route (S2, documented recipe + helper).** `bootstrap_mediation(statistic_fn, method = "nonparametric",
+     data = d, cluster = "id")` with `statistic_fn(data)` refitting the two-level lavaan model and returning
+     `nie(extract_mediation(fit, ...), level = )` or the contrast. The recipe lives on the model page and in the cookbook;
+     an internal helper `.two_level_refit_stat(model, treatment, mediator, outcome, effect)` builds the closure so users do not
+     hand-write it.
+  2. **Parametric route.** `bootstrap_mediation(mediation_data = x, method = "parametric")` draws from the joint `@vcov`; needs a
+     branch for the new class (check in S2 how `.bootstrap_parametric()` reads the object; if it only knows the existing
+     classes, add the branch). Its draws keep the cross-level covariance.
+  3. **Object-based refitting (optional, S2b or with S4).** The class retains *fit provenance*: `@call` (the `extract_mediation`
+     call), `@model` (lavaan or medfit syntax string), `@cluster` (column name), `@refit_args` (estimator, `se`, constraints) and,
+     for the adapter, a reference to the raw data only when the user passes `data =` (never silently pulled from the lavaan
+     object). With provenance, a `source_fit =`-style route (precedent: the FIML `source_fit` route, `R/bootstrap.R:264`) can
+     refit without a callback. Decision for the grill (question 12); until it is taken, only routes 1 and 2 exist.
+  Test (required, through the exact public call): `bootstrap_mediation(statistic_fn, method = "nonparametric", data = d,
+  cluster = "id", seed = s, n_boot = B)` where `statistic_fn` records, per refit, the number of distinct cluster ids and the
+  row count, with a seed that draws at least one cluster twice (asserted from the recorded sizes: some refit data have more rows
+  than a draw of J distinct clusters would allow only if relabeling failed). Assertions: every refit sees J distinct ids;
+  the duplicated cluster appears as two clusters; the bootstrap SE of the contrast is within Monte Carlo error of the
+  hand-built delta-method SE. Planted defect: mock the relabel helper (`.relabel_clusters()`, the 2-1-1 plan's P2 device) to
+  the identity and require the test to fail (duplicated ids collapse into one larger cluster, the refit sees fewer clusters).
 - **Entry points:**
   - S2: `extract_mediation(<lavaan>, treatment, mediator, outcome)` detects a two-level fit (`lavInspect(fit, "nclusters")`
     non-null / two blocks) and builds the class; no new arguments except optional `level_names`.
@@ -91,12 +114,22 @@ Validator: finite paths; `vcov` symmetric PSD-ish with matching alias names; `n_
 
 ## 5. Native two-level estimation (S4/S5) sketch
 
-1. **Data:** a cluster index and a `.sem_sample_ml2()` that returns, per distinct cluster size, the stacked cluster means and
-   within scatter matrices (research 4.1). Listwise deletion only (FIML out). Unbalanced clusters via one term per distinct
-   size (4.3).
-2. **Model:** two RAM blocks from the parser's `level` column, `A_W, S_W` and `A_B, S_B, mu`; the parameter vector is the
-   union; the objective is the sum in 2.3. Within-level variables that exist at level 2 only (cluster covariates) enter the
-   between block only.
+1. **Variable sets (revised after adversarial review).** Not one observed vector for everyone. Partition the model's observed
+   variables into `W` (measured at level 1: have a within part and a between part; p_w of them) and `Z` (cluster-only: constant
+   within every cluster, no within covariance row or column; q of them). Detection: a variable is in `Z` iff it is constant
+   within every cluster **and** appears only in `level: 2` rows (error if it appears in a `level: 1` row; error if a `W`
+   variable is accidentally constant). Per cluster j the statistics are n_j, the mean ybar_j and scatter S_j of the **W**
+   columns, and z_j (one value) for `Z`. `.sem_sample_ml2()` returns these per distinct cluster size. Listwise deletion only
+   (FIML out).
+2. **Likelihood with separate sets.** With Omega_j = [[Sigma_W/n_j + Sigma_B,WW, Sigma_B,WZ], [Sigma_B,ZW, Sigma_B,ZZ]], b_j = (ybar_j, z_j) and mu = (mu_W, mu_Z):
+   `-2 logL = sum_j [ (n_j - 1)(p_w log 2pi + log|Sigma_W|) + tr(Sigma_W^-1 S_j) + (p_w + q) log 2pi + log|Omega_j|
+   + (b_j - mu)' Omega_j^-1 (b_j - mu) + p_w log n_j ]`. The `p_w log n_j` term is the Jacobian of the raw-rows to
+   (mean, deviations) change of variables; it involves only `W` (cluster-only variables have no rows to transform). With q = 0 this
+   equals the formula of research 2.3 exactly. **Verified numerically** (research 2.5). Cluster-only covariates enter only through
+   Omega_j: they add rows/columns to the between block, have no within variance, and their between-level paths
+   (`m ~ z`, `y ~ z` at level 2) live in `A_B`, `S_B`. Two RAM blocks: `A_W, S_W` over `W`; `A_B, S_B` over `W` and `Z`; the
+   union is the parameter vector. Unbalanced clusters: one Cholesky of Omega_j per distinct n_j (the covariance depends on n_j only
+   through Sigma_W/n_j).
 3. **Gradients/information:** analytic gradient by the chain rule through Sigma_W and Sigma_B (reuse `.sem_dsigma()`); information by the
    existing observed/expected paths in `R/sem-ml.R`, with the two-level Hessian block structure. Finite-difference Hessian
    (as in the mean-structure centered coordinates) is the fallback and the oracle for the analytic one.
@@ -118,19 +151,20 @@ global chi-square.
 
 | Test | Oracle | Why it can fail |
 |---|---|---|
-| Hand-built likelihood equals lavaan `logLik()` and medfit's `-F` | the 8-line closed form (research 2.3) on balanced and unbalanced fixtures | any term error (missing (n_j - 1) log\|Sigma_W\|, wrong n_j) breaks it |
+| Hand-built likelihood equals lavaan `logLik()` and medfit's `-F` | the closed form with **separate W and Z sets** (section 5 item 2; research 2.3 and 2.5) on balanced and unbalanced fixtures, **with and without a cluster-only covariate** (`z` constant within clusters, `m ~ z` and `y ~ z` at level 2). Without Z the absolute value must match lavaan; with Z the objective must match lavaan up to the parameter-free constant of research 2.5 and ΔlogL between nested fits must match lavaan exactly | any term error (missing (n_j - 1) log\|Sigma_W\|, wrong n_j, a within row for Z, a dropped p_w log n_j) breaks it |
 | Path estimates and joint `vcov` equal lavaan's to 1e-6 (est) / 1e-3 relative (SE) | lavaan two-level raw-data fits: balanced n = 5, unbalanced n in 2..9, J = 100 and J = 40 | frozen SLSQP fixtures are pinned at 1e-6 (memory: `frozen-slsqp-fixtures-need-1e-6`) |
 | **Nonzero cross-level covariance fixture** | observed model gives small but nonzero cross-level entries (e.g. `Cov(aw, ab) = -0.00076` balanced, research 2.1); latent shared-loading fixture gives correlations -0.07 and -0.11. The plan's fixture is seeded so that `abs(Cov(a_w, a_b)) > 1e-4`, asserted in the test | planted defect: zero the cross-level block of `vcov` and require the contrast SE to differ (the SE gap must exceed a stated threshold) |
 | Contrast SE equals `sqrt(g' V g)` and lavaan's `:=` SE (matched to 8 digits in 2.1) | lavaan `:=`; hand delta method; nonparametric cluster bootstrap (n = 1000) within MC error | planted defect: gradient with a sign error on one path |
 | Shared loadings across levels | lavaan with the same labels; equality of the two loading vectors at the solution to 1e-8 | defect: unshared loadings |
 | Heywood / inadmissible | a seeded latent fixture where lavaan reports negative ov variance with `converged = TRUE`; medfit must report `admissible = FALSE` | defect: using `converged` only |
+| Cluster-only covariate fixture (S3, before S4) | built in `helper-ml2.R`: J = 120, n_j in 2..9, `z` between-only, nonzero `Cov(z, x_B)`; oracle = hand likelihood minimized with `optim` and lavaan; paths and joint vcov to 1e-6 / 1e-3 | planted defect: give `z` a within variance row; or drop the Omega_j `Sigma_B,WZ` block. Either must fail |
 | Unbalanced vs balanced | the two code paths agree when all n_j are equal (a balanced fit run through the unbalanced code) | defect: n_j replaced by the mean size |
 | Independent optimizer oracle | `optim` on the hand-built likelihood | guards against a shared bug with lavaan's optimizer |
 | Guards | `level:` without `cluster`; cluster var missing; J < 2; ICC = 0 variable; X-by-M product; non-Gaussian | classed errors |
 | Simulation gates (S3/S4) | coverage of the within, between and contrast CIs at J in {20, 50, 100}, n in {5, 20}; reliability cell; tolerances frozen before the run | registered in `tests/sim/gates.csv` (`oracle`, `mutants` columns) and `tests/sim/structures.csv` |
 | OpenMx cross-check | **not planned**: two-level OpenMx fitting was not tested here (research 2.3) |  |
 
-The adapter (S2) needs only the lavaan, hand-delta and bootstrap rows; the likelihood and optimizer rows belong to S3/S4.
+The adapter (S2) needs only the lavaan, hand-delta and bootstrap rows (the bootstrap row includes the duplicate-cluster test through the public call, section 4); the likelihood and optimizer rows belong to S3/S4.
 
 ## 7. Risk tier and admission checklist
 
@@ -179,7 +213,15 @@ The adapter (S2) needs only the lavaan, hand-delta and bootstrap rows; the likel
 9. **S0 guard:** ship the `extract_mediation(<lavaan>)` guard immediately, independent of the grill? (A silent wrong-level
    extraction is a correctness bug; the CLAUDE.md "correctness fixes" exemption from the deprecation period applies.)
 10. **Release target** and whether this displaces the FIML admission work currently queued (`planning/PLAN-FIML-statistical-admission-2026-11-01.md`).
-11. **Effort and sign-off:** the estimates below are single-developer-with-agents; confirm they fit the roadmap.
+11. **Bootstrap API:** callback + parametric only (recommended for S2) or also object-based refitting through retained provenance (route 3)?
+    Storing the model string and refit arguments is cheap; storing data is a memory and privacy decision.
+12. **logLik convention with cluster-only covariates:** lavaan's reported `logLik()` differs from the exact Gaussian density by a
+    parameter-free constant (170.5453 in the fixture, identical for two nested fits; research 2.5). Which convention does medfit
+    report (recommended: the exact density, documented, with absolute AIC/BIC not comparable to lavaan when cluster-only variables
+    are present)?
+13. **Cluster-only covariate detection:** automatic (constant within clusters and only in `level: 2` rows) or declared (a `between =`
+    argument)? Recommended: automatic with an error on any ambiguity.
+14. **Effort and sign-off:** the estimates below are single-developer-with-agents; confirm they fit the roadmap.
 
 ## 10. Effort summary
 
@@ -188,7 +230,7 @@ The adapter (S2) needs only the lavaan, hand-delta and bootstrap rows; the likel
 | S0 | lavaan two-level guard | 0.5 day | normal |
 | S1 | grill + spec | 1 session | n/a |
 | S2 | adapter, class, generics, methods, docs | 5-7 days | normal |
-| S3 | oracle harness and simulation helpers | ~3 days | normal (tests/sim only) |
+| S3 | oracle harness (incl. cluster-only covariate fixture) and simulation helpers | ~3-4 days | normal (tests/sim only) |
 | S4 | native observed-variable two-level ML, `cluster =`, gates | 3-4 weeks | **high** |
 | S5 | latent mediators, shared loadings | ~2 weeks | high |
 | S6 | cluster sandwich | ~1 week | high |

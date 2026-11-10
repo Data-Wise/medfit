@@ -87,6 +87,8 @@ covariance Sigma_B and mean mu:
                   + tr(Sigma_W^{-1} S_j) + n_j (ybar_j - mu)' (Sigma_W + n_j Sigma_B)^{-1} (ybar_j - mu) ]
 ```
 
+(valid when every variable has a within and a between part; with cluster-only variables use the separate-sets form of 2.5)
+
 where S_j = sum_i (y_ij - ybar_j)(y_ij - ybar_j)'. This is the standard closed form (Muthén 1994; McDonald and Goldstein 1989
 for the balanced case; the unbalanced case needs one term per distinct cluster size, which lavaan and Mplus implement). The
 implementation above took 8 lines of R and matched lavaan's `logLik()` on the unbalanced fixture, so a hand-built likelihood is
@@ -97,6 +99,26 @@ single-level fit.
 
 OpenMx 2.x is installed here; whether it can fit a two-level model with a cluster-level likelihood in this environment was
 **not tested** [unverified]. The hand-built likelihood is the stronger oracle anyway because it is independent code.
+
+### 2.5 Variables observed at one level only (cluster-only covariates) **[run]**
+
+The closed form in 2.3 assumes every variable has a within and a between part. A cluster-level covariate `z` (constant within
+clusters) has no within scatter and no within covariance. The correct form partitions the variables into `W` (both levels) and `Z`
+(between only): the within part is a Wishart on Sigma_W over `W` only, and the between vector is b_j = (ybar_j, z_j) with
+covariance Omega_j = [[Sigma_W/n_j + Sigma_B,WW, Sigma_B,WZ], [Sigma_B,ZW, Sigma_B,ZZ]]; the Jacobian term is `p_w log n_j`
+(plan section 5 item 2 has the full formula). Tested on 120 clusters (n_j in 2..9) with `z` entering `m` and `y` at level 2:
+
+| Check | Result |
+|---|---|
+| No `Z` (q = 0): separate-sets formula with the `p_w log n_j` term vs lavaan `logLik()` | -3054.494 vs -3054.494 (equal) |
+| With `Z`: nested-model difference, `y ~ z` free vs `y ~ 0*z` at level 2 | Δ = 3.876228 (hand) vs 3.876228 (lavaan): equal |
+| With `Z`: absolute value | hand -3204.823 vs lavaan -3034.278: lavaan's reported `logLik()` is higher by **170.5453**, the same constant in both nested fits, so it is parameter-free (data and design only) |
+
+So the derivation is right for estimation, standard errors and likelihood-ratio comparisons, and lavaan's absolute `logLik()` carries
+an extra parameter-free constant when cluster-only variables are present. I did not identify the constant's closed form
+[unverified], so the oracle compares the objective up to a constant (or Δ between nested fits) in the cluster-only case and
+absolute values in the no-`Z` case. The previous version of this note and the plan used the all-variables-at-both-levels
+formula and would have been wrong for the cluster-only fixtures S4 allows; this section corrects that.
 
 ### 2.4 lavaan limitations relevant to the plan
 
@@ -139,7 +161,7 @@ actual evidence).
 
 Observed vector y_ij = mu + y_B,j + y_W,ij with y_B,j ~ N(0, Sigma_B) independent of y_W,ij ~ N(0, Sigma_W).
 
-1. **Cluster-wise sufficient statistics.** For each cluster: n_j, the mean ybar_j, and the within scatter matrix S_j. A fixed-slope
+1. **Cluster-wise sufficient statistics.** For each cluster: n_j, the mean ybar_j and the within scatter matrix S_j of the variables measured at level 1 (set `W`), plus one value z_j per cluster-only variable (set `Z`, which has no within part; see 2.5). A fixed-slope
    model with only complete data needs nothing else (the likelihood depends on the data only through these), so the statistics
    are computed once and the optimizer touches O(distinct sizes + J) small matrices.
 2. **Balanced clusters (all n_j = n).** The likelihood collapses to two Wishart-type pieces: a within part on the pooled within
@@ -150,7 +172,7 @@ Observed vector y_ij = mu + y_B,j + y_W,ij with y_B,j ~ N(0, Sigma_B) independen
    closed form in 2.3 is exact and needs no EM. Cost: one Cholesky of Sigma_W + n Sigma_B per **distinct** n_j.
 4. **Model-implied matrices.** Sigma_W and Sigma_B each come from a RAM model (A_W, S_W and A_B, S_B), and mu from the level-2
    intercepts. This fits the existing `.sem_ram()` machinery: two RAM blocks stacked into one parameter vector, the objective
-   being the sum of cluster-wise terms. Level-1 variables that are observed at both levels have both a within and a between
+   being the sum of cluster-wise terms. Variables in `W` have both a within and a between
    column; variables measured only at level 2 appear in the between model only.
 5. **Identification.** Each level is identified separately (marker or fixed latent variance per level; with shared loadings
    across levels the cross-level equality supplies extra df); an observed variable that exists at both levels needs both
