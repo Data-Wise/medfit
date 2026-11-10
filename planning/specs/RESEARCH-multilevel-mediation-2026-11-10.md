@@ -1,6 +1,6 @@
 # Research: joint two-level SEM for 1-1-1 mediation (issue #394)
 
-**Date:** 2026-11-10 · **Status:** research note, read-only investigation (no code written) ·
+**Date:** 2026-11-10 · **Status:** research note (revised 2026-11-10 with section 2.6), read-only investigation (no code written) ·
 **Issue:** [Data-Wise/medfit#394](https://github.com/Data-Wise/medfit/issues/394) ·
 **Companion:** [PLAN-multilevel-mediation-2026-11-10.md](PLAN-multilevel-mediation-2026-11-10.md)
 
@@ -119,6 +119,18 @@ an extra parameter-free constant when cluster-only variables are present. I did 
 [unverified], so the oracle compares the objective up to a constant (or Δ between nested fits) in the cluster-only case and
 absolute values in the no-`Z` case. The previous version of this note and the plan used the all-variables-at-both-levels
 formula and would have been wrong for the cluster-only fixtures S4 allows; this section corrects that.
+
+### 2.6 Re-run of the Fable 5.2 review experiments **[run]**
+
+Scripts `e1.R`, `e2.R`, `e3.R` (in the other session's scratchpad) were re-run unmodified on lavaan 0.7.3; every claim in the plan's
+section 0.2 marked "Yes" matched. Key numbers: lavaan default `fixed.x = TRUE` (between `x ~~ x` fixed, `free = 0`) vs `FALSE`: estimates
+within 5e-5, `se(ab)` 0.166 vs 0.172; default information `observed`, `h1.information` `structured`; lavaan's optimizer vs the balanced closed
+form differ by about 1e-5; zeroing the cross-level vcov block moves the contrast SE 0.1954 to 0.1945 (0.48%) but `a_w - a_b` 0.1898 to 0.1792
+(5.6%); degenerate between X (centered: `ab` 0, SE `NA`, vcov not PD; SD 0.05: `post.check` TRUE, SE 0.731; within-randomized: not converged);
+`cluster=` single-level `nlevels` = 1 and `nclusters` = 1; multigroup single-level extraction returns group 1 with the total N; same label at
+both levels shares one parameter and the vcov has duplicated column names; `standardizedSolution()` standardizes per level; small J: J = 20,
+n = 5, 300 reps: `post.check` 73%, `ab` coverage 0.908; J = 50: 98% and 0.953 (fixed.x TRUE). Additional checks here: lavaan accepts
+`level: within`, `level: between` and `level: <cluster name>`; `Cov(a_w, a_b)` = -0.00195 in the review fixture.
 
 ### 2.4 lavaan limitations relevant to the plan
 

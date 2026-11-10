@@ -1,10 +1,154 @@
 # Plan: joint two-level mediation for 1-1-1 designs (issue #394)
 
-**Date:** 2026-11-10 · **Status:** DRAFT for the maintainer; nothing implemented, no PR, nothing posted on the issue ·
+**Date:** 2026-11-10 · **Status:** DRAFT, revision 4 (Fable review + grill decisions folded in, section 0 controls); nothing implemented, no PR, nothing posted on the issue ·
 **Issue:** [Data-Wise/medfit#394](https://github.com/Data-Wise/medfit/issues/394) ·
 **Evidence:** [RESEARCH-multilevel-mediation-2026-11-10.md](RESEARCH-multilevel-mediation-2026-11-10.md) (read first; section numbers below refer to it) ·
 **Predecessor:** 2-1-1 plan `PLAN-multilevel-mediation-2-1-1-2026-10-08.md` (module 1, shipped 0.6.0). This plan is **module 2**
 and, by D1/D6/D15 of `GRILL-multilevel-mediation-ext-d-2026-09-25.md`, still needs its own grill before code.
+
+## 0. Revision 4 (controlling): Fable 5.2 adversarial review and the 11 grill decisions
+
+**Precedence.** Where this section and a later section disagree, **this section wins**; the superseded text is marked
+`[superseded by section 0]` where it was edited. Sources: the maintainer's grill ledger
+(`planning/GRILL-multilevel-mediation-2026-11-10.md` on branch `claude/restore-b0bd19`, Q1-Q11, every recommended option
+accepted) and the Fable review scripts `e1.R`, `e2.R`, `e3.R`, all re-run here on lavaan 0.7.3 (results in research 2.6). The
+companion `LIT-multilevel-mediation-2026-11-10.md` is **not present** in that worktree (only the grill ledger is), so its
+findings are used here only as summarized in the ledger.
+
+### 0.1 Grill decisions folded in (Q1-Q11, closed)
+
+Q1 adapter first (guard, then adapter with the new class; native later). Q2 one `TwoLevelMediationData` for the adapter and the
+later native fitter, with a `source` property. Q3 estimand: `a_w b_w` conditional on fixed slopes (`sigma_ab = 0` stated),
+latent cluster means for the between effect, manifest-mean option as a labeled alternative. Q4 contrast `within - between`,
+**descriptive** (delta method over the joint covariance), not a test; **`nie()` returns the within effect by default** and
+`level =` selects `"between"`, `"contrast"` or both (this replaces section 4's "classed error when `level` is missing"
+[superseded]). Q5 refuse treatment-by-mediator products at both levels (classed error). Q6 adapter passes lavaan's
+`missing = "fiml"` through; native is listwise with loud row and cluster counts. Q7 small J: warn below 50 clusters, error
+below 10, constants editable, **but see 0.4: the adapter never errors on J**. Q8 Heywood: native `fit_sem()` errors (classed,
+ADR D-11); adapter flags `admissible = FALSE` with a warning. Q9 S0 guard ships now as its own PR. Q10 guard now, adapter in
+the next minor, native later, does not displace FIML admission. Q11 bootstrap (a): scalar `statistic_fn` callbacks in the public
+calls, a helper that builds the within, between and contrast callbacks, end-to-end tests of the exact calls incl. duplicate-cluster
+resamples; object-based dispatch (b) deferred (S2c). Consequences added to the S2 oracle list: lavaan `se = "robust.huber.white"`,
+`missing = "fiml"` and lavaan's cluster bootstrap, as exposed options and as oracles. Shared loadings across levels (Jak et al.)
+stay a testable restriction, not a default.
+
+### 0.2 Review findings and what the re-run showed
+
+| # | Finding | Severity | Reproduced? | Change in this plan |
+|---|---|---|---|---|
+| 1 | Between effect and contrast unidentified when X is cluster-mean centered or randomized within | HIGH | **Yes.** Centered X: `converged` TRUE, `ab` 0.000 with SE NA, `cb` SE 1406, vcov "not positive definite" warning. Between SD of X 0.05: `converged` TRUE, `post.check` TRUE, `ab` SE 0.731 (true value 0.7). Raw X with true between variance 0: `converged` FALSE and `bb` -36 | 0.3 |
+| 2 | Detection must use `nlevels`, not `nclusters`; S0 guard must cover `ngroups > 1` | HIGH | **Yes.** A `cluster=` single-level fit has `nlevels` 1 and `nclusters` 1 (so does a no-cluster fit; the old rule "`nclusters` non-null" fires for everything). Multigroup single-level fit: `extract_mediation()` returns group 1 (a = 0.451) with `n_obs` = total 500. lavaan itself refuses multigroup plus multilevel in one model, so `nlevels > 1` and `ngroups > 1` never co-occur | 0.3, S0 spec |
+| 3 | Same label at both levels is a silent equality constraint; vcov has duplicate column names | HIGH | **Yes.** `m ~ a*x` at both levels: one value reported twice (`a` 0.367 at both levels), `colnames(vcov)` contain `a b cp` twice; the current extractor returns `MediationData` with a = 0.367 | 0.3 |
+| 4 | Planted defect "zero the cross-level block" cannot fail on the contrast SE | HIGH | **Yes.** Zeroing the cross-level block moves the contrast SE from 0.1954 to 0.1945 (0.48%), under bootstrap MC error. For `a_w - a_b` the gap is 5.6% (0.1898 vs 0.1792), and the entry `Cov(a_w, a_b)` = -0.00195 is asserted directly | 0.5 |
+| 5 | `fixed.x` / information conventions and optimizer error | HIGH | **Yes.** lavaan defaults `fixed.x = TRUE` (between-level `x ~~ x` is `free = 0`); estimates differ from `fixed.x = FALSE` by about 5e-5, SEs by 3-4% (`se(ab)` 0.166 vs 0.172); lavaan's default optimizer is about 1e-5 away from the closed form (`bb` -0.000498 vs closed form -0.000508); a tight-tolerance run warns "solution has NOT been found". Default information is `observed` with `h1.information` `structured`; expected and observed `diff` SEs differ by 5e-7 here | 0.5 |
+| 6 | Oracle circularity | MEDIUM | Reasoned, not re-run beyond item 5's closed form (which reproduces) | 0.5 |
+| 7 | Contrast semantics and `standardized = TRUE` | MEDIUM | **Yes.** `standardizedSolution()` standardizes per level (`ab` 0.670 vs raw 0.690), so an extractor `standardized = TRUE` (`R/extract-lavaan.R:124`) would mix scales | 0.6 |
+| 8 | Small J | MEDIUM | **Yes.** J = 20, n = 5 (300 reps): `post.check` TRUE in 73% (27% fail), 295/300 usable, `ab` 95% CI coverage 0.908; J = 50: `post.check` 98%, coverage 0.953-0.970 (the J = 20 `fixed.x = FALSE` row did not finish in the run, since the script ends there) | 0.4 |
+| 9 | Drift and omissions | MEDIUM | `R/sem-parse.R:323` regex `^level\s*:\s*[0-9]+$` rejects `level: within`; **not reproduced as a lavaan claim**: lavaan accepts `level: within` and `level: between` (converged), and also a level named like the cluster variable (`level: id`) in a test here. Risk-files lists differ: `claude/restore-b0bd19` lacks `R/sem-fiml.R` and `R/sem-fiml-interface.R`, `origin/dev` has them (use `origin/dev`'s) | 0.7 |
+
+Not reproduced: nothing in the review was refuted. Two details I could not check: the review's claim about `fixed.x` SE gaps at the 3-4% level matched (`se(ab)` 3.4%); the "27% at J = 20" matched (0.73). The Mplus and brms comparators below were not run (no Mplus; brms two-level SEM is not a comparator for ML joint covariance).
+
+### 0.3 Adapter specification changes (S0 and S2)
+
+- **Detection.** `lavInspect(fit, "nlevels") > 1` identifies a two-level fit. `nclusters` and the block count are not used (both are 1 for
+  `cluster=` single-level fits). Regression test: a `cluster = "id"` single-level fit must still extract (it is a legitimate
+  cluster-robust single-level fit) and a true two-level fit must not.
+- **S0 guard** errors (classed) on `nlevels > 1` **or** `ngroups > 1`, with distinct messages: a two-level fit points at the
+  coming adapter; a multigroup fit says medfit does not extract per-group results yet (today it silently returns group 1 with the
+  total N). The S0 implementer has been told.
+- **Keying.** Paths are found from `parTable()` with `level`/`block` as part of the key and vcov rows by **free-parameter index**,
+  never by label or column name (duplicate names are possible, finding 3). Planted defects: swap levels (`ab` read as `aw`);
+  group-1/level-1 mis-keying on an unlabeled model; a mismatch of the `.l2` suffix.
+- **Cross-level equality.** From the parameter table, detect any free index shared by a within and a between parameter (same label at
+  both levels, or an explicit `==`). The class records `cross_level_equal` (the equated path names). A path equated across levels is reported
+  as such; a **contrast that is identically zero by constraint is reported `NA` with a classed message, not `0 +/- 0`**.
+  Within and between effects keep their SEs from the free-index vcov.
+- **Degenerate between X (and M).** The adapter computes per level, for X and M, the between variance share (ICC-type ratio
+  `Sigma_B / (Sigma_B + Sigma_W)` from the implied matrices) and the between SD, and sets `between_identified`:
+  FALSE if an ICC is below 0.01, a between SE is `NA`, the vcov is not positive definite, or `converged` is FALSE; a softer warning
+  band for an ICC below 0.05 (the 0.05 SD case above has `post.check` TRUE yet SE 0.731, so `post.check` is not enough).
+  **The class is within-only-capable**: when `between_identified` is FALSE the between paths, `nie(level = "between")` and the
+  contrast are `NA_real_` and signal a classed condition (`medfit_between_unidentified`); within effects and their SEs remain.
+- **`standardized = TRUE` refuses** for a two-level fit with a classed error (lavaan standardizes per level, so mixing is wrong).
+- **fixed.x and information are stored** on the class (`fixed_x`, `information`, `h1_information`, `se_type`) and printed in
+  `summary()`; the adapter reports the fit it was given and does not refit.
+- **Missing data.** `missing = "fiml"` fits pass through; `n_obs` and cluster counts come from `lavInspect(fit, "nobs")`/`"nclusters"` on the fitted object
+  (FIML keeps 500 rows and 100 clusters where listwise keeps 416 and 99 in the review fixture).
+- **Defined-parameter interplay.** The contrast is `a_w b_w - a_b b_b`. Its null is `a_w b_w = a_b b_b`; it is degenerate (zero
+  gradient) when all four paths are 0, and in practice it is a noisy between-vs-within comparison dominated by the between SE (SE 0.195 vs
+  0.025 in the review fixture). Documented as descriptive (Q4).
+- **`pm()` and `te()`** are defined per level: `te(level = w) = a_w b_w + c_w`, `te(level = b) = a_b b_b + c_b`,
+  `pm = nie / te` per level; no cross-level total or proportion.
+
+### 0.4 Small J: warning versus error
+
+The adapter never errors on J (it reports someone else's fit): it warns, citing admissibility, below 50 clusters, with the J = 20
+evidence above (27% `post.check` failures, coverage 0.908). The **error below 10 clusters applies to the native route only**
+(Q7/Q8 reconciled).
+
+### 0.5 Tests, oracles and tolerances (replaces the 1e-6 / 1e-3 tolerances in section 6 [superseded])
+
+- **Tolerances scale by SE.** Estimates: `|diff| <= 0.01 * SE` and at least 1e-4 absolute against lavaan (observed gaps: 5e-5 vs
+  SE 0.17); against a closed form the gap floor is lavaan's own optimizer error (about 1e-5), so the oracle for the *adapter's
+  arithmetic* uses the lavaan fit's own numbers (exact to 1e-10) and the oracle for lavaan itself uses SE-scaled tolerances.
+  SEs: 1e-3 relative **only** against `fixed.x = FALSE` at the same information; against a default (`fixed.x = TRUE`) fit the
+  documented gap is 3-4% by design and is *not* a tolerance.
+- **Native comparison convention.** Native fits are compared with lavaan `fixed.x = FALSE` (full ML, no fixed between moment) until the
+  second grill defines a two-level fixed-moment convention (0.8, question 2).
+- **Independent oracles added to S2 (not only lavaan):** the balanced saturated closed form (`Sigma_W = S_PW`, `Sigma_B = (S_B - S_PW)/n`;
+  verified here to 1e-5 against lavaan) for a balanced saturated model; `lm()` on cluster-centered data for the within paths and
+  `lm()` on cluster means for a manifest between check (labeled approximate); lavaan `se = "robust.huber.white"`, `missing =
+  "fiml"` and its cluster bootstrap as exposed options; lme4 (`lmer` with the within and between terms) as a point-estimate comparator for the
+  manifest-mean parameterization only (2-1-1 machinery), because it yields no cross-level covariance. Mplus and brms comparators
+  are **not planned**: Mplus is unavailable here and brms does not give the ML joint covariance; the grill may reopen this.
+- **S3 hand-built likelihood is scheduled before S2 merges** (it can be written while S2 is in review), so the adapter is not validated
+  only against the software it wraps.
+- **Planted defect for cross-level covariance (corrected).** Assert the vcov entries directly (`Cov(a_w, a_b)` = -0.00195 in the fixture is
+  nonzero and must be carried through to `@vcov`); and use a functional where the block matters, `a_w - a_b` (SE 0.1898 joint vs 0.1792
+  with the block zeroed, 5.6%), as the delta-method check. The contrast `a_w b_w - a_b b_b` (0.48%) and the bootstrap are sanity checks only.
+- **Further planted defects:** level swap; group-1/level-1 mis-keying on unlabeled models; `.l2` suffix mismatch; same-label-at-both-levels read as a
+  free contrast; `post.check`-only admissibility (the SD 0.05 fixture must be flagged).
+- **Additional tests:** the three degenerate-X fixtures of finding 1 (centered, SD 0.05, within-randomized) returning within-only results with the
+  classed condition; the `nlevels`/`ngroups` guard; `standardized = TRUE` refusal; `cross_level_equal` fixture; `test-dependents-contract.R` updated
+  (a new class is not a `MediationData` for probmed and RMediation: document and test that they error cleanly or are unaffected, and add the class to the
+  contract table); `NEWS.md` and the version bump (a new exported class and `extract_mediation()` behavior change: minor version, behavior-change note,
+  as the CLAUDE.md correctness exemption requires).
+
+### 0.6 Parser note
+
+`R/sem-parse.R:323` accepts only `level: <integer>`, while lavaan also accepts `level: within`, `level: between` and a level named like the
+cluster variable (verified here). The native route needs a decision before S4 (accept the lavaan names, or document integer-only).
+
+### 0.7 Slice verdicts (after the review)
+
+| Slice | Verdict | Condition |
+|---|---|---|
+| S0 guard | **GO** | `nlevels > 1` or `ngroups > 1`; regression tests of 0.3 |
+| S1 grill | **REOPEN** | second grill below (0.8) |
+| S2 adapter | **conditional GO** | after findings 1-6 are in the spec (0.3, 0.5); **budget 8-12 days** (the 2-1-1 module took five PRs) |
+| S3 oracle harness | **GO** | closed-form oracle scheduled with S2 (before S2 merges) |
+| S4 native observed ML | **NO-GO as written** | until tolerances (0.5) and the `fixed_x` convention (0.8) are defined |
+| S5 latent mediators, shared loadings | **NO-GO** | until the identification literature (Jak et al.; Heywood evidence) is read |
+| S6, S7 | unchanged | later milestones |
+
+### 0.8 S1 second grill: four undecided items (recommendation first)
+
+1. **Degenerate between X (or M).** *Recommendation: return a within-only result with `between_identified = FALSE`, `NA` between
+   paths and contrast and a classed condition (`medfit_between_unidentified`), triggered by an ICC below 0.01, an `NA` between SE, a non-PD vcov or
+   non-convergence; a warning band at ICC below 0.05.* Alternative: always error (loses the valid within effects, and a fit with
+   `post.check` TRUE and SE 0.731 would still slip through at 0.05). Evidence: three fixtures in 0.2 row 1.
+2. **`fixed.x` convention, adapter and native.** *Recommendation: the adapter reports the lavaan setting it was given and stores
+   it; native two-level defaults to `fixed_x = FALSE` (full ML, comparable with lavaan `fixed.x = FALSE`) until a fixed-between-moment convention is
+   derived and has an oracle; the docs state that contrast SEs from a `fixed.x = TRUE` fit are conditional-on-X and 3-4% narrower for the between
+   paths.* Alternative: mirror lavaan (`fixed.x = TRUE` default) in native, which makes native and lavaan agree by default but ties medfit to
+   lavaan's undocumented between-moment choice.
+3. **Cross-level label policy.** *Recommendation: detect cross-level equality from the parameter table (shared free index), record
+   `cross_level_equal`, report the contrast as `NA` (constrained), keep within and between effects and key vcov rows by free index.* Alternative: refuse any
+   cross-level shared label (simpler, but blocks the legitimate shared-loading case of S5, where sharing is intended).
+4. **`standardized = TRUE`.** *Recommendation: refuse for two-level fits with a classed error.* Alternative: standardize each level with
+   its own SDs and label the result "level-specific", which is a new estimand with no oracle in this plan.
+
+---
 
 ## 1. Feasibility verdict
 
@@ -73,8 +217,7 @@ Validator: finite paths; `vcov` symmetric PSD-ish with matching alias names; `n_
 - **Effects (existing generics, new methods; revised against `R/generics-effects.R`).** `nie()`, `nde()`, `te()`, `pm()` are
   documented to return a **scalar** of class `mediation_effect` with a `type` attribute (`.glance_*` reads `unclass(nie(x))[[1]]`),
   so the new methods keep that contract: `nie(x, level = c("within", "between", "contrast"))` returns one scalar, and calling
-  `nie(x)` with `level` missing is a classed error naming the three choices (no silent default: the two levels are different
-  estimands). The extra argument is allowed because the generic is `function(x, ...)`. `nde(x, level = c("within", "between"))`
+  `nie(x)` with `level` missing returns the within effect (Q4; the label says so) [superseded by section 0: earlier text made this an error]. The extra argument is allowed because the generic is `function(x, ...)`. `nde(x, level = c("within", "between"))`
   returns `c_w` or `c_b`; `te()`/`pm()` take the same `level`. `paths(x)` returns a named numeric of the six level-qualified paths
   (as `paths()` does for `ClusterMediationData`). `decompose(x)` returns a **named numeric with a `label` attribute and no SE**
   (the `ClusterMediationData` method does exactly that): `c(within = a_w b_w, between = a_b b_b, contrast = within - between)`.
@@ -131,8 +274,7 @@ Validator: finite paths; `vcov` symmetric PSD-ish with matching alias names; `n_
   planted defect: mock the relabel helper (`.relabel_clusters()`, the 2-1-1 plan's P2 device) to the identity and require the
   test to fail.
 - **Entry points (signatures checked):**
-  - S2: `extract_mediation(<lavaan>, treatment, mediator, outcome)` detects a two-level fit (`lavInspect(fit, "nclusters")`
-    non-null / two blocks) and builds the class; no new arguments except optional `level_names`.
+  - S2: `extract_mediation(<lavaan>, treatment, mediator, outcome)` detects a two-level fit with `lavInspect(fit, "nlevels") > 1` [superseded by section 0: `nclusters` and block counts are not valid, they are 1 for `cluster=` single-level fits] and builds the class; no new arguments except optional `level_names`.
   - S4: `fit_sem()` has no `cluster` argument today (`R/fit-sem.R:354`: `model, data, information, n_starts, control, weights, se_type, meanstructure, fixed_x, sampling_weights, missing`), so adding `cluster = NULL` is a signature change (an additive argument; it joins the API-freeze table in `tests/testthat/test-api-freeze.R`). `fit_sem(model, data, cluster = "id", ...)` accepts `level:` blocks only when `cluster` is given;
     `fit_mediation(engine = "native", model = , cluster = )` already has a `cluster` argument (used by the lmer engine, `R/fit-glm.R:238`); the native branch `.fit_mediation_native()` does not take it yet and must forward it, with a guard that today's native route errors on `cluster` without `level:` blocks; the error message in `R/sem-fit.R:97` becomes the
     "cluster missing" message when `cluster` is absent. `fit_mediation(formula-based, engine = "lmer")` is unchanged (it is the
@@ -223,7 +365,7 @@ The adapter (S2) needs only the lavaan, hand-delta and bootstrap rows (the boots
 - Each error message the new page quotes needs a test that triggers it (house rule, `test-guide-*.R`).
 - Cross-references to `ClusterMediationData` and the lavaan comparison article (`test-lavaan-comparison.R`).
 
-## 9. Open questions for the maintainer (grill agenda)
+## 9. Open questions for the maintainer (grill agenda) [superseded by section 0: Q1-Q11 are decided there; items 12-13 and the four items of 0.8 remain open]
 
 1. **Order:** adapter first (recommended) or native first? Is a lavaan-dependent first release acceptable to the ecosystem
    (lavaan is Suggests; the native engine avoids that)?
@@ -263,11 +405,11 @@ The adapter (S2) needs only the lavaan, hand-delta and bootstrap rows (the boots
 |---|---|---|---|
 | S0 | lavaan two-level guard | 0.5 day | normal |
 | S1 | grill + spec | 1 session | n/a |
-| S2 | adapter, class, generics, methods, docs | 5-7 days | normal |
+| S2 | adapter, class, generics, methods, docs, degenerate-X handling, label policy, fixed.x/information, oracles | 8-12 days (review revision; was 5-7) | normal |
 | S2c | optional: object-based effect dispatch for `bootstrap_mediation()` (generic, branch, provenance refit) | 4-6 days, grill first | normal |
 | S3 | oracle harness (incl. cluster-only covariate fixture) and simulation helpers | ~3-4 days | normal (tests/sim only) |
-| S4 | native observed-variable two-level ML, `cluster =`, gates | 3-4 weeks | **high** |
-| S5 | latent mediators, shared loadings | ~2 weeks | high |
+| S4 | native observed-variable two-level ML, `cluster =`, gates (NO-GO until section 0.5 and 0.8 are settled) | 3-4 weeks | **high** |
+| S5 | latent mediators, shared loadings (NO-GO until the identification literature is read) | ~2 weeks | high |
 | S6 | cluster sandwich | ~1 week | high |
 | S7 | FIML in clusters | unscoped (XL) | high |
 
