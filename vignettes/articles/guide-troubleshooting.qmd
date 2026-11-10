@@ -76,6 +76,30 @@ Examples on this site use medfit 0.13.0. If `mediation_demo` or
 | `clusters: inference on the cluster-level paths is unreliable` (a warning, fewer than 10 clusters) | too few clusters for any model-based interval | use `bootstrap_mediation(cluster = )` for the products |
 | `fewer than 25` (a warning) | 10 to 24 clusters with model-based standard errors | add `se_type = "kr"`, and bootstrap clusters for the products |
 
+## Two-level mediation
+
+The two-level route is `extract_mediation()` on a `lavaan` fit with `level:` blocks (see
+[Two-level mediation](model-twolevel.html)). Each condition carries a class, so you can handle or silence
+one kind.
+
+| You see | Class | Cause | Fix |
+|---|---|---|---|
+| `The between level is not identified, so only the within-level paths are returned` (a warning) | `medfit_between_unidentified` | the ICC of the treatment or the mediator is below 0.01, a between covariance is not finite or not positive definite, or the fit did not converge | read the within results, or fix the design; the between effects and the contrast are `NA` |
+| `The between-level variance of the treatment or the mediator is small` (a warning) | `medfit_warning_between_weak` | an ICC between 0.01 and 0.05 | the between results are kept but may be imprecise |
+| `The contrast NIE_within - NIE_between is NA` (a warning) | `medfit_warning_twolevel_constrained` | a or b is equated across levels (a shared label or an `==` row), so the contrast is zero by constraint | drop the cross-level constraint to compare the levels |
+| `The lavaan fit is not admissible` (a warning) | `medfit_warning_twolevel_inadmissible` | lavaan's `post.check` is `FALSE`, for example a negative variance | inspect the fit before using the numbers |
+| `Two-level estimates and between-level standard errors are unreliable with few clusters` (a warning) | `medfit_warning_twolevel_few_clusters` | fewer than 50 clusters (a judgment, not a published cutoff) | treat the between results as rough; `options(medfit.twolevel_min_clusters = )` changes the threshold |
+| `is ignored for a two-level fit` (a warning, once per session) | `medfit_warning_twolevel_labels_ignored` | `a_label`, `b_label` or `cp_label` was set | none needed: the paths are read by variable names and level |
+| `standardized = TRUE is not supported for a two-level fit` | `medfit_error_twolevel_standardized` | a standardized path mixes the within and the between variances | use the unstandardized paths |
+| `A product (interaction) term is not supported for a two-level fit` | `medfit_error_twolevel_product` | a `:` term in a regression, or `interaction =` | remove the product |
+| `A two-level fit supports exactly one mediator` | `medfit_error_twolevel_unsupported` | more than one mediator | one mediator only |
+| `is not in the model at the` | `medfit_error_twolevel_unsupported` | the treatment or mediator is missing at one level (a cluster-level treatment, 2-1-1) | use `fit_mediation(engine = "lmer", cluster = )`; see [Cluster-randomized trials](model-cluster.html) |
+| `is not assumed to be 0` | `medfit_error_twolevel_path_missing` | a path (`M ~ X`, `Y ~ M` or `Y ~ X`) is absent at a level | add it to the model, or fix it with `0*` |
+| `The two-level fit is not usable` | `medfit_error_twolevel_unusable` | the fit did not converge, or the within covariance is missing or not positive definite | fix the fit |
+| `is defined only for nie()` | `medfit_error_twolevel_level` | `level = "contrast"` for `nde()`, `te()` or `pm()` | use `tidy()` for those contrasts |
+| `The lavaan fit has more than two levels` | `medfit_error_lavaan_multilevel` | a three-level fit | fit a one- or two-level model |
+| `The lavaan fit has more than one group` | `medfit_error_lavaan_multigroup` | a multigroup fit | fit each group as its own model |
+
 ## Native engine
 
 | You see | Cause | Fix |

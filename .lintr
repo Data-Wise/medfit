@@ -16,6 +16,7 @@ exclusions: list(
     "tests/testthat/helper-fiml-generic.R" = list(object_usage_linter = Inf),
     # two-level effect helpers use tl_* fixtures defined in helper-twolevel.R
     "tests/testthat/helper-twolevel-effects.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-docs.R" = list(object_usage_linter = Inf),
     "tests/testthat/helper-fiml-golden.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g1-covariate.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g1-two-covariates.R" = list(object_usage_linter = Inf),
