@@ -6,10 +6,11 @@
 # lavaan's `:=` and labeled values: the chain NIE, its SE and (in the pure chain) the total effect are invariant to a
 # consistent d1/b swap, so a check on the effects alone could not catch that defect; the path rows can.
 # MUTANT= wrong_unit, no_offset, swap_b, dropped_cov, missing_guard, parcov_drop_path, parcov_orthogonal,
-# serial_admitted, serial_router_off, ser_swap_db, ser_drop_cross, ser_total_gradient, ser_drop_shortcut,
+# serial_router_off, ser_swap_db, ser_drop_cross, ser_total_gradient, ser_drop_shortcut,
 # ser_chain_free_shortcut, ser_chain_swap_db, ser_chain_origin, ser_chain_te_gradient, ser_cov_alias, ser_cov_drop_y,
 # ser_cov_wrong_offset, ser_chain_cov_treatment, ser_cov2_drop_gy, ser_cov2_wrong_offset, ser_cov_max_narrow,
-# ser_k2_closed alter production functions in memory only.
+# ser_k2_closed alter production functions in memory only. (The master-switch mutant `serial_admitted` was retired in
+# S4: with every valid serial shape public, flipping `.fiml_serial_admitted()` changes no probe: an equivalent mutant.)
 suppressMessages(pkgload::load_all(quiet = TRUE))
 source("tests/testthat/helper-sem.R")
 ns <- asNamespace("medfit")
@@ -49,9 +50,6 @@ if (mutant == "wrong_unit") {
     paste0("return({ t <- .sem_fiml_tables_parcov(k, direct, residual_covariance); ",
            "t$s <- t$s[!(t$s$row == \"X\" & t$s$col == t$vars[2L]), ]; t })")
   )
-} else if (mutant == "serial_admitted") {
-  # the serial fit-entry refusal removed: serial syntaxes that are valid but not yet public are fitted (R4 probes)
-  swap(".fiml_serial_admitted", "FALSE", "TRUE")
 } else if (mutant == "serial_router_off") {
   # serial detection disabled: serial syntax falls to the parallel parser and loses its Q2 and shortcut reasons
   swap(".sem_fiml_ser_detect", "length(outcome) == 1L", "FALSE && length(outcome) == 1L")
