@@ -149,8 +149,8 @@
 #' three or more covariates and a covariate on only some of the equations stay
 #' refused.
 #'
-#' Two serial mediators are fitted in two forms, each with no covariate or one
-#' covariate: the saturated forward graph `M1 ~ X`, `M2 ~ M1 + X` and
+#' Two serial mediators are fitted in two forms, each with no, one or two
+#' covariates: the saturated forward graph `M1 ~ X`, `M2 ~ M1 + X` and
 #' `Y ~ M1 + M2 + X`, and the pure chain `M1 ~ X`, `M2 ~ M1` and `Y ~ M2` (the direct
 #' path `Y ~ X` is free, `0*X`, or omitted in both without a covariate), with the independence of all three
 #' disturbance pairs written as `M1 ~~ 0*M2`, `M1 ~~ 0*Y` and `M2 ~~ 0*Y`
@@ -166,8 +166,15 @@
 #' `M2 ~ M1 + X + Z` or `M2 ~ M1 + Z`, `Y ~ ... + X + Z`), `X` and `Z` have a free
 #' covariance, and every exogenous variable needs a written `Y` path (free; at most
 #' one fixed at exactly zero, which makes that variable the treatment). The
-#' saturated model then has 20 free parameters (19) and the chain 18 (17). In the
-#' pure chain the treatment is structural, the variable with no path to `M2`.
+#' saturated model then has 20 free parameters (19) and the chain 18 (17). With two
+#' covariates `Z1` and `Z2` both predict every equation, the three exogenous
+#' covariances (`X ~~ Z1`, `X ~~ Z2`, `Z1 ~~ Z2`) are all written or none (a
+#' partial set is refused), and the saturated model has 27 free parameters (26) and
+#' the chain 25 (24). In the pure chain the treatment is structural, the variable
+#' with no path to `M2`: leaving a variable out of the equation of `M2` makes it the
+#' treatment, and exactly one variable may be left out. In the saturated graph with
+#' a fixed-zero direct path the variable with the fixed-zero path is the only valid
+#' treatment.
 #' [extract_mediation()] needs both mediators named in the fitted
 #' order (the reversed order is refused) and returns a `FIMLSerialMediationData`
 #' object with the full covariance of `a`, `a2` (X to M2), `d1` (M1 to M2), `b1`
@@ -178,10 +185,10 @@
 #' `nie(type = "total")` are the same effect. The covariate's coefficients are never
 #' paths: the aliases are the treatment's. In the saturated graph with a free direct
 #' path a covariate may be named the treatment; in the pure chain naming a covariate
-#' is refused. Its normal intervals
+#' is refused (both covariates, with the classed `medfit_error_fiml_extract_unsupported`). Its normal intervals
 #' are available; `pm()`, `quick()`, `glance()` and bootstrap intervals are not
 #' (`bootstrap_mediation(source_fit = )` stays withheld, and behind that guard a
-#' serial fit raises `medfit_error_fiml_serial_source_fit`). Serial models with two
+#' serial fit raises `medfit_error_fiml_serial_source_fit`). Serial models with three
 #' or more covariates and every other serial shape stay refused.
 #'
 #' Supply `fixed_x = FALSE` explicitly; omission, `TRUE` and named subsets are errors.

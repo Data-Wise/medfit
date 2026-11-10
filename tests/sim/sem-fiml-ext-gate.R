@@ -1,14 +1,16 @@
 # Extended bounded FIML gate (FI-G1 covariates, FI-G2 parallel mediators with zero, one or two covariates, FI-G3 slices
-# S1b, S2 and S3 the saturated serial variant and the pure chain, each with no covariate or one covariate).
+# S1b, S2, S3 and S4 the saturated serial variant and the pure chain, each with no, one or two covariates).
 # Oracle: matched lavaan raw-data FIML with observed information (estimates, covariance, logLik, defined indirect
 # effect and its delta SE). Two seeds each. For a serial structure `nie_estimate` and `nie_se` are the WORST of the
 # chain NIE (a*d1*b), the total indirect effect, the total effect and every extracted path (estimate, SE) against
 # lavaan's `:=` and labeled values: the chain NIE, its SE and (in the pure chain) the total effect are invariant to a
 # consistent d1/b swap, so a check on the effects alone could not catch that defect; the path rows can.
 # MUTANT= wrong_unit, no_offset, swap_b, dropped_cov, missing_guard, parcov_drop_path, parcov_orthogonal,
-# serial_admitted, serial_router_off, ser_swap_db, ser_drop_cross, ser_total_gradient, ser_drop_shortcut,
+# serial_router_off, ser_swap_db, ser_drop_cross, ser_total_gradient, ser_drop_shortcut,
 # ser_chain_free_shortcut, ser_chain_swap_db, ser_chain_origin, ser_chain_te_gradient, ser_cov_alias, ser_cov_drop_y,
-# ser_cov_wrong_offset, ser_chain_cov_treatment alter production functions in memory only.
+# ser_cov_wrong_offset, ser_chain_cov_treatment, ser_cov2_drop_gy, ser_cov2_wrong_offset, ser_cov_max_narrow,
+# ser_k2_closed alter production functions in memory only. (The master-switch mutant `serial_admitted` was retired in
+# S4: with every valid serial shape public, flipping `.fiml_serial_admitted()` changes no probe: an equivalent mutant.)
 suppressMessages(pkgload::load_all(quiet = TRUE))
 source("tests/testthat/helper-sem.R")
 ns <- asNamespace("medfit")
@@ -48,9 +50,6 @@ if (mutant == "wrong_unit") {
     paste0("return({ t <- .sem_fiml_tables_parcov(k, direct, residual_covariance); ",
            "t$s <- t$s[!(t$s$row == \"X\" & t$s$col == t$vars[2L]), ]; t })")
   )
-} else if (mutant == "serial_admitted") {
-  # the serial fit-entry refusal removed: serial syntaxes that are valid but not yet public are fitted (R4 probes)
-  swap(".fiml_serial_admitted", "FALSE", "TRUE")
 } else if (mutant == "serial_router_off") {
   # serial detection disabled: serial syntax falls to the parallel parser and loses its Q2 and shortcut reasons
   swap(".sem_fiml_ser_detect", "length(outcome) == 1L", "FALSE && length(outcome) == 1L")
@@ -108,6 +107,25 @@ if (mutant == "wrong_unit") {
   # the pure chain accepts a covariate as the treatment (Q6a): the probe below must then fail
   swap(".sem_fiml_extract_serial", "if (chain && named_cov) {", "if (FALSE) {")
   swap(".sem_fiml_extract_serial", "(named_cov && !chain && spec$direct)", "(named_cov && spec$direct)")
+} else if (mutant == "ser_cov2_drop_gy") {
+  # the second covariate is dropped from the outcome equation of the serial tables (a covariate-count defect: the k = 2
+  # fit then fails the parameter count, the k = 1 and k = 0 structures are untouched)
+  swap(
+    ".sem_fiml_tables_ser", "path(\"Y\", z, paste0(\"gy\", nm$sfx))", "path(\"Y\", z[1L], paste0(\"gy\", nm$sfx[1L]))"
+  )
+} else if (mutant == "ser_cov2_wrong_offset") {
+  # the centering of the SECOND covariate is not carried into the intercepts (only the k = 2 structures see it)
+  swap(
+    ".sem_fiml_transport", "transport[layout$intercepts$par[r], path$par] <- -center[path$predictor] * units[path$par]",
+    paste0("transport[layout$intercepts$par[r], path$par] <- -center[path$predictor] * units[path$par] * ",
+           "(path$predictor != \"Z2\")")
+  )
+} else if (mutant == "ser_cov_max_narrow") {
+  # the serial covariate limit narrowed to one (a covariate-count defect): the k = 2 structures are refused at fit
+  swap(".sem_fiml_model_ser", "k > .sem_fiml_ser_cov_max()", "k > 1L")
+} else if (mutant == "ser_k2_closed") {
+  # the admission predicate stops at one covariate (a regression of slice S4): the k = 2 structures are refused at fit
+  swap(".fiml_serial_shape_admitted", "as.integer(k) %in% 0:2", "as.integer(k) %in% 0:1")
 } else if (mutant == "missing_guard") {
   swap(".sem_fiml_refuse", "if (.sem_fiml_is(x))", "if (FALSE)")
 } else if (nzchar(mutant)) {
@@ -129,7 +147,17 @@ lav <- function(model, d) {
 make_data <- function(structure, seed, n = 300L) {
   set.seed(seed)
   x <- .5 + stats::rnorm(n)
-  if (structure %in% c("ser_sat1", "ser_chain1")) {
+  if (structure %in% c("ser_sat2", "ser_chain2")) {
+    # two covariates with large distinct effects; the pure chain data have no shortcut effects
+    sc <- structure == "ser_sat2"
+    z1 <- 1 + .5 * x + stats::rnorm(n, sd = 1.1)
+    z2 <- -.5 + .3 * x - .4 * z1 + stats::rnorm(n, sd = .9)
+    m1 <- .3 + .9 * x + 1.4 * z1 - .8 * z2 + stats::rnorm(n, sd = .7)
+    m2 <- -.2 + .7 * m1 + (if (sc) .4 * x else 0) - .9 * z1 + 1.1 * z2 + stats::rnorm(n, sd = .8)
+    y <- .2 + .6 * m2 + (if (sc) .35 * m1 else 0) + .25 * x + 1.7 * z1 - 1.2 * z2 + stats::rnorm(n, sd = .9)
+    d <- data.frame(X = x, Z1 = z1, Z2 = z2, M1 = m1, M2 = m2, Y = y)
+    vars <- names(d)
+  } else if (structure %in% c("ser_sat1", "ser_chain1")) {
     # one covariate with large effects distinct from the paths; the pure chain data have no shortcut effects
     sc <- structure == "ser_sat1"
     z1 <- 1 + .5 * x + stats::rnorm(n, sd = 1.1)
@@ -222,6 +250,20 @@ models$ser_chain1 <- list(
   fit = paste0("M1 ~ X + Z1\nM2 ~ M1 + Z1\nY ~ M2 + X + Z1", zeros3),
   lab = paste0("M1 ~ a*X + gm1*Z1\nM2 ~ d1*M1 + gm2*Z1\nY ~ b*M2 + cp*X + gy*Z1", zeros3,
                "\nnie := a*d1*b\nnie_tot := a*d1*b\nte := a*d1*b + cp"),
+  med = c("M1", "M2"), serial = TRUE, paths = c(a = "a", d1 = "d1", b = "b", c_prime = "cp")
+)
+# two covariates: Z1 and Z2 predict M1, M2 and Y in both variants (labels gm1a, gm1b, gm2a, gm2b, gya, gyb)
+models$ser_sat2 <- list(
+  fit = paste0("M1 ~ X + Z1 + Z2\nM2 ~ M1 + X + Z1 + Z2\nY ~ M1 + M2 + X + Z1 + Z2", zeros3),
+  lab = paste0("M1 ~ a*X + gm1a*Z1 + gm1b*Z2\nM2 ~ d1*M1 + a2*X + gm2a*Z1 + gm2b*Z2\n",
+               "Y ~ b1*M1 + b*M2 + cp*X + gya*Z1 + gyb*Z2", zeros3,
+               "\nnie := a*d1*b\nnie_tot := a*d1*b + a2*b + a*b1\nte := a*d1*b + a2*b + a*b1 + cp"),
+  med = c("M1", "M2"), serial = TRUE, paths = c(a = "a", a2 = "a2", d1 = "d1", b1 = "b1", b = "b", c_prime = "cp")
+)
+models$ser_chain2 <- list(
+  fit = paste0("M1 ~ X + Z1 + Z2\nM2 ~ M1 + Z1 + Z2\nY ~ M2 + X + Z1 + Z2", zeros3),
+  lab = paste0("M1 ~ a*X + gm1a*Z1 + gm1b*Z2\nM2 ~ d1*M1 + gm2a*Z1 + gm2b*Z2\nY ~ b*M2 + cp*X + gya*Z1 + gyb*Z2",
+               zeros3, "\nnie := a*d1*b\nnie_tot := a*d1*b\nte := a*d1*b + cp"),
   med = c("M1", "M2"), serial = TRUE, paths = c(a = "a", d1 = "d1", b = "b", c_prime = "cp")
 )
 for (kk in 1:2) {
@@ -322,7 +364,8 @@ sat1 <- "M1 ~ X + Z1\nM2 ~ M1 + X + Z1\nY ~ M1 + M2 + X + Z1"
 chn1 <- "M1 ~ X + Z1\nM2 ~ M1 + Z1\nY ~ M2 + X + Z1"
 sat2 <- "M1 ~ X + Z1 + Z2\nM2 ~ M1 + X + Z1 + Z2\nY ~ M1 + M2 + X + Z1 + Z2"
 chn2 <- "M1 ~ X + Z1 + Z2\nM2 ~ M1 + Z1 + Z2\nY ~ M2 + X + Z1 + Z2"
-omit <- "not yet available"
+sat3 <- "M1 ~ X + Z1 + Z2 + Z3\nM2 ~ M1 + X + Z1 + Z2 + Z3\nY ~ M1 + M2 + X + Z1 + Z2 + Z3"
+chn3 <- "M1 ~ X + Z1 + Z2 + Z3\nM2 ~ M1 + Z1 + Z2 + Z3\nY ~ M2 + X + Z1 + Z2 + Z3"
 refused <- list(
   three_covariates = list("M ~ X + Z1 + Z2 + Z3\nY ~ M + X + Z1 + Z2 + Z3"),
   covariate_on_M_only = list("M ~ X + Z1\nY ~ M + X"),
@@ -350,7 +393,18 @@ refused <- list(
     paste0("M1 ~ X + 0*Z1\nM2 ~ M1 + X + Z1\nY ~ M1 + M2 + X + Z1", zeros), "may be fixed"
   ),
   k1_both_y_paths_fixed = list(paste0("M1 ~ X + Z1\nM2 ~ M1 + X + Z1\nY ~ M1 + M2 + 0*X + 0*Z1", zeros), "only one"),
-  serial_saturated_k2 = list(paste0(sat2, zeros), omit), serial_chain_k2 = list(paste0(chn2, zeros), omit),
+  # S4 probes: two covariates are public; a third is refused, and the k = 2 rules are enforced
+  serial_saturated_k3 = list(paste0(sat3, zeros), "number of FIML covariates"),
+  serial_chain_k3 = list(paste0(chn3, zeros), "number of FIML covariates"),
+  k2_omitted_y_path = list(paste0("M1 ~ X + Z1 + Z2\nM2 ~ M1 + X + Z1 + Z2\nY ~ M1 + M2 + X + Z1", zeros), "Y path"),
+  k2_covariate_on_some_equations = list(
+    paste0("M1 ~ X + Z1 + Z2\nM2 ~ M1 + X + Z1\nY ~ M1 + M2 + X + Z1 + Z2", zeros), "shortcut"
+  ),
+  k2_partial_exo_cov = list(paste0(sat2, zeros, "\nX ~~ Z1"), "exogenous covariance"),
+  k2_partial_exo_cov_chain = list(paste0(chn2, zeros, "\nX ~~ Z1\nX ~~ Z2"), "exogenous covariance"),
+  k2_two_y_paths_fixed = list(paste0("M1 ~ X + Z1 + Z2\nM2 ~ M1 + X + Z1 + Z2\nY ~ M1 + M2 + 0*X + 0*Z1 + Z2", zeros),
+                              "only one"),
+  k2_chain_two_absent = list(paste0("M1 ~ X + Z1 + Z2\nM2 ~ M1 + Z2\nY ~ M2 + X + Z1 + Z2", zeros), "shortcut"),
   parallel_covariate_on_one_mediator = list("M1 ~ X + Z1\nM2 ~ X\nY ~ M1 + M2 + X + Z1\nM1 ~~ 0*M2"),
   parallel_three_covariates = list(paste0("M1 ~ X + Z1 + Z2 + Z3\nM2 ~ X + Z1 + Z2 + Z3\n",
                                           "Y ~ M1 + M2 + X + Z1 + Z2 + Z3\nM1 ~~ 0*M2")),
@@ -382,6 +436,25 @@ accepted[["serial_chain_covariate_treatment_extraction"]] <-
   !inherits(chain1_err, "medfit_error_fiml_extract_unsupported")
 chain1_ok <- tryCatch(extract_mediation(chain1_fit, treatment = "X", mediator = c("M1", "M2")), error = identity)
 accepted[["serial_chain_structural_treatment_refused"]] <- inherits(chain1_ok, "error")
+# S4: a covariate named the treatment of the pure chain with two covariates is refused at extraction (both covariates);
+# in the saturated graph with a fixed-zero direct path naming another variable is refused with the class
+chain2_fit <- tryCatch(fit_sem(paste0(chn2, zeros), big, missing = "fiml", fixed_x = FALSE, meanstructure = TRUE),
+                       error = identity)
+for (tr in c("Z1", "Z2")) {
+  e2 <- tryCatch(extract_mediation(chain2_fit, treatment = tr, mediator = c("M1", "M2")), error = identity)
+  accepted[[paste0("serial_chain2_covariate_treatment_", tr)]] <-
+    !inherits(e2, "medfit_error_fiml_extract_unsupported")
+}
+chain2_ok <- tryCatch(extract_mediation(chain2_fit, treatment = "X", mediator = c("M1", "M2")), error = identity)
+accepted[["serial_chain2_structural_treatment_refused"]] <- inherits(chain2_ok, "error")
+fz_fit <- tryCatch(
+  fit_sem(paste0("M1 ~ X + Z1 + Z2\nM2 ~ M1 + X + Z1 + Z2\nY ~ M1 + M2 + X + Z1 + 0*Z2", zeros), big,
+          missing = "fiml", fixed_x = FALSE, meanstructure = TRUE),
+  error = identity
+)
+fz_err <- tryCatch(extract_mediation(fz_fit, treatment = "X", mediator = c("M1", "M2")), error = identity)
+accepted[["serial_sat2_fixed_zero_other_treatment"]] <- !(inherits(fz_err, "medfit_error_fiml_extract_unsupported") &&
+                                                            grepl("fixed-zero direct path", conditionMessage(fz_err)))
 # a pair of variables never jointly observed (saturated serial, direct path free): fails closed at the numerical stage
 never <- big[, c("X", "M1", "M2", "Y")]
 never$M2 <- .5 * never$M1 + stats::rnorm(nrow(never))

@@ -62,8 +62,8 @@ object when \code{mediator} names both mediators (\code{structure = "parallel"} 
 \code{"auto"}); it carries the full covariance of the paths, and a refusal has
 class \code{medfit_error_fiml_extract_unsupported}. With one or two covariates
 the same rules as for the one-mediator covariate fits choose the treatment.
-A two-mediator serial fit (the saturated graph or the pure chain, with no
-covariate or one covariate) extracts to a \code{FIMLSerialMediationData} object when \code{mediator}
+A two-mediator serial fit (the saturated graph or the pure chain, with no,
+one or two covariates) extracts to a \code{FIMLSerialMediationData} object when \code{mediator}
 names both mediators in the fitted order (a reversed order is refused with
 the same class); it carries the full covariance of \code{a}, \code{a2}, \code{d1}, \code{b1}, \code{b}
 and \code{c_prime} (saturated) or of \code{a}, \code{d1}, \code{b} and \code{c_prime} (chain).

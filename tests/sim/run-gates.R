@@ -477,7 +477,8 @@ verdict_gate <- function(gate, d, s) {
       checks <- c("estimates", "covariance", "likelihood", "retained", "provenance", "nie_estimate", "nie_se", "guard")
       structures <- c(
         "cov1", "cov2", "par_ind", "par_free",
-        "parcov1_ind", "parcov1_free", "parcov2_ind", "parcov2_free", "ser_sat0", "ser_chain0", "ser_sat1", "ser_chain1"
+        "parcov1_ind", "parcov1_free", "parcov2_ind", "parcov2_free", "ser_sat0", "ser_chain0",
+        "ser_sat1", "ser_chain1", "ser_sat2", "ser_chain2"
       )
       cells <- as.vector(outer(structures, c(4111L, 7219L), paste, sep = "-"))
       expected <- c(as.vector(outer(cells, checks, paste, sep = ":")), "refusals:unadmitted_accepted")
@@ -487,7 +488,7 @@ verdict_gate <- function(gate, d, s) {
       rbind(
         rows_chk(d, s),
         chk("complete cells", identical(sort(keys), sort(expected)),
-            "twelve structures x two seeds x eight checks plus the refusal count, no duplicates"),
+            "fourteen structures x two seeds x eight checks plus the refusal count, no duplicates"),
         chk("numerical checks", all(is.finite(d$value) & d$value >= 0 & d$value <= d$limit),
             "every recorded discrepancy satisfies its frozen limit"),
         chk("frozen limits", all(d$limit == limits[d$check]), "limits cannot be widened in results"),

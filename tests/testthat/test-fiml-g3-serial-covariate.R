@@ -33,32 +33,14 @@ test_that("k = 1 is a public fit for both variants and direct policies; paramete
   }
 })
 
-test_that("the admission predicates open k = 1 for both variants and keep k = 2 closed", {
+test_that("the admission predicates open k = 0 and k = 1 for both variants (k = 2 opened in slice S4)", {
   for (v in c("saturated", "chain")) {
     for (k in 0:1) {
       expect_true(.fiml_serial_shape_admitted(v, k), info = paste(v, k))
       expect_true(.fiml_serial_extract_supported(v, k), info = paste(v, k))
     }
-    expect_false(.fiml_serial_shape_admitted(v, 2L))
-    expect_false(.fiml_serial_extract_supported(v, 2L))
   }
   expect_false(.fiml_serial_shape_admitted("bogus", 1L))
-})
-
-test_that("k = 2 serial syntax stays refused with the not-yet-available reason, for both variants", {
-  d <- s3_data("complete")
-  d$Z1 <- d$Z
-  d$Z2 <- stats::rnorm(nrow(d))
-  for (v in c("saturated", "chain")) {
-    sat <- v == "saturated"
-    m <- paste(c(
-      "M1 ~ X + Z1 + Z2", paste("M2 ~ M1 +", if (sat) "X + " else "", "Z1 + Z2"),
-      paste("Y ~", if (sat) "M1 + " else "", "M2 + X + Z1 + Z2"), s3_zeros
-    ), collapse = "\n")
-    e <- tryCatch(fit_sem(m, d, missing = "fiml", fixed_x = FALSE), error = identity)
-    expect_s3_class(e, "medfit_sem_fiml_error")
-    expect_match(conditionMessage(e), "serial FIML is not yet available", info = v)
-  }
 })
 
 # ---- V1: lavaan raw-data FIML ----------------------------------------------------------------------------------------
@@ -451,24 +433,6 @@ test_that("extraction refuses the reversed mediators, a covariate as mediator, s
   expect_s3_class(s3_extract(f, structure = "serial"), "medfit::FIMLSerialMediationData")
 })
 
-test_that("k = 2 extraction stays refused for a mock-opened fit, both variants", {
-  d <- s3_data("complete")
-  d$Z1 <- d$Z
-  d$Z2 <- stats::rnorm(nrow(d))
-  testthat::local_mocked_bindings(.fiml_serial_admitted = function() TRUE)
-  for (v in c("saturated", "chain")) {
-    sat <- v == "saturated"
-    m <- paste(c(
-      "M1 ~ X + Z1 + Z2", paste("M2 ~ M1 +", if (sat) "X + " else "", "Z1 + Z2"),
-      paste("Y ~", if (sat) "M1 + " else "", "M2 + X + Z1 + Z2"), s3_zeros
-    ), collapse = "\n")
-    f <- fit_sem(m, d, missing = "fiml", fixed_x = FALSE)
-    e <- tryCatch(s3_extract(f), error = identity)
-    expect_s3_class(e, "medfit_error_fiml_extract_unsupported")
-    expect_match(conditionMessage(e), "not yet available", info = v)
-  }
-})
-
 # ---- the validator ---------------------------------------------------------------------------------------------------
 
 test_that("the validator rejects forgeries with a covariate: dropped, on some equations only, wrong treatment", {
@@ -613,7 +577,10 @@ test_that("the k = 1 tables are frozen with identical() for S4; the refusal dump
   b3 <- readRDS(test_path("fixtures", "fiml-refusals-after-g3s3.rds"))
   expect_identical(b3$models, b2$models)
   changed <- c("ser_sat1_zeros", "ser_chain1_zeros", "ser_chain_z_omitted", "ser_partial_exo_cov_sat1")
-  for (nm in names(b3$models)) {
+  # the entries slice S4 changed (the k = 2 shapes became fits; a partial exogenous covariance set has its own reason)
+  # are pinned against the post-S4 dump in test-fiml-g3-serial-two-cov.R
+  s4_changed <- c("ser_sat2_zeros", "ser_chain2_zeros", "ser_all_exo_cov_sat2", "ser_partial_exo_cov_sat2")
+  for (nm in setdiff(names(b3$models), s4_changed)) {
     got <- s3_observe(b3$models[[nm]], b3$data)
     expect_identical(got$class, b3$results[[nm]]$class, info = nm)
     expect_identical(got$message, b3$results[[nm]]$message, info = nm)

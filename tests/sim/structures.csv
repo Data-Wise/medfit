@@ -21,3 +21,5 @@ bounded random-X FIML with serial mediators,syntax,fiml-ext,model-native
 bounded random-X FIML with the pure chain of serial mediators,syntax,fiml-ext,model-native
 bounded random-X FIML with serial mediators and one covariate,syntax,fiml-ext,model-native
 bounded random-X FIML with the pure chain of serial mediators and one covariate,syntax,fiml-ext,model-native
+bounded random-X FIML with serial mediators and two covariates,syntax,fiml-ext,model-native
+bounded random-X FIML with the pure chain of serial mediators and two covariates,syntax,fiml-ext,model-native
