@@ -4,13 +4,13 @@
 # production kernel: matched lavaan raw-data FIML (estimates, logLik, the full covariance and the `:=` effects), the
 # closed-form complete-data equation-wise OLS with its block-diagonal covariance, a from-scratch rowwise likelihood
 # with an independent Hessian, the unrestricted multivariate-normal likelihood, and OpenMx for one cell per variant.
-# Helpers: helper-fiml-serial.R (sb_*) and helper-fiml-serial3.R (s3_*). The covariate effects in the data-generating process are
-# large and distinct from the path values, so a covariate coefficient mistaken for a path cannot hide.
+# Helpers: helper-fiml-serial.R (sb_*) and helper-fiml-serial3.R (s3_*). The covariate effects in the data-generating
+# process are large and distinct from the path values, so a covariate coefficient mistaken for a path cannot hide.
 
 s3_observe <- function(model, data) {
   e <- tryCatch(fit_sem(model, data, missing = "fiml", fixed_x = FALSE), error = identity)
-  if (!inherits(e, "error")) return(list(class = "<fit>", message = NA_character_))
-  list(class = class(e), message = conditionMessage(e))
+  if (!inherits(e, "error")) return(list(class = "<fit>", message = NA_character_, stage = NA_character_))
+  list(class = class(e), message = conditionMessage(e), stage = if (is.null(e$stage)) NA_character_ else e$stage)
 }
 s3_cells <- expand.grid(variant = c("saturated", "chain"), direct = c("free", "zero"), stringsAsFactors = FALSE)
 
@@ -317,6 +317,51 @@ test_that("printing and summarizing the extracted objects with a covariate do no
   }
 })
 
+# ---- exact-origin rules with a covariate in the fit ------------------------------------------------------------------
+
+test_that("the per-effect exact-origin rules hold for k = 1 objects in both variants, in tidy() and confint()", {
+  na_row <- function(w, term) {
+    t <- suppressWarnings(generics::tidy(w, type = "effects"))
+    is.na(t$std_error[t$term == term])
+  }
+  notes <- function(w) attr(suppressWarnings(generics::tidy(w, type = "effects")), "note")
+  ci_na <- function(w, term) all(is.na(suppressWarnings(confint(w, parm = "effects"))[term, ]))
+  for (v in c("saturated", "chain")) {
+    z <- s3_obj(v, "free", "mar")$z
+    expect_identical(z@fit_context$covariate, "Z")
+    # two of a, d1, b exactly zero: the chain effect is withheld, with its note
+    for (zero in list(c("a", "d1"), c("a", "b"), c("d1", "b"))) {
+      w <- sb_forge(z, stats::setNames(as.list(rep(0, 2L)), zero))
+      expect_true(na_row(w, "nie"), info = paste(v, paste(zero, collapse = "")))
+      expect_true(ci_na(w, "nie"), info = paste(v, paste(zero, collapse = "")))
+      expect_identical(unname(notes(w)["nie"]), sb_note_nie)
+      expect_false(na_row(w, "te"))
+      expect_false(na_row(w, "nde"))
+      if (v == "chain") {
+        # the pure chain's total indirect row is the same effect and is withheld with it
+        expect_true(na_row(w, "nie_total"))
+        expect_identical(unname(notes(w)["nie_total"]), sb_note_total)
+      }
+    }
+    # one zero factor keeps every SE finite and no note
+    w <- sb_forge(z, list(a = 0))
+    expect_false(na_row(w, "nie"))
+    expect_false(na_row(w, "nie_total"))
+    expect_null(notes(w))
+    expect_false(ci_na(w, "nie"))
+  }
+  # saturated: the total indirect effect is withheld only when a = a2 = b = b1 = 0; nie_total stays finite at a = d1 = 0
+  z <- s3_obj("saturated", "free", "mar")$z
+  w <- sb_forge(z, list(a = 0, d1 = 0))
+  expect_false(na_row(w, "nie_total"))
+  w <- sb_forge(z, list(a = 0, a2 = 0, b = 0, b1 = 0))
+  expect_true(na_row(w, "nie_total") && na_row(w, "nie"))
+  expect_true(ci_na(w, "nie_total"))
+  expect_identical(notes(w), c(nie = sb_note_nie, nie_total = sb_note_total))
+  expect_false(na_row(w, "te"))
+  expect_false(na_row(w, "nde"))
+})
+
 # ---- the treatment rule (Q6 and Q6a) ---------------------------------------------------------------------------------
 
 test_that("saturated: a covariate may be the treatment and takes a = gm1, a2 = gm2, c_prime = gy (lavaan, relabeled)", {
@@ -571,6 +616,7 @@ test_that("the k = 1 tables are frozen with identical() for S4; the refusal dump
     got <- s3_observe(b3$models[[nm]], b3$data)
     expect_identical(got$class, b3$results[[nm]]$class, info = nm)
     expect_identical(got$message, b3$results[[nm]]$message, info = nm)
+    expect_identical(got$stage, b3$results[[nm]]$stage, info = nm)
     if (nm %in% changed) {
       expect_identical(b3$results[[nm]]$class, "<fit>", info = nm)
       expect_match(b2$results[[nm]]$message, "serial FIML is not yet available", info = nm)

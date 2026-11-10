@@ -102,7 +102,7 @@ if (mutant == "wrong_unit") {
   swap(
     ".sem_fiml_transport", "transport[layout$intercepts$par[r], path$par] <- -center[path$predictor] * units[path$par]",
     paste0("transport[layout$intercepts$par[r], path$par] <- -center[path$predictor] * units[path$par] * ",
-           "(path$predictor != \"Z1\")")
+           "(path$predictor != \"Z\")")
   )
 } else if (mutant == "ser_chain_cov_treatment") {
   # the pure chain accepts a covariate as the treatment (Q6a): the probe below must then fail

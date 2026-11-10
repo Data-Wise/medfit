@@ -779,7 +779,8 @@
   if (chain && named_cov) {
     refuse(paste0(
       "FIML extraction of the pure serial chain needs the structural treatment (", x0, ", the variable with no path ",
-      "to the second mediator); a covariate cannot be named the treatment"
+      "to the second mediator); a covariate cannot be named the treatment, because its free paths to the second ",
+      "mediator and the outcome would make the graph the one-shortcut graph that is refused"
     ))
   }
   # With a free direct path any exogenous variable may be the saturated treatment; a fixed-zero direct path belongs to
