@@ -25,6 +25,17 @@
   `medfit_warning_twolevel_constrained` when a or b is equated across levels. Intervals are
   Wald (no small-sample correction).
 
+* `twolevel_statistic()` builds the scalar callback `bootstrap_mediation()` needs for a two-level
+  effect (`nie_within`, `nie_between`, `nie_contrast`, the other per-level effects and the six
+  paths). Given a `TwoLevelMediationData` it is the parametric callback; given a two-level `lavaan`
+  fit (plus `treatment`, `mediator`, `outcome`) it refits the fit's own model on each cluster
+  resample, with a cluster drawn twice refitted as two clusters. A refit that errors, warns, does
+  not converge or leaves the between level unidentified is a failed replicate, excluded and counted
+  in the bootstrap warning. A between effect of a within-only object and the contrast of a fit with
+  `a` or `b` equated across levels raise `medfit_between_unidentified` and
+  `medfit_error_twolevel_constrained`. `bootstrap_mediation()` now accepts a `TwoLevelMediationData`
+  as `mediation_data`. Object-based cluster bootstrap dispatch is still deferred (#394).
+
 * `print()` and `summary()` of a serial FIML object (`FIMLSerialMediationData`) now name
   the variant (saturated, or the pure chain without shortcut paths) and the covariates
   on the line under the chain. The printed numbers are unchanged.
