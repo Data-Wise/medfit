@@ -35,7 +35,7 @@ test_that("O8 (b): maximizing the hand likelihood reproduces lavaan's within and
   skip_on_cran()
   for (d in list(tl_data_balanced(), tl_data_unbalanced())) {
     fit <- tl_fit_lavaan(d)
-    hand <- tl_fit(d)
+    hand <- tl_o8_fit(d)
     tl_check_paths(hand, fit)
     tl_check_loglik(hand$loglik, as.numeric(lavaan::logLik(fit)))
     # the hand maximum is not below the likelihood at lavaan's converged point (to its tolerance)
@@ -47,7 +47,7 @@ test_that("O8 (b): maximizing the hand likelihood reproduces lavaan's within and
 test_that("O8 (c): the balanced closed form Sigma_W = S_PW, Sigma_B = (S_B - S_PW) / n agrees", {
   skip_if_not_installed("lavaan")
   d <- tl_data_balanced()
-  cf <- tl_closed_form(d)
+  cf <- tl_o8_closed_form(d)
   expect_equal(cf$n, 6)
   # the closed form is the MLE only when the between estimate is positive definite
   skip_if_not(all(eigen(cf$sb, symmetric = TRUE)$values > 0), "closed-form Sigma_B is not positive definite")
@@ -110,7 +110,7 @@ test_that("O8 (d): planted defects in the hand likelihood are caught", {
     verbose_o8("\nO8 (d) defect %s: hand %.4f  lavaan %.4f\n", defect, bad, lav_ll)
     expect_failure(tl_check_loglik(bad, lav_ll))
     # (b) fails: maximizing the defective density does not reproduce lavaan's paths
-    bad_fit <- tl_fit(d, defect = defect)
+    bad_fit <- tl_o8_fit(d, defect = defect)
     pt <- lavaan::parameterEstimates(fit)
     verbose_o8(
       "O8 (d) defect %s paths: a_b %.4f (lavaan %.4f, se %.4f)  b_b %.4f (lavaan %.4f)  cp_b %.4f (lavaan %.4f)\n",
