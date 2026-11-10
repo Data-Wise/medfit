@@ -113,6 +113,11 @@
 #' }
 #' }
 #'
+#' @section Limits:
+#' Fits with more than one level (`lavaan::sem(..., cluster = )` with `level:` blocks) are refused with the
+#' classed error `medfit_error_lavaan_multilevel`; extraction would otherwise read the within level only.
+#' Fit a single-level model, or wait for the two-level adapter planned in issue #394.
+#'
 #' @keywords internal
 extract_mediation_lavaan <- function(object,
                                      treatment,
@@ -132,6 +137,8 @@ extract_mediation_lavaan <- function(object,
   # A lavaan fit is wrapped (and lavaan's availability checked) by the lavaan
   # accessor; a ready-made accessor list passes through, so a native fit can be
   # extracted with lavaan absent.
+  # A multi-level lavaan fit is refused before anything is read (#394): the workers would use the within block.
+  if (inherits(object, "lavaan")) .assert_lavaan_single_level(object)
   acc <- .sem_as_accessors(object)
 
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
@@ -1355,4 +1362,29 @@ extract_mediation_lavaan <- function(object,
 #' @noRd
 .lavaan_n_obs <- function(acc) {
   as.integer(round(sum(acc$nobs())))
+}
+
+# TRUE when a lavaan fit has more than one level. `lavInspect(, "nlevels")` is the public API; the parameter
+# table's `level` column is the fallback. When neither can be read the fit is treated as single-level, so the
+# guard can never block an ordinary fit on its own failure.
+.lavaan_is_multilevel <- function(object) {
+  nl <- tryCatch(as.integer(lavaan::lavInspect(object, "nlevels")), error = function(e) NA_integer_)
+  if (length(nl) == 1L && !is.na(nl)) return(nl > 1L)
+  lev <- tryCatch(lavaan::parTable(object)$level, error = function(e) NULL)
+  !is.null(lev) && length(unique(lev[!is.na(lev)])) > 1L
+}
+
+.assert_lavaan_single_level <- function(object) {
+  if (!.lavaan_is_multilevel(object)) return(invisible(object))
+  stop(structure(
+    class = c("medfit_error_lavaan_multilevel", "error", "condition"),
+    list(
+      message = paste0(
+        "The lavaan fit has two levels (within and between). extract_mediation() would silently use the ",
+        "within level only, with N equal to the total number of rows, so it refuses. Fit a single-level ",
+        "model instead; a two-level adapter is planned (issue #394)."
+      ),
+      call = NULL
+    )
+  ))
 }
