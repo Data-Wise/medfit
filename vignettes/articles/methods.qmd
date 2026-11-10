@@ -55,6 +55,7 @@ is no longer a natural indirect effect on the outcome scale.
 | several mediators, not chained, no product | `ParallelMediationData` | $\sum_j a_j b_j$ |
 | several mediators, $X \times M_i$ in the outcome | `JointMediationData` | joint NIE through all mediators |
 | treatment assigned to whole clusters, `lmer` fits | `ClusterMediationData` | $a \, b_B$, split into own $a \, b_W$ and spillover $a (b_B - b_W)$ |
+| $X$, $M$, $Y$ on level-1 units, two-level `lavaan` fit | `TwoLevelMediationData` | $a_w b_w$ within and $a_b b_b$ between; the contrast is descriptive |
 
 `extract_mediation()` chooses the class from the models; `fit_mediation()`
 fits single-mediator models and returns the first two, or, with
@@ -381,6 +382,81 @@ medfit does not support, in this design: treatment varying within clusters
 (1-1-1), non-Gaussian outcomes or mediators, treatment-by-mediator or
 covariate-by-mediator products, random slopes on anything but the within-cluster
 mediator term, or individual-average effects.
+
+## Two-level mediation (1-1-1)
+
+### Model and effects
+
+Treatment, mediator and outcome are measured on level-1 units $i$ in clusters $j$. In lavaan's two-level
+parameterization each variable is a within part (a unit's deviation from its cluster) plus a between part (a
+*latent* cluster mean), and the same three regressions hold at each level $\ell \in \{w, b\}$:
+
+$$
+M = a_\ell X + e_M, \qquad Y = b_\ell M + c'_\ell X + e_Y .
+$$
+
+Slopes are fixed: they do not vary over clusters. Per level, with $\ell$ the level,
+
+$$
+\text{NIE}_\ell = a_\ell b_\ell, \qquad \text{NDE}_\ell = c'_\ell, \qquad
+\text{TE}_\ell = a_\ell b_\ell + c'_\ell, \qquad \text{PM}_\ell = \text{NIE}_\ell / \text{TE}_\ell ,
+$$
+
+and the contrast is $\text{NIE}_w - \text{NIE}_b$. No cross-level total effect or proportion mediated is
+defined. $\text{PM}_\ell$ is `NA` when $|\text{TE}_\ell|$ is below machine epsilon.
+
+### Delta method with the cross-level covariance
+
+Let $\hat\theta = (a_w, b_w, c'_w, a_b, b_b, c'_b)$ and $\hat V$ the corresponding $6 \times 6$ sub-block of
+lavaan's joint covariance of the free parameters, read by free-parameter index (never by label). The
+cross-level entries such as $\text{Cov}(\hat a_w, \hat a_b)$ are carried, not set to zero. Each effect $g(\theta)$
+has standard error $\sqrt{\nabla g^\top \hat V \nabla g}$ with
+
+| Term | Gradient over $(a_w, b_w, c'_w, a_b, b_b, c'_b)$ |
+|---|---|
+| $\text{NIE}_w$ | $(b_w, a_w, 0, 0, 0, 0)$ |
+| $\text{NIE}_b$ | $(0, 0, 0, b_b, a_b, 0)$ |
+| contrast | $(b_w, a_w, 0, -b_b, -a_b, 0)$ |
+| $\text{NDE}_\ell$ | a unit vector on $c'_\ell$ |
+| $\text{TE}_\ell$ | the $\text{NIE}_\ell$ gradient plus that unit vector |
+| $\text{PM}_\ell$ | $(\text{TE}_\ell \nabla \text{NIE}_\ell - \text{NIE}_\ell \nabla \text{TE}_\ell) / \text{TE}_\ell^2$ (quotient rule) |
+
+Intervals are Wald (normal); there is no small-sample correction. A path pair equated across levels (a shared
+label or an `==` constraint) repeats a row and column of $\hat V$ (correlation 1), and the contrast is then zero
+by constraint, so it is reported `NA`.
+
+### Bootstrap
+
+`twolevel_statistic()` gives `bootstrap_mediation()` the scalar $g(\theta)$ of the effect above. The parametric
+route draws $\theta^{*} \sim N(\hat\theta, \hat V)$, so the cross-level covariance is part of every draw. The
+cluster route resamples whole clusters with replacement and refits the fit's own model on each resample, a
+cluster drawn twice counting as two clusters. Refits that are inadmissible are kept, as the point estimate
+keeps its own; a refit that fails or leaves the between level unidentified is excluded and counted. Because
+boundary refits give the between effects and the contrast heavy tails, report the percentile interval; the
+plain standard deviation of the draws is not a standard error for them.
+
+### Caveats
+
+- **Fixed versus random slopes.** With random slopes the average indirect effect is $ab + \sigma_{ab}$, where
+  $\sigma_{ab}$ is the covariance of the cluster-specific $a_j$ and $b_j$ (Kenny et al., 2003; Bauer et al.,
+  2006). The fixed-slope $ab$ equals it only when $\sigma_{ab} = 0$.
+- **Latent versus manifest cluster means.** The between effects use latent cluster means (Lüdtke et al.,
+  2008). Observed cluster means are a different model with a different causal story (Preacher et al., 2010);
+  medfit does not offer it.
+- **The contrast is descriptive.** No source supports $\text{NIE}_w - \text{NIE}_b$ as a named test; its
+  standard error is a delta-method standard error, not a test of equal indirect effects.
+- **Few clusters.** No source gives a cluster count below which the estimates or the between standard errors
+  can be trusted. The warning below 50 clusters is a judgment, and the threshold is an option.
+- **`fixed.x = TRUE`.** The between standard errors are conditional on the sample between-level moments of the
+  treatment.
+- **Identification.** The between slopes need between variance in the treatment and the mediator. The adapter
+  treats an ICC below 0.01 as unidentified (a within-only result) and warns between 0.01 and 0.05; both cutoffs
+  are judgments.
+
+### What is not supported
+
+Random slopes, latent or non-Gaussian variables, more than one mediator, product terms, standardized
+effects, three-level and multigroup fits, and manifest cluster means.
 
 ## Covariance of the estimates
 
@@ -1144,15 +1220,25 @@ anova(fit, fit0)
 
 ## References
 
+Bauer, D. J., Preacher, K. J., & Gil, K. M. (2006). Conceptualizing and testing random indirect effects and
+moderated mediation in multilevel models. *Psychological Methods*, 11(2), 142–163.
+<https://doi.org/10.1037/1082-989X.11.2.142>
+
 Falk, C. F., Vogel, T. A., Hammami, S., & Miočević, M. (2024). Multilevel
 mediation analysis in R: A comparison of bootstrap and Bayesian approaches.
 *Behavior Research Methods*, 56(2), 750–764.
 <https://doi.org/10.3758/s13428-023-02079-4>
 
+Kenny, D. A., Korchmaros, J. D., & Bolger, N. (2003). Lower level mediation in multilevel models.
+*Psychological Methods*, 8(2), 115–128. <https://doi.org/10.1037/1082-989X.8.2.115>
+
 Lüdtke, O., Marsh, H. W., Robitzsch, A., Trautwein, U., Asparouhov, T., &
 Muthén, B. (2008). The multilevel latent covariate model: A new, more reliable
 approach to group-level effects in contextual studies. *Psychological
 Methods*, 13(3), 203–229. <https://doi.org/10.1037/a0012869>
+
+Preacher, K. J., Zyphur, M. J., & Zhang, Z. (2010). A general multilevel SEM framework for assessing
+multilevel mediation. *Psychological Methods*, 15(3), 209–233. <https://doi.org/10.1037/a0020141>
 
 Talloen, W., Moerkerke, B., Loeys, T., De Naeghel, J., Van Keer, H., &
 Vansteelandt, S. (2016). Estimation of indirect effects in the presence of

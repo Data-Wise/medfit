@@ -1,4 +1,4 @@
-# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): twenty-two numbered
+# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): twenty-three numbered
 # recipes, every article link resolves, and the cluster recipe simulates the same
 # data as methods.qmd so their numbers agree. Skips when the vignettes are absent
 # (installed or built package).
@@ -14,10 +14,10 @@ article_text <- function(name) {
   paste(readLines(p, warn = FALSE), collapse = "\n")
 }
 
-test_that("the cookbook has twenty-two numbered recipes and every article link resolves", {
+test_that("the cookbook has twenty-three numbered recipes and every article link resolves", {
   cb <- article_text("cookbook.qmd")
   heads <- regmatches(cb, gregexpr("(?m)^## [0-9]+\\. ", cb, perl = TRUE))[[1]]
-  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:22, "."))
+  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:23, "."))
   links <- unique(regmatches(cb, gregexpr("\\]\\(([a-z-]+)\\.html\\)", cb))[[1]])
   targets <- paste0(gsub("^\\]\\(|\\.html\\)$", "", links), ".qmd")
   expect_gt(length(targets), 0L)
@@ -150,11 +150,11 @@ test_that("planted defect: the smaller p-value in place of the larger is caught"
   expect_false(grepl("joint = max(p)", sub("joint = max(p)", "joint = min(p)", cb, fixed = TRUE), fixed = TRUE))
 })
 
-test_that("recipes 14-22 run after the setup chunk alone and say what they claim", {
+test_that("recipes 14-23 run after the setup chunk alone and say what they claim", {
   article_text("cookbook.qmd")
   parsed <- cookbook_recipe_chunks(readLines(article_path("cookbook.qmd"), warn = FALSE))
   setup <- unlist(parsed[[1L]])
-  for (k in 14:22) {
+  for (k in 14:23) {
     err <- run_cookbook_recipe(setup, parsed[[k + 1L]])
     expect_null(err, info = sprintf("recipe %d fails on its own: %s", k, err))
   }
@@ -362,8 +362,8 @@ test_that("every export and class is in the cookbook or carries a stated no-reci
     grepl(pat, cb, perl = TRUE)
   }
   expect_identical(c(ex, classes)[!vapply(c(ex, classes), has, logical(1))], character())
-  # a no-recipe row must say so: the two-level class has no recipe and the table states why
-  expect_true(grepl("`TwoLevelMediationData` | no recipe yet", cb, fixed = TRUE))
+  # the two-level class has a recipe row
+  expect_true(grepl("`TwoLevelMediationData` | 23", cb, fixed = TRUE))
   # planted defect: dropping a name from the text is caught
   broken <- gsub("compare_lr", "compare_l0", cb, fixed = TRUE)
   expect_false(grepl("compare_lr", broken, fixed = TRUE))

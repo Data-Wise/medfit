@@ -84,6 +84,8 @@ navbar:
       - text: "Clusters and latent variables"
       - text: "Cluster-randomized trial"
         href: articles/model-cluster.html
+      - text: "Two-level mediation (1-1-1)"
+        href: articles/model-twolevel.html
       - text: "lavaan fits"
         href: articles/model-lavaan.html
       - text: "Native: paths and defined parameters"
@@ -175,6 +177,10 @@ navbar:
         href: articles/cookbook.html#four-way-decomposition-from-a-native-fit
       - text: "21. Categorical covariate (native)"
         href: articles/cookbook.html#a-categorical-covariate-in-a-native-fit
+      - text: "22. Missing data: bounded FIML"
+        href: articles/cookbook.html#missing-data-bounded-fiml
+      - text: "23. Two-level lavaan fit (1-1-1)"
+        href: articles/cookbook.html#a-two-level-lavaan-fit-within-and-between
     articles:
       text: Articles
       menu:
@@ -311,6 +317,7 @@ articles:
     desc: "Treatment assigned to clusters, lavaan fits, and the native engine"
     contents:
       - '`articles/model-cluster`'
+      - '`articles/model-twolevel`'
       - '`articles/model-lavaan`'
       - '`articles/model-native`'
       - '`articles/model-native-latent`'

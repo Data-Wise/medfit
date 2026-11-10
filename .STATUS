@@ -1,3 +1,7 @@
+# Two-level mediation docs (#394 S2 PR4) — 2026-11-10 MST
+
+# Model page model-twolevel, cookbook recipe 23, methods, troubleshooting, glossary and test-twolevel-docs.R on feature/twolevel-pr4-docs; twolevel_statistic() (PR3, #404) merged into dev and documented as shipped. DESCRIPTION left at 0.16.0 (dev convention: version moves in the release-prep PR).
+
 # FIML expansion planning checkpoint — 2026-11-01 MST
 
 # PR #379 merged bounded simple-model inference to dev at 0bd99134 after local numerical QA and verification. Next-release planning targets covariates, parallel and serial models in planning/PLAN-FIML-next-release-model-expansion-2026-11-01.md; FI-G0 contract review precedes implementation. Stage-0 guard and variant-specific study-source provenance are proposed in planning/PLAN-FIML-stage0-release-guard-2026-11-01.md. Statistical admission gates, timing pilot, studies, expansion implementation and release remain deferred. No admission studies or admission gates ran.
