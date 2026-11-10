@@ -103,6 +103,13 @@ lm/glm route sets them to zero (see [Serial mediation](model-serial.html)).
 - **Four-way effects** (a treatment-by-mediator product) need the mean structure
   and a specific syntax; see [Model Extraction](extraction.html) for what is
   supported before relying on it.
+- **Multilevel and multigroup fits are refused.** A lavaan fit with `level:` blocks
+  (condition class `medfit_error_lavaan_multilevel`) or with `group =` (class
+  `medfit_error_lavaan_multigroup`) stops extraction. Before the guard, extraction
+  returned the within-level (or first-group) paths with the total sample size, which
+  is a wrong answer. A single-level fit that only sets `cluster =` for robust
+  standard errors still extracts. Two-level mediation support is planned
+  ([issue #394](https://github.com/Data-Wise/medfit/issues/394)).
 - To write a model as syntax **without** lavaan, with latent mediators and
   constraints, use the [native engine](model-native.html).
 
