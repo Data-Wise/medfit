@@ -1,5 +1,11 @@
 # medfit (development version)
 
+## Documentation
+
+* New articles "probmed and medfit" and "RMediation and medfit": what each dependent adds, which medfit
+  objects it accepts (a feature table whose statuses a test checks against live calls into probmed 0.4.1 and
+  RMediation 1.11.1, skipped when they are absent), and one worked example each.
+
 ## Added
 
 * `extract_mediation()` on a two-level `lavaan` fit (`level:` blocks, `cluster =`) now returns
