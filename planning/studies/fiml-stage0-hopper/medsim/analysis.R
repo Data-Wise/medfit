@@ -25,6 +25,11 @@ stage0_integrity <- function(L, cells, nd) {
   # NA interval, status from the inference object) would be reported as an inconsistent success. Those rows are presented to
   # it as `error` rows: still in the ledger, still unavailable. A "complete" row with an unusable interval stays flagged.
   Lc <- L; Lc$status[Lc$status %in% c("withheld", "incomplete")] <- "error"
+  # A "complete" call must have used every requested refit/draw: a relabeled withheld row (failed > 0, or successful !=
+  # requested) with an interval copied in is a contradiction that check-complete.R alone does not see.
+  cm <- which(L$status %in% "complete")
+  inconsistent <- cm[is.na(L$failed[cm]) | L$failed[cm] != 0 | is.na(L$successful[cm]) | L$successful[cm] != L$requested[cm] |
+                     is.na(L$interrupted[cm]) | L$interrupted[cm] != 0 | is.na(L$unattempted[cm]) | L$unattempted[cm] != 0]
   res <- stage0_check(Lc, nc = max(cells), nd = nd)
   problems <- res$problems[!grepl("^ledger keys:", res$problems)]
   ek <- with(expand.grid(cell = cells, dataset = seq_len(nd), effect = EFFECTS, method = c("nonparametric", "parametric"),
@@ -35,6 +40,7 @@ stage0_integrity <- function(L, cells, nd) {
   if (sum(counts[c("missing", "duplicated", "unexpected")]) > 0)
     problems <- c(sprintf("ledger keys: missing %d, duplicated %d, unexpected %d", counts[["missing"]], counts[["duplicated"]],
                           counts[["unexpected"]]), problems)
+  if (length(inconsistent)) problems <- c(problems, sprintf("%d rows with status complete but failed/interrupted/unattempted > 0 or successful != requested", length(inconsistent)))
   list(ok = length(problems) == 0L, problems = problems, counts = counts)
 }
 
@@ -66,7 +72,7 @@ stage0_receipts <- function(W) {
 
 # Per cell x effect x method. `denominator = "attempted"` is the stage-0 rule; "complete" (drop failures) exists only so the
 # tests can show that it gives a different, wrong answer. `attempted` must equal the ledger's nd or it stops.
-stage0_coverage <- function(L, cells, nd, denominator = c("attempted", "complete")) {
+.stage0_coverage_table <- function(L, cells, nd, denominator = c("attempted", "complete")) {
   denominator <- match.arg(denominator)
   if (!stage0_integrity(L, cells, nd)$ok) stop("ledger is not complete and consistent; no coverage is computed")
   cl <- stage0_cells()
@@ -105,4 +111,33 @@ stage0_truth_check <- function(truth, W) {
     }
   }
   list(ok = !length(problems), problems = problems)
+}
+
+# The one gate every runner uses: ledger integrity, receipts AND truth checks must all pass, else stop with every problem.
+stage0_gate <- function(L, W, truth, cells, nd) {
+  p <- c(stage0_integrity(L, cells, nd)$problems, stage0_receipts(W)$problems, stage0_truth_check(truth, W)$problems)
+  if (length(p)) stop("stage-0 gate refused:\n  - ", paste(p, collapse = "\n  - "), call. = FALSE)
+  invisible(TRUE)
+}
+# Coverage is only computed behind the gate (wide frame W and medsim truth table needed).
+stage0_coverage <- function(L, W, truth, cells, nd, denominator = c("attempted", "complete")) {
+  stage0_gate(L, W, truth, cells, nd)
+  .stage0_coverage_table(L, cells, nd, match.arg(denominator))
+}
+
+# One local run of cells through the adapter: chunks, medsim combine and audit (any violation stops), long CSV + wide RDS
+# written, then the gate. `chunk_ids` exists so a test can leave a chunk out; `gate = FALSE` (stop -> warn at combine, no final gate) only
+# for runs that are meant to contain failure rows: the collection-cap and budget parity cases are all-failed cells, which medsim's
+# audit rightly reports.
+stage0_run_cells <- function(outdir, nd, nch, cells, chunk_ids = seq_len(nch), gate = TRUE) {
+  for (cc in cells) {
+    for (k in chunk_ids) stage0_adapter_run_task(cc, k, nch, nd, file.path(outdir, "chunks"))
+    cmb <- stage0_adapter_combine(file.path(outdir, "chunks"), cc, nd, nch, on_violation = if (gate) "stop" else "warn")
+    L <- stage0_medsim_long(cmb$results)
+    dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
+    utils::write.table(L, file.path(outdir, sprintf("cell%03d_%05d-%05d.csv", cc, 1L, nd)), sep = ",", row.names = FALSE, qmethod = "double")
+    saveRDS(list(W = cmb$results, truth = cmb$truth), file.path(outdir, sprintf("wide-cell%03d.rds", cc)))
+    if (gate) stage0_gate(L, cmb$results, cmb$truth, cc, nd)
+  }
+  invisible(TRUE)
 }

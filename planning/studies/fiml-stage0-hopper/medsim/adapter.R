@@ -165,8 +165,11 @@ stage0_medsim_method <- function() {
 }
 
 # ---- one array task: cell, chunk k of n_chunks, nd datasets per cell -------------------------------------------------
-stage0_adapter_run_task <- function(cell, chunk_id, n_chunks, nd, outdir, verbose = FALSE) {
+stage0_adapter_run_task <- function(cell, chunk_id, n_chunks, nd, outdir, verbose = FALSE, overwrite = FALSE) {
   stage0_adapter_setup()
+  # like run-chunk.R ("output exists"): a rerun (e.g. a requeued task) must not silently replace a chunk file
+  target <- file.path(outdir, sprintf("cell%03d", cell), getFromNamespace(".medsim_chunk_filename", "medsim")(chunk_id))
+  if (file.exists(target) && !isTRUE(overwrite)) stop(sprintf("output exists: %s (pass overwrite = TRUE to replace it)", target), call. = FALSE)
   cfg <- medsim::medsim_config(mode = "local", n_replications = nd, n_cores = 1L, seed = 7000000L + cell,
                                output_dir = file.path(outdir, sprintf("cell%03d", cell)), chunk_id = chunk_id,
                                n_chunks = n_chunks, n_truth = 1L)
