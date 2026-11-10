@@ -83,7 +83,7 @@ R/
 ├── extract-joint.R         # JointMediationData worker, stacked-OLS vcov
 ├── extract-lavaan.R        # lavaan extraction
 ├── extract-lmer.R          # ClusterMediationData from lme4 fits (term detection by value, KR)
-├── classes-twolevel.R, extract-lavaan-twolevel.R   # TwoLevelMediationData (1-1-1) and its lavaan two-level adapter (keyed by free-parameter index, joint vcov sub-block)
+├── classes-twolevel.R, extract-lavaan-twolevel.R, twolevel-statistic.R   # TwoLevelMediationData (1-1-1) and its lavaan two-level adapter (keyed by free-parameter index, joint vcov sub-block)
 ├── sem-*.R                 # native SEM engine internals: parse, expr, model, ml, optim, constraints, se, sandwich, fit, mbco (mbco_sem()), outcomes (the versioned outcome ledger, `fit@diagnostics$ledger`, its validators `.sem_valid_outcome()` and `.sem_valid_mbco_outcome()`, and the D2 literal zero/nonzero certificates, `.sem_literal_zero_certificate()`)
 ├── fit-sem.R               # fit_sem(), .fit_mediation_native()
 ├── extract-sem.R           # accessor seam (lavaan and native), extract_mediation() for SEMFit
@@ -212,7 +212,7 @@ MyClass <- S7::new_class(
 **TwoLevelMediationData** (X, M, Y on level-1 units, two-level lavaan fit, 1-1-1)
 - Paths `a_within`, `b_within`, `c_prime_within` and the `_between` three; per level NIE = a × b, NDE = c', TE, PM; `nie(level = "within" | "between" | "contrast" | "both")`, contrast descriptive, not a test
 - Fixed slopes (not ab + sigma_ab), latent cluster means; `@vcov` is the joint 6 × 6 sub-block (cross-level covariance carried); within-only object (`medfit_between_unidentified`) when the treatment or mediator ICC < 0.01; refuses `standardized`, products, three-level, multigroup
-- Page `model-twolevel.qmd`, cookbook recipe 23; the bootstrap helper `twolevel_statistic()` is planned (PR3), not on dev
+- Page `model-twolevel.qmd`, cookbook recipe 23; `twolevel_statistic()` (`R/twolevel-statistic.R`) builds the `bootstrap_mediation()` callback: the object for the parametric route, the lavaan fit plus roles for the cluster refit (`se`, `test`, `check.post` overridden only; inadmissible refits kept, so report the percentile interval, not the SD)
 
 **BootstrapResult**
 - Inference: `estimate`, `ci_lower`, `ci_upper`

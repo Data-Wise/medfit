@@ -264,9 +264,71 @@ the standard errors lavaan reports and does not adjust them; `summary()` prints 
 
 ## Bootstrap
 
-`bootstrap_mediation()` does not yet accept a `TwoLevelMediationData` as `mediation_data`. A helper that
-turns a two-level effect into the scalar statistic `bootstrap_mediation()` needs, for the parametric and the
-cluster (nonparametric) bootstrap, is planned for a later change.
+`twolevel_statistic()` turns one two-level effect into the scalar statistic that `bootstrap_mediation()`
+needs. The `effect` is `"nie_within"`, `"nie_between"`, `"nie_contrast"`, the other per-level effects
+(`"nde_*"`, `"te_*"`, `"pm_*"`) or one of the six paths. The first argument decides the route:
+
+- **Parametric** (and `"plugin"`): pass the `TwoLevelMediationData`. Each draw comes from the normal
+  distribution of the six paths with their joint covariance, so the cross-level covariance is part of every
+  draw. This is fast and has the same normality assumption as the delta method.
+- **Cluster (nonparametric)**: pass the `lavaan` fit and the roles (`treatment`, `mediator`, `outcome`), and
+  give `bootstrap_mediation()` the data and `cluster =`. Each replicate resamples whole clusters and refits
+  the model stored in the fit's own call, with only the standard errors, the model test and lavaan's
+  post-check switched off (`se = "none"`, `test = "none"`, `check.post = FALSE`; none changes the point
+  estimates). A cluster drawn twice is refitted as two clusters.
+
+```{r}
+#| label: bootstrap
+#| eval: !expr has_lavaan
+b_par <- bootstrap_mediation(
+  twolevel_statistic(td, "nie_between"),
+  method = "parametric", mediation_data = td, n_boot = 1000, seed = 1
+)
+b_par
+b_cl <- bootstrap_mediation(
+  twolevel_statistic(fit, "nie_between", treatment = "X", mediator = "M", outcome = "Y"),
+  method = "nonparametric", data = d, cluster = "id", n_boot = 30, seed = 1
+)
+c(estimate = b_cl@estimate, n_boot = b_cl@n_boot)
+```
+
+Both routes report the point estimate of the original fit, which equals `nie(td, level = "between")`. The
+cluster call here uses 30 replicates only to keep the page fast; use at least several hundred for an
+interval.
+
+Three things to know about the cluster route:
+
+- **Report the percentile interval, not the standard deviation.** Refits that are inadmissible (for example,
+  a negative between variance) are kept, because the point estimate keeps them too and the percentile
+  interval is defined on the same footing. At a few dozen clusters such boundary refits give the between
+  effects and the contrast heavy tails, so the plain standard deviation of the draws can exceed the delta
+  standard error while the percentile interval stays close to it. Use `ci_lower` and `ci_upper` and do not
+  treat the standard deviation of `boot_estimates` as a standard error.
+- **Failed replicates are counted.** A refit that errors, warns, does not converge, or leaves the between
+  level unidentified in that resample (an ICC below `medfit.between_icc_error`) is excluded and the count is
+  reported in a warning (`bootstrap samples failed and were excluded`); `n_boot` in the result is the number
+  of replicates that were used.
+- **Constructing the callback can fail.** A between effect or the contrast of a within-only fit stops with
+  class `medfit_between_unidentified`, and the contrast of a fit that equates a or b across levels stops with
+  class `medfit_error_twolevel_constrained`, instead of bootstrapping a distribution of `NA`. A `lavaan` fit
+  without `treatment`, `mediator` and `outcome` stops with class `medfit_error_twolevel_unsupported`.
+
+```{r}
+#| label: bootstrap-errors
+#| eval: !expr has_lavaan
+err_within_only <- tryCatch(
+  twolevel_statistic(td0, "nie_between"),
+  medfit_between_unidentified = function(e) class(e)[1]
+)
+err_constrained <- tryCatch(
+  twolevel_statistic(td_eq, "nie_contrast"),
+  medfit_error_twolevel_constrained = function(e) class(e)[1]
+)
+c(err_within_only, err_constrained)
+```
+
+Passing an object to `bootstrap_mediation()` and having it choose the cluster route by itself is not
+available; the two calls above are the supported ones.
 
 ## Limits
 
@@ -295,7 +357,7 @@ you have decided to accept can be muffled by class (see [Troubleshooting](guide-
 
 | Class | Kind | When |
 |---|---|---|
-| `medfit_between_unidentified` | warning | the between level is not identified: the result is within-only. Also from a between accessor on a within-only object |
+| `medfit_between_unidentified` | warning (error from `twolevel_statistic()`) | the between level is not identified: the result is within-only. Also from a between accessor on a within-only object; `twolevel_statistic()` stops with this class for a between effect or the contrast |
 | `medfit_warning_between_weak` | warning | the ICC of the treatment or the mediator is in [0.01, 0.05) |
 | `medfit_warning_twolevel_constrained` | warning | the contrast is `NA` because a or b is equated across levels |
 | `medfit_warning_twolevel_inadmissible` | warning | lavaan's `post.check` is `FALSE` (for example a negative variance) |
@@ -307,6 +369,7 @@ you have decided to accept can be muffled by class (see [Troubleshooting](guide-
 | `medfit_error_twolevel_path_missing` | error | a, b or c' absent at a level |
 | `medfit_error_twolevel_unusable` | error | the within block is unusable: the fit did not converge, or the within covariance is missing or not positive definite |
 | `medfit_error_twolevel_level` | error | `level = "contrast"` for `nde()`, `te()` or `pm()` |
+| `medfit_error_twolevel_constrained` | error | `twolevel_statistic(effect = "nie_contrast")` for a fit that equates a or b across levels |
 
 The messages they carry are quoted in [Troubleshooting](guide-troubleshooting.html#two-level-mediation).
 

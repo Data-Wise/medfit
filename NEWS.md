@@ -6,8 +6,10 @@
   (the estimand, the delta method with the cross-level covariance, the caveats), troubleshooting rows for the
   two-level conditions, and glossary terms. The page states the estimand's limits: fixed slopes (the average
   with random slopes is ab + sigma_ab), latent rather than manifest cluster means, a contrast that is
-  descriptive and not a test, and thresholds (50 clusters, ICC 0.01 and 0.05) that are judgments. A
-  scalar-statistic helper for `bootstrap_mediation()` is planned for a later change.
+  descriptive and not a test, and thresholds (50 clusters, ICC 0.01 and 0.05) that are judgments. The page
+  and recipe also show `twolevel_statistic()` and say to report the percentile interval of a cluster
+  bootstrap, not the standard deviation of its draws (inadmissible refits are kept, which gives the between
+  effects heavy tails).
 * New articles "probmed and medfit" and "RMediation and medfit": what each dependent adds, which medfit
   objects it accepts (a feature table whose statuses a test checks against live calls into probmed 0.4.1 and
   RMediation 1.11.1, skipped when they are absent), and one worked example each.

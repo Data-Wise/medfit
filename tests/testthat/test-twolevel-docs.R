@@ -50,6 +50,15 @@ test_that("the model page runs and its claims hold against lm and lavaan", {
   expect_true(is.na(suppressWarnings(nie(env$td_eq, level = "contrast"))))
   expect_false(is.na(nie(env$td_eq, level = "between")))
 
+  # the bootstrap section: both public routes return the object's own between NIE as the estimate
+  expect_equal(env$b_par@estimate, as.numeric(nie(td, level = "between")))
+  expect_equal(env$b_cl@estimate, as.numeric(nie(td, level = "between")))
+  expect_true(env$b_cl@n_boot <= 30L && env$b_cl@n_boot >= 20L)
+  expect_lt(env$b_par@ci_lower, env$b_par@estimate)
+  expect_gt(env$b_par@ci_upper, env$b_par@estimate)
+  expect_identical(env$err_within_only, "medfit_between_unidentified")
+  expect_identical(env$err_constrained, "medfit_error_twolevel_constrained")
+
   # planted defect: a within path off by 0.1 fails the lm comparison
   bad <- unname(paths(td)[1:3]) + c(0.1, 0, 0)
   expect_false(isTRUE(all.equal(bad, unname(env$ols), tolerance = 1e-3)))
@@ -154,6 +163,20 @@ tl_doc_cases <- function() {
          }),
     list("medfit_error_twolevel_level", "is defined only for nie()",
          function() tl_catch(nde(tl_extract(tl_fixture("base")), level = "contrast"), "medfit_error_twolevel_level")),
+    list("medfit_between_unidentified", "needs the between level, which is not identified",
+         function() {
+           tl_catch(twolevel_statistic(tl_fixture("x_centered"), "nie_between", treatment = "X", mediator = "M",
+                                       outcome = "Y"), "medfit_between_unidentified")
+         }),
+    list("medfit_error_twolevel_constrained", "so the two levels are not compared freely",
+         function() {
+           tl_catch(twolevel_statistic(tl_fixture("shared_label"), "nie_contrast", treatment = "X", mediator = "M",
+                                       outcome = "Y"), "medfit_error_twolevel_constrained")
+         }),
+    list("medfit_error_twolevel_unsupported", "are required for a lavaan fit",
+         function() {
+           tl_catch(twolevel_statistic(tl_fixture("base"), "nie_within"), "medfit_error_twolevel_unsupported")
+         }),
     list("medfit_error_lavaan_multilevel", "The lavaan fit has more than two levels",
          function() {
            testthat::local_mocked_bindings(.lavaan_nlevels = function(object) 3L, .package = "medfit")

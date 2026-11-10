@@ -1,6 +1,6 @@
 # Two-level mediation docs (#394 S2 PR4) — 2026-11-10 MST
 
-# Model page model-twolevel, cookbook recipe 23, methods, troubleshooting, glossary and test-twolevel-docs.R on feature/twolevel-pr4-docs; twolevel_statistic() (PR3) not yet on dev, documented as planned. DESCRIPTION left at 0.16.0 (dev convention: version moves in the release-prep PR).
+# Model page model-twolevel, cookbook recipe 23, methods, troubleshooting, glossary and test-twolevel-docs.R on feature/twolevel-pr4-docs; twolevel_statistic() (PR3, #404) merged into dev and documented as shipped. DESCRIPTION left at 0.16.0 (dev convention: version moves in the release-prep PR).
 
 # FIML expansion planning checkpoint — 2026-11-01 MST
 

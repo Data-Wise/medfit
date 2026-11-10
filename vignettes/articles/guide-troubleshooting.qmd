@@ -97,6 +97,9 @@ one kind.
 | `is not assumed to be 0` | `medfit_error_twolevel_path_missing` | a path (`M ~ X`, `Y ~ M` or `Y ~ X`) is absent at a level | add it to the model, or fix it with `0*` |
 | `The two-level fit is not usable` | `medfit_error_twolevel_unusable` | the fit did not converge, or the within covariance is missing or not positive definite | fix the fit |
 | `is defined only for nie()` | `medfit_error_twolevel_level` | `level = "contrast"` for `nde()`, `te()` or `pm()` | use `tidy()` for those contrasts |
+| `needs the between level, which is not identified` | `medfit_between_unidentified` (an error here) | `twolevel_statistic()` was asked for a between effect or the contrast of a within-only fit | fix the between level (see the first row of this section), or bootstrap a within effect |
+| `so the two levels are not compared freely` | `medfit_error_twolevel_constrained` | `twolevel_statistic(effect = "nie_contrast")` on a fit that equates a or b across levels | bootstrap the within and the between effect separately |
+| `are required for a lavaan fit` | `medfit_error_twolevel_unsupported` | `twolevel_statistic()` got a `lavaan` fit without `treatment`, `mediator` and `outcome` | name the three variables |
 | `The lavaan fit has more than two levels` | `medfit_error_lavaan_multilevel` | a three-level fit | fit a one- or two-level model |
 | `The lavaan fit has more than one group` | `medfit_error_lavaan_multigroup` | a multigroup fit | fit each group as its own model |
 

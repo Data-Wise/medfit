@@ -425,6 +425,16 @@ Intervals are Wald (normal); there is no small-sample correction. A path pair eq
 label or an `==` constraint) repeats a row and column of $\hat V$ (correlation 1), and the contrast is then zero
 by constraint, so it is reported `NA`.
 
+### Bootstrap
+
+`twolevel_statistic()` gives `bootstrap_mediation()` the scalar $g(\theta)$ of the effect above. The parametric
+route draws $\theta^{*} \sim N(\hat\theta, \hat V)$, so the cross-level covariance is part of every draw. The
+cluster route resamples whole clusters with replacement and refits the fit's own model on each resample, a
+cluster drawn twice counting as two clusters. Refits that are inadmissible are kept, as the point estimate
+keeps its own; a refit that fails or leaves the between level unidentified is excluded and counted. Because
+boundary refits give the between effects and the contrast heavy tails, report the percentile interval; the
+plain standard deviation of the draws is not a standard error for them.
+
 ### Caveats
 
 - **Fixed versus random slopes.** With random slopes the average indirect effect is $ab + \sigma_{ab}$, where

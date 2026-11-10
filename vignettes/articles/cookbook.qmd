@@ -755,9 +755,15 @@ fit2 <- lavaan::sem(model2, data = d2, cluster = "id")
 z <- extract_mediation(fit2, treatment = "X", mediator = "M", outcome = "Y")
 nie(z, level = "both")
 tidy(z, type = "effects")[c(1, 5, 9), ]
+bootstrap_mediation(
+  twolevel_statistic(z, "nie_between"),
+  method = "parametric", mediation_data = z, n_boot = 500, seed = 1
+)
 ```
 
-A treatment or mediator with almost no between-cluster variance gives a within-only result and the classed
+`twolevel_statistic()` builds the callback for `bootstrap_mediation()`: pass the object for the parametric
+bootstrap, or the `lavaan` fit with `treatment`, `mediator`, `outcome` and `cluster =` for the cluster
+bootstrap (report its percentile interval). A treatment or mediator with almost no between-cluster variance gives a within-only result and the classed
 warning `medfit_between_unidentified`. More: [Two-level mediation](model-twolevel.html).
 
 ## Which recipe returns which object
@@ -775,4 +781,4 @@ Every exported class and function appears in a recipe, or the table says why not
 | `SEMFit` | 11 to 21 |
 | `BootstrapResult` | 9 and 20 (returned by `bootstrap_mediation()`) |
 | `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | 22 (the simple model; the parallel and serial forms are in [Bounded FIML](model-fiml.html)) |
-| `TwoLevelMediationData` | 23 (an `extract_mediation()` on a two-level `lavaan` fit; see [Two-level mediation](model-twolevel.html)) |
+| `TwoLevelMediationData` | 23 (an `extract_mediation()` on a two-level `lavaan` fit, and `twolevel_statistic()` for its bootstrap; see [Two-level mediation](model-twolevel.html)) |
