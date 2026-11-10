@@ -2,6 +2,18 @@
 
 ## Added
 
+* `extract_mediation()` on a two-level `lavaan` fit (`level:` blocks, `cluster =`) now returns
+  the new `TwoLevelMediationData`: the a, b and c' paths at the within and the between
+  level (one mediator, linear, no products, latent cluster means), read from the fit's
+  parameter table by free-parameter index with the sub-block of the joint covariance, plus
+  per-variable ICCs. Behavior change: this call was refused in the previous development
+  version (#395) and returned the within level only before that. When the between level
+  is not identified (a treatment or mediator ICC below 0.01, a non-finite or non-positive
+  definite between covariance) the object is within-only and warns with
+  `medfit_between_unidentified`; a non-converged fit without a usable within block errors
+  with `medfit_error_twolevel_unusable`. Three-level and multigroup fits are still refused.
+  Effects, inference and bootstrap helpers follow in later changes (#394).
+
 * `print()` and `summary()` of a serial FIML object (`FIMLSerialMediationData`) now name
   the variant (saturated, or the pure chain without shortcut paths) and the covariates
   on the line under the chain. The printed numbers are unchanged.

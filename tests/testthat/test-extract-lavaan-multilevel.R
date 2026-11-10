@@ -12,18 +12,27 @@
 )
 .sl_model <- "y1 ~ cp*x1 + b*y2\n y2 ~ a*x1"
 
-test_that("a two-level lavaan fit is refused with a classed error", {
+test_that("a two-level lavaan fit returns TwoLevelMediationData (S0 refusal flipped by the S2 adapter)", {
   skip_if_not_installed("lavaan")
   fit <- suppressWarnings(lavaan::sem(.ml_model, lavaan::Demo.twolevel, cluster = "cluster"))
-  err <- tryCatch(
+  # x1 in Demo.twolevel has no between-cluster variance (ICC 0.001): the result is within-only, with the
+  # classed warning, and the within paths are lavaan's
+  w <- NULL
+  res <- withCallingHandlers(
     extract_mediation(fit, treatment = "x1", mediator = "y2", outcome = "y1"),
-    error = function(e) e
+    warning = function(cnd) {
+      if (inherits(cnd, "medfit_between_unidentified")) w <<- cnd
+      invokeRestart("muffleWarning")
+    }
   )
-  expect_s3_class(err, "medfit_error_lavaan_multilevel")
-  expect_match(conditionMessage(err), "two levels", fixed = TRUE)
-  expect_match(conditionMessage(err), "within level", fixed = TRUE)
-  expect_match(conditionMessage(err), "#394", fixed = TRUE)
-  expect_match(conditionMessage(err), "single-level", fixed = TRUE)
+  expect_true(S7::S7_inherits(res, TwoLevelMediationData))
+  expect_s3_class(w, "medfit_between_unidentified")
+  expect_false(res@between_identified)
+  pe <- lavaan::parameterEstimates(fit)
+  expect_equal(unname(res@a_within), pe$est[pe$label == "a"])
+  expect_equal(unname(res@b_within), pe$est[pe$label == "b"])
+  expect_true(is.na(res@a_between))
+  expect_equal(res@n_obs, nrow(lavaan::Demo.twolevel))
 })
 
 test_that("a single-level lavaan fit still extracts as before", {

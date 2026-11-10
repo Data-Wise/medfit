@@ -64,9 +64,10 @@
     class = c("medfit_error_lavaan_multilevel", "error", "condition"),
     list(
       message = paste0(
-        "The lavaan fit has two levels (within and between). extract_mediation() would silently use the ",
+        "The lavaan fit has more than two levels (or a level count that could not be read). ",
+        "extract_mediation() reads exactly one or two levels; with more it would silently use the ",
         "within level only, with N equal to the total number of rows, so it refuses. Fit a single-level ",
-        "model instead; a two-level adapter is planned (issue #394)."
+        "or a two-level model instead (issue #394)."
       ),
       call = NULL
     )

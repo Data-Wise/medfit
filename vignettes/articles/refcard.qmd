@@ -65,6 +65,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | X by M term | `InteractionMediationData` | INTmed + PIE |
 | Several M with X by M | `JointMediationData` | joint over the block |
 | Cluster treatment, `lmer` | `ClusterMediationData` | $a \, b_B$ |
+| Two-level `lavaan` fit, X, M, Y on level-1 units | `TwoLevelMediationData` | $a_w b_w$ and $a_b b_b$ per level |
 
 ## Effects
 
