@@ -30,7 +30,7 @@ read_dir <- function(d) {
 compare <- function(label, cells, nd, env = character(), inject = "none", nch_pattern = function(i) c(1L, 3L)[1 + i %% 2L]) {
   ref <- file.path(work, paste0(label, "-ref")); ad <- file.path(work, paste0(label, "-adapter"))
   tdir <- "planning/studies/fiml-stage0-hopper/medsim/tests"
-  if (inject != "none") env <- c(env, STAGE0_PRELUDE = file.path(tdir, "inject-prelude.R"), STAGE0_INJECT = inject)
+  if (inject != "none") env <- c(env, STAGE0_PRELUDE = file.path(tdir, "inject-prelude.R"), STAGE0_INJECT = inject, STAGE0_GATE = "off")   # all-withheld cells are a medsim cell_failed violation by construction
   for (cc in cells) run(if (inject == "none") c("planning/studies/fiml-stage0-hopper/run-chunk.R", cc, 1L, nd, ref)
                         else c(file.path(tdir, "ref-inject.R"), inject, cc, 1L, nd, ref), env)
   for (i in seq_along(cells))   # chunk counts alternate 1 and 3 so the replication-offset path is exercised too
@@ -52,8 +52,8 @@ if (mutant) {   # planted defect: the adapter draws its datasets from a changed 
 main <- compare("main", cells, ND)
 # failure/budget paths, each against the same reference: a collection-cap hit (generation_failed) and a zero wall-clock budget
 empty <- pick(200L, "b_null", "empty", TRUE)
-cap <- compare("cap", empty, 2L, c(STAGE0_CAP_MULT = "0.001"))
-bud <- compare("budget", cells[1], 2L, c(STAGE0_BUDGET_S = "0"))
+cap <- compare("cap", empty, 2L, c(STAGE0_CAP_MULT = "0.001", STAGE0_GATE = "off"))
+bud <- compare("budget", cells[1], 2L, c(STAGE0_BUDGET_S = "0", STAGE0_GATE = "off"))
 # injected refit failures/warnings (parity-check.R's rules: sum(rows) %% 7 fails, %% 3 warns): direct on/off x mar/mcar-or-empty
 inj_cells <- c(pick(200L, "nonzero", "mar", TRUE), pick(200L, "nonzero", "mar", FALSE),
                pick(200L, "nonzero", "mcar", TRUE), pick(200L, "nonzero", "empty", FALSE))

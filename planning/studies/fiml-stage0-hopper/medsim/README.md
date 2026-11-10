@@ -10,7 +10,7 @@ reference. Plan: `planning/PLAN-FIML-admission-via-medsim-2026-11-09.md` (P1 and
 | --- | --- |
 | `adapter.R` | Setup (library, guard override, shared refits, receipt), one medsim scenario per cell, the method, `stage0_adapter_run_task()` (one array task), `stage0_medsim_long()` (back to the 21 `run-chunk.R` columns), `stage0_adapter_combine()` |
 | `analysis.R` | The decision-side analysis: attempted-replication denominator, ledger, receipts and truth checks |
-| `run-cells.R` | Runs cells through the adapter and writes long-format CSVs (used by the parity test) |
+| `run-cells.R` | Thin wrapper over `stage0_run_cells()` (analysis.R): chunks, medsim combine (any violation stops), long CSV + wide RDS, then the gate; used by the parity and defect tests |
 | `smoke.R` | Smoke runner: 4 cells x 3 datasets x 3 chunks, B = 40, medsim combine and audit, then the analysis |
 | `tests/parity.R`, `tests/ref-inject.R`, `tests/inject-prelude.R` | Parity against `run-chunk.R`, with a seed-formula mutant and injected refit failures |
 | `tests/defects.R` | Planted defects, each with a positive control |
@@ -61,6 +61,19 @@ bash planning/studies/fiml-stage0-hopper/medsim/tests/run-all.sh <empty workdir>
 * Defects caught (26 checks): a dropped chunk, a duplicated cell, failed/incomplete/withheld intervals in the denominator (and the
   complete-only denominator shown to differ), a seed-formula change, swapped truth columns, receipt violations. Each has a positive
   control (the clean run passes the same checks).
+
+## QA gaps, closed (second round)
+
+* G1: `stage0_integrity()` flags a `complete` row with `failed`/`interrupted`/`unattempted` > 0 or `successful != requested`
+  (planted: a withheld row relabeled `complete` with the parametric interval copied in and `failed > 0` kept).
+* G2: `stage0_coverage(L, W, truth, cells, nd)` runs `stage0_gate()` first: ledger integrity, receipts and `stage0_truth_check`
+  must all pass or it stops listing every problem. `smoke.R` and `run-cells.R` use it. Planted: mixed `rcp_B`, a restored
+  shared-refit patch (a real run-cells run with the patch removed exits nonzero), a swapped truth table.
+* G3: `stage0_adapter_run_task()` refuses to replace an existing `chunk_NNNN.rds` ("output exists") unless `overwrite = TRUE`.
+  medsim's generated submit script sets `--requeue`; a requeued task therefore hits this guard (or needs an identical-content
+  check) instead of silently replacing a chunk, which also differs from medsim's own replace-on-rerun behavior.
+* G4: the combine in `run-cells.R` uses `on_violation = "stop"` (tested: a missing chunk stops `stage0_run_cells()`).
+  `STAGE0_GATE=off` (combine violations become warnings, no final gate) is used only by the cap/budget parity runs, whose cells are all failure rows.
 
 ## What is NOT verified
 
