@@ -32,6 +32,11 @@ b2_changed <- c(
   "ser_labeled_chain_paths"
 )
 
+# Slice S3 (the k = 1 serial shapes, both variants, become public fits) changes the answer for exactly the entries
+# below, again from "not yet available" to an accepted fit; they are pinned against fiml-refusals-after-g3s3.rds
+# (made by make-fiml-after-g3s3.R) in test-fiml-g3-serial-covariate.R. The earlier dumps are never rewritten.
+b3_changed <- c("ser_sat1_zeros", "ser_chain1_zeros", "ser_chain_z_omitted", "ser_partial_exo_cov_sat1")
+
 b0_tables <- function() readRDS(test_path("fixtures", "fiml-tables-before-g3s1.rds"))
 b0_refusals <- function() readRDS(test_path("fixtures", "fiml-refusals-before-g3s1.rds"))
 b0_rebuild <- function() {
@@ -98,7 +103,7 @@ test_that("the entries S1a may change match the post-S1a fixture, and none of th
   after <- readRDS(test_path("fixtures", "fiml-refusals-after-g3s1a.rds"))
   expect_identical(after$models, before$models)
   expect_identical(after$data, before$data)
-  for (nm in setdiff(names(after$models), c(b1_changed, b2_changed))) {
+  for (nm in setdiff(names(after$models), c(b1_changed, b2_changed, b3_changed))) {
     got <- b0_observe(after$models[[nm]], after$data)
     expect_identical(got$class, after$results[[nm]]$class, info = nm)
     expect_identical(got$stage, after$results[[nm]]$stage, info = nm)
@@ -149,7 +154,7 @@ test_that("S1b: the post-S1b dump pins the entries that became fits and every ot
   expect_identical(b1$models, a1$models)
   expect_identical(b1$data, a1$data)
   # the entries S2 changed are compared with the live code in the S2 test below, not here
-  for (nm in setdiff(names(b1$models), b2_changed)) {
+  for (nm in setdiff(names(b1$models), c(b2_changed, b3_changed))) {
     got <- b0_observe(b1$models[[nm]], b1$data)
     expect_identical(got$class, b1$results[[nm]]$class, info = nm)
     expect_identical(got$stage, b1$results[[nm]]$stage, info = nm)
@@ -171,7 +176,7 @@ test_that("S2: the post-S2 dump pins the chain k = 0 entries that became fits an
   b2 <- readRDS(test_path("fixtures", "fiml-refusals-after-g3s2.rds"))
   expect_identical(b2$models, b1$models)
   expect_identical(b2$data, b1$data)
-  for (nm in names(b2$models)) {
+  for (nm in setdiff(names(b2$models), b3_changed)) {
     got <- b0_observe(b2$models[[nm]], b2$data)
     expect_identical(got$class, b2$results[[nm]]$class, info = nm)
     expect_identical(got$stage, b2$results[[nm]]$stage, info = nm)

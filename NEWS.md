@@ -2,6 +2,27 @@
 
 ## Added
 
+* Bounded Gaussian random-X FIML now also fits the two serial forms (the saturated
+  graph and the pure chain) with ONE observed covariate `Z`: `M1 ~ X + Z`,
+  `M2 ~ M1 + X + Z` (saturated) or `M2 ~ M1 + Z` (chain), `Y ~ ... + X + Z`, with the
+  same three disturbance zeros written, a free covariance of `X` and `Z`, and every
+  exogenous variable needing a written `Y` path (free, or at most one fixed at
+  exactly zero, which makes that variable the treatment). The saturated model has 20
+  free parameters (19 with the direct path fixed) and is just identified with a free
+  direct path; the chain has 18 (17), with 2 (3) degrees of freedom. The extracted
+  paths are the treatment's coefficients (`a`, `a2`, `d1`, `b1`, `b`, `c_prime`, or
+  `a`, `d1`, `b`, `c_prime` for the chain) with the full covariance from the fitted
+  information; the covariate's coefficients are never paths and the covariate is
+  recorded in `fit_context`. In the saturated graph with a free direct path a
+  covariate may be named the treatment; in the pure chain the treatment is the
+  structural variable with no path to `M2` and naming a covariate is refused with
+  `medfit_error_fiml_extract_unsupported`. Effects, per-effect origin rules and
+  consumer refusals are those of the no-covariate forms. Two or more covariates stay
+  refused. Verified against lavaan (estimates, covariance, logLik, `:=` effects,
+  the relabeled covariate treatment), a closed-form equation-wise OLS oracle, an
+  independent rowwise likelihood and Hessian, and OpenMx; not calibrated for
+  coverage or statistically admitted.
+
 * Bounded Gaussian random-X FIML now also fits the pure chain of two serial
   mediators with no covariates: `M1 ~ X`, `M2 ~ M1`, `Y ~ M2` (plus `Y ~ X` free,
   `0*X` or omitted), with `X -> M2` and `M1 -> Y` absent and the same three
@@ -22,8 +43,7 @@
   `bootstrap_mediation(source_fit = )` stays withheld. The predictor lists of an
   extracted serial object must now match its variant exactly. Verified against
   lavaan (restriction test, estimates, covariance and effects), OpenMx for one
-  cell and an independent likelihood; serial models with covariates stay refused;
-  not calibrated for coverage or statistically admitted.
+  cell and an independent likelihood; not calibrated for coverage or statistically admitted.
 
 * Bounded Gaussian random-X FIML now also fits two serial mediators in the saturated
   forward graph with no covariates: `M1 ~ X`, `M2 ~ M1 + X`, `Y ~ M1 + M2 + X`

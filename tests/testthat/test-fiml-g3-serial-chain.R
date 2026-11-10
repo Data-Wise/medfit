@@ -43,13 +43,8 @@ test_that("every other serial shape except the saturated k = 0 stays refused wit
   d$Z2 <- stats::rnorm(nrow(d))
   z <- paste(sc_zeros, collapse = "\n")
   shapes <- c(
-    sat1 = "M1 ~ X + Z\nM2 ~ M1 + X + Z\nY ~ M1 + M2 + X + Z",
-    chain1 = "M1 ~ X + Z\nM2 ~ M1 + Z\nY ~ M2 + X + Z",
-    chain1_zero = "M1 ~ X + Z\nM2 ~ M1 + Z\nY ~ M2 + 0*X + Z",
     sat2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + X + Z1 + Z2\nY ~ M1 + M2 + X + Z1 + Z2",
-    chain2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + Z1 + Z2\nY ~ M2 + X + Z1 + Z2",
-    # F6: `M2 ~ M1 + X` with Z omitted is a chain whose treatment is Z (k = 1), not the saturated k = 0 shape
-    z_treatment = "M1 ~ X + Z\nM2 ~ M1 + X\nY ~ M2 + X + Z"
+    chain2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + Z1 + Z2\nY ~ M2 + X + Z1 + Z2"
   )
   for (nm in names(shapes)) {
     e <- tryCatch(fit_sem(paste(shapes[[nm]], z, sep = "\n"), d, missing = "fiml", fixed_x = FALSE), error = identity)
@@ -89,10 +84,11 @@ test_that("the admission predicates: the chain joins the saturated variant at k 
   for (v in c("saturated", "chain")) {
     expect_true(.fiml_serial_shape_admitted(v, 0L))
     expect_true(.fiml_serial_extract_supported(v, 0L))
-    for (k in 1:2) {
-      expect_false(.fiml_serial_shape_admitted(v, k))
-      expect_false(.fiml_serial_extract_supported(v, k))
-    }
+    # slice S3 opened k = 1 for both variants; two covariates stay closed until S4
+    expect_true(.fiml_serial_shape_admitted(v, 1L))
+    expect_true(.fiml_serial_extract_supported(v, 1L))
+    expect_false(.fiml_serial_shape_admitted(v, 2L))
+    expect_false(.fiml_serial_extract_supported(v, 2L))
   }
   expect_false(.fiml_serial_shape_admitted("bogus", 0L))
   testthat::local_mocked_bindings(.fiml_serial_admitted = function() TRUE)
@@ -480,7 +476,6 @@ test_that("the chain extraction of a shape that is not public stays refused (moc
   d$Z2 <- stats::rnorm(nrow(d))
   z <- paste(sc_zeros, collapse = "\n")
   shapes <- c(
-    chain1 = "M1 ~ X + Z\nM2 ~ M1 + Z\nY ~ M2 + X + Z",
     chain2 = "M1 ~ X + Z1 + Z2\nM2 ~ M1 + Z1 + Z2\nY ~ M2 + X + Z1 + Z2"
   )
   for (nm in names(shapes)) {

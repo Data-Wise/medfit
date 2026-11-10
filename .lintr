@@ -30,6 +30,10 @@ exclusions: list(
     "tests/testthat/helper-fiml-serial2-chain.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g3-serial-chain.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g3-serial-chain-defects.R" = list(object_usage_linter = Inf),
+    # S3 helpers (s3_*) live in helper-fiml-serial3.R and use the sb_* helpers
+    "tests/testthat/helper-fiml-serial3.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-serial-covariate.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-serial-covariate-defects.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-generic-kernel-fourvar.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-generic-kernel-oracle.R" = list(object_usage_linter = Inf)
   )
