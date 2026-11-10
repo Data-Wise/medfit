@@ -103,7 +103,7 @@ tl_mu_hat <- function(stats, sw, sb) {
 # Balanced closed form (saturated model, equal cluster size n, S_B - S_W / n PSD): the ML
 # estimates are the pooled within covariance S_PW and (S_B - S_PW) / n, where S_B is the
 # between-cluster scatter of the cluster means (times n, divisor J as in ML).
-tl_closed_form <- function(data, cluster = "cluster") {
+tl_o8_closed_form <- function(data, cluster = "cluster") {
   st <- tl_stats(data, cluster)
   n <- unique(vapply(st, function(s) s$n, numeric(1)))
   stopifnot(length(n) == 1L)
@@ -117,7 +117,7 @@ tl_closed_form <- function(data, cluster = "cluster") {
 # Maximize the hand likelihood over the 12 path/variance parameters (6 per level), the mean
 # profiled out. Start: moment estimates, repaired to be positive definite. `defect` runs the
 # same maximizer on a planted wrong likelihood.
-tl_fit <- function(data, cluster = "cluster", defect = "none") {
+tl_o8_fit <- function(data, cluster = "cluster", defect = "none") {
   st <- tl_stats(data, cluster)
   nj <- vapply(st, function(s) s$n, numeric(1))
   s_pw <- Reduce(`+`, lapply(st, function(s) s$ssw)) / (sum(nj) - length(nj))
