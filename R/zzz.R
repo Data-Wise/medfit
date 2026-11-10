@@ -120,6 +120,7 @@
   registerS3method("print", "summary_SerialMediationData", print_summary_serial_mediation_data)
   registerS3method("print", "summary_JointMediationData", print_summary_joint_mediation_data)
   registerS3method("print", "summary_ClusterMediationData", print_summary_cluster_mediation_data)
+  registerS3method("print", "summary_TwoLevelMediationData", print_summary_twolevel_mediation_data)
   registerS3method("print", "summary_SEMFit", print_summary_semfit)
 
   # tidy()/glance() methods for S7 objects (function names avoid dots, so NAMESPACE directives cannot register them)
