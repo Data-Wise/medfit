@@ -17,9 +17,9 @@ source-fit bootstrap intervals. Delta Wald intervals are already available.
 
 | Need | medsim piece | Fit |
 |---|---|---|
-| SLURM array on Hopper | `medsim_write_submit_script()`, fail-loud login-shell script, requeue, throttle | replaces hand-written `stage0.sbatch` |
+| SLURM array on Hopper | `medsim_write_submit_script()`, fail-loud login-shell script, requeue, throttle | does NOT replace `stage0.sbatch` (see Status below): it lacks the module purge, thread exports, fingerprint, clean-tree and HEAD checks and loads a different R module (`-ytj2` vs `-fyqw`, a BLAS difference) |
 | One chunk of cells | `medsim_run_chunk()` | replaces the loop in `run-chunk.R` |
-| Combine and integrity audit | `medsim_combine_chunks()`, `medsim_audit_results()`, `medsim_check_results()` | covers most of `check-complete.R` |
+| Combine and integrity audit | `medsim_combine_chunks()`, `medsim_audit_results()`, `medsim_check_results()` | adds to `check-complete.R`, whose `FAIL_STATUS` lacks `withheld` and `incomplete` (the adapter recodes them) |
 | Coverage, power, bias tables | `medsim_analyze_coverage()`, `medsim_analyze_power()`, `medsim_tables()` | exploratory tables only (see below) |
 | Caching | `medsim_cache_*` | resumable chunks |
 
@@ -85,3 +85,21 @@ are a release requirement.
 3. Budget: keep the 250 core-day cap, or a separate cap per phase.
 4. Whether to adopt medsim for the stage-0 harness (this plan) or keep the hand-written harness
    that has already had independent QA.
+
+## Status (2026-11-09): P1 and P2 done locally, merged into this branch
+
+Code: `planning/studies/fiml-stage0-hopper/medsim/` (adapter, receipts, attempted-denominator analysis with a single
+gate, smoke runner, parity and planted-defect tests, README). Independent QA PASS (parity on five cells the implementer had not
+used, hand-recomputed denominator, truth for all 60 cells, 11 of 12 planted defects caught; the four gaps it found are closed and
+re-tested: complete-row consistency, one gate over ledger, receipts and truth, chunk-overwrite guard, combine in stop mode).
+Defects 37/37 and parity 12/12 identical at B = 40 on the local macOS BLAS.
+
+Findings that change this plan:
+
+- medsim's generated submit script cannot replace `stage0.sbatch`; keep the hand-written script or re-implement its gates in a wrapper.
+- Pin medsim 0.6.x (0.5.1 drops task-level errors silently). The silent single-imputation fallback is in medsim's own multiple-imputation
+  methods, which the adapter never calls.
+- `check-complete.R` must learn `withheld` and `incomplete` before any real run with refit failures (feeds PREREG P7).
+- Not verified: Hopper or Slurm, OpenBLAS, full-size B = 999 timing and parity, the real HEAD-equals-fingerprint check.
+
+Next (needs the maintainer): P0 scope decision, then P3 (pin the environment, rerun parity on Hopper, freeze the preregistration).
