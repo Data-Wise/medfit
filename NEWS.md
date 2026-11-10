@@ -191,6 +191,13 @@
 
 ## Fixed
 
+* `extract_mediation()` on a lavaan fit with more than one level (`level:` blocks with
+  `cluster =`) now stops with the classed error `medfit_error_lavaan_multilevel`. It used to
+  return an ordinary `MediationData` built from the within block alone, with `n_obs` equal
+  to the total number of rows. This is a correctness fix (behavior change, no deprecation
+  period): fit a single-level model, or use the two-level adapter planned in #394.
+  Single-level fits are unchanged.
+
 * Generic help and the README now distinguish bounded FIML normal summaries
   from deferred bootstrap, proportion-mediated and comparison operations, including
   the different `glance()` support on source fits and extracted objects.

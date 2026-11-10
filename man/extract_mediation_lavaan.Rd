@@ -111,6 +111,13 @@ by variable names. This requires specifying \code{treatment}, \code{mediator},
 and \code{outcome} arguments.
 }
 }
+\section{Limits}{
+
+Fits with more than one level (\code{lavaan::sem(..., cluster = )} with \verb{level:} blocks) are refused with the
+classed error \code{medfit_error_lavaan_multilevel}; extraction would otherwise read the within level only.
+Fit a single-level model, or wait for the two-level adapter planned in issue #394.
+}
+
 \examples{
 \donttest{
 if (requireNamespace("lavaan", quietly = TRUE)) {
