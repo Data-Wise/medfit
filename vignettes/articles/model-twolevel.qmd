@@ -174,7 +174,7 @@ rbind(lavaan = pe[pe$op == ":=", "se"],
 `nie(td, level = "contrast")` is the within NIE minus the between NIE, with a delta-method standard error. It
 describes how the two levels differ in this fit. It is **not a test**: medfit makes no claim that a contrast
 interval excluding zero shows the levels differ in the population, and no source supports the contrast as a
-named test. `decompose(td)` returns the within, between and contrast values without a standard error and
+named test. It is returned unless both `a` and `b` are equated across levels (see below). `decompose(td)` returns the within, between and contrast values without a standard error and
 labels them descriptive.
 
 ```{r}
@@ -223,9 +223,24 @@ judgments, not published cutoffs; they are the options `medfit.between_icc_error
 ## Paths equated across levels
 
 If you give the same label to a path at both levels (`M ~ a*X` in both blocks) or add `a == a2`, lavaan
-estimates one parameter for both. The effects at each level are still reported, but the contrast is zero by
-constraint, not an estimate, so it is `NA` and carries the warning `medfit_warning_twolevel_constrained`. The
-object lists the equated paths in `cross_level_equal`.
+estimates one parameter for both. The object lists the equated paths in `cross_level_equal`. medfit finds an
+equated path three ways: a shared free parameter or label, an `==` row between the two labels, and a numeric
+check of the fit itself. The numeric check records a path as equated when the estimated difference of its two
+level estimates and the variance of that difference are both effectively zero:
+$|\hat\theta_w - \hat\theta_b| \le 10^{-6} \max(1, |\hat\theta_w|, |\hat\theta_b|)$ and
+$\operatorname{Var}(\hat\theta_w - \hat\theta_b) \le 10^{-10} (V_{ww} + V_{bb})$. Those two defaults are the
+options `medfit.twolevel_equal_diff` and `medfit.twolevel_equal_var`. The check finds an algebraic equality that
+lavaan keeps as two parameters (for example `a^2 - a2^2 == 0`). A constant offset between the two levels (`a2 == a + 0.01`) is a constraint but not an equality, so it is not
+flagged unless it is smaller than the tolerance, where the paths are equal to that precision. It never uses the correlation of the two
+estimates: a correlation of $-1$, or of $+1$ between proportional but unequal paths, does not mean the paths
+are equal, and the contrast would silently become `NA`.
+
+The contrast follows the equated paths. With **only one** of `a` or `b` equated, the contrast stays an
+estimate: with `a` equated it is $a (b_w - b_b)$, with `b` equated it is $(a_w - a_b) b$, each with a
+delta-method standard error from the joint covariance (the cross-level covariance of the equated pair enters
+the gradient). It is still descriptive, not a test. Only when **both** `a` and `b` are equated is the contrast
+zero by constraint, not an estimate: it is `NA` and carries the warning `medfit_warning_twolevel_constrained`.
+The chunk below checks the `a`-only contrast and its standard error against lavaan's own `:=` definition.
 
 ```{r}
 #| label: equated
@@ -233,16 +248,39 @@ object lists the equated paths in `cross_level_equal`.
 shared <- "
   level: 1
     M ~ a*X
-    Y ~ M + X
+    Y ~ b*M + X
   level: 2
     M ~ a*X
-    Y ~ M + X
+    Y ~ b2*M + X
+  nc := a*b - a*b2
 "
 fit_eq <- suppressWarnings(lavaan::sem(shared, data = d, cluster = "id"))
 td_eq <- extract_mediation(fit_eq, treatment = "X", mediator = "M", outcome = "Y")
 td_eq@cross_level_equal
-suppressWarnings(nie(td_eq, level = "contrast"))
+eff_eq <- tidy(td_eq, type = "effects")
+eff_eq[eff_eq$term == "nie_contrast", ]
+pe_eq <- lavaan::parameterEstimates(fit_eq)
+pe_eq[pe_eq$op == ":=", c("est", "se")]
 nie(td_eq, level = "between")
+```
+
+With both equated, the contrast is `NA` and `twolevel_statistic()` refuses it.
+
+```{r}
+#| label: equated-both
+#| eval: !expr has_lavaan
+shared_ab <- "
+  level: 1
+    M ~ a*X
+    Y ~ b*M + X
+  level: 2
+    M ~ a*X
+    Y ~ b*M + X
+"
+fit_eq2 <- suppressWarnings(lavaan::sem(shared_ab, data = d, cluster = "id"))
+td_eq2 <- extract_mediation(fit_eq2, treatment = "X", mediator = "M", outcome = "Y")
+td_eq2@cross_level_equal
+suppressWarnings(nie(td_eq2, level = "contrast"))
 ```
 
 ## Few clusters
@@ -309,7 +347,7 @@ Three things to know about the cluster route:
   reported in a warning (`bootstrap samples failed and were excluded`); `n_boot` in the result is the number
   of replicates that were used.
 - **Constructing the callback can fail.** A between effect or the contrast of a within-only fit stops with
-  class `medfit_between_unidentified`, and the contrast of a fit that equates a or b across levels stops with
+  class `medfit_between_unidentified`, and the contrast of a fit that equates both a and b across levels stops with
   class `medfit_error_twolevel_constrained`, instead of bootstrapping a distribution of `NA`. A `lavaan` fit
   without `treatment`, `mediator` and `outcome` stops with class `medfit_error_twolevel_unsupported`.
 
@@ -321,7 +359,7 @@ err_within_only <- tryCatch(
   medfit_between_unidentified = function(e) class(e)[1]
 )
 err_constrained <- tryCatch(
-  twolevel_statistic(td_eq, "nie_contrast"),
+  twolevel_statistic(td_eq2, "nie_contrast"),
   medfit_error_twolevel_constrained = function(e) class(e)[1]
 )
 c(err_within_only, err_constrained)
@@ -359,7 +397,7 @@ you have decided to accept can be muffled by class (see [Troubleshooting](guide-
 |---|---|---|
 | `medfit_between_unidentified` | warning (error from `twolevel_statistic()`) | the between level is not identified: the result is within-only. Also from a between accessor on a within-only object; `twolevel_statistic()` stops with this class for a between effect or the contrast |
 | `medfit_warning_between_weak` | warning | the ICC of the treatment or the mediator is in [0.01, 0.05) |
-| `medfit_warning_twolevel_constrained` | warning | the contrast is `NA` because a or b is equated across levels |
+| `medfit_warning_twolevel_constrained` | warning | the contrast is `NA` because both a and b are equated across levels |
 | `medfit_warning_twolevel_inadmissible` | warning | lavaan's `post.check` is `FALSE` (for example a negative variance) |
 | `medfit_warning_twolevel_few_clusters` | warning | fewer than 50 clusters |
 | `medfit_warning_twolevel_labels_ignored` | warning | `a_label`, `b_label` or `cp_label` was set: the paths are read by variable names and level, not by label |
@@ -369,7 +407,7 @@ you have decided to accept can be muffled by class (see [Troubleshooting](guide-
 | `medfit_error_twolevel_path_missing` | error | a, b or c' absent at a level |
 | `medfit_error_twolevel_unusable` | error | the within block is unusable: the fit did not converge, or the within covariance is missing or not positive definite |
 | `medfit_error_twolevel_level` | error | `level = "contrast"` for `nde()`, `te()` or `pm()` |
-| `medfit_error_twolevel_constrained` | error | `twolevel_statistic(effect = "nie_contrast")` for a fit that equates a or b across levels |
+| `medfit_error_twolevel_constrained` | error | `twolevel_statistic(effect = "nie_contrast")` for a fit that equates both a and b across levels |
 
 The messages they carry are quoted in [Troubleshooting](guide-troubleshooting.html#two-level-mediation).
 

@@ -241,10 +241,11 @@ TwoLevelMediationData <- S7::new_class(
 )
 
 
-# The contrast NIE_within - NIE_between is NA when the between level is unidentified or a or b is equated
-# across levels (it is then zero by constraint, not an estimate).
+# The contrast NIE_within - NIE_between is NA when the between level is unidentified or BOTH a and b are
+# equated across levels (it is then zero by constraint, not an estimate). With only one of them equated it is
+# a * (b_within - b_between) or (a_within - a_between) * b: estimable, descriptive, with a delta SE (C-Q1).
 .twolevel_contrast_available <- function(x) {
-  isTRUE(x@between_identified) && !any(c("a", "b") %in% x@cross_level_equal)
+  isTRUE(x@between_identified) && !all(c("a", "b") %in% x@cross_level_equal)
 }
 
 #' Print Method for TwoLevelMediationData

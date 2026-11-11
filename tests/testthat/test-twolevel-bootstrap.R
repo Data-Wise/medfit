@@ -86,7 +86,7 @@ test_that("a between effect from a within-only object and a constrained contrast
   expect_error(twolevel_statistic(within_only, "pm_between"), class = "medfit_between_unidentified")
   expect_type(twolevel_statistic(within_only, "nie_within"), "closure")
 
-  constrained <- tl_td(cross_level_equal = "a")
+  constrained <- tl_td(cross_level_equal = c("a", "b"))
   expect_error(twolevel_statistic(constrained, "nie_contrast"), class = "medfit_error_twolevel_constrained")
   expect_type(twolevel_statistic(constrained, "nie_between"), "closure")
   expect_error(twolevel_statistic(tl_td(), "nie_within", treatment = "X"), class = "medfit_error_twolevel_unsupported")
@@ -337,9 +337,11 @@ test_that("a lavaan fit with a within-only or constrained result errors at const
   expect_error(do.call(twolevel_statistic, c(list(within_only, "nie_between"), args)),
                class = "medfit_between_unidentified")
   expect_type(do.call(twolevel_statistic, c(list(within_only, "nie_within"), args)), "closure")
-  shared <- tl_fixture("shared_label")
+  shared <- tl_fixture("shared_ab")
   expect_error(do.call(twolevel_statistic, c(list(shared, "nie_contrast"), args)),
                class = "medfit_error_twolevel_constrained")
+  # only a equated: the contrast callback is built (C-Q1)
+  expect_type(do.call(twolevel_statistic, c(list(tl_fixture("shared_label"), "nie_contrast"), args)), "closure")
   # the roles are required for a fit (the spec's `twolevel_statistic(fit, effect)` sketch infers none)
   expect_error(twolevel_statistic(tl_fixture("base"), "nie_within"), class = "medfit_error_twolevel_unsupported")
 })

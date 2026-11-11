@@ -86,7 +86,7 @@ one kind.
 |---|---|---|---|
 | `The between level is not identified, so only the within-level paths are returned` (a warning) | `medfit_between_unidentified` | the ICC of the treatment or the mediator is below 0.01, a between covariance is not finite or not positive definite, or the fit did not converge | read the within results, or fix the design; the between effects and the contrast are `NA` |
 | `The between-level variance of the treatment or the mediator is small` (a warning) | `medfit_warning_between_weak` | an ICC between 0.01 and 0.05 | the between results are kept but may be imprecise |
-| `The contrast NIE_within - NIE_between is NA` (a warning) | `medfit_warning_twolevel_constrained` | a or b is equated across levels (a shared label or an `==` row), so the contrast is zero by constraint | drop the cross-level constraint to compare the levels |
+| `The contrast NIE_within - NIE_between is NA` (a warning) | `medfit_warning_twolevel_constrained` | both a and b are equated across levels (a shared label, an `==` row or an algebraic equality), so the contrast is zero by constraint; with only one of them equated the contrast is returned | free `a` or `b` across levels to compare the levels |
 | `The lavaan fit is not admissible` (a warning) | `medfit_warning_twolevel_inadmissible` | lavaan's `post.check` is `FALSE`, for example a negative variance | inspect the fit before using the numbers |
 | `Two-level estimates and between-level standard errors are unreliable with few clusters` (a warning) | `medfit_warning_twolevel_few_clusters` | fewer than 50 clusters (a judgment, not a published cutoff) | treat the between results as rough; `options(medfit.twolevel_min_clusters = )` changes the threshold |
 | `is ignored for a two-level fit` (a warning, once per session) | `medfit_warning_twolevel_labels_ignored` | `a_label`, `b_label` or `cp_label` was set | none needed: the paths are read by variable names and level |
@@ -98,7 +98,7 @@ one kind.
 | `The two-level fit is not usable` | `medfit_error_twolevel_unusable` | the fit did not converge, or the within covariance is missing or not positive definite | fix the fit |
 | `is defined only for nie()` | `medfit_error_twolevel_level` | `level = "contrast"` for `nde()`, `te()` or `pm()` | use `tidy()` for those contrasts |
 | `needs the between level, which is not identified` | `medfit_between_unidentified` (an error here) | `twolevel_statistic()` was asked for a between effect or the contrast of a within-only fit | fix the between level (see the first row of this section), or bootstrap a within effect |
-| `so the two levels are not compared freely` | `medfit_error_twolevel_constrained` | `twolevel_statistic(effect = "nie_contrast")` on a fit that equates a or b across levels | bootstrap the within and the between effect separately |
+| `both a and b are equated across levels` | `medfit_error_twolevel_constrained` | `twolevel_statistic(effect = "nie_contrast")` on a fit that equates both a and b across levels | bootstrap the within and the between effect separately |
 | `are required for a lavaan fit` | `medfit_error_twolevel_unsupported` | `twolevel_statistic()` got a `lavaan` fit without `treatment`, `mediator` and `outcome` | name the three variables |
 | `The lavaan fit has more than two levels` | `medfit_error_lavaan_multilevel` | a three-level fit | fit a one- or two-level model |
 | `The lavaan fit has more than one group` | `medfit_error_lavaan_multigroup` | a multigroup fit | fit each group as its own model |

@@ -16,7 +16,7 @@ glance_s7_object(x, ...)
 has its own columns; see \link{SEMFit-methods}). A \code{TwoLevelMediationData} has
 within and between rows (\code{nie_within}, \code{nie_between}, \code{nie_contrast}, ...);
 the between effect rows and the contrast are \code{NA} with a classed warning
-when the between level is unidentified or a path is equated across levels
+when the between level is unidentified (the contrast also when both \code{a} and \code{b} are equated across levels)
 (between path rows are \code{NA} without one).}
 
 \item{...}{Passed to the class method: \code{type} (\code{"all"}, \code{"paths"},

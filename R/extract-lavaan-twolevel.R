@@ -10,11 +10,14 @@
 
 # Constants in one place; `options(medfit.twolevel_min_clusters = , medfit.between_icc_error = ,
 # medfit.between_icc_warn = )` override them.
-.twolevel_defaults <- list(min_clusters = 50L, icc_error = 0.01, icc_warn = 0.05)
+# `equal_diff` and `equal_var` are the tolerances of the numeric equality detector (`.twolevel_pair_equal()`).
+.twolevel_defaults <- list(min_clusters = 50L, icc_error = 0.01, icc_warn = 0.05,
+                           equal_diff = 1e-6, equal_var = 1e-10)
 
 .twolevel_option <- function(name) {
   opt <- c(min_clusters = "medfit.twolevel_min_clusters", icc_error = "medfit.between_icc_error",
-           icc_warn = "medfit.between_icc_warn")[[name]]
+           icc_warn = "medfit.between_icc_warn", equal_diff = "medfit.twolevel_equal_diff",
+           equal_var = "medfit.twolevel_equal_var")[[name]]
   getOption(opt, .twolevel_defaults[[name]])
 }
 
@@ -106,9 +109,38 @@
   out
 }
 
+# Is the pair (within, between) equated? `est` is c(within, between) and `V` their 2x2 covariance. The pair is
+# equated when the estimated difference AND the variance of the difference are both effectively zero:
+#   |d| <= equal_diff * max(1, |est|)   and   Var(d) <= equal_var * (V_ww + V_bb),   d = est_w - est_b.
+# Never the correlation: correlation -1, or +1 between proportional but unequal paths, does not imply
+# equality. Tolerances (calibrated on the oracle fits, 2026-11-11): an algebraic equality that lavaan keeps as
+# two parameters (`a^2 - a2^2 == 0`) leaves |d| near 9e-9 and Var(d)/(V_ww + V_bb) near 1e-16; an unequal pair
+# in the same model has |d| of 0.3 or more and a relative variance near 1. The 1e-6 and 1e-10 defaults sit
+# two orders and six orders from the equated cases; override with `options(medfit.twolevel_equal_diff = ,
+# medfit.twolevel_equal_var = )`.
+.twolevel_pair_equal <- function(est, V) {
+  if (length(est) != 2L || !all(is.finite(est)) || !all(is.finite(V))) return(FALSE)
+  d <- est[[1L]] - est[[2L]]
+  var_d <- V[1L, 1L] + V[2L, 2L] - 2 * V[1L, 2L]
+  abs(d) <= .twolevel_option("equal_diff") * max(1, abs(est)) &&
+    var_d <= .twolevel_option("equal_var") * (V[1L, 1L] + V[2L, 2L])
+}
+
+# Paths equated across the levels by the numeric criterion, among the free rows (a fixed row has no variance).
+.twolevel_numeric_equal <- function(key, V) {
+  equal <- vapply(c("a", "b", "c_prime"), function(p) {
+    nm <- paste0(p, c("_within", "_between"))
+    rows <- match(nm, key$path)
+    if (anyNA(rows) || any(key$free[rows] <= 0L) || is.null(V) || !all(nm %in% rownames(V))) return(FALSE)
+    .twolevel_pair_equal(key$est[rows], V[nm, nm, drop = FALSE])
+  }, logical(1))
+  names(equal)[equal]
+}
+
 # Paths ("a", "b", "c_prime") equated across the two levels: (i) a shared non-zero free index, (ii) a shared
-# non-empty label, or (iii) a `==` row naming both labels (or their plabels).
-.twolevel_cross_equal <- function(pt, key) {
+# non-empty label, (iii) a `==` row naming both labels (or their plabels), or (iv) the numeric criterion
+# (`.twolevel_numeric_equal()`), which also finds an algebraic equality lavaan keeps as two parameters.
+.twolevel_cross_equal <- function(pt, key, V = NULL) {
   eq_rows <- pt[pt$op == "==", , drop = FALSE]
   tags <- function(row) setdiff(c(row$label, row$plabel), "")
   equal <- vapply(c("a", "b", "c_prime"), function(p) {
@@ -123,7 +155,8 @@
     )
     by_index || by_label || by_row
   }, logical(1))
-  names(equal)[equal]
+  found <- union(names(equal)[equal], .twolevel_numeric_equal(key, V))
+  found[order(match(found, c("a", "b", "c_prime")))]
 }
 
 # Intraclass correlation per variable from the model-implied within and between covariances:
@@ -345,7 +378,7 @@
   }
 
   # --- Assemble ---
-  equal <- if (identified) .twolevel_cross_equal(pt, key) else character(0)
+  equal <- if (identified) .twolevel_cross_equal(pt, key, V6) else character(0)
   rows <- if (identified) seq_len(6L) else within
   est <- stats::setNames(key$est[rows], key$path[rows])
   # A within-only object keeps the audit rows but not between numbers it says do not exist

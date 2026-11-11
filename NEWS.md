@@ -32,6 +32,18 @@
 
 ## Added
 
+* The two-level contrast `NIE_within - NIE_between` is now returned unless **both** `a` and `b` are equated across
+  levels (it was `NA` when either was). With only `a` equated it is `a (b_w - b_b)`, with only `b` equated
+  `(a_w - a_b) b`, each with a delta-method SE from the joint covariance, equal to lavaan's `:=` definition
+  (still descriptive, not a test). With both equated it is `NA` (zero by constraint) with
+  `medfit_warning_twolevel_constrained`, and `twolevel_statistic("nie_contrast")` raises
+  `medfit_error_twolevel_constrained`. Behavior change for the development version only (the adapter is unreleased).
+* `cross_level_equal` also finds an equality lavaan keeps as two parameters (for example `a^2 - a2^2 == 0`):
+  a path is recorded as equated when the estimated difference of its two level estimates and the variance of that
+  difference are both effectively zero (defaults `1e-6` relative to `max(1, |estimate|)` and `1e-10` relative to
+  the summed variances; options `medfit.twolevel_equal_diff` and `medfit.twolevel_equal_var`). The correlation of
+  the two estimates is not used: correlation -1, or +1 between proportional unequal paths, does not imply equality.
+
 * `extract_mediation()` on a two-level `lavaan` fit (`level:` blocks, `cluster =`) now returns
   the new `TwoLevelMediationData`: the a, b and c' paths at the within and the between
   level (one mediator, linear, no products, latent cluster means), read from the fit's
@@ -52,7 +64,7 @@
   `summary()` work through the one delta-method gradient builder, over the joint covariance
   of the paths, so the cross-level covariance enters the contrast SE. Between effects of a
   within-only object are `NA` with `medfit_between_unidentified`; the contrast is `NA` with
-  `medfit_warning_twolevel_constrained` when a or b is equated across levels. Intervals are
+  `medfit_warning_twolevel_constrained` when both a and b are equated across levels. Intervals are
   Wald (no small-sample correction).
 
 * `twolevel_statistic()` builds the scalar callback `bootstrap_mediation()` needs for a two-level
@@ -62,7 +74,7 @@
   resample, with a cluster drawn twice refitted as two clusters. A refit that errors, warns, does
   not converge or leaves the between level unidentified is a failed replicate, excluded and counted
   in the bootstrap warning. A between effect of a within-only object and the contrast of a fit with
-  `a` or `b` equated across levels raise `medfit_between_unidentified` and
+  `a` and `b` both equated across levels raise `medfit_between_unidentified` and
   `medfit_error_twolevel_constrained`. `bootstrap_mediation()` now accepts a `TwoLevelMediationData`
   as `mediation_data`. Object-based cluster bootstrap dispatch is still deferred (#394).
 
