@@ -1,0 +1,83 @@
+# Renders the repository-only book (book/) to HTML and PDF.
+# Triggers are deliberately narrow (hosted-cost policy): PRs that touch book/** or
+# this file, a published release, and manual runs. Never on pushes or unrelated PRs.
+on:
+  pull_request:
+    branches: [dev, main]
+    paths: ['book/**', '.github/workflows/book.yaml']
+  release:
+    types: [published]
+  workflow_dispatch:
+
+name: book
+
+# Cancel a superseded run on the same PR; other runs are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  html:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: quarto-dev/quarto-actions/setup@v2
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      # The chapters call library(medfit) and use the Suggests (lavaan, OpenMx, ...):
+      # install this tree plus its Suggests.
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: local::.
+
+      - name: Render HTML
+        run: quarto render book --to html
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: book-html
+          path: book/_book
+          if-no-files-found: error
+
+  pdf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          tinytex: true
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: local::.
+
+      - name: Render PDF
+        run: quarto render book --to pdf
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: book-pdf
+          path: book/_book/*.pdf
+          if-no-files-found: error
