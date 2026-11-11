@@ -2,15 +2,13 @@
 
 ## Documentation
 
-* The native-engine book (repository only) now teaches the contracts added since the 2026-10-20 audit that it lacked:
-  `compare_lr()` with a live check against lavaan (chapter 5), nonzero-product sign branches and `search_evidence`, the
-  branch map, the exact-zero standard error of a pinned parameter under a mean structure, and the bound-slope floor
-  (chapter 3). The audit is `planning/specs/AUDIT-minibook-coverage-2026-11-10.md`.
-
-* The repository-only book gains chapter 9, "The lavaan two-level adapter and TwoLevelMediationData" (the estimand,
-  the parameter-table keying by free-parameter index, the sub-block of the joint covariance, the contrast standard
-  error by hand, the cross-level equality rule, the two-level likelihood rebuilt in base R as an oracle against
-  lavaan's `logLik()`, and the two bootstrap routes), and now has the title "The medfit engines and model classes".
+* The native-engine book (ten chapters, 1 to 8 on the native engine, 9 on the lavaan two-level adapter and 10 on 2-1-1
+  cluster mediation, titled "The medfit engines and model classes") has moved out of this repository into its own private
+  repository, with its history, and is no longer published or linked from the package website. `book/` is removed from the
+  source tree; the identities its chapters teach stay tested here (`test-native-identities.R`, formerly part of
+  `test-native-book.R`), and the oracles for the two-level adapter and cluster mediation stay in `test-twolevel-*.R` and
+  `test-cluster-211.R`. Links from the native guide, quickstart, tutorial, model page, cookbook and defaults article to the
+  book are removed.
 
 * New model page "Two-level mediation (1-1-1)" (`model-twolevel`), cookbook recipe 23, a methods section
   (the estimand, the delta method with the cross-level covariance, the caveats), troubleshooting rows for the
