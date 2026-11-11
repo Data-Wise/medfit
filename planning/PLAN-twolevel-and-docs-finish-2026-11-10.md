@@ -13,8 +13,12 @@ out of scope, stop conditions: they apply to every task here).
 | 1 PR3 bootstrap helper | done | #404 merged `76120d96`; full suite on its install 208 files / 2313 tests / 0 failed; decision recorded: inadmissible refits kept, oracle on percentile half-width (maintainer, 2026-11-10) |
 | 2 PR4 docs | done | #403 merged `cac3e38f`; full suite on its install 210 files / 2327 tests / 19663 expectations / 0 failed; version bump deliberately not in this PR (dev keeps the released version under "(development version)"; bump belongs to release-prep) |
 | 3 lavaan floor | done | #405 merged `b5490aa7`; floor `lavaan (>= 0.7-3)` = oldest version in CI; 0.7-2 passed locally, 0.6-19 and 0.6-12 fail (no multilevel cluster bootstrap); 0.7-0 and 0.7-1 unverified |
-| 4 D2 book audit | in progress | worker on `docs/book-contract-audit-d2` |
-| 5-8, Checkpoints A and B | pending | Checkpoint A runs after Task 4 merges (full suite, lint, risk-tier on `dev`) |
+| 4 D2 book audit | done | merged into dev (book contract paragraphs) |
+| 5 D2b chapter 9 | done | #407 merged |
+| 6 D2b chapter 10 | done | #409 merged (`a2ac942e`) |
+| 7 D7 book CI render | dropped | maintainer decision 2026-11-10: the book is not published online; #408 closed unmerged, no book workflow |
+| 7b book move | in review | book moved to private `Data-Wise/medfit-book` (Quarto, tome scaffold, 34 commits of history kept, HTML and PDF render verified); removal PR #410 to dev |
+| 8 D6 final gate, Checkpoints A and B | pending | spelling, urlchecker, check_pkgdown, evaluated site build and links; the book render now belongs to the book repo |
 
 Also merged this session outside the task list: #402 (helper-name clash fix, `ce898ac7`), docs D1 #398, D3 #399, D5 #401.
 
@@ -95,7 +99,7 @@ If the oldest lavaan cannot be installed locally, record "floor unverified" in `
 **Acceptance criteria:** [ ] `ClusterMediationData`, NIE = a x b_between, own and spillover with the large-cluster caveat, Kenward-Roger, cluster bootstrap; [ ] numbers match `test-cluster-211.R` oracles.
 **Verification:** as Task 5. **Dependencies:** Task 5. **Size:** M.
 
-### Task 7: D7, book CI render
+### Task 7: D7, book CI render (DROPPED 2026-11-10: the book moved to a private repository and is not published; #408 closed)
 **Acceptance criteria:** [ ] `.github/workflows/book.yaml` renders HTML and PDF, uploads artifacts; [ ] triggers only on PRs touching `book/**` and on release; [ ] no new cost on unrelated PRs.
 **Verification:** [ ] workflow runs green on a PR that touches `book/`; [ ] a PR that does not touch it does not trigger it. If the PDF job fails twice, ship the HTML job and stop on the PDF job with the log.
 **Dependencies:** Task 6. **Size:** S.
