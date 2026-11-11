@@ -225,3 +225,67 @@ test_that("planted defect: a dropped cross-level block in the extracted vcov is 
   se_obj <- sqrt(drop(t(g) %*% td@vcov[names(g), names(g)] %*% g))
   expect_gt(abs(se_obj - se_joint) / se_joint, 0.01)
 })
+
+
+# --- Hardening 7: a negative or missing variance is NA with one classed warning, never a silent NaN ---
+
+# Classes of every warning raised while evaluating `expr`, and the value.
+tl_collect_warnings <- function(expr) {
+  classes <- list()
+  value <- withCallingHandlers(
+    expr,
+    warning = function(w) {
+      classes[[length(classes) + 1L]] <<- class(w)
+      invokeRestart("muffleWarning")
+    }
+  )
+  list(value = value, classes = classes)
+}
+
+test_that(".safe_se is sqrt for valid variances and NA with one classed warning otherwise", {
+  v <- c(a = 4, b = 0, c = 2.25)
+  res <- tl_collect_warnings(medfit:::.safe_se(v, "test"))
+  expect_identical(res$value, sqrt(v))              # bit-identical when every entry is valid
+  expect_length(res$classes, 0L)
+
+  bad <- c(a = 4, b = -1, c = NA, d = -2)
+  res <- tl_collect_warnings(medfit:::.safe_se(bad, "test"))
+  expect_identical(unname(res$value), c(2, NA, NA, NA))
+  expect_identical(names(res$value), names(bad))
+  expect_identical(sum(vapply(res$classes, function(k) "medfit_warning_vcov_diagonal" %in% k, logical(1))), 1L)
+  expect_length(res$classes, 1L)                    # one warning for the whole vector, no NaN warning
+})
+
+test_that("summary() reports NA for a negative variance and signals medfit_warning_vcov_diagonal", {
+  td <- tl_td()
+  vc <- td@vcov
+  vc[2, 2] <- -0.01
+  S7::prop(td, "vcov", check = FALSE) <- vc
+  res <- tl_collect_warnings(summary(td))
+  expect_true(any(vapply(res$classes, function(k) "medfit_warning_vcov_diagonal" %in% k, logical(1))))
+  expect_true(is.na(res$value$paths["b_within", "std_error"]))
+  expect_false(is.na(res$value$paths["a_within", "std_error"]))
+  # planted defect: a plain sqrt gives NaN and no medfit warning, which this test must not accept
+  plain <- suppressWarnings(sqrt(diag(vc)))
+  expect_true(is.nan(plain[[2]]))
+})
+
+test_that("the extractor reports a negative between variance with the classed warning, not a silent NaN", {
+  skip_if_not_installed("lavaan")
+  fit <- tl_fixture("base")
+  real_read <- medfit:::.twolevel_read_vcov
+  pt <- lavaan::parTable(fit)
+  i <- pt$free[match("a2", pt$label)]
+  testthat::local_mocked_bindings(
+    .twolevel_read_vcov = function(fit) {
+      V <- real_read(fit)
+      V[i, i] <- -0.01
+      V
+    },
+    .twolevel_is_pd = function(M) TRUE,     # let the bad block reach the standard-error step
+    .package = "medfit"
+  )
+  res <- tl_collect_warnings(try(extract_mediation(fit, "X", "M", "Y"), silent = TRUE))
+  expect_true(any(vapply(res$classes, function(k) "medfit_warning_vcov_diagonal" %in% k, logical(1))))
+  expect_s3_class(res$value, "try-error")           # the validator refuses the object that follows
+})

@@ -324,7 +324,11 @@ S7::method(summary, TwoLevelMediationData) <- function(object, level = 0.95, ...
                         conf_low = unname(est - z * se), conf_high = unname(est + z * se),
                         row.names = names(est))
   p <- paths(object)
-  p_se <- sqrt(diag(object@vcov)[match(names(p), rownames(object@vcov))])
+  # A path with no row in vcov (the between paths of a within-only object) has no SE; only rows that exist
+  # are checked for an invalid variance.
+  p_idx <- match(names(p), rownames(object@vcov))
+  p_se <- rep(NA_real_, length(p))
+  p_se[!is.na(p_idx)] <- .safe_se(diag(object@vcov)[p_idx[!is.na(p_idx)]], "the two-level paths")
   structure(
     list(
       effects = effects,

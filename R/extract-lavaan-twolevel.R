@@ -348,9 +348,10 @@
   equal <- if (identified) .twolevel_cross_equal(pt, key) else character(0)
   rows <- if (identified) seq_len(6L) else within
   est <- stats::setNames(key$est[rows], key$path[rows])
-  se <- suppressWarnings(sqrt(diag(V6)))
   # A within-only object keeps the audit rows but not between numbers it says do not exist
   shown <- if (identified) rep(TRUE, 6L) else key$level == "within"
+  se <- rep(NA_real_, 6L)
+  se[shown] <- .safe_se(diag(V6)[shown], "the two-level fit")
   table <- data.frame(
     path = key$path, level = key$level, lhs = key$lhs, op = key$op, rhs = key$rhs, label = key$label,
     free = key$free, est = ifelse(shown, key$est, NA_real_), se = ifelse(shown, unname(se), NA_real_),
