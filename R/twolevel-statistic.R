@@ -35,7 +35,7 @@
 #' was made and not where the callback later runs. Create the callback in the scope that holds those
 #' objects. Calls written with a namespace, such as `lavaan::lavaan()` resolve regardless.
 #'
-#' The contrast is `NA` by constraint when `a` or `b` is equated across levels and a between effect is
+#' The contrast is `NA` by constraint when both `a` and `b` are equated across levels and a between effect is
 #' `NA` when the between level is not identified, so asking for either raises a classed error here
 #' instead of returning a distribution of `NA`.
 #'
@@ -130,8 +130,8 @@ twolevel_statistic <- function(x,
   }
   if (identical(effect, "nie_contrast") && !.twolevel_contrast_available(td)) {
     .twolevel_abort(
-      paste0("The contrast NIE_within - NIE_between is NA: a or b is equated across levels, so the two ",
-             "levels are not compared freely."),
+      paste0("The contrast NIE_within - NIE_between is NA: both a and b are equated across levels, so the ",
+             "contrast is zero by constraint."),
       "medfit_error_twolevel_constrained"
     )
   }

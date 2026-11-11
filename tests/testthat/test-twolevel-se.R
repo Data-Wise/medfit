@@ -76,7 +76,7 @@ test_that("tidy() and confint() agree, and the contrast is NA with a warning whe
   expect_equal(unname(as.matrix(tp[c("conf_low", "conf_high")])), unname(cp), tolerance = 1e-12)
   expect_equal(unname(cp[1, ]), 0.4 + c(-1, 1) * stats::qnorm(0.95) * 0.10, tolerance = 1e-12)
 
-  tc <- tl_td_cov(cross_level_equal = "b")
+  tc <- tl_td_cov(cross_level_equal = c("a", "b"))
   expect_warning(t_c <- tidy(tc, type = "effects"), class = "medfit_warning_twolevel_constrained")
   expect_true(is.na(t_c$estimate[t_c$term == "nie_contrast"]))
   expect_true(is.na(t_c$std_error[t_c$term == "nie_contrast"]))

@@ -64,7 +64,7 @@ resolved in the environment that called \code{twolevel_statistic()}, captured at
 was made and not where the callback later runs. Create the callback in the scope that holds those
 objects. Calls written with a namespace, such as \code{lavaan::lavaan()} resolve regardless.
 
-The contrast is \code{NA} by constraint when \code{a} or \code{b} is equated across levels and a between effect is
+The contrast is \code{NA} by constraint when both \code{a} and \code{b} are equated across levels and a between effect is
 \code{NA} when the between level is not identified, so asking for either raises a classed error here
 instead of returning a distribution of \code{NA}.
 }

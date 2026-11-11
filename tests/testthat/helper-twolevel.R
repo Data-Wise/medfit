@@ -54,6 +54,14 @@ tl_model <- function(within = "a*X", between = "a2*X") {
   )
 }
 
+# The same model with the between-level mediator-to-outcome slope shared with the within level (label `b`).
+tl_model_b_shared <- function(within = "a*X", between = "a2*X") {
+  paste0(
+    "level: 1\n  M ~ ", within, "\n  Y ~ b*M + cp*X\n",
+    "level: 2\n  M ~ ", between, "\n  Y ~ b*M + cp2*X\n"
+  )
+}
+
 # A model without any labels: the first block must not be read for both levels.
 tl_model_unlabeled <- function() {
   "level: 1\n  M ~ X\n  Y ~ M + X\nlevel: 2\n  M ~ X\n  Y ~ M + X\n"
@@ -85,6 +93,12 @@ tl_fixture <- function(name = "base") {
       },
       shared_label = tl_fit(tl_sim(), tl_model(within = "a*X", between = "a*X")),
       equal_rows = tl_fit(tl_sim(), paste0(tl_model(), "  a == a2\n")),
+      shared_b = tl_fit(tl_sim(), tl_model_b_shared()),
+      shared_ab = tl_fit(tl_sim(), tl_model_b_shared(within = "a*X", between = "a*X")),
+      # equalities lavaan does not fold into one free parameter: the numeric detector is the only route
+      nl_a = tl_fit(tl_sim(), paste0(tl_model(), "  a^2 - a2^2 == 0\n")),
+      nl_b = tl_fit(tl_sim(), paste0(tl_model(), "  b^2 - b2^2 == 0\n")),
+      nl_ab = tl_fit(tl_sim(), paste0(tl_model(), "  a^2 - a2^2 == 0\n  b^2 - b2^2 == 0\n")),
       x_centered = tl_fit(tl_sim(x_mode = "centered")),
       x_small_between = tl_fit(tl_sim(x_mode = "small_between")),
       x_randomized = tl_fit(tl_sim(x_mode = "randomized")),

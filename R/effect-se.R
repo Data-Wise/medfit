@@ -275,7 +275,7 @@
 #' Gradients are named over the alias rows (`a_within`, ..., `c_prime_between`) of `@vcov`, so the cross-level
 #' covariances enter `g' V g`. A
 #' between term of a within-only object has no rows in `@vcov` and so gets `NA` from `.effect_se_or_na()`; a
-#' contrast that is zero by constraint (a or b equated across levels) is named by a row `@vcov` does not have, for
+#' contrast that is zero by constraint (both a and b equated across levels) is named by a row `@vcov` does not have, for
 #' the same reason.
 #'
 #' @param x A TwoLevelMediationData object.

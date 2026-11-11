@@ -424,8 +424,12 @@ has standard error $\sqrt{\nabla g^\top \hat V \nabla g}$ with
 | $\text{PM}_\ell$ | $(\text{TE}_\ell \nabla \text{NIE}_\ell - \text{NIE}_\ell \nabla \text{TE}_\ell) / \text{TE}_\ell^2$ (quotient rule) |
 
 Intervals are Wald (normal); there is no small-sample correction. A path pair equated across levels (a shared
-label or an `==` constraint) repeats a row and column of $\hat V$ (correlation 1), and the contrast is then zero
-by constraint, so it is reported `NA`.
+label, an `==` constraint, or an algebraic equality found numerically) repeats a row and column of $\hat V$
+(correlation 1). With only $a$ or only $b$ equated the contrast gradient above still applies, with the repeated
+rows carrying the cross-level covariance, and the contrast and its SE are reported. When both $a$ and $b$ are
+equated the contrast is zero by constraint and is reported `NA`. The numeric detector flags a pair when
+$|\hat\theta_w - \hat\theta_b| \le 10^{-6}\max(1, |\hat\theta_w|, |\hat\theta_b|)$ and
+$\operatorname{Var}(\hat\theta_w - \hat\theta_b) \le 10^{-10}(V_{ww} + V_{bb})$, never from the correlation alone.
 
 ### Bootstrap
 
