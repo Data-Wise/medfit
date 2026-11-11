@@ -2,6 +2,12 @@
 
 ## Documentation
 
+* Two new Guides articles: "Two-level workflow, step by step" (`guide-twolevel-tutorial`, a checked, evaluated
+  walkthrough from a `lavaan` fit to a reported result) and "How medfit is organized" (`guide-architecture`, Mermaid
+  diagrams of the classes, engines and generics). The Troubleshooting guide now lists `medfit_warning_vcov_diagonal`
+  and `medfit_error_search_evidence`. A new `CONTRIBUTING.md` describes the branch flow, the local gates and the hosted
+  checks. `test-condition-docs.R` fails when a classed condition in `R/` is named nowhere in the docs.
+
 * The native-engine book (ten chapters, 1 to 8 on the native engine, 9 on the lavaan two-level adapter and 10 on 2-1-1
   cluster mediation, titled "The medfit engines and model classes") has moved out of this repository into its own private
   repository, with its history, and is no longer published or linked from the package website. `book/` is removed from the

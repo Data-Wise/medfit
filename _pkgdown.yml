@@ -111,6 +111,10 @@ navbar:
         href: articles/guide-intervals.html
       - text: "Glossary and symbols"
         href: articles/guide-glossary.html
+      - text: "Two-level workflow, step by step"
+        href: articles/guide-twolevel-tutorial.html
+      - text: "How medfit is organized"
+        href: articles/guide-architecture.html
       - text: "Native defaults in 0.15.0"
         href: articles/native-defaults-0-15.html
       - text: "Native engine in five minutes"
@@ -332,6 +336,8 @@ articles:
       - '`articles/guide-troubleshooting`'
       - '`articles/guide-intervals`'
       - '`articles/guide-glossary`'
+      - '`articles/guide-twolevel-tutorial`'
+      - '`articles/guide-architecture`'
       - '`articles/native-defaults-0-15`'
       - '`articles/native-quickstart`'
       - '`articles/native-tutorial`'
