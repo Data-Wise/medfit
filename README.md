@@ -274,6 +274,8 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")  # minimum of two likelihood-ratio tes
 | `ParallelMediationData` | Mediators side by side; indirect effect is the sum of a_j * b_j |
 | `JointMediationData` | Joint natural effects of several mediators with products |
 | `ClusterMediationData` | Treatment assigned to clusters (2-1-1): own-mediator and spillover parts |
+| `TwoLevelMediationData` | A two-level `lavaan` fit with X, M and Y on level-1 units (1-1-1): the indirect effect at the within and the between level (development version) |
+| `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | Bounded FIML fits (`fit_sem(missing = "fiml")`): X to M to Y, two parallel mediators, two serial mediators (see above) |
 | `SEMFit` | A native-engine fit; `extract_mediation()` turns it into the classes above |
 | `BootstrapResult` | Point estimates, intervals and the bootstrap distribution |
 
@@ -329,7 +331,7 @@ on the `dev` branch; see `NEWS.md` for what each release contains.
 ### Code Quality
 
 - **Defensive Programming**: checkmate for input validation, S7 validators for class integrity
-- **Testing**: 5,700+ testthat expectations in 1,200+ test blocks (>90% coverage, enforced via codecov)
+- **Testing**: 2,200+ `test_that()` blocks (>90% coverage, enforced via codecov)
 - **CI/CD**: R CMD check, lintr, coverage reporting via GitHub Actions
 
 See the [NEWS](https://data-wise.github.io/medfit/news/index.html) for what changed in each release.
