@@ -1,10 +1,10 @@
 # Preface {.unnumbered}
 
-This book opens the native maximum-likelihood engine of the medfit R package
-(`fit_sem()`, `fit_mediation(engine = "native")`, `SEMFit`) and shows every
-matrix it works with. It documents the native engine as of medfit 0.16.0, with the bounded FIML scope
-of the development version noted below. It is reference material kept
-in the package repository (`book/`); it is not part of the package website.
+This book opens the engines and model classes of the medfit R package and shows the matrices they work with.
+Chapters 1 to 8 open the native maximum-likelihood engine (`fit_sem()`, `fit_mediation(engine = "native")`,
+`SEMFit`) as of medfit 0.16.0, with the bounded FIML scope of the development version noted below. Chapter 9
+opens the adapter that reads a two-level `lavaan` fit into `TwoLevelMediationData`, in the development version.
+It is reference material kept in the package repository (`book/`); it is not part of the package website.
 
 Chapters, in order:
 
@@ -16,6 +16,8 @@ Chapters, in order:
 6. The product term: `x:m`, rules 8 and 9, the model test.
 7. The four-way decomposition: CDE, INTref, INTmed, PIE.
 8. Bounded FIML: learning from partially observed rows.
+9. The lavaan two-level adapter and `TwoLevelMediationData`: the estimand, the parameter-table keying, the joint-covariance
+   sub-block, the contrast standard error, the two-level likelihood as an oracle, and the bootstrap.
 
 How the optimizer is tested, and the decisions behind its solver, are on the package website:
 [Quality control of the optimizer](https://data-wise.github.io/medfit/articles/quality-control.html).

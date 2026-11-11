@@ -7,6 +7,11 @@
   branch map, the exact-zero standard error of a pinned parameter under a mean structure, and the bound-slope floor
   (chapter 3). The audit is `planning/specs/AUDIT-minibook-coverage-2026-11-10.md`.
 
+* The repository-only book gains chapter 9, "The lavaan two-level adapter and TwoLevelMediationData" (the estimand,
+  the parameter-table keying by free-parameter index, the sub-block of the joint covariance, the contrast standard
+  error by hand, the cross-level equality rule, the two-level likelihood rebuilt in base R as an oracle against
+  lavaan's `logLik()`, and the two bootstrap routes), and now has the title "The medfit engines and model classes".
+
 * New model page "Two-level mediation (1-1-1)" (`model-twolevel`), cookbook recipe 23, a methods section
   (the estimand, the delta method with the cross-level covariance, the caveats), troubleshooting rows for the
   two-level conditions, and glossary terms. The page states the estimand's limits: fixed slopes (the average
