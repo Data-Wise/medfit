@@ -66,6 +66,28 @@
   `medfit_error_twolevel_constrained`. `bootstrap_mediation()` now accepts a `TwoLevelMediationData`
   as `mediation_data`. Object-based cluster bootstrap dispatch is still deferred (#394).
 
+* Hardening of the two-level adapter (all within the development version, no change to a valid fit's numbers):
+  * Behavior change: the `TwoLevelMediationData` validator now rejects non-finite `estimates`, a `vcov` that is not
+    symmetric or has a negative diagonal, `fixed_paths` that are not rows of `estimates`, and `n_obs` that differs from
+    `sum(cluster_sizes)`. The constructor errors on such objects instead of storing them, so a bad object fails at
+    creation rather than returning wrong effects later.
+  * `pm()` (with its standard error and the `twolevel_statistic()` callback) is `NA` with the existing warning
+    when `|TE| < sqrt(eps) * max(|NIE|, |NDE|)` at that level (was: below `eps`), so a near-zero total effect gives
+    `NA` instead of a huge proportion. The rule is stated in the methods article.
+  * An invalid variance on the diagonal of `vcov` (negative, missing or non-finite) gives an `NA` standard error and
+    one `medfit_warning_vcov_diagonal`, in the path standard errors of `summary()` and in the extractor's
+    audit table, instead of a silent `NaN`.
+  * `lavaan_version` records the version of the lavaan that fitted the model (`"0.7-3"` is stored as `"0.7.3"`), not
+    the installed one.
+  * The admissibility check on a refit no longer swallows errors: an error in reading the fit now stops instead of
+    counting as inadmissible.
+  * `twolevel_statistic()` captures the refit environment when it is called, not when the callback first runs, so the
+    objects named in the fit's call (data, control lists) resolve in the environment that built the callback;
+    `?twolevel_statistic` documents this. An input that is neither a `TwoLevelMediationData` nor a two-level lavaan fit
+    is now the classed error `medfit_error_twolevel_unsupported`.
+  * The `source_package` and `data` slots stay, documented as kept for the dependents contract shared with the other
+    mediation classes (`data` is always `NULL` for the lavaan adapter).
+
 * `print()` and `summary()` of a serial FIML object (`FIMLSerialMediationData`) now name
   the variant (saturated, or the pure chain without shortcut paths) and the covariates
   on the line under the chain. The printed numbers are unchanged.

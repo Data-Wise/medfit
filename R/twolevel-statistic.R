@@ -33,7 +33,7 @@
 #' that lavaan leaves unevaluated in that call (for example `control = ctl` or `estimator = est`) are
 #' resolved in the environment that called `twolevel_statistic()`, captured at that call, not where the fit
 #' was made and not where the callback later runs. Create the callback in the scope that holds those
-#' objects. Namespaced calls such as `lavaan::lavaan()` resolve regardless.
+#' objects. Calls written with a namespace, such as `lavaan::lavaan()` resolve regardless.
 #'
 #' The contrast is `NA` by constraint when `a` or `b` is equated across levels and a between effect is
 #' `NA` when the between level is not identified, so asking for either raises a classed error here
