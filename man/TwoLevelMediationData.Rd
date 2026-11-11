@@ -112,9 +112,11 @@ cross-level covariances are carried.}
 
 \item{between_parameterization}{Character scalar: \code{"latent"} (cluster means are latent).}
 
-\item{data}{Data frame or \code{NULL}: the data, when cheap to keep.}
+\item{data}{Data frame or \code{NULL}: always \code{NULL} for the lavaan adapter (the fit is never refit and the data
+are not copied); kept for the contract shared with the other mediation classes, which read \verb{@data}.}
 
-\item{source_package}{Character scalar: \code{"lavaan"}.}
+\item{source_package}{Character scalar: \code{"lavaan"}; kept for the dependents contract shared with the other
+mediation classes (\code{tests/testthat/test-dependents-contract.R} pins it across classes).}
 }
 \value{
 A \code{TwoLevelMediationData} S7 object.

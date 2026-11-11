@@ -57,6 +57,13 @@ computed). Refits skip standard errors, the model test and lavaan's post-check (
 \code{test = "none"}, \code{check.post = FALSE}), which do not change the maximum likelihood estimates;
 everything else comes from the fit's own call.
 
+\strong{Refit environment.} The refit re-evaluates the call stored in the fit with \code{data} replaced by the
+resampled data (and, for a \code{model} that is not a literal string, with the fit's parameter table). Names
+that lavaan leaves unevaluated in that call (for example \code{control = ctl} or \code{estimator = est}) are
+resolved in the environment that called \code{twolevel_statistic()}, captured at that call, not where the fit
+was made and not where the callback later runs. Create the callback in the scope that holds those
+objects. Namespaced calls such as \code{lavaan::lavaan()} resolve regardless.
+
 The contrast is \code{NA} by constraint when \code{a} or \code{b} is equated across levels and a between effect is
 \code{NA} when the between level is not identified, so asking for either raises a classed error here
 instead of returning a distribution of \code{NA}.

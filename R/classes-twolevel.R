@@ -36,8 +36,10 @@
 #' @param fixed_x,information,h1_information,se_type,estimator,missing How the fit was made, read from it.
 #' @param lavaan_version,call Character scalars: provenance of the fit.
 #' @param between_parameterization Character scalar: `"latent"` (cluster means are latent).
-#' @param data Data frame or `NULL`: the data, when cheap to keep.
-#' @param source_package Character scalar: `"lavaan"`.
+#' @param data Data frame or `NULL`: always `NULL` for the lavaan adapter (the fit is never refit and the data
+#'   are not copied); kept for the contract shared with the other mediation classes, which read `@data`.
+#' @param source_package Character scalar: `"lavaan"`; kept for the dependents contract shared with the other
+#'   mediation classes (`tests/testthat/test-dependents-contract.R` pins it across classes).
 #'
 #' @return A `TwoLevelMediationData` S7 object.
 #'
