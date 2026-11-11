@@ -11,7 +11,7 @@
 |---|---|
 | Scope | Flip + AIC/BIC convention |
 | #320 (`compare_lr()` lavaan LR above reference, ~30% of gate runs) | Re-measure first, then decide |
-| Timing | Readiness-gated; floor 2026-12-24 |
+| Timing | Readiness-gated; floor 2026-12-24 (waived: see the 0.15.0 plan) |
 | Dependents | Scratch-lib suites for all six + missingmed#102 merged |
 | AIC/BIC | Keep medfit's parameter count, document it |
 | Gate fails | Hold the flip, fix first |
