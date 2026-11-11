@@ -396,3 +396,38 @@ test_that("an inadmissible fit is flagged with a classed warning", {
   expect_s3_class(w, "medfit_warning_twolevel_inadmissible")
   expect_false(tl_extract(fit)@admissible)
 })
+
+
+# --- Hardening 2: provenance is read from the fit ---
+
+test_that("lavaan_version is the version that made the fit, not the one installed at extraction time", {
+  fit <- tl_fixture("base")
+  expect_identical(tl_extract(fit)@lavaan_version, as.character(numeric_version(fit@version)))
+  old <- fit
+  old@version <- "0.6-1"
+  expect_identical(tl_extract(old)@lavaan_version, "0.6.1")
+  # planted defect: the installed version differs from the stored one, so reading it instead must be caught
+  expect_false(identical(tl_extract(old)@lavaan_version, as.character(utils::packageVersion("lavaan"))))
+  # an empty (or unparsable) slot falls back to the installed version; lavaan itself rejects such a fit
+  # earlier in extraction, so the helper is tested directly
+  blank <- fit
+  blank@version <- character(0)
+  expect_identical(medfit:::.twolevel_fit_version(blank), as.character(utils::packageVersion("lavaan")))
+  blank@version <- "not a version"
+  expect_identical(medfit:::.twolevel_fit_version(blank), as.character(utils::packageVersion("lavaan")))
+})
+
+# --- Hardening 3: only the expected inadmissibility is a FALSE; other errors propagate ---
+
+test_that(".twolevel_admissible returns FALSE for an inadmissible fit and lets other errors propagate", {
+  expect_false(suppressWarnings(medfit:::.twolevel_admissible(tl_fixture("m_centered"))))
+  expect_true(medfit:::.twolevel_admissible(tl_fixture("base")))
+  # not a lavaan object: the error is a defect of the caller, not an inadmissible fit
+  expect_error(medfit:::.twolevel_admissible(1))
+  # an unexpected failure inside lavaan propagates with its own message
+  testthat::local_mocked_bindings(
+    lavInspect = function(object, what, ...) stop("boom from lavaan"),
+    .package = "lavaan"
+  )
+  expect_error(medfit:::.twolevel_admissible(tl_fixture("base")), "boom from lavaan")
+})
