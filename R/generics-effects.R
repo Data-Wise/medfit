@@ -802,8 +802,8 @@ S7::method(decompose, ClusterMediationData) <- function(x, ...) {
     )
   } else if ("nie_contrast" %in% terms && !.twolevel_contrast_available(x)) {
     .twolevel_warn(
-      paste0("The contrast NIE_within - NIE_between is NA: a or b is equated across levels, so the two ",
-             "levels are not compared freely. The within and between effects are still reported."),
+      paste0("The contrast NIE_within - NIE_between is NA: both a and b are equated across levels, so the ",
+             "contrast is zero by constraint. The within and between effects are still reported."),
       "medfit_warning_twolevel_constrained"
     )
   }

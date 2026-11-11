@@ -130,8 +130,8 @@ twolevel_statistic <- function(x,
   }
   if (identical(effect, "nie_contrast") && !.twolevel_contrast_available(td)) {
     .twolevel_abort(
-      paste0("The contrast NIE_within - NIE_between is NA: a or b is equated across levels, so the two ",
-             "levels are not compared freely."),
+      paste0("The contrast NIE_within - NIE_between is NA: both a and b are equated across levels, so the ",
+             "contrast is zero by constraint."),
       "medfit_error_twolevel_constrained"
     )
   }

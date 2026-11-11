@@ -66,13 +66,19 @@ test_that("a within-only object: between effects and the contrast are NA with a 
   expect_true(is.na(val(p)))
 })
 
-test_that("a constrained path makes only the contrast NA, with the constrained warning", {
-  for (eq in list("a", "b", c("a", "b"))) {
+test_that("both a and b equated make only the contrast NA, with the constrained warning (C-Q1)", {
+  for (eq in list(c("a", "b"), c("b", "a", "c_prime"))) {
     td <- tl_td(cross_level_equal = eq)
     expect_warning(e <- nie(td, level = "contrast"), class = "medfit_warning_twolevel_constrained")
     expect_true(is.na(val(e)))
     expect_no_warning(b <- nie(td, level = "between"))
     expect_equal(val(b), 1.05)
+  }
+  # one of a or b equated: the contrast is an estimate (a * (b_w - b_b) or (a_w - a_b) * b)
+  for (eq in c("a", "b")) {
+    td <- tl_td(cross_level_equal = eq)
+    expect_no_warning(e <- nie(td, level = "contrast"))
+    expect_equal(val(e), 0.2 - 1.05)
   }
   # an equated c' alone does not constrain the NIE contrast
   td <- tl_td(cross_level_equal = "c_prime")
@@ -95,17 +101,17 @@ test_that("decompose() gives the three NIE numbers, labeled descriptive, no SE",
   expect_identical(names(d), c("within", "between", "contrast"))
   expect_equal(as.numeric(d), c(0.2, 1.05, 0.2 - 1.05))
   expect_match(attr(d, "label"), "contrast is not a test")
-  expect_warning(dc <- decompose(tl_td(cross_level_equal = "a")), class = "medfit_warning_twolevel_constrained")
+  expect_warning(dc <- decompose(tl_td(cross_level_equal = c("a", "b"))), class = "medfit_warning_twolevel_constrained")
   expect_true(is.na(dc[["contrast"]]))
   expect_warning(dw <- decompose(tl_td(within_only = TRUE)), class = "medfit_between_unidentified")
   expect_equal(as.numeric(dw), c(0.2, NA, NA))
 })
 
-test_that("real fits: equated paths give an NA contrast, a degenerate X a within-only object", {
+test_that("real fits: a and b both equated give an NA contrast, a degenerate X a within-only object", {
   skip_if_not_installed("lavaan")
-  for (fx in c("shared_label", "equal_rows")) {
+  for (fx in c("shared_ab", "nl_ab")) {
     td <- tl_extract(tl_fixture(fx))
-    expect_true("a" %in% td@cross_level_equal, info = fx)
+    expect_identical(td@cross_level_equal, c("a", "b"), info = fx)
     expect_warning(e <- nie(td, level = "contrast"), class = "medfit_warning_twolevel_constrained")
     expect_true(is.na(val(e)), info = fx)
     expect_warning(t_c <- tidy(td, type = "effects"), class = "medfit_warning_twolevel_constrained")
@@ -118,13 +124,13 @@ test_that("real fits: equated paths give an NA contrast, a degenerate X a within
   expect_true(is.finite(val(nie(w))))
 })
 
-test_that("planted defect: a shared label read as a free contrast is caught", {
+test_that("planted defect: shared labels read as a free contrast are caught", {
   skip_if_not_installed("lavaan")
-  testthat::local_mocked_bindings(.twolevel_cross_equal = function(pt, key) character(0), .package = "medfit")
-  td <- tl_extract(tl_fixture("shared_label"))
+  testthat::local_mocked_bindings(.twolevel_cross_equal = function(...) character(0), .package = "medfit")
+  td <- tl_extract(tl_fixture("shared_ab"))
   # the defect leaves a contrast that is zero by constraint looking like an estimate
   expect_false(is.na(val(suppressWarnings(nie(td, level = "contrast")))))
-  expect_false(identical(td@cross_level_equal, "a"))
+  expect_false(identical(td@cross_level_equal, c("a", "b")))
 })
 
 test_that("effects of a lavaan fit match lavaan's own := definitions (O3, estimates)", {
