@@ -139,6 +139,6 @@ Candidates, in recommended order:
 
 ## Open questions (not decided here; do not decide unattended)
 
-- Contrast when only `a` or `b` is equated across levels (currently `NA`); algebraic cross-level equalities (`a1 - a2 == 0`).
+- DECIDED 2026-11-10 (grill, `GRILL-multilevel-mediation-2026-11-10.md` section "Contrast and equality grill"): the contrast is `NA` only when both `a` and `b` are equated across levels; algebraic equalities are detected by the alias-row correlation (|r| within 1e-8 of 1). Not yet implemented.
 - Whether a 0.17.0 release (tag, GitHub release, `main`) follows; a separate release goal, not part of this plan. The version bump to 0.17.0 was not made in PR4 (see Progress).
 - FIML admission, Hopper, medsim P0: unauthorized, out of scope.

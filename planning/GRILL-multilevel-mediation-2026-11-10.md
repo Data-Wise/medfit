@@ -44,3 +44,20 @@ All four answers were the recommended option (plan section 0.8 on branch `claude
 
 Slice status after the second grill: S1 closed; S2 conditional GO once the review findings 1-6 are in the spec; S4 stays NO-GO until
 tolerances and the fixed_x definition are in the spec; S5 stays NO-GO until the identification literature is read.
+
+## Contrast and equality grill (maintainer, 2026-11-10 evening)
+
+Both answers were the recommended option. They supersede S1-Q3's "contrast `NA` when a label is shared across levels" for the
+one-equated case.
+
+| # | Question | Decision | Why |
+|---|---|---|---|
+| C-Q1 | Contrast when only `a` or only `b` is equated across levels | The contrast is returned; it is `NA` (constrained) only when both `a` and `b` are equated | With one equated path the contrast is a(b_within - b_between), estimable and descriptive, with a delta-method SE from the joint vcov; it is exactly zero by constraint only when both are equated. The old comment "zero by constraint" was true only for that case |
+| C-Q2 | Algebraic equalities (`a1 - a2 == 0`) | Detect numerically: `a` or `b` is recorded in `cross_level_equal` when its two alias rows of the joint vcov have \|correlation\| within 1e-8 of 1, as a third route beside the two label-based ones; docs state the tolerance and that a near-collinear pair can be flagged | Catches any form of equality, labeled or algebraic; without it a both-equated algebraic model shows a contrast of 0 with SE 0 as if it were an estimate |
+
+Implementation (not started; for the next hardening or follow-up PR, test-first, with planted defects): `.twolevel_contrast_available()`
+(`R/classes-twolevel.R`) becomes `isTRUE(between_identified) && !all(c("a", "b") %in% cross_level_equal)`; add the correlation
+detector in the extraction (`R/extract-lavaan-twolevel.R`) with a test for `a1 - a2 == 0` in a fit and a planted near-collinear pair;
+update `print`, `model-twolevel.qmd` ("contrast is descriptive"), the methods section, the troubleshooting row, `NEWS.md`, and the
+`twolevel_statistic()` check that raises `medfit_error_twolevel_constrained`. Chapter 9 in the book repo mentions the contrast rule and
+must follow.
