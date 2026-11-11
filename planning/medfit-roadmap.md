@@ -1989,6 +1989,7 @@ history; old dates or incomplete task references are not the current queue:
 
 
 1. ~~Release 0.6.0 (Ext D module 1)~~ — done 2026-10-09; see `planning/specs/PLAN-multilevel-mediation-2-1-1-2026-10-08.md` and `.STATUS`. Module 2 (1-1-1, random slopes) follows
+   Literature review, gaps and ideas for multilevel SEM (2026-11-11): `planning/specs/LIT-multilevel-sem-gaps-2026-11-11.md`.
 2. ~~Release 0.7.0 (native SEM engine)~~ — done 2026-10-10; see `planning/specs/PLAN-medfit-0-7-0-release-2026-10-10.md` and `.STATUS`.
 3. ~~0.8.0 to 0.10.0 (native SEM hardening, nonlinear constraints, mean structure and `fixed_x`, the `:` product term and four-way)~~ — done 2026-10-11 to 2026-10-14; see `.STATUS`.
 3b. ~~**0.11.0 to 0.13.0**~~: released 2026-10-17 to 2026-10-24 (GitHub-only; see `.STATUS`). 0.11.0: factor covariates, S7 compatibility, the #213 fix, the native gates in `tests/sim/run-gates.R`, and dropping the "experimental" label; see `planning/PLAN-0.11.0-scope-2026-10-16.md`. The old note that release/T5e/T6 were open is historical; consult the completed release plan for their final dispositions.
