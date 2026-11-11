@@ -48,7 +48,7 @@ not exhaustive; it is a gap-finding pass.
 - **Tier A**: Crossref metadata matched and the abstract was read (often only the first part; the entry notes this).
 - **Tier B**: Crossref metadata matched; the abstract was not retrievable or not read. For tier B this note claims only what
   the title says.
-- **Tier L**: a local file without a DOI (textbook, notes or slides), read in part; cited for the passages read.
+- **Tier L**: a local file (textbook, draft, notes or slides), read in part; cited for the passages read. Its metadata comes from the file's own title or copyright page (Snijders and Bosker, the two slide decks), from Crossref (Pinheiro and Bates), or is marked unverified (the publisher of the Bates draft).
 - **Unverified**: not opened, or could not be matched; never cited as support. The unverified items are listed in 1.1.
 - Full texts were not read in general. Anything beyond an abstract is marked.
 
@@ -349,6 +349,23 @@ Top five by value to medfit: G2, G1, G3, G5, G4.
 
 ## 5. medfit implementation gaps
 
+### 5.0 Recorded plan decisions this section respects
+
+The plan (section 0 of `PLAN-multilevel-mediation-2026-11-10.md`) and the grill ledger
+(`planning/GRILL-multilevel-mediation-2026-11-10.md` on the branch `claude/restore-b0bd19`) record decisions this review does
+not reopen. Each idea or recommendation below that touches one says so.
+
+- **S4 (native observed two-level ML) is NO-GO as written** until the tolerances (plan 0.5) and the native `fixed_x`
+  convention with an oracle (plan 0.8, S1-Q2) exist. **S5 (latent mediators, shared loadings) is NO-GO** until the
+  identification literature (Jak et al.; Heywood evidence) is read. S6 and S7 are later milestones.
+- **Q3:** the estimand is `a_w b_w` conditional on fixed slopes (`sigma_ab = 0` stated); latent cluster means for the between
+  effect; a manifest-mean option is a labeled alternative. Random slopes are out of the plan's scope.
+- **Q4:** the contrast within minus between is descriptive, not a test.
+- **Q6:** the adapter passes lavaan's FIML through; native is listwise until a separate FIML milestone. **Q10:** the work does
+  not displace FIML admission.
+- **Q8 (ADR D-11):** native `fit_sem()` errors on a Heywood case; the adapter flags `admissible = FALSE`.
+- Shared loadings across levels stay a testable restriction, not a default.
+
 ### 5.1 What `R/` has at `91f4c39b`
 
 - **Native engine:** single level only. The parser reads `level:` lines (`R/sem-parse.R:322-326`); the fitter errors on any
@@ -373,12 +390,12 @@ Cost labels follow the plan's own scale (S, M, L, XL).
 
 | Rank | Gap | Who offers it (evidence) | Value | Cost | Notes |
 |---|---|---|---|---|---|
-| 1 | Native two-level ML, observed, fixed slopes (S4) | lavaan, Mplus, OpenMx (section 3) | high: removes the lavaan dependency for estimation, enables everything below | L (plan: 3 to 4 weeks) | assessed in 5.3 |
+| 1 | Native two-level ML, observed, fixed slopes (S4) | lavaan, Mplus, OpenMx (section 3) | high: removes the lavaan dependency for estimation, enables everything below | L (plan: 3 to 4 weeks) | **NO-GO as written** (5.0); assessed in 5.3 |
 | 2 | Cluster-aware robust SE and few-cluster adjustments | lavaan MLR two-level, Mplus MLR/MLF; small-cluster adjustments in econometrics (section 6) | high for G2, G7 | M after S4 (per-cluster scores) | the plan lists it as S6 |
-| 3 | Two-level tests: equal indirect effects across levels, product-null per level | none verified in any package | high (G3); novel | M to L after S4 | idea I1, I2 in section 6 |
-| 4 | The 1-1-1 random-slope estimand: random a and b slopes and their covariance, E[ab] = ab + cov. (The lmer engine already accepts random slopes in the 2-1-1 mediator and outcome models; no medfit route estimates the 1-1-1 a-b covariance.) | lavaan 0.7 `rv()`, Mplus, bmlm/brms, multilevelmediation | high for G1 | L, new class and estimand | the plan marks random slopes "out" (Q-decisions); revisit as an open question. The workflow in [Tofighi2013] (fit without and with the a-b covariance, then a sensitivity analysis) needs this class |
+| 3 | Two-level tests: equal indirect effects across levels, product-null per level | none verified in any package | high (G3); novel | M to L after S4 (itself NO-GO) | ideas I1, I2 in section 6; Q4 keeps the contrast descriptive, so these are separate optional tests |
+| 4 | The 1-1-1 random-slope estimand: random a and b slopes and their covariance, E[ab] = ab + cov. (The lmer engine already accepts random slopes in the 2-1-1 mediator and outcome models; no medfit route estimates the 1-1-1 a-b covariance.) | lavaan 0.7 `rv()`, Mplus, bmlm/brms, multilevelmediation | high for G1 | L, new class and estimand | the plan marks random slopes "out" (Q3 fixes `sigma_ab = 0`); this note records the gap and asks the author whether to reopen, and changes nothing in Q3. The workflow in [Tofighi2013] (fit without and with the a-b covariance, then a sensitivity analysis) needs this class |
 | 5 | More than one mediator in a two-level model | multilevelmediation? (1-1-1 only, mediator count unverified); lavaan syntax allows it | medium | M | the adapter refuses it today |
-| 6 | Latent mediators with cross-level shared loadings (S5) | lavaan, Mplus | medium | L on top of S4 | assessed in 5.3 |
+| 6 | Latent mediators with cross-level shared loadings (S5) | lavaan, Mplus | medium | L on top of S4 | **NO-GO** until the identification literature is read (5.0); assessed in 5.3 |
 | 7 | Level-specific fit (partially saturated models) | Mplus, lavaan workflows [RyuWest2009] | medium | M after S4 | two fits per level; chi-square only |
 | 8 | Two-level FIML | lavaan (EM), Mplus | medium (G5) | XL | the plan defers it (S7) |
 | 9 | Categorical outcomes at two levels | Mplus, Stata, lavaan DWLS | low for medfit's current scope | XL | out |
@@ -386,6 +403,8 @@ Cost labels follow the plan's own scale (S, M, L, XL).
 | 11 | Bayesian two-level | blavaan, Mplus, bmlm/brms | low (not medfit's lane) | not planned | small-J argument for it exists (G2); out of scope |
 
 ### 5.3 S4 and S5, assessed
+
+**Status.** S4 remains NO-GO as written until the plan's conditions are met (tolerances, plan 0.5; the native fixed-moment convention with an oracle, plan 0.8 S1-Q2). What follows describes what S4 needs and what the literature adds; it does not lift the NO-GO.
 
 **What an exact ML implementation of S4 needs.** From the plan (section 5 of the 2026-11-10 plan, **not repeated in
 full here**): variable sets W (level 1) and Z (cluster-only); cluster-wise sufficient statistics per distinct cluster size;
@@ -396,7 +415,7 @@ The literature adds four things:
 
 1. **A start-value and oracle path through EM.** Liang and Bentler's EM for unbalanced two-level SEM [LiangBentler2004] is a
    natural independent estimator and a robust start; lavaan also offers EM (section 3). INFERENCE.
-2. **A decision on level-2 variance parametrization.** Hard floors in SLSQP (the plan's choice, the same device as the #213 fix)
+2. **A decision on level-2 variance parametrization** (Q8 and ADR D-11 stand: native `fit_sem()` errors on a Heywood case; the experiment is about how the fit reaches a solution, not about replacing that error). Hard floors in SLSQP (the plan's choice, the same device as the #213 fix)
    versus an unconstrained parametrization of the covariance matrix [Pinheiro1996] (tier B: the title says only
    "unconstrained parametrizations"; the Cholesky and matrix-log forms are background knowledge) versus a penalized
    likelihood that avoids boundary variance estimates [Chung2013] (abstract). INFERENCE: a boundary solution is an infinite
@@ -424,18 +443,23 @@ test suite per a file listing; content unread), and, as a speculative extra, Sta
 **S5 (latent mediators).** Needs cross-level equality in the constraint machinery plus a per-level admissibility story.
 Latent contextual-effect models (not mediation models) show small-sample trouble that Bayesian estimation reduces [Zitzmann2016],
 [DepaoliClifton2015]; conventional fit indices were weak against between-level misspecification in one simulation study [Hsu2015]; cluster-level factor
-models in lavaan have their own evaluation recipe [Jak2021] (abstract read). INFERENCE: S5 should follow S4's oracle and
-reliability cells, not run in parallel, and its first oracle must be lavaan on a latent fixture (the plan notes lavaan already
-reports negative variances with `converged = TRUE` there).
+models in lavaan have their own evaluation recipe [Jak2021] (abstract read). **S5 remains NO-GO until the identification literature (Jak et al.; Heywood evidence) is read** (plan 0.7). This review does
+not meet that condition: it read only the abstract of [Jak2021] (cluster-level factor models in lavaan and Mplus); the Jak et al.
+shared-loadings work the plan names was not identified or read here, and no source on Heywood cases in two-level SEM was found
+(a notebook answer said none covers Heywood cases by name). That identification review is a prerequisite and is **still open**.
+It is separate from the later oracle step: once the prerequisite is met, INFERENCE: S5 should follow S4's oracle and reliability
+cells, not run in parallel, and its first oracle would be lavaan on a latent fixture (the plan notes lavaan already reports
+negative variances with `converged = TRUE` there). Shared loadings stay a testable restriction, not a default.
 
 ### 5.4 Top three recommendations
 
-1. **Proceed with S4 as planned, but gate it on three things the literature adds:** the O8 oracle plus lavaan plus OpenMx,
-   a reliability grid that includes small-J, low-ICC and unbalanced cells (G2), and an explicit parametrization experiment for
-   level-2 variances (floor versus log-Cholesky).
-2. **Plan S6 together with a small-cluster inference choice:** cluster-score sandwich, then a bias-reduced or bootstrap
+1. **S4 remains NO-GO until the plan's conditions are met** (tolerances, plan 0.5; the native fixed-moment convention with an
+   oracle, plan 0.8 S1-Q2). **This review adds these gates, in addition to those and not replacing them:** the O8 oracle plus
+   lavaan plus OpenMx, a reliability grid that includes small-J, low-ICC and unbalanced cells (G2), and an explicit
+   parametrization experiment for level-2 variances (floor versus log-Cholesky), with Q8 and D-11 unchanged.
+2. **When S6 (a later milestone) is scheduled, pair it with a small-cluster inference choice:** cluster-score sandwich, then a bias-reduced or bootstrap
    interval for the between-level indirect effect, validated against the existing cluster bootstrap callbacks (G7).
-3. **Build the two-level equality and product-null tests after S4,** using the existing nonlinear-constraint pipeline and the
+3. **After S4 (itself NO-GO), consider the two-level equality and product-null tests as separate optional additions (Q4 keeps the contrast descriptive; the grill and this review found no source supporting the contrast as a test),** using the existing nonlinear-constraint pipeline and the
    zero-product branch machinery per level (idea I1, I2): the one place medfit's current engine is closer to a solution
    than any comparator found.
 
@@ -451,15 +475,15 @@ finding.
 | Rank | Idea | Gap | Why novel (INFERENCE) | Feasibility | Independent oracle |
 |---|---|---|---|---|---|
 | I1 | **Two-level model-based constrained-optimization (MBCO-style) tests** for the within and between indirect effects (a times b = 0 at one level or both), splitting the zero-product null into exact linear branches per level (as medfit does single-level) and using a boundary-aware reference law | G3 | no source read combines product nulls, boundary variances and two levels; MBCO itself: **[CITE]** | medium after S4; the branch machinery exists (`.sem_fit_branches()`) | lavaan refits with a = 0 or b = 0 per level; Monte Carlo null calibration; the O8 hand likelihood |
-| I2 | **A formal test of equal indirect effects across levels** (a_w b_w = a_b b_b) as a nonlinear equality constraint, replacing the descriptive contrast | G3 | the current contrast is descriptive by design; a test needs the constrained fit | medium after S4; nonlinear rows exist | lavaan constrained fit (nonlinear constraints in two-level unverified); parametric bootstrap under the null |
-| I3 | **Same-estimand manifest-versus-latent comparison for 2-1-1 mediation, as a package diagnostic.** The two estimands, both for a cluster-level treatment (2-1-1): the *manifest route* (shipped: `fit_mediation(engine = "lmer")`, REML, the mediator split into its within-cluster deviation and its observed cluster mean) estimates a between indirect effect a times b_between through the observed cluster mean; the *latent route* (a two-level SEM, ML, fixed slopes, treatment in the between block only, the cluster mean of the mediator a latent variable) targets the same quantity through the true cluster mean. The question is how far the two differ as the number of clusters J, cluster size n and ICC change. The lavaan adapter refuses 2-1-1 today, so the latent side needs that refusal lifted or a lavaan-side oracle run outside medfit; a 1-1-1 version would need a manifest-mean 1-1-1 model medfit does not ship | G2 | **prior 2-1-1 work covers the bias itself.** [Talloen2018] (abstract): unreliability of the cluster means biases the manifest between indirect effect but not the within effect, and under unmeasured confounding both the manifest and the latent between effects are biased; it does not (in the abstract read) compare REML Kenward-Roger inference with a latent-mean ML fit at small J. [AsparouhovMuthen2019] (2-1-1 mediation section read): with a random M-to-Y slope and a contextual effect, observed centering was biased with low coverage at small cluster sizes and latent centering was not; their latent fit with a random slope is Bayesian (they call ML with a random slope impractical), and the reported conditions do not match a fixed-slope ML latent fit. Neither source settles the matched question, so it needs a matched 2-1-1 simulation (INFERENCE). What remains is at most a user-facing diagnostic, not new theory. The econometric analog [Mundlak1978], [Bell2015] is SPECULATIVE. [Tofighi2013] is 1-1-1 and is not used here | medium (a 2-1-1 latent branch or an external oracle is needed; the two shipped routes are not comparable as they stand) | a matched simulation with known between and within truth over J, n and ICC; the bias results in [Talloen2018] and [AsparouhovMuthen2019] as published benchmarks |
+| I2 | **A formal test of equal indirect effects across levels** (a_w b_w = a_b b_b) as a nonlinear equality constraint, as a separate optional test beside the descriptive contrast (Q4 keeps the contrast descriptive) | G3 | the current contrast is descriptive by design; a test needs the constrained fit | medium after S4; nonlinear rows exist | lavaan constrained fit (nonlinear constraints in two-level unverified); parametric bootstrap under the null |
+| I3 | **Same-estimand manifest-versus-latent comparison for 2-1-1 mediation, as a package diagnostic.** The two estimands, both for a cluster-level treatment (2-1-1): the *manifest route* (shipped: `fit_mediation(engine = "lmer")`, REML, the mediator split into its within-cluster deviation and its observed cluster mean) estimates a between indirect effect a times b_between through the observed cluster mean; the *latent route* (a two-level SEM, ML, fixed slopes, treatment in the between block only, the cluster mean of the mediator a latent variable) targets the same quantity through the true cluster mean. The question is how far the two differ as the number of clusters J, cluster size n and ICC change. The lavaan adapter refuses 2-1-1 today, so the latent side needs that refusal lifted or a lavaan-side oracle run outside medfit; a 1-1-1 version would need a manifest-mean 1-1-1 model medfit does not ship (Q3 lists a manifest-mean option as a labeled alternative, not yet built) | G2 | **prior 2-1-1 work covers the bias itself.** [Talloen2018] (abstract): unreliability of the cluster means biases the manifest between indirect effect but not the within effect, and under unmeasured confounding both the manifest and the latent between effects are biased; it does not (in the abstract read) compare REML Kenward-Roger inference with a latent-mean ML fit at small J. [AsparouhovMuthen2019] (2-1-1 mediation section read): with a random M-to-Y slope and a contextual effect, observed centering was biased with low coverage at small cluster sizes and latent centering was not; their latent fit with a random slope is Bayesian (they call ML with a random slope impractical), and the reported conditions do not match a fixed-slope ML latent fit. Neither source settles the matched question, so it needs a matched 2-1-1 simulation (INFERENCE). What remains is at most a user-facing diagnostic, not new theory. The econometric analog [Mundlak1978], [Bell2015] is SPECULATIVE. [Tofighi2013] is 1-1-1 and is not used here | medium (a 2-1-1 latent branch or an external oracle is needed; the two shipped routes are not comparable as they stand) | a matched simulation with known between and within truth over J, n and ICC; the bias results in [Talloen2018] and [AsparouhovMuthen2019] as published benchmarks |
 | I4 | **Few-cluster robust inference for products of coefficients:** small-cluster adjustments (a degrees-of-freedom correction [Imbens2016], small-sample variance estimators [Pustejovsky2018], bootstrap improvements for clustered errors [Cameron2008]) applied to the between-level indirect effect from cluster scores; the abstracts address regression, not products of coefficients | G7 | SPECULATIVE transfer from econometric regression to a product of two path estimates | medium after S6 | cluster bootstrap callbacks already shipped; coverage grid |
 | I5 | **Conditional-AIC-style criterion for two-level SEM** using effective degrees of freedom [VaidaBlanchard2005], [GrevenKneib2010] | G6 | nothing found for latent-variable multilevel SEM | low to medium; theory first | leave-cluster-out predictive log-likelihood |
 | I6 | **Interference-aware reading of the between-level path:** state the assumptions under which a between a-path times b-path is a spillover-type indirect effect [VanderWeele2013], [Talloen2016], [Aronow2017] | G4 | a theory note linking latent-mean SEM paths to spillover estimands was not found | theory-heavy; docs value even without proof | simulate from a structural causal model with known spillover and compare to the g-formula truth |
-| I7 | **Level-2 variance handling experiment:** floors, matrix-log and penalty compared on Heywood-prone cells [Pinheiro1996] (tier B: title only), [Chung2013] | G2 | the comparison inside a SEM engine with constraints is not described | high (part of S4) | lavaan's Heywood fixtures; Bayesian posterior mode as reference |
+| I7 | **Level-2 variance handling experiment:** floors, matrix-log and penalty compared on Heywood-prone cells [Pinheiro1996] (tier B: title only), [Chung2013]; Q8 and ADR D-11 (error on Heywood) stand | G2 | the comparison inside a SEM engine with constraints is not described | high (part of S4) | lavaan's Heywood fixtures; Bayesian posterior mode as reference |
 | I8 | **Automatic-differentiation oracles (Stan or TMB)** for the two-level likelihood and its gradient [Carpenter2017] (abstract: Stan defines a log probability function), [Kristensen2016] (abstract: user-defined joint likelihood, automatic differentiation in the title) | testing the analytic gradient | an oracle, not a method | high for p = 3; needs the Stan toolchain | the oracle itself |
 | I9 | **Balanced-design closed forms** as exact start values and a check: the balanced likelihood splits into two single-level pieces [McDonaldGoldstein1989], [Muthen1994] | S4 start values | known result used as a test | high | pooled-within and between covariance fits |
-| I10 | **Two-level FIML through EM** (E-step with Gaussian conditionals; analog of [LiangBentler2004]) | G5 | not explored for medfit's engine | XL | lavaan two-level `missing = "ml"` |
+| I10 | **Two-level FIML through EM** (E-step with Gaussian conditionals; analog of [LiangBentler2004]) | G5 (Q6 and Q10: FIML is a separate milestone; this is a research idea only) | not explored for medfit's engine | XL | lavaan two-level `missing = "ml"` |
 
 ### 6.2 Cross-disciplinary map
 
@@ -526,9 +550,8 @@ for those the Crossref issued year is kept without a separate check against the 
 @book{Bates2010,
   title = {lme4: Mixed-effects modeling with {R}},
   author = {Bates, Douglas M.},
-  publisher = {Springer},
   year = {2010},
-  note = {local file; book draft dated 25 June 2010}
+  note = {book draft dated 25 June 2010 (title page of a local copy); publisher and final edition unverified}
 }
 
 %% tier A
@@ -785,8 +808,10 @@ for those the Crossref issued year is kept without a separate check against the 
 @book{Pinheiro2000,
   title = {Mixed-Effects Models in {S} and {S-PLUS}},
   author = {Pinheiro, Jos{\'e} C. and Bates, Douglas M.},
+  publisher = {Springer New York},
   year = {2000},
-  note = {local file; preface dated March 2000; publisher not printed in the text read}
+  doi = {10.1007/978-1-4419-0318-1},
+  note = {metadata from Crossref; preface of the local copy dated March 2000; text read in part}
 }
 
 %% tier A
@@ -853,10 +878,11 @@ for those the Crossref issued year is kept without a separate check against the 
   title = {Multilevel Analysis: An Introduction to Basic and Advanced Multilevel Modeling},
   author = {Snijders, Tom A. B. and Bosker, Roel J.},
   edition = {2},
-  publisher = {SAGE Publications},
+  publisher = {SAGE Publications Ltd},
   address = {London},
   year = {2012},
-  note = {local file; year from the file name; verify edition year and publisher}
+  isbn = {978-1-84920-200-8},
+  note = {metadata from the book's title and copyright pages (second edition, copyright 2012, first edition 1999); text read in part from a local copy}
 }
 
 %% tier A
