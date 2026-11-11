@@ -61,3 +61,12 @@ detector in the extraction (`R/extract-lavaan-twolevel.R`) with a test for `a1 -
 update `print`, `model-twolevel.qmd` ("contrast is descriptive"), the methods section, the troubleshooting row, `NEWS.md`, and the
 `twolevel_statistic()` check that raises `medfit_error_twolevel_constrained`. Chapter 9 in the book repo mentions the contrast rule and
 must follow.
+
+### C-Q2 reopened after the Codex adversarial review (2026-11-10)
+
+Codex (thread `01a1c8ae-dfda-7a11-8fa7-8d2f5b9cfb89`, verdict needs-attention) found that |correlation| near 1 does not imply equal paths: correlation
+-1, or +1 between proportional unequal paths, would put both paths in `cross_level_equal` and silently turn an estimable contrast into `NA`.
+Maintainer accepted the revision (recommended option). **C-Q2 now reads:** record `a` or `b` as equated when the estimated difference of its two
+alias rows and the variance of that difference are both effectively zero (scale-aware tolerances set against the oracle fits); tests for
+correlation -1, proportional paths and a just-inside-threshold unequal pair. C-Q1 is unchanged. The same review added: a b-only oracle for the
+one-equated contrast SE, the book render against the release candidate as a release gate, and the full 0.16.0-style gate list in the release checklist.
