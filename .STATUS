@@ -1,3 +1,7 @@
+# Docs and website audit on dev — 2026-11-11 MST
+
+# Audit of README, NEWS, CLAUDE, DESCRIPTION, planning, articles and _pkgdown.yml: document() no diff, check_pkgdown() clean, 48 URLs OK, article links resolve, spelling clean after four jargon words. Fixed stale refcard/guide-changes version sentences (0.16.0 row added), README class table and test count, four plan status lines (0.14.0, 0.15.0, #360, missingmed D1-D4), roadmap FIML status (#382-#392 merged) and a multilevel board item, CLAUDE.md class count and FIML plan wording. Landed on dev since 0.16.0: #411 (ubuntu-24.04 CI), #412 (two-level hardening), #413 (literature review), #414 (35-minute lint timeout), #415 (contrast rule); no version bump, no release.
+
 # Two-level mediation docs (#394 S2 PR4) — 2026-11-10 MST
 
 # Model page model-twolevel, cookbook recipe 23, methods, troubleshooting, glossary and test-twolevel-docs.R on feature/twolevel-pr4-docs; twolevel_statistic() (PR3, #404) merged into dev and documented as shipped. DESCRIPTION left at 0.16.0 (dev convention: version moves in the release-prep PR).
