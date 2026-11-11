@@ -370,3 +370,43 @@ test_that("O4: cluster bootstrap SEs of the three effects are plausible against 
     if (identical(eff, "nie_within")) expect_lt(abs(stats::sd(b) / delta - 1), 0.20)
   }
 })
+
+
+# --- Hardening 4 and 5: the refit environment rule and a classed error for an unsupported x ---
+
+test_that("twolevel_statistic() rejects an object that is neither a two-level fit nor TwoLevelMediationData", {
+  expect_error(twolevel_statistic(1), class = "medfit_error_twolevel_unsupported")
+  expect_error(twolevel_statistic(data.frame(a = 1)), class = "medfit_error_twolevel_unsupported")
+})
+
+test_that("names in the stored call resolve where twolevel_statistic() was called; data is always replaced", {
+  skip_on_cran()
+  skip_if_not_installed("lavaan")
+  d <- tl_sim()
+  ctl <- list(iter.max = 500)
+  fit <- suppressWarnings(lavaan::sem(tl_model(), data = d, cluster = "id", control = ctl))
+  # lavaan keeps `control = ctl` as a symbol in the stored call: the name must be resolved at refit time
+  expect_identical(fit@call$control, quote(ctl))
+  p <- tl_lavaan_paths(fit)
+  want <- unname(p["a_between"] * p["b_between"])
+
+  make <- function() twolevel_statistic(fit, "nie_between", treatment = "X", mediator = "M", outcome = "Y")
+  cb_here <- suppressWarnings(make())
+  # a decoy `ctl` in the environment that calls twolevel_statistic() is the one the refit sees (it cannot
+  # converge in one iteration, so the replicate is NA)
+  cb_decoy <- local({
+    ctl <- list(iter.max = 1)
+    suppressWarnings(twolevel_statistic(fit, "nie_between", treatment = "X", mediator = "M", outcome = "Y"))
+  })
+  expect_equal(suppressWarnings(cb_here(d)), want, tolerance = 1e-6)
+  expect_true(is.na(suppressWarnings(cb_decoy(d))))
+  # a helper that wraps the call resolves in its own frame (`ctl` there is the test's), not its caller's
+  cb_wrapped <- local({
+    ctl <- list(iter.max = 1)
+    make()
+  })
+  expect_equal(suppressWarnings(cb_wrapped(d)), want, tolerance = 1e-6)
+  # `data` is replaced: the callback uses the data it is given, not the fit's
+  d_half <- d[d$id <= 60L, ]
+  expect_false(isTRUE(all.equal(suppressWarnings(cb_here(d_half)), want)))
+})

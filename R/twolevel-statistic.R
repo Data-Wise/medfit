@@ -27,6 +27,14 @@
 #' `test = "none"`, `check.post = FALSE`), which do not change the maximum likelihood estimates;
 #' everything else comes from the fit's own call.
 #'
+#' @details
+#' **Refit environment.** The refit re-evaluates the call stored in the fit with `data` replaced by the
+#' resampled data (and, for a `model` that is not a literal string, with the fit's parameter table). Names
+#' that lavaan leaves unevaluated in that call (for example `control = ctl` or `estimator = est`) are
+#' resolved in the environment that called `twolevel_statistic()`, captured at that call, not where the fit
+#' was made and not where the callback later runs. Create the callback in the scope that holds those
+#' objects. Namespaced calls such as `lavaan::lavaan()` resolve regardless.
+#'
 #' The contrast is `NA` by constraint when `a` or `b` is equated across levels and a between effect is
 #' `NA` when the between level is not identified, so asking for either raises a classed error here
 #' instead of returning a distribution of `NA`.
@@ -81,6 +89,9 @@ twolevel_statistic <- function(x,
                                           "a_between", "b_between", "c_prime_between"),
                                treatment = NULL, mediator = NULL, outcome = NULL) {
   effect <- match.arg(effect)
+  # Captured here, eagerly: the environment that called twolevel_statistic() is where the names in the stored
+  # lavaan call (`control = ctl`, `estimator = est`, ...) are resolved at refit time.
+  refit_env <- rlang::caller_env()
   checkmate::assert_string(treatment, null.ok = TRUE, .var.name = "treatment")
   checkmate::assert_string(mediator, null.ok = TRUE, .var.name = "mediator")
   checkmate::assert_string(outcome, null.ok = TRUE, .var.name = "outcome")
@@ -101,9 +112,10 @@ twolevel_statistic <- function(x,
     # The object is read once here to learn what the fit identifies and constrains; no refit.
     td <- suppressWarnings(extract_mediation(x, treatment = treatment, mediator = mediator, outcome = outcome))
     .twolevel_stat_check(td, effect)
-    return(.twolevel_stat_refit(x, effect, treatment, mediator, outcome, rlang::caller_env()))
+    return(.twolevel_stat_refit(x, effect, treatment, mediator, outcome, refit_env))
   }
-  stop("x must be a TwoLevelMediationData object or a two-level lavaan fit", call. = FALSE)
+  .twolevel_abort("x must be a TwoLevelMediationData object or a two-level lavaan fit.",
+                  "medfit_error_twolevel_unsupported")
 }
 
 
@@ -161,6 +173,7 @@ twolevel_statistic <- function(x,
 # name need not resolve at bootstrap time.
 .twolevel_stat_refit <- function(fit, effect, treatment, mediator, outcome, env) {
   force(effect)
+  force(env)
   call <- fit@call
   if (is.null(call)) {
     .twolevel_abort("The lavaan fit has no stored call to refit.", "medfit_error_twolevel_unusable")
