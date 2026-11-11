@@ -44,6 +44,7 @@ test_that("QA1: the rule is scale invariant (an absolute epsilon rule is not)", 
 })
 
 test_that("QA1: pm() on real fits is numerically identical to NIE / TE and warns only on the undefined case", {
+  skip_if_not_installed("lavaan")
   for (nm in c("base", "fixed_x_false", "robust", "x_small_between", "shared_label", "j20")) {
     td <- tl_extract(tl_fixture(nm))
     for (lv in c("within", "between")) {
@@ -58,6 +59,7 @@ test_that("QA1: pm() on real fits is numerically identical to NIE / TE and warns
 
 test_that("QA3: lavaan's post.check never errors, so .twolevel_admissible has no error to swallow", {
   skip_on_cran()
+  skip_if_not_installed("lavaan")
   d <- tl_sim()
   small <- tl_sim(J = 12L, n = 3L, seed = 5)
   fits <- list(
@@ -104,6 +106,7 @@ test_that("QA4: bootstrap_mediation() with a refit statistic resolves the call's
 
 test_that("QA5/6: every real extractor output passes the strengthened validator", {
   skip_on_cran()
+  skip_if_not_installed("lavaan")
   d <- tl_sim()
   dn <- d
   set.seed(9)
