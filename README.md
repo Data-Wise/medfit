@@ -21,14 +21,19 @@ model, from one mediator to a latent variable.
 ## Bounded FIML in 0.16.0
 
 medfit 0.16.0 adds explicit `fit_sem(missing = "fiml", fixed_x = FALSE)` for
-three-variable Gaussian random-X mediation, preserving listwise defaults. It is
+three-variable Gaussian random-X mediation, preserving listwise defaults. The
+development version also fits one or two covariates, two parallel mediators
+(with zero, one or two covariates) and two-mediator serial models (the saturated graph
+or the pure chain, with up to two covariates; implemented and verified against lavaan, not calibrated for coverage). It is
 unavailable in 0.15.0 and earlier. Observed/model SEs and
 unstandardized effects and normal intervals are supported. The model requires
 continuous X, M and Y, a free or exactly zero direct path, independent Gaussian
 disturbances, free intercepts and ignorable missingness under that joint model.
 Native `fit_mediation()` uses `engine_args` for the same opt-in. Extracted FIML
-objects refuse `quick()`, `pm()` and `glance()`; fit tests, bootstrap, profiles and
-MBCO are deferred. `glance()` on the source SEMFit retains likelihood/IC fields.
+objects refuse `quick()`, `pm()` and `glance()`; fit tests, profiles and MBCO
+remain unavailable. Source-fit retained-row and Gaussian parameter-draw intervals
+(`bootstrap_mediation(source_fit = ...)`) are implemented but withheld: the call is
+refused until statistical admission is decided. `glance()` on the source SEMFit retains likelihood/IC fields.
 See the [native guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
 for settings and limits. Website publication remains a separate step.
 
@@ -305,7 +310,7 @@ See [Ecosystem Coordination](https://github.com/Data-Wise/mediation-planning/blo
 |---|---|
 | Run your first model | [Get Started](https://data-wise.github.io/medfit/articles/getting-started.html) |
 | Find the page for your model | [Models](https://data-wise.github.io/medfit/articles/models.html) |
-| Copy a short recipe | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (twenty-one recipes) |
+| Copy a short recipe | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (twenty-three recipes) |
 | Look up a function or class | [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html) |
 | Understand the classes | [Introduction](https://data-wise.github.io/medfit/articles/introduction.html) |
 | Extract from fitted models | [Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html) |

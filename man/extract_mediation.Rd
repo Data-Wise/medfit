@@ -49,7 +49,24 @@ maximum-likelihood engine), with the same arguments and structures as
 the lavaan method. A treatment-by-mediator product written \code{x:m} (or \code{m:x})
 in the outcome equation gives the four-way decomposition, stored under the
 canonical name \code{m:x}; without it \code{decomposition = "four_way"} is refused
-by name. \verb{interaction =} takes that product written with \code{:}.
+by name. \verb{interaction =} takes that product written with \code{:}. A fit from
+\code{fit_sem(missing = "fiml")} extracts to a \code{FIMLMediationData} object for the
+three-variable model and for the bounded one- and two-covariate models (see
+the Bounded FIML section of \code{\link[=fit_sem]{fit_sem()}}). With covariates, \code{treatment} may
+name any exogenous variable when no outcome path is fixed at zero; with
+exactly one outcome path fixed at zero, that variable is the treatment. The
+other exogenous variables are the covariates; three or more covariates, a
+covariate on one equation only and every other structure are refused.
+A fit with two parallel mediators extracts to a \code{FIMLParallelMediationData}
+object when \code{mediator} names both mediators (\code{structure = "parallel"} or
+\code{"auto"}); it carries the full covariance of the paths, and a refusal has
+class \code{medfit_error_fiml_extract_unsupported}. With one or two covariates
+the same rules as for the one-mediator covariate fits choose the treatment.
+A two-mediator serial fit (the saturated graph or the pure chain, with no,
+one or two covariates) extracts to a \code{FIMLSerialMediationData} object when \code{mediator}
+names both mediators in the fitted order (a reversed order is refused with
+the same class); it carries the full covariance of \code{a}, \code{a2}, \code{d1}, \code{b1}, \code{b}
+and \code{c_prime} (saturated) or of \code{a}, \code{d1}, \code{b} and \code{c_prime} (chain).
 \item \strong{brmsfit}: Extract from Bayesian models (future)
 }
 

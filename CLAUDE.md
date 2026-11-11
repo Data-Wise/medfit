@@ -39,7 +39,7 @@ covr::package_coverage()          # Target: >90%
 ## About This Package
 
 **medfit** is the foundation package for the mediationverse ecosystem, providing:
-- **S7 classes**: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, `ClusterMediationData`, `BootstrapResult`, `SEMFit` (native SEM fit)
+- **S7 classes**: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, `ClusterMediationData`, `TwoLevelMediationData`, `BootstrapResult`, `SEMFit` (native SEM fit)
 - **Extraction**: Generic `extract_mediation()` with methods for lm/glm/lavaan/lmer and `SEMFit` (native)
 - **Fitting**: Formula-based `fit_mediation()` with the `glm`, `regmedint` and `lmer` (cluster-level treatment, `cluster =`) engines, case `weights`, and `se_type = "sandwich"` (HC3); `fit_sem()` and `fit_mediation(engine = "native", model = )` fit medfit model syntax with the native ML engine (`SEMFit`; `fixed_x = TRUE` or names fixes exogenous moments at the sample values, as lavaan's `fixed.x = TRUE`: same structural results, conditional logLik)
 - **Inference**: delta-method effect SEs in `tidy()`/`confint()`; bootstrap (parametric, nonparametric, plugin)
@@ -83,6 +83,7 @@ R/
 ├── extract-joint.R         # JointMediationData worker, stacked-OLS vcov
 ├── extract-lavaan.R        # lavaan extraction
 ├── extract-lmer.R          # ClusterMediationData from lme4 fits (term detection by value, KR)
+├── classes-twolevel.R, extract-lavaan-twolevel.R, twolevel-statistic.R   # TwoLevelMediationData (1-1-1) and its lavaan two-level adapter (keyed by free-parameter index, joint vcov sub-block)
 ├── sem-*.R                 # native SEM engine internals: parse, expr, model, ml, optim, constraints, se, sandwich, fit, mbco (mbco_sem()), outcomes (the versioned outcome ledger, `fit@diagnostics$ledger`, its validators `.sem_valid_outcome()` and `.sem_valid_mbco_outcome()`, and the D2 literal zero/nonzero certificates, `.sem_literal_zero_certificate()`)
 ├── fit-sem.R               # fit_sem(), .fit_mediation_native()
 ├── extract-sem.R           # accessor seam (lavaan and native), extract_mediation() for SEMFit
@@ -207,6 +208,11 @@ MyClass <- S7::new_class(
 **ClusterMediationData** (treatment assigned to clusters, 2-1-1)
 - Paths `a_path`, `b_within`, `b_between`, `c_prime`; NIE = a × b_between, own a × b_within, spillover a × (b_between − b_within) (`decompose()`, labeled large-cluster approximation, D11 warning)
 - `extract_mediation()` on `lmer` fits finds the mean/within/raw terms by value; `fit_mediation(engine = "lmer", cluster = )`; `se_type = "kr"` for Kenward-Roger t intervals; `bootstrap_mediation(cluster = )` for cluster resampling
+
+**TwoLevelMediationData** (X, M, Y on level-1 units, two-level lavaan fit, 1-1-1)
+- Paths `a_within`, `b_within`, `c_prime_within` and the `_between` three; per level NIE = a × b, NDE = c', TE, PM; `nie(level = "within" | "between" | "contrast" | "both")`, contrast descriptive, not a test
+- Fixed slopes (not ab + sigma_ab), latent cluster means; `@vcov` is the joint 6 × 6 sub-block (cross-level covariance carried); within-only object (`medfit_between_unidentified`) when the treatment or mediator ICC < 0.01; refuses `standardized`, products, three-level, multigroup
+- Page `model-twolevel.qmd`, cookbook recipe 23; `twolevel_statistic()` (`R/twolevel-statistic.R`) builds the `bootstrap_mediation()` callback: the object for the parametric route, the lavaan fit plus roles for the cluster refit (`se`, `test`, `check.post` overridden only; inadmissible refits kept, so report the percentile interval, not the SD)
 
 **BootstrapResult**
 - Inference: `estimate`, `ci_lower`, `ci_upper`
@@ -352,6 +358,7 @@ tests/testthat/
 ├── helper-test-data.R, helper-joint.R   # Test data generators, joint oracles
 ├── test-classes*.R, test-validators.R   # S7 validation
 ├── test-extract-*.R                     # lm/glm, lavaan, serial, parallel, interaction, joint
+├── test-twolevel-*.R, helper-twolevel*.R, test-twolevel-docs.R   # two-level: class, extraction, degenerate cases, effects, SEs, likelihood oracle O8; docs guard (page chunks, quoted conditions, recipe 23)
 ├── test-cluster-211.R, test-cluster-boot.R, test-cluster-harness.R, helper-cluster.R   # cluster mediation: guards, oracles, KR, fit engine, cluster bootstrap, harness
 ├── test-refcard-coverage.R, test-cookbook-consistency.R   # refcard names every export and class; cookbook recipes, links and cluster data match methods.qmd
 ├── test-model-pages*.R, test-guide-*.R   # every model page is on the landing page, index and menu; links and cookbook anchors resolve; each error message the pages and guides quote is triggered, and Suggests-dependent cases skip when the package is absent
@@ -360,6 +367,7 @@ tests/testthat/
 ├── test-serial-total-effect.R           # te() over every path
 ├── test-fit-*.R                         # glm, regmedint, m_star, native (test-fit-sem.R)
 ├── test-sem-*.R, helper-sem.R           # native SEM engine: parser, model, optimizer, constraints, SEs, weights, MBCO, methods, probmed gate, product term (`test-sem-product-*.R`: token, table, materialize, rules, mean, modeltest, extract; `test-four-way-oracle-*.R` with `helper-four-way-oracle.R`; the evidence contract: `test-sem-outcomes`, `-literal-certificates`, `-branch-map`, `-post-fit` (+ `-qa`), `-mbco-root` (+ `-qa`), `test-compare-lr-retained-null`)
+├── test-native-identities.R             # hand identities the native docs teach (delta SE, MBCO, trace information, product, four-way)
 ├── test-native-defaults*.R, helper-native-defaults.R   # default-change warning, 0.15 option, lenient subset; oracle gate (tests/sim/native-defaults-oracle.R)
 ├── test-bootstrap*.R                    # Bootstrap methods
 └── test-mediation-demo.R                # bundled data known answers
@@ -548,6 +556,7 @@ version bump, and check dependents' usage first (decided 2026-09-24,
 | `SerialMediationData` | X → M1 → … → Mk → Y | chain a × d × … × b; total over every path via `nie(type = "total")` |
 | `ParallelMediationData` | X → M_j → Y | Σ a_j b_j |
 | `JointMediationData` | several mediators with X × M products | joint NIE over the block |
+| `TwoLevelMediationData` | X → M → Y on level-1 units, two-level lavaan fit | a_w × b_w within, a_b × b_b between (contrast descriptive) |
 | `ClusterMediationData` | cluster-level X → M → Y with mixed models | a × b_between (own a × b_within, spillover the rest) |
 
 **Why separate classes?** Clean separation, no over-engineering, extend without
@@ -631,7 +640,17 @@ file; GitHub Issues are only linked from PRs. Agents' reports go to `_agents_wor
 ### Planning Documents
 
 **Package:** `planning/medfit-roadmap.md`
-**Active plan:** none. Completed: `planning/PLAN-0.16.0-GitHub-release-2026-10-30.md` (v0.16.0 published at c37c7ee8; main CI/tagged install/live site verified, release branches/worktrees cleaned; CRAN hold). Historical previous snapshots: Completed locally: `planning/PLAN-FIML-docs-audit-2026-10-30.md` (docs and final gates PASS at d29421a5; 10 HTML artifacts content/link inspected, 1,785 tests/9,796 passed assertions, lint clean, built check OK; no runtime changes, push or PR; main-only coverage unchanged). Previous: Completed: `planning/PLAN-FIML-native-guide-fixture-2026-10-30.md` (PR #371 squash-merged into dev as `04b7ac8c`; exact reviewed head `a1f03ddf` passed lint/pkgdown/risk-tier, merged tree identical; docs/local gates/user visual PASS; local and remote feature branch/worktree absent, 423 evidence files archived and hash-verified; metadata reconciliation local only; main-only coverage unchanged). Completed: `planning/PLAN-FIML-minibook-unit-2026-10-30.md` (Chapter 8 merged into dev via PR #368, `e2f028f9`; six exact-head fast checks PASS; local numerical/docs/render/USER-visual gates PASS; feature branch/worktree removed, 805 evidence files archived and verified; duplicate post-merge coverage run 41155534928 cancelled at user request; reviewed PR coverage and Codecov PASS; no release/main merge/expensive CI). `planning/PLAN-FIML-regression-oracles-2026-10-30.md` (regression oracles and minibook support clarification merged via PR #367, `fb879fac`; post-merge coverage run 41147354533 and Codecov PASS; merged branch/worktree removed with 200 evidence files archived and verified). `planning/PLAN-FIML-bounded-integration-2026-10-29.md` (bounded FIML merged into dev via PR #364, `a894e45e`; post-merge fast coverage and Codecov PASS; included in planned 0.16 (unreleased; see `planning/SCOPE-0.16-FIML-2026-10-30.md`); 23,086 local evidence entries archived and verified; merged branch/worktree removed). `planning/PLAN-360-boundary-regression-2026-10-29.md` (issue #360 boundary regression; local implementation, independent QA and gates PASS; PR #363 to dev, namespace lint repair awaiting hosted CI). `planning/PLAN-357-first-milestone-2026-10-29.md` (issue #357 reduced milestone; merged into dev via PR #361, `446cf12d`; post-merge coverage PASS, cleanup verified); `planning/PLAN-d4-covariance-correction-2026-10-28.md` (merged into dev via PR #358, `b9af937a`). Previous: `planning/PLAN-0.15.0-native-defaults-flip-2026-10-26.md` (released); `planning/PLAN-missingmed-evidence-D1-D4-2026-10-24.md` (P0-P4 merged; Checkpoint 2 recorded in `.STATUS`). Keep plans under `planning/`; `tasks/plan.md` and `tasks/todo.md` are the closed `fixed_x` plan.
+**FIML execution handoff (2026-11-01 MST):** planning PR #378 merged at `5e845007`.
+Bounded existing-model FI-B1/FI-B2 local implementation and verification are now explicitly authorized.
+Contract: `planning/DECISION-FI-B0-existing-model-inference-2026-10-31.md`.
+Code/tests: `medfit-implementer`; independent QA: `medfit-oracle-qa`; coordinator: Codex.
+The active plan owns task progress and the cumulative four-wall/eight-CPU-hour verification cap,
+two-worker ceiling and focused matrix sub-cap. Statistical admission/studies/timing pilots,
+model expansion, implementation push/PR/merge, release and CRAN remain deferred or unauthorized.
+All eleven future variants and main-only coverage/release-only expensive CI remain unchanged.
+
+**Active plan:** `planning/PLAN-FIML-bounded-inference-implementation-2026-11-01.md` (bounded implementation authorized 2026-11-01 MST; implementation owner `medfit-implementer`, independent QA owner `medfit-oracle-qa`; statistical admission deferred). Completed: `planning/PLAN-0.16.0-GitHub-release-2026-10-30.md` (v0.16.0 published at c37c7ee8; main CI/tagged install/live site verified, release branches/worktrees cleaned; CRAN hold). Historical previous snapshots: Completed locally: `planning/PLAN-FIML-docs-audit-2026-10-30.md` (docs and final gates PASS at d29421a5; 10 HTML artifacts content/link inspected, 1,785 tests/9,796 passed assertions, lint clean, built check OK; no runtime changes, push or PR; main-only coverage unchanged). Previous: Completed: `planning/PLAN-FIML-native-guide-fixture-2026-10-30.md` (PR #371 squash-merged into dev as `04b7ac8c`; exact reviewed head `a1f03ddf` passed lint/pkgdown/risk-tier, merged tree identical; docs/local gates/user visual PASS; local and remote feature branch/worktree absent, 423 evidence files archived and hash-verified; metadata reconciliation local only; main-only coverage unchanged). Completed: `planning/PLAN-FIML-minibook-unit-2026-10-30.md` (Chapter 8 merged into dev via PR #368, `e2f028f9`; six exact-head fast checks PASS; local numerical/docs/render/USER-visual gates PASS; feature branch/worktree removed, 805 evidence files archived and verified; duplicate post-merge coverage run 41155534928 cancelled at user request; reviewed PR coverage and Codecov PASS; no release/main merge/expensive CI). `planning/PLAN-FIML-regression-oracles-2026-10-30.md` (regression oracles and minibook support clarification merged via PR #367, `fb879fac`; post-merge coverage run 41147354533 and Codecov PASS; merged branch/worktree removed with 200 evidence files archived and verified). `planning/PLAN-FIML-bounded-integration-2026-10-29.md` (bounded FIML merged into dev via PR #364, `a894e45e`; post-merge fast coverage and Codecov PASS; included in planned 0.16 (unreleased; see `planning/SCOPE-0.16-FIML-2026-10-30.md`); 23,086 local evidence entries archived and verified; merged branch/worktree removed). `planning/PLAN-360-boundary-regression-2026-10-29.md` (issue #360 boundary regression; local implementation, independent QA and gates PASS; PR #363 to dev, namespace lint repair awaiting hosted CI). `planning/PLAN-357-first-milestone-2026-10-29.md` (issue #357 reduced milestone; merged into dev via PR #361, `446cf12d`; post-merge coverage PASS, cleanup verified); `planning/PLAN-d4-covariance-correction-2026-10-28.md` (merged into dev via PR #358, `b9af937a`). Previous: `planning/PLAN-0.15.0-native-defaults-flip-2026-10-26.md` (released); `planning/PLAN-missingmed-evidence-D1-D4-2026-10-24.md` (P0-P4 merged; Checkpoint 2 recorded in `.STATUS`). Keep plans under `planning/`; `tasks/plan.md` and `tasks/todo.md` are the closed `fixed_x` plan.
+**Book (2026-11-10):** the ten-chapter Quarto book "The medfit engines and model classes" lives in its own private repository (`Data-Wise/medfit-book`, history kept), not in this tree and not on the package website; `book/` and its CI render were dropped. Its identities stay tested in `tests/testthat/test-native-identities.R`; its install recipe is `scripts/setup.R` there (medfit from `dev`).
 **Ecosystem:** `~/projects/r-packages/mediation-planning/docs/ECOSYSTEM-COORDINATION.md`
 
 ### Related Packages

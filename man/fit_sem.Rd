@@ -129,13 +129,99 @@ The 0.14.x \code{options(medfit.native_defaults)} opt-in no longer has any effec
 
 Explicit \code{missing = "fiml"} fits a joint Gaussian random-X model under ignorable
 missingness (for example, MAR with the usual ignorability conditions). It evaluates
-observed components, without imputing values. It supports exactly three numeric
-continuous observed variables in X -> M -> Y, with the X -> Y path free or fixed
-exactly at zero, independent disturbances and free intercepts. Names and labels
-are arbitrary. Extra predictors, latent variables, products, factors, correlated
-disturbances, parameter ties, bounds, general constraints, defined parameters and
-syntax-supplied starts are not supported. Input checks and local numerical gates
-do not establish global identification, a global optimum or inference coverage.
+observed components, without imputing values. It supports numeric continuous
+observed variables in four shapes: X -> M -> Y (three variables), the
+same model with one covariate \code{Z}, with two covariates \code{Z1} and \code{Z2}, and two
+parallel mediators (see below). The
+X -> Y path is free or fixed exactly at zero, intercepts are free, and
+disturbances are independent except the free mediator residual covariance of the
+parallel form. Names and labels are arbitrary.
+
+With covariates the regressions are \code{M ~ X + Z} and \code{Y ~ M + X + Z} (one
+covariate), or \code{M ~ X + Z1 + Z2} and \code{Y ~ M + X + Z1 + Z2} (two). Every
+exogenous variable needs a written path to \code{Y}, and every covariate path to \code{M}
+is free. The exogenous variables have a free joint covariance: write every pair
+(in either order) or none; a partial set is refused. Any variable may be
+incomplete. With no \code{Y} path fixed at zero, the first exogenous variable is the
+fit's treatment and \code{\link[=extract_mediation]{extract_mediation()}} may name any exogenous variable as the
+treatment; with exactly one \code{Y} path fixed at zero, that variable is the
+treatment. Parameter counts are 8 or 9 (three variables), 13 or 14 (one
+covariate) and 19 or 20 (two covariates), without or with the direct path.
+Three or more covariates, a covariate on one equation only, residual
+covariances (other than the parallel mediator covariance), extra predictors beyond these, latent variables, products,
+factors, correlated disturbances, parameter ties, bounds, general constraints,
+defined parameters and syntax-supplied starts are not supported. The covariate
+fits are implemented and numerically verified against lavaan and an independent
+likelihood; their coverage has not been calibrated or statistically admitted.
+Input checks and local numerical gates do not establish global identification,
+a global optimum or inference coverage.
+
+Two parallel mediators (\code{M1 ~ X}, \code{M2 ~ X}, \code{Y ~ M1 + M2}, with or without
+\code{Y ~ X}) are fitted in two forms. Independent residuals require
+the statement \code{M1 ~~ 0*M2} (either order): an omitted statement is refused
+because lavaan's default would free it. A free, label-less \code{M1 ~~ M2} fits the
+mediator residual covariance. A labeled, fixed nonzero, bounded, tied or
+otherwise constrained covariance is refused. The free-parameter count is 12 or
+13 (independent residuals) and 13 or 14 (free covariance), without or with the
+direct path. \code{\link[=extract_mediation]{extract_mediation()}} needs both mediators named and returns a
+\code{FIMLParallelMediationData} object with the full path covariance of \code{a1}, \code{a2},
+\code{b1}, \code{b2} and \code{c_prime}, so the sum of the indirect effects keeps every
+cross-path term. Extraction refusals for the parallel form have class
+\code{medfit_error_fiml_extract_unsupported}.
+
+Two parallel mediators also take one covariate \code{Z} or two covariates \code{Z1},
+\code{Z2} (\code{M1 ~ X + Z}, \code{M2 ~ X + Z}, \code{Y ~ M1 + M2 + X + Z}, in either residual
+form). The covariate rules are those above: every exogenous variable has a free
+path to both mediators and a written path to \code{Y}, the exogenous covariance is
+free (write every pair or none), and any variable may be incomplete. With no \code{Y}
+path fixed at zero, \code{\link[=extract_mediation]{extract_mediation()}} may name any exogenous variable as the
+treatment; with one fixed at zero that variable is the treatment. The
+free-parameter count is 18 to 20 (one covariate) and 25 to 27 (two), without or
+with the direct path and the free residual covariance. Three or more mediators,
+three or more covariates and a covariate on only some of the equations stay
+refused.
+
+Two serial mediators are fitted in two forms, each with no, one or two
+covariates: the saturated forward graph \code{M1 ~ X}, \code{M2 ~ M1 + X} and
+\code{Y ~ M1 + M2 + X}, and the pure chain \code{M1 ~ X}, \code{M2 ~ M1} and \code{Y ~ M2} (the direct
+path \code{Y ~ X} is free, \code{0*X}, or omitted in both without a covariate), with the independence of all three
+disturbance pairs written as \code{M1 ~~ 0*M2}, \code{M1 ~~ 0*Y} and \code{M2 ~~ 0*Y}
+(either order within a pair; an omitted or free statement is refused). The
+saturated model has 14 free parameters (13 with the direct path fixed) and is just
+identified with the direct path free, so a pair of variables that is never
+observed together makes the fit fail closed (\code{medfit_sem_fiml_error} at the
+numerical stage). The chain has 12 free parameters (11 with the direct path
+fixed), is overidentified (2 or 3 degrees of freedom) and so is a restriction
+the data can reject; it fails closed for fewer unobserved pairs. A graph with
+exactly one of the two shortcuts, and a fixed or labeled shortcut, is refused.
+With one covariate \code{Z} it predicts \code{M1}, \code{M2} and \code{Y} (\code{M1 ~ X + Z},
+\code{M2 ~ M1 + X + Z} or \code{M2 ~ M1 + Z}, \code{Y ~ ... + X + Z}), \code{X} and \code{Z} have a free
+covariance, and every exogenous variable needs a written \code{Y} path (free; at most
+one fixed at exactly zero, which makes that variable the treatment). The
+saturated model then has 20 free parameters (19) and the chain 18 (17). With two
+covariates \code{Z1} and \code{Z2} both predict every equation, the three exogenous
+covariances (\code{X ~~ Z1}, \code{X ~~ Z2}, \code{Z1 ~~ Z2}) are all written or none (a
+partial set is refused), and the saturated model has 27 free parameters (26) and
+the chain 25 (24). In the pure chain the treatment is structural, the variable
+with no path to \code{M2}: leaving a variable out of the equation of \code{M2} makes it the
+treatment, and exactly one variable may be left out. In the saturated graph with
+a fixed-zero direct path the variable with the fixed-zero path is the only valid
+treatment.
+\code{\link[=extract_mediation]{extract_mediation()}} needs both mediators named in the fitted
+order (the reversed order is refused) and returns a \code{FIMLSerialMediationData}
+object with the full covariance of \code{a}, \code{a2} (X to M2), \code{d1} (M1 to M2), \code{b1}
+(M1 to Y), \code{b} and \code{c_prime}; \code{nie()} is the chain effect \code{a * d1 * b},
+\code{nie(type = "total")} adds \code{a2 * b + a * b1}, and \code{paths()}, \code{tidy()},
+\code{coef(type = "paths")} and \code{summary()} list all six paths. For the chain the
+object has the four paths \code{a}, \code{d1}, \code{b} and \code{c_prime}, and \code{nie()} and
+\code{nie(type = "total")} are the same effect. The covariate's coefficients are never
+paths: the aliases are the treatment's. In the saturated graph with a free direct
+path a covariate may be named the treatment; in the pure chain naming a covariate
+is refused (both covariates, with the classed \code{medfit_error_fiml_extract_unsupported}). Its normal intervals
+are available; \code{pm()}, \code{quick()}, \code{glance()} and bootstrap intervals are not
+(\code{bootstrap_mediation(source_fit = )} stays withheld, and behind that guard a
+serial fit raises \code{medfit_error_fiml_serial_source_fit}). Serial models with three
+or more covariates and every other serial shape stay refused.
 
 Supply \code{fixed_x = FALSE} explicitly; omission, \code{TRUE} and named subsets are errors.
 Require \code{meanstructure = TRUE}, \code{information = "observed"}, \code{se_type = "model"},
@@ -149,7 +235,8 @@ Native \code{\link[=fit_mediation]{fit_mediation()}} forwards these settings thr
 all-empty rows. Singleton patterns and data with no complete rows are supported
 when the local identification and information checks pass. Original positional
 row IDs and pattern counts are retained. \code{logLik()} includes the full Gaussian
-constants, with its \code{df} attribute equal to the free-parameter count (8 or 9).
+constants, with its \code{df} attribute equal to the free-parameter count (8 or 9 for three variables; see above for
+covariates).
 AIC and BIC use that likelihood and retained row count. The discrepancy \code{f} and
 model-test \code{df} are \code{NA}: no saturated missing-data reference model is fitted.
 
@@ -162,9 +249,17 @@ At a = b = 0, the NIE point value remains available but its inferential fields
 are unavailable; a known fixed direct path is a different case.
 
 SEMFit \code{glance()} reports likelihood/IC fields with unavailable model-test fields;
-extracted-object \code{glance()}, \code{quick()}, \code{pm()}, bootstrap, profiles, MBCO and fit
-tests are deferred and refuse FIML objects. Object-aware package guards precede
-package-controlled refits/RNG/workers; opaque user callbacks and external-first
+extracted-object \code{glance()}, \code{quick()}, \code{pm()}, extracted-object bootstrap, profiles,
+MBCO and fit tests remain unavailable. The \code{\link[=bootstrap_mediation]{bootstrap_mediation()}} \code{source_fit}
+intervals are implemented but withheld (refused with a classed error) until
+statistical admission is decided; a covariate fit is additionally refused with
+\code{medfit_error_fiml_covariate_source_fit} (including a parallel fit with
+covariates) and a parallel fit without covariates with
+\code{medfit_error_fiml_parallel_source_fit}, so no source-fit interval exists for
+either. Delta-method Wald intervals stay available for these extracted objects;
+as for the three-variable model, the NIE standard error is \code{NA} only at the
+exact origin (every a and b path exactly zero).
+Object-aware package guards precede package-controlled refits/RNG/workers; opaque user callbacks and external-first
 dispatch remain outside that guarantee. Adapter/topology/numerical failures retain
 stage, reason, original parent and completed attempts; basic argument-type errors
 can occur earlier. A dedicated \code{fiml-1} ledger binds likelihood, rows, settings

@@ -1,0 +1,208 @@
+{
+  "ok": true,
+  "operation": "review",
+  "review_kind": "adversarial",
+  "subject_kind": "changes",
+  "subject_label": "working tree (staged, unstaged, and untracked)",
+  "subject_fingerprint": "e2f6afa37b8dc33ab39f596f165fc5b00a46e7fad06ed8d5592f018cbb916bc6",
+  "usage_summary": "Usage: tokens=153635 output=10353 turns=5 duration_ms=173029 api_ms=172602 cost_usd=0.6559033999999999",
+  "total_tokens": 153635,
+  "total_cost_usd": 0.6559033999999999,
+  "cumulative_chain_cost_usd": 0.6559033999999999,
+  "parent_job_id": null,
+  "num_turns": 5,
+  "duration_ms": 173029,
+  "duration_api_ms": 172602,
+  "task_profile": null,
+  "review_profile": "standard",
+  "requested_model": "opus",
+  "effective_models": [
+    "claude-opus-5-5"
+  ],
+  "effort": "medium",
+  "budget": {
+    "max_turns": 10,
+    "finalize_at_turn": 8,
+    "soft_budget_usd": 3,
+    "max_budget_usd": 3,
+    "timeout_ms": 300000
+  },
+  "evidence_lease": null,
+  "evidence_lease_exhausted": false,
+  "cost_budget_exhausted": false,
+  "turn_limit_reached": false,
+  "structured_output": {
+    "verdict": "needs-attention",
+    "summary": "I reviewed only §3, §5 and the Q8–Q11 decisions in §9 of the untracked plan at /Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md. Most of the inference rules hold up:\n- **Q8 sampling frame:** resampling the retained nonempty rows at a fixed retained n is valid, because all-empty rows add nothing to the likelihood.\n- **Q7 failure rule:** withholding the CI when any refit fails avoids survivor bias, and lines 251-253 already admit that it pulls against availability.\n- **B2 draws:** using the full joint covariance, keeping fixed zeros fixed, drawing aliases once, and not truncating negative variance draws are all sound.\n- **Joint null and cost:** treating a=b=0 as a limit to describe rather than gate is reasonable, and the 500×999 cost is openly acknowledged behind a timing pilot.\n\nThe problems are in the Q10 acceptance design:\n1. **No power calculation (high).** The plan never works out how often a correctly calibrated method would pass the per-cell exact-binomial gates at M=500. My rough estimate is about 75–80% per cell for coverage, and lower once failed intervals shrink the denominator. Availability needs true availability around 0.98, which under Q7 at B=999 means a per-refit failure rate of about 2e-5 or less. Every cell must pass, and an inconclusive result counts as failure, so a correct method across many cells is likely to be rejected.\n2. **Pilot leaks outcomes (high/medium).** The timing pilot runs B=999 refits before the cell manifest and the regime labels are frozen. That exposes availability, which is one of the gated outcomes.\n3. **Axis nulls skip the gate (medium).** Cells with a=0 and b≠0 are excluded from the gate, even though §3 itself says only a=b=0 is nonregular. Those are exactly the Type I error cells for reading \"CI excludes 0\" as a test.\n\nTwo smaller gaps: B2 never declares its quantile convention, and the statistical study never exercises Q8's empty-row exclusion. None of this blocks the plan's concept, but Q10 should be fixed before the B0 specification and the pilot are frozen.",
+    "findings": [
+      {
+        "severity": "high",
+        "title": "Q10 gates never check how often a correct method would pass; a well-calibrated method likely fails",
+        "body": "Lines 233-238 and 374-383 require, in each regular cell and for each method, one-sided 95% exact binomial lower bounds of ≥92.5% conditional coverage, ≥95% availability and ≥90% joint usable-and-covering probability, all at M=500. Lines 246-249 add that an inconclusive cell is not accepted and M cannot be increased.\n\nNo calculation shows how often a method that is actually correct would pass. My estimates use a normal approximation; Clopper-Pearson is slightly stricter.\n- **Coverage:** with true coverage exactly 0.95, the lower bound clears 0.925 only if about 472 or more of 500 intervals cover. That happens roughly 75-80% of the time. The denominator is returned intervals, so it is below 500 and the chance is lower.\n- **Availability:** clearing 0.95 needs about 483-484 of 500. True availability must be about 0.98 to pass reliably; at 0.97 it passes only about 74% of the time.\n- **Interaction with Q7:** under the any-failure rule at B=999, availability equals (1-q)^999, so 0.98 availability requires a per-refit failure rate q of about 2e-5 or less. That includes failures that come from the data themselves, such as resamples with rank loss or with no observed pairs for a covariance.\n- **Across cells:** every cell must pass, so with K regular cells a correct method passes everything with probability of roughly 0.78^(2K). That is illustrative only, because K is not frozen. With the 11 variants crossed with missingness types and n levels, a valid method would almost certainly be rejected.\n\nThe plan says the gates are \"not simultaneous guarantees\" but never addresses this opposite risk: rejecting correct methods. Because M is fixed and inconclusive counts as failure, a false no-go cannot be recovered.",
+        "file": "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md",
+        "line_start": 233,
+        "line_end": 254,
+        "confidence": 0.8,
+        "recommendation": "Before freezing the manifest:\n- Compute the operating characteristics of the gates for a correct method: the probability of passing one cell and all cells at plausible true coverage and availability, using Clopper-Pearson.\n- Then either choose M, thresholds or a predeclared release-level aggregation rule (for example a pooled criterion, or an allowed number of inconclusive cells with a stated error rate) so that a correct method passes with stated high probability.\n- Or accept and document the high false-rejection rate explicitly.\n- State the per-refit failure rate implied by the availability gate at B=999."
+      },
+      {
+        "severity": "high",
+        "title": "Timing pilot sees gated outcomes before the cells and regime labels are frozen",
+        "body": "Lines 242-245 and 385-390 put a bounded timing pilot first, and only afterwards freeze the full cell manifest, cost cap and stopping rule. Running B=999 refits in the pilot necessarily shows refit failures, which is the availability outcome that Q10 gates. If the pilot also builds intervals, it shows coverage.\n\nNothing requires the cell list (n levels, missingness rates, effect sizes) or the regular/axis/local/joint-null labels to be fixed before the pilot. Someone could therefore choose regular cells, or relabel a troublesome regular cell as local-to-null, after seeing pilot availability.\n\nThe \"no quiet cell removal\" safeguard (line 390) cannot catch this, because no manifest exists yet to remove cells from. This is a forking-paths leak that undermines the predeclared-stopping guarantee the section claims (inferred from the order of steps; no pilot protocol is specified yet).",
+        "file": "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md",
+        "line_start": 242,
+        "line_end": 249,
+        "confidence": 0.7,
+        "recommendation": "Do one of the following:\n- Freeze the full cell grid and regime labels before the pilot, so the pilot only measures cost.\n- Or require the pilot to use disjoint seeds or design points, record only timing and resource fields, and keep failure, availability and coverage fields blinded or discarded.\n\nWrite this into the B0 timing-pilot protocol."
+      },
+      {
+        "severity": "medium",
+        "title": "Axis-null cells are left out of the gate even though the plan's own reasoning treats them as regular",
+        "body": "Line 123 places the nonregular point only at a=b=0, where the gradient vanishes. At an axis null (a=0, b≠0) the gradient of ab is (b, 0), which is nonzero, so the point is first-order regular.\n\nEven so, lines 240-241 and 381-382 exempt axis-null and local-null cells from the Q10 gates and only report them separately. Axis nulls are exactly the cells where \"CI excludes 0\" works as a test of H0: ab=0, and that is how users will read these intervals. The percentile bootstrap and Monte Carlo intervals for ab are known to drift away from nominal in small samples in these cells.\n\nThe plan's refusal to promote a product-null test (line 125) does not stop users reading the intervals this way. As written, a method that undercovers at axis nulls (an inflated Type I error) could still pass and be released.",
+        "file": "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md",
+        "line_start": 121,
+        "line_end": 130,
+        "confidence": 0.6,
+        "recommendation": "Either:\n- add predeclared gates for axis-null cells (at least conditional coverage and availability, and ideally the per-tail miss rate),\n- or document why they are excluded and limit the release wording to say intervals near a single-path null are unvalidated and must not be used as a mediation test.\n\nAlso cross-reference the gate exemption at lines 240-241 and 381-382."
+      },
+      {
+        "severity": "low",
+        "title": "B2 parameter-draw intervals never declare a quantile convention",
+        "body": "B1 explicitly declares stats::quantile(type = 7) (line 99). B2 (lines 105-110) only says \"percentile interval\" and never names a quantile type.\n\nTwo places depend on a declared convention: §5 item 4 (lines 195-197) requires reproducing effect quantiles, and the planted defect \"wrong percentile interpolation\" (line 218) must fail a named assertion. Neither can be checked for B2 without a fixed convention. At 20,000 draws the numerical difference is tiny, but oracle parity is undefined.",
+        "file": "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md",
+        "line_start": 103,
+        "line_end": 111,
+        "confidence": 0.75,
+        "recommendation": "Declare the quantile type for B2 in B0 (for example type 7, matching B1) and extend the interpolation planted defect to both methods."
+      },
+      {
+        "severity": "low",
+        "title": "The statistical study never exercises Q8's exclusion of all-empty rows",
+        "body": "Q8 (lines 81-86, 368-370) fixes the resampling frame to retained nonempty rows at a fixed retained n. The simulation design (lines 225-226) uses MCAR plus MAR that depends on an always-observed covariate.\n\nUnder MAR that design produces no all-empty model rows, and under MCAR they are rare. So the sampling-frame choice is checked only numerically (item 1, line 176) and never in coverage terms. The difference between the conditional and unconditional frames is never measured.",
+        "file": "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md",
+        "line_start": 223,
+        "line_end": 231,
+        "confidence": 0.55,
+        "recommendation": "Add at least one predeclared cell with a non-negligible all-empty-row rate, or state explicitly that the Q8 frame is supported by an argument (empty rows contribute zero likelihood) rather than by simulation evidence."
+      }
+    ],
+    "next_steps": [
+      "Calculate how often a correct method passes the Q10 gates at M=500 (per cell and across all cells, using Clopper-Pearson) and pick M, thresholds or an aggregation rule accordingly.",
+      "Freeze the cell grid and regime labels before the timing pilot, or blind the pilot's outcomes.",
+      "Decide whether axis-null cells are gated, or limit release wording to rule out reading the intervals as a test.",
+      "Declare B2's quantile convention in the B0 specification.",
+      "Optional: decide whether to document user reseeding under the Q7 strict-failure rule, since reseeding until a CI appears amounts to retrying until success outside the package."
+    ],
+    "coverage": {
+      "files_examined": [
+        "/Users/davood/projects/r-packages/active/medfit/.worktrees/fiml-inference-models-design/planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md (lines 54-258, 364-403; §4 lines 132-167 read incidentally and not reviewed in depth)"
+      ],
+      "files_skipped": [
+        "Plan §1-2 (lines 1-53) and §6-8 (lines 259-363)",
+        ".codex/agents/medfit-docs.toml",
+        ".codex/agents/medfit-gates.toml",
+        ".codex/agents/medfit-implementer.toml",
+        ".codex/agents/medfit-oracle-qa.toml",
+        ".codex/guard-session-counts",
+        "planning/studies/fiml-feasibility/REPORT-fiml-draft-pr-364-2026-10-30.md",
+        "All repository source, roadmap and implementation files (excluded by scope)"
+      ],
+      "areas": [
+        "B1 row-bootstrap sampling frame (Q8) and strict failure rule (Q7)",
+        "B2 joint Gaussian parameter draws, fixed zeros, aliases",
+        "Handling of nonregular inference at singular products",
+        "Q10 conditional coverage, availability and joint thresholds",
+        "500x999 feasibility, timing pilot and predeclared stopping"
+      ]
+    },
+    "uncertainty": "medium",
+    "budget_exhausted": false,
+    "cost_budget_exhausted": false,
+    "evidence_lease_exhausted": false,
+    "turn_limit_reached": false,
+    "recommended_followup": {
+      "profile": "quick",
+      "focus": [
+        "Exact Clopper-Pearson pass probabilities for Q10 at M=500 under true coverage 0.95 and availability 0.97-0.99",
+        "B0 timing-pilot blinding protocol"
+      ],
+      "reason": "The power figures are hand normal approximations and the number of cells K is not fixed. A short exact calculation would confirm how severe the main finding is before the B0 specification is frozen. The target file sits outside the diff adapter's scope, so I read it directly; no code was run."
+    }
+  },
+  "session_id": "aa3d0e73-1120-4afc-a4c8-9f1300ec6fe1",
+  "resume_hint": "claude --resume aa3d0e73-1120-4afc-a4c8-9f1300ec6fe1",
+  "disclosure": null,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 22367,
+    "cache_read_input_tokens": 80152,
+    "output_tokens": 10353,
+    "output_tokens_details": {
+      "thinking_tokens": 5020
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 16178,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 4717,
+        "cache_read_input_tokens": 20922,
+        "cache_creation_input_tokens": 6734,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 6734
+        },
+        "type": "message"
+      },
+      {
+        "input_tokens": 33918,
+        "output_tokens": 6837,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 0
+        },
+        "type": "advisor_message",
+        "model": "claude-opus-5-5"
+      },
+      {
+        "input_tokens": 2,
+        "output_tokens": 5130,
+        "cache_read_input_tokens": 27656,
+        "cache_creation_input_tokens": 6189,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 6189,
+          "ephemeral_1h_input_tokens": 0
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-opus-5-5": {
+      "inputTokens": 33926,
+      "outputTokens": 17190,
+      "cacheReadInputTokens": 80152,
+      "cacheCreationInputTokens": 22367,
+      "webSearchRequests": 0,
+      "costUSD": 0.6559033999999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 5020,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  }
+}

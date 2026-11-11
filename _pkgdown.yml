@@ -84,6 +84,8 @@ navbar:
       - text: "Clusters and latent variables"
       - text: "Cluster-randomized trial"
         href: articles/model-cluster.html
+      - text: "Two-level mediation (1-1-1)"
+        href: articles/model-twolevel.html
       - text: "lavaan fits"
         href: articles/model-lavaan.html
       - text: "Native: paths and defined parameters"
@@ -96,6 +98,8 @@ navbar:
         href: articles/model-native-multi.html
       - text: "Native: categorical covariates"
         href: articles/model-native-factors.html
+      - text: "Missing data: bounded FIML"
+        href: articles/model-fiml.html
     guides:
       text: Guides
       menu:
@@ -117,6 +121,10 @@ navbar:
         href: articles/native-guide.html
       - text: "lavaan and the native engine"
         href: articles/lavaan-comparison.html
+      - text: "probmed and medfit"
+        href: articles/probmed-comparison.html
+      - text: "RMediation and medfit"
+        href: articles/rmediation-comparison.html
       - text: "One model in medfit, lavaan, OpenMx and semopy"
         href: articles/syntax-crosswalk.html
       - text: "Worked example: study hours and GPA"
@@ -169,6 +177,10 @@ navbar:
         href: articles/cookbook.html#four-way-decomposition-from-a-native-fit
       - text: "21. Categorical covariate (native)"
         href: articles/cookbook.html#a-categorical-covariate-in-a-native-fit
+      - text: "22. Missing data: bounded FIML"
+        href: articles/cookbook.html#missing-data-bounded-fiml
+      - text: "23. Two-level lavaan fit (1-1-1)"
+        href: articles/cookbook.html#a-two-level-lavaan-fit-within-and-between
     articles:
       text: Articles
       menu:
@@ -254,6 +266,7 @@ reference:
       - InteractionMediationData
       - JointMediationData
       - ClusterMediationData
+      - TwoLevelMediationData
       - BootstrapResult
       - SEMFit
 
@@ -267,6 +280,7 @@ reference:
       - compare_lr
       - medfit-syntax
       - bootstrap_mediation
+      - twolevel_statistic
 
   - title: "Methods"
     desc: "tidy() and glance() for medfit classes; print, summary, anova, confint and logLik methods for SEMFit"
@@ -303,12 +317,14 @@ articles:
     desc: "Treatment assigned to clusters, lavaan fits, and the native engine"
     contents:
       - '`articles/model-cluster`'
+      - '`articles/model-twolevel`'
       - '`articles/model-lavaan`'
       - '`articles/model-native`'
       - '`articles/model-native-latent`'
       - '`articles/model-native-constraints`'
       - '`articles/model-native-multi`'
       - '`articles/model-native-factors`'
+      - '`articles/model-fiml`'
   - title: "Guides"
     desc: "Upgrading, errors, intervals and terms"
     contents:
@@ -321,6 +337,8 @@ articles:
       - '`articles/native-tutorial`'
       - '`articles/native-guide`'
       - '`articles/lavaan-comparison`'
+      - '`articles/probmed-comparison`'
+      - '`articles/rmediation-comparison`'
       - '`articles/syntax-crosswalk`'
       - '`articles/example-gpa`'
   - title: "Detailed guides"

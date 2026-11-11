@@ -38,7 +38,7 @@ Imports:
     rlang
 Suggests:
     knitr,
-    lavaan (>= 0.6-0),
+    lavaan (>= 0.7-3),
     lme4,
     numDeriv,
     OpenMx,
@@ -54,5 +54,5 @@ Language: en-US
 Roxygen: list(markdown = TRUE, roclets = c("rd", "collate", "namespace"))
 Config/testthat/edition: 3
 Config/Needs/website: knitr, rmarkdown, quarto
-Config/roxygen2/version: 8.1.0
+Config/roxygen2/version: 8.1.1
 LazyData: true

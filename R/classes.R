@@ -520,18 +520,24 @@ S7::S4_register(SerialMediationData)
 #' @param method Character scalar: bootstrap method
 #'   ("parametric", "nonparametric", or "plugin")
 #' @param call Call object or NULL: original function call
+#' @param inference Optional list, empty by default for legacy results. Bounded FIML
+#'   source intervals use schema `fiml-bootstrap-1` for method/target, source and RNG
+#'   provenance, retained/collected counts and every requested replicate outcome.
 #'
 #' @return A BootstrapResult S7 object
 #' @usage
 #' BootstrapResult(estimate, ci_lower, ci_upper, ci_level, boot_estimates,
-#'   n_boot, method, call)
+#'   n_boot, method, call, inference = list())
 #'
 #' @details
 #' This class standardizes bootstrap inference results across different
 #' bootstrap methods (parametric, nonparametric, plugin).
 #'
 #' The class includes validation to ensure consistency between
-#' method type and required fields.
+#' method type and required fields. See [bootstrap_mediation()] for the bounded
+#' FIML source route. Its failed or incomplete results retain length-`n_boot`
+#' distributions with unresolved `NA` values and withhold intervals through every
+#' accessor. The optional metadata does not change legacy tidy/glance columns.
 #'
 #' @examples
 #' \donttest{
@@ -569,7 +575,8 @@ BootstrapResult <- S7::new_class(
     method = S7::class_character,
 
     # Metadata
-    call = S7::class_call | NULL
+    call = S7::class_call | NULL,
+    inference = S7::class_list
   ),
 
   validator = function(self) {
@@ -694,14 +701,19 @@ S7::method(print, BootstrapResult) <- function(x, ...) {
   cat("======================\n\n")
 
   cat(sprintf("Method:   %s\n", x@method))
+  if (length(x@inference)) {
+    cat(x@inference$method_label, "\n")
+    cat("Inference status:", x@inference$status, "\n")
+  }
   cat(sprintf("Estimate: %8.4f\n", x@estimate))
 
   if (x@method != "plugin") {
+    ci <- .bootstrap_fiml_interval(x)
     cat(sprintf("N bootstrap samples: %d\n", x@n_boot))
     cat("\n")
     cat(sprintf("%g%% Confidence Interval:\n", x@ci_level * 100))
-    cat(sprintf("  Lower: %8.4f\n", x@ci_lower))
-    cat(sprintf("  Upper: %8.4f\n", x@ci_upper))
+    cat(sprintf("  Lower: %8.4f\n", ci[1]))
+    cat(sprintf("  Upper: %8.4f\n", ci[2]))
   } else {
     cat("\n")
     cat("(No confidence interval for plugin method)\n")
@@ -800,12 +812,10 @@ S7::method(summary, BootstrapResult) <- function(object, ...) {
     estimate = object@estimate,
     n_boot = object@n_boot
   )
+  if (length(object@inference)) boot_summary$inference <- object@inference
 
   if (object@method != "plugin") {
-    boot_summary$ci <- c(
-      lower = object@ci_lower,
-      upper = object@ci_upper
-    )
+    boot_summary$ci <- stats::setNames(.bootstrap_fiml_interval(object), c("lower", "upper"))
     boot_summary$ci_level <- object@ci_level
 
     # Add bootstrap distribution summary statistics
@@ -828,6 +838,10 @@ print_summary_bootstrap_result <- function(x, ...) {
   cat("==========================\n\n")
 
   cat("Method:   ", x$method, "\n")
+  if (length(x$inference)) {
+    cat(x$inference$method_label, "\n")
+    cat("Inference status:", x$inference$status, "\n")
+  }
   cat("Estimate: ", x$estimate, "\n")
 
   if (x$method != "plugin") {
@@ -868,6 +882,14 @@ S7::method(show, BootstrapResult) <- function(object) {
 #' @param x A SerialMediationData object
 #' @param ... Additional arguments (ignored)
 #' @noRd
+# One line for the serial FIML prints (Q11): the variant (are the shortcut paths estimated?) and the covariates.
+.sem_fiml_ser_context_line <- function(ctx) {
+  cov <- ctx$covariate
+  variant <- if (identical(ctx$variant, "chain")) "pure chain (no shortcut paths)" else
+    "saturated (both shortcut paths estimated)"
+  paste0("  ", variant, "; covariates: ", if (length(cov)) paste(cov, collapse = ", ") else "none")
+}
+
 S7::method(print, SerialMediationData) <- function(x, ...) {
   cat("SerialMediationData object\n")
   cat("==========================\n\n")
@@ -882,6 +904,7 @@ S7::method(print, SerialMediationData) <- function(x, ...) {
               x@treatment,
               paste(x@mediators, collapse = " -> "),
               x@outcome))
+  if (S7::S7_inherits(x, FIMLSerialMediationData)) cat(.sem_fiml_ser_context_line(x@fit_context), "\n", sep = "")
   cat("\n")
 
   cat("Path coefficients:\n")
@@ -944,6 +967,7 @@ S7::method(print, SerialMediationData) <- function(x, ...) {
 #' @param ... Additional arguments (ignored)
 #' @noRd
 S7::method(summary, SerialMediationData) <- function(object, ...) {
+  if (S7::S7_inherits(object, FIMLSerialMediationData)) return(.sem_fiml_ser_summary(object))
   n_mediators <- length(object@mediators)
   indirect <- object@a_path * prod(object@d_path) * object@b_path
 
@@ -995,6 +1019,7 @@ S7::method(summary, SerialMediationData) <- function(object, ...) {
 #' @noRd
 print_summary_serial_mediation_data <- function(x, ...) {
   cat("Summary of SerialMediationData\n")
+  if (identical(x$fit_context$method, "fiml")) cat("FIML, random X; retained partial rows\n")
   cat("==============================\n\n")
 
   cat("Serial Chain:\n")
@@ -1002,6 +1027,7 @@ print_summary_serial_mediation_data <- function(x, ...) {
               x$variables["treatment"],
               paste(x$mediators, collapse = " -> "),
               x$variables["outcome"]))
+  if (identical(x$fit_context$method, "fiml")) cat(.sem_fiml_ser_context_line(x$fit_context), "\n", sep = "")
   cat("\n")
 
   cat("Path Coefficients:\n")
@@ -1226,6 +1252,7 @@ S7::method(print, ParallelMediationData) <- function(x, ...) {
   k <- length(x@mediators)
   indirect <- sum(x@a_paths * x@b_paths)
   cat("<ParallelMediationData>\n")
+  if (.sem_fiml_is(x)) cat("  FIML, random X; retained partial rows\n")
   cat(sprintf("  %s -> {%s} -> %s  (%d parallel mediators)\n",
               x@treatment, paste(x@mediators, collapse = ", "), x@outcome, k))
   for (j in seq_len(k)) {
@@ -2303,6 +2330,84 @@ FIMLMediationData <- S7::new_class(
           !identical(unname(ctx$variables), c(self@treatment, self@mediator, self@outcome)) ||
           !identical(ctx$data_hash, rlang::hash(self@data)) || !identical(ctx$parameter_hash, parameter_hash)) {
       return("FIML fit_context must match the retained rows and extracted parameters")
+    }
+    NULL
+  }
+)
+
+# Internal subclass for two parallel mediators: the ordinary parallel effects, plus the likelihood provenance.
+FIMLParallelMediationData <- S7::new_class(
+  "FIMLParallelMediationData", parent = ParallelMediationData, package = "medfit",
+  properties = list(fit_context = S7::class_list),
+  validator = function(self) {
+    ctx <- self@fit_context
+    vars <- unname(ctx$variables)
+    source_hash <- rlang::hash(list(ctx$source_theta, ctx$source_vcov, ctx$source_roles))
+    parameter_hash <- rlang::hash(list(
+      self@estimates, self@vcov, self@a_paths, self@b_paths, self@c_prime
+    ))
+    if (!identical(ctx$source_hash, source_hash) ||
+          !identical(ctx$method, "fiml") || !identical(ctx$x_policy, "random") ||
+          !identical(ctx$n_obs, self@n_obs) || !identical(self@source_package, "medfit") ||
+          length(vars) != 4L || !identical(vars[c(1L, 4L)], c(self@treatment, self@outcome)) ||
+          !setequal(vars[2:3], self@mediators) || !identical(ctx$mediators, self@mediators) ||
+          !identical(ctx$data_hash, rlang::hash(self@data)) || !identical(ctx$parameter_hash, parameter_hash)) {
+      return("FIML fit_context must match the retained rows and extracted parameters")
+    }
+    NULL
+  }
+)
+
+# Internal subclass for two serial mediators (FI-G3): the ordinary serial effects, plus the likelihood provenance and a
+# `variant` that must agree with `fit_context` (a forged variant breaks the object). The saturated variant stores the
+# six paths a, a2, d1, b1, b, c_prime; the pure chain stores a, d1, b, c_prime and records the absent shortcuts in the
+# predictor lists (a skip edge whose source is not a predictor is a structural zero in `.serial_path_system()`); the
+# predictor lists must equal the variant's sets exactly.
+FIMLSerialMediationData <- S7::new_class(
+  "FIMLSerialMediationData", parent = SerialMediationData, package = "medfit",
+  properties = list(fit_context = S7::class_list, variant = S7::class_character),
+  validator = function(self) {
+    msg <- "FIML fit_context must match the retained rows and extracted parameters"
+    ctx <- self@fit_context
+    vars <- unname(ctx$variables)
+    variant <- self@variant
+    if (length(variant) != 1L || !variant %in% c("saturated", "chain") || !identical(ctx$variant, variant)) {
+      return(msg)
+    }
+    alias <- if (variant == "saturated") c("a", "a2", "d1", "b1", "b", "c_prime") else c("a", "d1", "b", "c_prime")
+    est <- self@estimates
+    # The stored alias vector, the path slots and the predictor lists must all describe the one variant, and each
+    # predictor list must be EXACTLY the variant's set (order is free): M1 ~ X, then M2 ~ M1 [+ X] and Y ~ M2 [+ M1] + X
+    # (saturated with both shortcuts, chain with neither), plus the covariates of the fit.
+    x <- self@treatment
+    m <- self@mediators
+    z <- as.character(unlist(ctx$covariate))
+    sat <- variant == "saturated"
+    preds <- self@mediator_predictors
+    want_m1 <- c(x, z)
+    want_m2 <- c(m[1L], if (sat) x, z)
+    want_y <- c(if (sat) m[1L], m[2L], x, z)
+    if (!identical(names(est), alias) ||
+          !identical(unname(est[["a"]]), self@a_path) || !identical(unname(est[["d1"]]), unname(self@d_path)) ||
+          !identical(unname(est[["b"]]), self@b_path) || !identical(unname(est[["c_prime"]]), self@c_prime) ||
+          length(m) != 2L || length(preds) != 2L ||
+          !identical(sort(as.character(preds[[1L]])), sort(want_m1)) ||
+          !identical(sort(as.character(preds[[2L]])), sort(want_m2)) ||
+          !identical(sort(as.character(self@outcome_predictors)), sort(want_y))) {
+      return(msg)
+    }
+    source_hash <- rlang::hash(list(ctx$source_theta, ctx$source_vcov, ctx$source_roles))
+    parameter_hash <- rlang::hash(list(
+      self@estimates, self@vcov, self@a_path, self@d_path, self@b_path, self@c_prime, variant
+    ))
+    if (!identical(ctx$source_hash, source_hash) ||
+          !identical(ctx$method, "fiml") || !identical(ctx$x_policy, "random") ||
+          !identical(ctx$structure, "serial") ||
+          !identical(ctx$n_obs, self@n_obs) || !identical(self@source_package, "medfit") ||
+          length(vars) != 4L || !identical(vars[c(1L, 4L)], c(self@treatment, self@outcome)) ||
+          !identical(vars[2:3], self@mediators) || !identical(unname(ctx$mediators), self@mediators) ||
+          !identical(ctx$data_hash, rlang::hash(self@data)) || !identical(ctx$parameter_hash, parameter_hash)) {
+      return(msg)
     }
     NULL
   }

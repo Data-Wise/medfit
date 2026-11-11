@@ -88,6 +88,7 @@ S7::method(coef, SerialMediationData) <- function(object, type = c("paths", "eff
 
   switch(type,
     paths = {
+      if (S7::S7_inherits(object, FIMLSerialMediationData)) return(.sem_fiml_ser_coef_paths(object))
       n_mediators <- length(object@mediators)
       paths <- c(a = object@a_path)
 
@@ -230,7 +231,8 @@ S7::method(confint, MediationData) <- function(object, parm = "paths", level = 0
   } else if (identical(parm, "effects")) {
     coefs <- coef(object, type = "effects")      # nie, nde, te
     if (.sem_fiml_is(object)) {
-      warning("Normal approximation for NIE may be inaccurate; FIML bootstrap is unavailable.", call. = FALSE)
+      warning("Normal approximation for NIE may be inaccurate. ",
+              "Bootstrap intervals for FIML fits are unavailable pending statistical admission.", call. = FALSE)
     } else {
       warning("Normal approximation for NIE may be inaccurate. ",
               "Consider bootstrap_mediation() for robust inference.", call. = FALSE)
@@ -287,18 +289,29 @@ S7::method(confint, SerialMediationData) <- function(object,
                                                      method = c("normal", "boot"),
                                                      ...) {
   method <- match.arg(method)
+  fiml <- .sem_fiml_is(object)
+  if (fiml && identical(method, "boot")) .sem_fiml_refuse(object, "bootstrap CI")
   if (identical(method, "boot")) {
     stop("Bootstrap CIs are computed via bootstrap_mediation(); ",
          "call it directly with the desired statistic.", call. = FALSE)
   }
   checkmate::assert_choice(parm, c("paths", "effects"), .var.name = "parm")
   checkmate::assert_number(level, lower = 0, upper = 1, .var.name = "level")
+  withheld <- NULL
 
   if (identical(parm, "paths")) {
     coefs <- paths(object)            # a, d (or d21, d32, ...), b, c_prime
-    # paths() names the d paths by mediator pair; @vcov aliases them d1..dk
-    alias <- c("a", paste0("d", seq_along(object@d_path)), "b", "c_prime")
+    # paths() names the d paths by mediator pair; @vcov aliases them d1..dk (a serial FIML object lists every path)
+    alias <- .serial_tidy_alias(object)
     se <- .path_se(object, alias)
+  } else if (fiml) {
+    # serial FIML: the total indirect effect has its own row, each effect its own exact-origin rule, no bootstrap advice
+    warning("Normal approximation for NIE may be inaccurate. ",
+            "Bootstrap intervals for FIML fits are unavailable pending statistical admission.", call. = FALSE)
+    coefs <- .sem_fiml_ser_effect_estimates(object)
+    se <- .effect_se(object, names(coefs))
+    withheld <- .sem_fiml_origin_effects(object)
+    se[intersect(names(withheld)[withheld], names(se))] <- NA_real_
   } else {
     warning("Normal approximation for NIE may be inaccurate. ",
             "Consider bootstrap_mediation() for robust inference.", call. = FALSE)
@@ -315,6 +328,7 @@ S7::method(confint, SerialMediationData) <- function(object,
     paste0(format(100 * alpha / 2, digits = 3), " %"),
     paste0(format(100 * (1 - alpha / 2), digits = 3), " %")
   )
+  if (!is.null(withheld) && any(withheld)) attr(ci_mat, "note") <- .sem_fiml_origin_notes(withheld)
   ci_mat
 }
 
@@ -427,6 +441,7 @@ S7::method(confint, ParallelMediationData) <- function(object,
                                                        method = c("normal", "boot"),
                                                        ...) {
   method <- match.arg(method)
+  if (.sem_fiml_is(object) && identical(method, "boot")) .sem_fiml_refuse(object, "bootstrap CI")
   if (identical(method, "boot")) {
     stop("Bootstrap CIs are computed via bootstrap_mediation(); ",
          "call it directly with the desired statistic.", call. = FALSE)
@@ -447,6 +462,8 @@ S7::method(confint, ParallelMediationData) <- function(object,
     coefs <- coef(object, type = "effects")      # indirect, direct, total
     se <- .effect_se(object, c("nie", "nde", "te"))
     names(se) <- names(coefs)
+    # exact origin: zero delta gradient, so the NIE interval is withheld (as for the single-mediator FIML object)
+    if (.sem_fiml_origin(object)) se[["indirect"]] <- NA_real_
   } else {
     stop("`parm` must be 'paths' or 'effects'.", call. = FALSE)
   }
@@ -456,6 +473,9 @@ S7::method(confint, ParallelMediationData) <- function(object,
     paste0(format(100 * alpha / 2, digits = 3), " %"),
     paste0(format(100 * (1 - alpha / 2), digits = 3), " %")
   )
+  if (.sem_fiml_origin(object) && identical(parm, "effects")) {
+    attr(ci_mat, "note") <- "NIE inference unavailable: zero delta gradient"
+  }
   ci_mat
 }
 
@@ -752,6 +772,91 @@ S7::method(confint, ClusterMediationData) <- function(object,
 }
 
 
+# --- Base-generic methods for TwoLevelMediationData ---
+
+#' Extract Coefficients from TwoLevelMediationData
+#'
+#' @param object A TwoLevelMediationData object
+#' @param type One of `"paths"` (the six paths), `"effects"` (the nine effect terms of `tidy()`), or `"all"`
+#'   (the stored `@estimates`, the identified path rows).
+#' @param ... Additional arguments (ignored)
+#' @return A named numeric vector
+#' @noRd
+S7::method(coef, TwoLevelMediationData) <- function(object, type = c("paths", "effects", "all"), ...) {
+  type <- match.arg(type)
+  if (identical(type, "effects")) .twolevel_signal_na(object, .twolevel_effect_keys)
+  switch(type,
+    paths = paths(object),
+    effects = .twolevel_effect_vec(object),
+    all = object@estimates
+  )
+}
+
+#' Extract Variance-Covariance Matrix from TwoLevelMediationData
+#'
+#' @param object A TwoLevelMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return The path block of the fit's joint covariance (a within-only object has three rows)
+#' @noRd
+S7::method(vcov, TwoLevelMediationData) <- function(object, ...) {
+  object@vcov
+}
+
+#' Number of Observations from TwoLevelMediationData
+#'
+#' @param object A TwoLevelMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return Integer: number of observations the fit used
+#' @noRd
+S7::method(nobs, TwoLevelMediationData) <- function(object, ...) {
+  object@n_obs
+}
+
+#' Confidence Intervals for TwoLevelMediationData
+#'
+#' @description
+#' Wald (normal) intervals, the same SEs as `tidy()`: path SEs from the diagonal of `@vcov`, effect SEs by the
+#' delta method over the joint `@vcov` (the contrast uses the cross-level covariance). There is no small-J t
+#' correction. A between row of a within-only object, and the contrast of an object with an equated path, is
+#' `NA` with a classed warning.
+#'
+#' @param object A TwoLevelMediationData object.
+#' @param parm `"paths"`, `"effects"`, or term names (any path or effect term of `tidy()`).
+#' @param level Confidence level (default 0.95).
+#' @param ... Additional arguments (ignored).
+#' @return A two-column matrix of lower/upper bounds, one row per term.
+#' @noRd
+S7::method(confint, TwoLevelMediationData) <- function(object, parm = "paths", level = 0.95, ...) {
+  checkmate::assert_number(level, lower = 0, upper = 1)
+  checkmate::assert_character(parm, min.len = 1, any.missing = FALSE, .var.name = "parm")
+  path_names <- names(paths(object))
+  terms <- if (identical(parm, "paths")) {
+    path_names
+  } else if (identical(parm, "effects")) {
+    .twolevel_effect_keys
+  } else {
+    checkmate::assert_subset(parm, c(path_names, .twolevel_effect_keys), .var.name = "parm")
+    parm
+  }
+  is_path <- terms %in% path_names
+  est <- c(paths(object), .twolevel_effect_vec(object))[terms]
+  se <- numeric(length(terms))
+  vc <- object@vcov
+  se[is_path] <- sqrt(diag(vc)[match(terms[is_path], rownames(vc))])
+  if (any(!is_path)) se[!is_path] <- .effect_se_or_na(object, terms[!is_path])
+  .twolevel_signal_na(object, terms[!is_path])
+  z <- stats::qnorm(1 - (1 - level) / 2)
+  ci_mat <- cbind(est - z * se, est + z * se)
+  rownames(ci_mat) <- terms
+  alpha <- 1 - level
+  colnames(ci_mat) <- c(
+    paste0(format(100 * alpha / 2, digits = 3), " %"),
+    paste0(format(100 * (1 - alpha / 2), digits = 3), " %")
+  )
+  ci_mat
+}
+
+
 # --- Base-generic methods for BootstrapResult ---
 
 #' Extract the Point Estimate from a BootstrapResult
@@ -797,7 +902,9 @@ S7::method(confint, BootstrapResult) <- function(object,
   }
   alpha <- 1 - level
 
-  if (identical(object@method, "plugin") || length(object@boot_estimates) == 0) {
+  if (.bootstrap_fiml_withheld(object)) {
+    ci <- c(NA_real_, NA_real_)
+  } else if (identical(object@method, "plugin") || length(object@boot_estimates) == 0) {
     warning("A plugin BootstrapResult has no bootstrap distribution; ",
             "the confidence interval is NA.", call. = FALSE)
     ci <- c(NA_real_, NA_real_)
