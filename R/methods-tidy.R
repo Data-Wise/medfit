@@ -26,7 +26,7 @@
 #'   has its own columns; see [SEMFit-methods]). A `TwoLevelMediationData` has
 #'   within and between rows (`nie_within`, `nie_between`, `nie_contrast`, ...);
 #'   the between effect rows and the contrast are `NA` with a classed warning
-#'   when the between level is unidentified or a path is equated across levels
+#'   when the between level is unidentified (the contrast also when both `a` and `b` are equated across levels)
 #'   (between path rows are `NA` without one).
 #' @param ... Passed to the class method: `type` (`"all"`, `"paths"`,
 #'   `"effects"`, and for interaction objects `"components"`), `conf_int`
@@ -621,7 +621,7 @@ glance_s7_object <- function(x, ...) {
 #' @param conf_level Confidence level (default 0.95)
 #' @param ... Additional arguments (ignored)
 #' @return A tibble with `term`, `estimate`, `std_error` (and `conf_low`, `conf_high` when `conf_int = TRUE`).
-#'   Between rows of a within-only object, and the contrast when a or b is equated across levels, are `NA` with
+#'   Between rows of a within-only object, and the contrast when both a and b are equated across levels, are `NA` with
 #'   a classed warning (between path rows are `NA` without one).
 #' @noRd
 .tidy_twolevel_mediation_data <- function(x, type = c("all", "paths", "effects"),

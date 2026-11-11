@@ -210,7 +210,7 @@ MyClass <- S7::new_class(
 - `extract_mediation()` on `lmer` fits finds the mean/within/raw terms by value; `fit_mediation(engine = "lmer", cluster = )`; `se_type = "kr"` for Kenward-Roger t intervals; `bootstrap_mediation(cluster = )` for cluster resampling
 
 **TwoLevelMediationData** (X, M, Y on level-1 units, two-level lavaan fit, 1-1-1)
-- Paths `a_within`, `b_within`, `c_prime_within` and the `_between` three; per level NIE = a × b, NDE = c', TE, PM; `nie(level = "within" | "between" | "contrast" | "both")`, contrast descriptive, not a test
+- Paths `a_within`, `b_within`, `c_prime_within` and the `_between` three; per level NIE = a × b, NDE = c', TE, PM; `nie(level = "within" | "between" | "contrast" | "both")`, contrast descriptive, not a test; the contrast is `NA` (constrained) only when both `a` and `b` are equated across levels, found by label, index, `==` row or the numeric zero-difference-and-variance check (never correlation; `.twolevel_pair_equal()`)
 - Fixed slopes (not ab + sigma_ab), latent cluster means; `@vcov` is the joint 6 × 6 sub-block (cross-level covariance carried); within-only object (`medfit_between_unidentified`) when the treatment or mediator ICC < 0.01; refuses `standardized`, products, three-level, multigroup
 - Page `model-twolevel.qmd`, cookbook recipe 23; `twolevel_statistic()` (`R/twolevel-statistic.R`) builds the `bootstrap_mediation()` callback: the object for the parametric route, the lavaan fit plus roles for the cluster refit (`se`, `test`, `check.post` overridden only; inadmissible refits kept, so report the percentile interval, not the SD)
 

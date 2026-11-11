@@ -35,7 +35,7 @@
 #' was made and not where the callback later runs. Create the callback in the scope that holds those
 #' objects. Calls written with a namespace, such as `lavaan::lavaan()` resolve regardless.
 #'
-#' The contrast is `NA` by constraint when `a` or `b` is equated across levels and a between effect is
+#' The contrast is `NA` by constraint when both `a` and `b` are equated across levels and a between effect is
 #' `NA` when the between level is not identified, so asking for either raises a classed error here
 #' instead of returning a distribution of `NA`.
 #'

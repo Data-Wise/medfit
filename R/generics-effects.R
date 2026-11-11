@@ -776,7 +776,7 @@ S7::method(decompose, ClusterMediationData) <- function(x, ...) {
 }
 
 # All effects as a named vector, with no condition signaled: NA where the between level is unidentified, where
-# |TE| is below machine epsilon (PM) and for a contrast that is zero by constraint.
+# |TE| is below machine epsilon (PM) and for a contrast that is zero by constraint (both a and b equated).
 .twolevel_effect_vec <- function(x) {
   per_level <- function(level) {
     a <- S7::prop(x, paste0("a_", level))

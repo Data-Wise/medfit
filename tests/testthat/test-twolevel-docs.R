@@ -47,8 +47,17 @@ test_that("the model page runs and its claims hold against lm and lavaan", {
   expect_true(all(is.na(paths(env$td0)[4:6])))
   # equated paths: the contrast is NA and the equated path is listed
   expect_identical(env$td_eq@cross_level_equal, "a")
-  expect_true(is.na(suppressWarnings(nie(env$td_eq, level = "contrast"))))
+  # only a equated: the contrast and its SE are lavaan's := values (the page prints both)
+  def <- lavaan::parameterEstimates(env$fit_eq)
+  def <- def[def$op == ":=", ]
+  ce <- tidy(env$td_eq, type = "effects")
+  ce <- ce[ce$term == "nie_contrast", ]
+  expect_equal(ce$estimate, def$est, tolerance = 1e-4)
+  expect_equal(ce$std_error, def$se, tolerance = 1e-4)
   expect_false(is.na(nie(env$td_eq, level = "between")))
+  # both equated: the contrast is NA
+  expect_identical(env$td_eq2@cross_level_equal, c("a", "b"))
+  expect_true(is.na(suppressWarnings(nie(env$td_eq2, level = "contrast"))))
 
   # the bootstrap section: both public routes return the object's own between NIE as the estimate
   expect_equal(env$b_par@estimate, as.numeric(nie(td, level = "between")))
@@ -111,7 +120,7 @@ tl_doc_cases <- function() {
          function() tl_ex("medfit_warning_between_weak", "x_small_between")),
     list("medfit_warning_twolevel_constrained", "The contrast NIE_within - NIE_between is NA",
          function() {
-           td <- tl_extract(tl_fixture("shared_label"))
+           td <- tl_extract(tl_fixture("shared_ab"))
            tl_catch(nie(td, level = "contrast"), "medfit_warning_twolevel_constrained")
          }),
     list("medfit_warning_twolevel_inadmissible", "The lavaan fit is not admissible",
@@ -168,9 +177,9 @@ tl_doc_cases <- function() {
            tl_catch(twolevel_statistic(tl_fixture("x_centered"), "nie_between", treatment = "X", mediator = "M",
                                        outcome = "Y"), "medfit_between_unidentified")
          }),
-    list("medfit_error_twolevel_constrained", "so the two levels are not compared freely",
+    list("medfit_error_twolevel_constrained", "both a and b are equated across levels",
          function() {
-           tl_catch(twolevel_statistic(tl_fixture("shared_label"), "nie_contrast", treatment = "X", mediator = "M",
+           tl_catch(twolevel_statistic(tl_fixture("shared_ab"), "nie_contrast", treatment = "X", mediator = "M",
                                        outcome = "Y"), "medfit_error_twolevel_constrained")
          }),
     list("medfit_error_twolevel_unsupported", "are required for a lavaan fit",
