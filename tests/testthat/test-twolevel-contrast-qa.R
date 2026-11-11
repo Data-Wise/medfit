@@ -23,7 +23,10 @@ qa_hand <- function(fit) {
     x <- pt[pt$op == "~" & pt$level == level & pt$lhs == l & pt$rhs == r, ]
     list(est = x$est, free = x$free)
   }
-  aw <- pick(1, "M", "X"); bw <- pick(1, "Y", "M"); ab <- pick(2, "M", "X"); bb <- pick(2, "Y", "M")
+  aw <- pick(1, "M", "X")
+  bw <- pick(1, "Y", "M")
+  ab <- pick(2, "M", "X")
+  bb <- pick(2, "Y", "M")
   g <- numeric(nrow(V))
   g[aw$free] <- g[aw$free] + bw$est
   g[bw$free] <- g[bw$free] + aw$est
@@ -99,7 +102,12 @@ test_that("QA: detector has no false positive on free fits and keeps unequal-but
 
 test_that("QA: algebraic equality at a rescaled outcome (Y x 100) is still detected", {
   skip_if_not_installed("lavaan")
-  d <- tl_cached("qa_y100", { x <- tl_sim(seed = 20261110L); x$M <- x$M * 100; x$Y <- x$Y * 100; x })
+  d <- tl_cached("qa_y100", {
+    x <- tl_sim(seed = 20261110L)
+    x$M <- x$M * 100
+    x$Y <- x$Y * 100
+    x
+  })
   fit <- tl_fit(d, paste0(tl_model(), "  a^2 - a2^2 == 0\n  b^2 - b2^2 == 0\n"))
   expect_identical(tl_extract(fit)@cross_level_equal, c("a", "b"))
 })

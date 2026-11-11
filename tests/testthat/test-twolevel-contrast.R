@@ -24,8 +24,10 @@ tl_hand_contrast <- function(fit) {
     r <- pt[pt$op == "~" & pt$level == level & pt$lhs == lhs & pt$rhs == rhs, ]
     list(est = r$est, free = r$free)
   }
-  aw <- pick(1, "M", "X"); bw <- pick(1, "Y", "M")
-  ab <- pick(2, "M", "X"); bb <- pick(2, "Y", "M")
+  aw <- pick(1, "M", "X")
+  bw <- pick(1, "Y", "M")
+  ab <- pick(2, "M", "X")
+  bb <- pick(2, "Y", "M")
   # shared free indices add their gradient entries: d/d theta_k of aw*bw - ab*bb
   g <- numeric(nrow(V))
   g[aw$free] <- g[aw$free] + bw$est
@@ -134,8 +136,8 @@ test_that("only b equated (a separate fit): contrast and delta SE equal lavaan's
   expect_equal(unname(row["estimate"]), (td@a_within - td@a_between) * td@b_within, tolerance = 1e-8)
   expect_gt(unname(row["std_error"]), 0)
   # the gradient is not the a-only one: swapping the two oracles' roles must not agree with this SE
-  expect_false(isTRUE(all.equal(unname(row["std_error"]), unname(tl_contrast_row(tl_extract(tl_fixture("shared_label")))["std_error"]),
-                                tolerance = 1e-3)))
+  se_a_only <- tl_contrast_row(tl_extract(tl_fixture("shared_label")))[["std_error"]]
+  expect_false(isTRUE(all.equal(unname(row["std_error"]), se_a_only, tolerance = 1e-3)))
 })
 
 test_that("both a and b equated (labels): the contrast is NA and the statistic raises the classed error", {
@@ -151,24 +153,25 @@ test_that("both a and b equated (labels): the contrast is NA and the statistic r
 # --- C-Q2: the pair criterion on synthetic covariances -----------------------------------------------------
 
 # A 2x2 covariance of (w, b) with the given SDs and correlation.
-tl_pair_V <- function(sd_w, sd_b, r) matrix(c(sd_w^2, r * sd_w * sd_b, r * sd_w * sd_b, sd_b^2), 2L)
+tl_pair_v <- function(sd_w, sd_b, r) matrix(c(sd_w^2, r * sd_w * sd_b, r * sd_w * sd_b, sd_b^2), 2L)
 
 # Every case the criterion must get right: a list of (est, V, want). Returns TRUE when `fn` is right on all.
 tl_pair_cases <- function() {
   list(
-    list(name = "identical", est = c(0.5, 0.5), V = tl_pair_V(0.05, 0.05, 1), want = TRUE),
-    list(name = "identical, solver noise 1e-8", est = c(0.5, 0.5 + 9e-9), V = tl_pair_V(0.05, 0.05, 1), want = TRUE),
-    list(name = "identical, large scale", est = c(500, 500 + 9e-6), V = tl_pair_V(50, 50, 1), want = TRUE),
-    list(name = "correlation -1, unequal", est = c(0.5, -0.5), V = tl_pair_V(0.05, 0.05, -1), want = FALSE),
-    list(name = "proportional, correlation +1, unequal", est = c(0.5, 1.0), V = tl_pair_V(0.05, 0.10, 1), want = FALSE),
+    list(name = "identical", est = c(0.5, 0.5), V = tl_pair_v(0.05, 0.05, 1), want = TRUE),
+    list(name = "identical, solver noise 1e-8", est = c(0.5, 0.5 + 9e-9), V = tl_pair_v(0.05, 0.05, 1), want = TRUE),
+    list(name = "identical, large scale", est = c(500, 500 + 9e-6), V = tl_pair_v(50, 50, 1), want = TRUE),
+    list(name = "correlation -1, unequal", est = c(0.5, -0.5), V = tl_pair_v(0.05, 0.05, -1), want = FALSE),
+    list(name = "proportional, correlation +1, unequal", est = c(0.5, 1.0), V = tl_pair_v(0.05, 0.10, 1), want = FALSE),
     list(name = "r just inside 1 - 1e-8, nonzero difference", est = c(0.5, 0.51),
-         V = tl_pair_V(0.05, 0.05, 1 - 1e-9), want = FALSE),
-    list(name = "r = 1 - 1e-12, difference 0.01", est = c(0.5, 0.51), V = tl_pair_V(0.05, 0.05, 1 - 1e-12), want = FALSE),
+         V = tl_pair_v(0.05, 0.05, 1 - 1e-9), want = FALSE),
+    list(name = "r = 1 - 1e-12, difference 0.01", est = c(0.5, 0.51),
+         V = tl_pair_v(0.05, 0.05, 1 - 1e-12), want = FALSE),
     list(name = "r = 1, difference 1e-3 (tolerance 1e-2 would flag it)", est = c(0.5, 0.501),
-         V = tl_pair_V(0.05, 0.05, 1), want = FALSE),
+         V = tl_pair_v(0.05, 0.05, 1), want = FALSE),
     list(name = "equal estimates, independent (a free difference)", est = c(0.5, 0.5),
-         V = tl_pair_V(0.05, 0.05, 0), want = FALSE),
-    list(name = "equal estimates, correlation 0.99", est = c(0.5, 0.5), V = tl_pair_V(0.05, 0.05, 0.99), want = FALSE)
+         V = tl_pair_v(0.05, 0.05, 0), want = FALSE),
+    list(name = "equal estimates, correlation 0.99", est = c(0.5, 0.5), V = tl_pair_v(0.05, 0.05, 0.99), want = FALSE)
   )
 }
 
@@ -191,7 +194,9 @@ test_that("planted defect: a correlation-only rule is caught by the not-flagged 
 })
 
 test_that("planted defect: a difference tolerance of 1e-2 is caught", {
-  loose <- function(est, V) abs(est[1] - est[2]) <= 1e-2 && (V[1, 1] + V[2, 2] - 2 * V[1, 2]) <= 1e-10 * (V[1, 1] + V[2, 2])
+  loose <- function(est, V) {
+    abs(est[1] - est[2]) <= 1e-2 && (V[1, 1] + V[2, 2] - 2 * V[1, 2]) <= 1e-10 * (V[1, 1] + V[2, 2])
+  }
   ok <- tl_pair_cases_ok(loose)
   expect_false(ok)
   expect_true("r = 1, difference 1e-3 (tolerance 1e-2 would flag it)" %in% attr(ok, "failed"))
