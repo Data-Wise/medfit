@@ -17,6 +17,7 @@ book:
     - chapters/07-four-way.qmd
     - chapters/08-fiml.qmd
     - chapters/09-twolevel.qmd
+    - chapters/10-cluster.qmd
 
 format:
   html:
