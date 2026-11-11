@@ -250,3 +250,22 @@ test_that("planted defect: dropping the numeric route leaves an algebraic both-e
   td <- tl_extract(tl_fixture("nl_ab"))
   expect_false(identical(td@cross_level_equal, c("a", "b")))
 })
+
+# --- Codex review: a fixed nonzero offset is a constraint but not an equality ---------------------------------
+
+test_that("paths tied by a nonzero offset (a2 == a + 0.01, b2 == b + 0.01) are not equated: the contrast is returned", {
+  skip_if_not_installed("lavaan")
+  for (off in c(0.01, 1e-4)) {
+    model <- paste0(tl_model(), sprintf("  a2 == a + %g\n  b2 == b + %g\n", off, off))
+    ora <- tl_defined_contrast(model, "a*b - a2*b2")
+    fit <- tl_fit(tl_sim(), model)
+    td <- tl_extract(fit)
+    expect_identical(td@cross_level_equal, character(0), info = off)
+    expect_no_warning(e <- nie(td, level = "contrast"))
+    row <- tl_contrast_row(td)
+    expect_equal(unname(row["estimate"]), unname(ora["est"]), tolerance = 1e-4, info = off)
+    expect_equal(unname(row["std_error"]), unname(ora["se"]), tolerance = 1e-4, info = off)
+    expect_false(is.na(val(e)))
+    expect_type(twolevel_statistic(td, "nie_contrast"), "closure")
+  }
+})

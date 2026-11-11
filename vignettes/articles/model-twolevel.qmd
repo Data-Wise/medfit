@@ -230,7 +230,8 @@ level estimates and the variance of that difference are both effectively zero:
 $|\hat\theta_w - \hat\theta_b| \le 10^{-6} \max(1, |\hat\theta_w|, |\hat\theta_b|)$ and
 $\operatorname{Var}(\hat\theta_w - \hat\theta_b) \le 10^{-10} (V_{ww} + V_{bb})$. Those two defaults are the
 options `medfit.twolevel_equal_diff` and `medfit.twolevel_equal_var`. The check finds an algebraic equality that
-lavaan keeps as two parameters (for example `a^2 - a2^2 == 0`). It never uses the correlation of the two
+lavaan keeps as two parameters (for example `a^2 - a2^2 == 0`). A constant offset between the two levels (`a2 == a + 0.01`) is a constraint but not an equality, so it is not
+flagged unless it is smaller than the tolerance, where the paths are equal to that precision. It never uses the correlation of the two
 estimates: a correlation of $-1$, or of $+1$ between proportional but unequal paths, does not mean the paths
 are equal, and the contrast would silently become `NA`.
 
