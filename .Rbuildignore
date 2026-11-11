@@ -34,7 +34,6 @@
 ^tasks$
 ^scripts$
 ^\.codex$
-^book$
 ^_agents_workspace$
 ^\.worktrees$
 ^\.agents$
