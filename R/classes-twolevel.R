@@ -4,6 +4,10 @@
 
 #' TwoLevelMediationData Class
 #'
+#' **Experimental.** This class, [twolevel_statistic()] and the `level` argument of the effect generics may
+#' change without the usual deprecation period (a native two-level fitter, a later milestone, could change the
+#' object).
+#'
 #' S7 class for two-level mediation in which treatment, mediator and outcome are all measured on level-1
 #' units nested in clusters (1-1-1), with the paths estimated separately at the within and the between
 #' level (latent cluster means, fixed slopes). Built by [extract_mediation()] from a `lavaan` two-level

@@ -122,12 +122,16 @@ mediation classes (\code{tests/testthat/test-dependents-contract.R} pins it acro
 A \code{TwoLevelMediationData} S7 object.
 }
 \description{
+\strong{Experimental.} This class, \code{\link[=twolevel_statistic]{twolevel_statistic()}} and the \code{level} argument of the effect generics may
+change without the usual deprecation period (a native two-level fitter, a later milestone, could change the
+object).
+}
+\details{
 S7 class for two-level mediation in which treatment, mediator and outcome are all measured on level-1
 units nested in clusters (1-1-1), with the paths estimated separately at the within and the between
 level (latent cluster means, fixed slopes). Built by \code{\link[=extract_mediation]{extract_mediation()}} from a \code{lavaan} two-level
 fit; the same class is the target of a native fitter later (\code{source} says which).
-}
-\details{
+
 Per level the indirect effect is \eqn{NIE_l = a_l b_l}{NIE_l = a_l * b_l}, the direct effect is
 \eqn{c'_l}{c'_l}, and the contrast \eqn{NIE_w - NIE_b}{NIE_w - NIE_b} is descriptive, not a test. When the
 between level cannot be identified (for example a treatment with no between-cluster variance) the object

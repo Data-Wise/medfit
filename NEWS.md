@@ -1,4 +1,18 @@
-# medfit (development version)
+# medfit 0.17.0
+
+## Release summary
+
+* **Bounded FIML expansion.** Covariates (one or two), two parallel mediators and two serial mediators (the saturated
+  graph or the pure chain) are fitted by `fit_sem(missing = "fiml", fixed_x = FALSE)`. They are **numerically verified
+  against lavaan, not statistically admitted**: no interval coverage is established, and every non-`NULL` `source_fit`
+  still stops with `medfit_error_fiml_inference_unavailable` before any draw, refit or worker.
+* **Two-level mediation (experimental).** `extract_mediation()` on a two-level `lavaan` fit returns
+  `TwoLevelMediationData`; `nie(level = )`, `twolevel_statistic()` and the contrast are **experimental** and may change
+  without the usual two-month deprecation period (the native two-level fitter, a later milestone, could change the
+  object). The lavaan floor is now `>= 0.7-3`.
+* **Known issue.** `compare_lr()`: lavaan's product-null fit returns an LR above medfit's reference on about 30% of
+  gate runs; medfit flags it correctly (#320, open).
+* GitHub-only release; CRAN stays on hold (#83).
 
 ## Documentation
 

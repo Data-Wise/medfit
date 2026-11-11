@@ -4,6 +4,8 @@
 
 #' Bootstrap Callback for Two-Level Mediation
 #'
+#' **Experimental.** The interface may change without the usual deprecation period.
+#'
 #' Builds the scalar `statistic_fn` that [bootstrap_mediation()] needs for one effect of a two-level
 #' (1-1-1) mediation model, so the within and the between indirect effect and their contrast can be
 #' bootstrapped without writing the callback by hand. The form of the callback depends on the first
