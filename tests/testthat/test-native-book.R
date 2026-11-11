@@ -363,7 +363,8 @@ test_that("chapter 10 runs from its setup chunk alone and its oracles hold", {
   expect_equal(env$spill_exact, env$a_hat * (env$b_b - env$b_w) * (env$n_j - 1) / env$n_j, tolerance = 1e-8)
   expect_equal(env$own_exact + env$spill_exact, env$a_hat * env$b_b, tolerance = 1e-8)
   expect_equal(unname(env$dec[["own"]] + env$dec[["spillover"]]), unname(env$dec[["nie"]]), tolerance = 1e-12)
-  # D11: the warning is the one the chapter captured, and its gap is the hand gap
+  # D11: quiet at ten members per cluster; the warning is the one the chapter captured, and its gap is the hand gap
+  expect_no_warning(decompose(env$x_ext))
   expect_equal(medfit:::.cluster_own_gap(env$x_trio), env$gap_hand, tolerance = 1e-12)
   expect_gt(env$gap_hand, 0.5 * env$own_se)
   expect_match(env$trio_warning, sprintf("off by about %.3g", env$gap_hand), fixed = TRUE)

@@ -325,8 +325,8 @@ delta_gap <- max(abs(se_hand - se_tidy))
 
 ## Kenward-Roger intervals
 
-With few clusters the model-based standard errors, which treat the estimated variance components as known, can be
-too small. `se_type = "kr"` asks `pbkrtest` for the Kenward-Roger adjusted covariance of each model's fixed effects
+With few clusters the model-based standard errors can be too small, which is why the extractor warns below 25
+clusters. `se_type = "kr"` asks `pbkrtest` for the Kenward-Roger adjusted covariance of each model's fixed effects
 (`vcovAdj()`; it needs REML fits) and a denominator degrees of freedom for each path (`Lb_ddf()`), and the stored
 `@vcov` is built from the adjusted covariances. Path intervals from `confint()` and `tidy()` are then t intervals,
 $\hat\theta \pm t_{0.975,\,\nu}\, \mathrm{se}$ with the path's own $\nu$ in `@kr_df`. The effect intervals (NIE,
@@ -364,12 +364,12 @@ c(lb_ddf_a = unname(pbkrtest::Lb_ddf(l_a, v_model, v_adj)),
   var_adjusted = as.matrix(v_adj)["X", "X"], var_model = v_model["X", "X"])
 ```
 
-Here the adjusted covariance of $a$ coincides with the model-based one, so the whole difference between
-`se_type = "model"` and `"kr"` in this balanced design is the t quantile in place of the normal one. That
-coincidence belongs to this design; the chapter makes no statement about how the two covariances compare in general,
-and none about the coverage of either interval. The extractor warns below 25 clusters with model-based standard
-errors, and below 10 clusters under either option, and names `se_type = "kr"` and the cluster bootstrap as the
-remedies.
+Here the adjusted variance of $a$ coincides with the model-based one, so for the treatment path the whole difference
+between `se_type = "model"` and `"kr"` in this balanced design is the t quantile in place of the normal one. That
+coincidence belongs to this design and this path; the chapter makes no statement about how the two covariances
+compare in general, and none about the coverage of either interval. The extractor warns below 25 clusters with
+model-based standard errors, and below 10 clusters whatever the standard error type, and its message names the
+remedies it recommends (`se_type = "kr"` where the model-based type is in use, and the cluster bootstrap).
 
 ## The cluster bootstrap
 
