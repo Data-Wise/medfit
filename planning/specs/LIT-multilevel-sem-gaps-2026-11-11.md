@@ -50,12 +50,12 @@ not exhaustive; it is a gap-finding pass.
 - **Unverified**: not opened, or could not be matched; never cited as support. The unverified items are listed in 1.1.
 - Full texts were not read in general. Anything beyond an abstract is marked.
 
-**Counts (cited sources).** 126 sources are cited: 93 tier A (abstract read), 33 tier B (metadata only). The five research passes opened 188 sources in all (130 tier A, 58 tier B); the other 62 are not cited here. Unverified or `[CITE]` items: the items listed in 1.1 plus the MBCO reference marked **[CITE]**. The research passes were run by subagents; each cited DOI was re-fetched from Crossref or DataCite in a final pass to render section 7.
+**Counts.** 126 sources are cited: 116 tier A (abstract read) and 10 tier B (metadata only). The research passes opened 188 sources in all (153 tier A, 35 tier B); the other 62 are not cited here. Not verified and not cited: 14 items in 1.1; marked `[CITE]` in the text: 1 (the MBCO reference). The research passes were run by subagents; each cited DOI was fetched again from Crossref or DataCite in a final pass to build section 7.
 
 ### 1.1 Not verified, so not cited as support
 
-Muthén and Asparouhov on categorical outcomes in Mplus (no matching record); Hayes (2013), Bolger and Laurenceau (2013)
-and Hong (2015, tier B only) as books; Zhang and Wang multilevel mediation; a multilevel Kelava (latent interaction)
+Muthén and Asparouhov on categorical outcomes in Mplus (no matching record); Hayes (2013) and Bolger and Laurenceau
+(2013) as books; Zhang and Wang multilevel mediation; a multilevel Kelava (latent interaction)
 paper; Muthén and Asparouhov's 2010 Bayesian Mplus report; Lee and Poon (1998); Schmidt (1969); Kish (1965); Raudenbush
 and Bryk; Kang and Imai; Bollen's boundary-LR work; any Enders 2023 FIML paper; the Mplus web-note records with
 `10.61700` DOIs (non-standard records). Specific numbers (for example Meuleman and Billiet's cluster thresholds) that came
@@ -70,7 +70,7 @@ reference: **[CITE]**.
 ### 2.1 Estimation
 
 **Full-information ML (FIML) and the pseudobalanced shortcut.** Muthén's approach fits multilevel covariance structures
-with conventional SEM software [Muthen1994]; it is an approximate estimator. McDonald and Goldstein give the two-level
+with conventional SEM software [Muthen1994]; its pseudobalanced version was evaluated with unequal groups [HoxMaas2001] (INFERENCE: it is an approximate estimator). McDonald and Goldstein give the two-level
 model and, for balanced designs, a likelihood discrepancy function and fit test [McDonaldGoldstein1989]; Lee derives ML and
 generalized least squares for unbalanced designs [Lee1990]. Liang and Bentler give an EM algorithm for the unbalanced
 two-level model [LiangBentler2004]. A simulation of the pseudobalanced estimator found the within part unproblematic and the
@@ -96,8 +96,8 @@ methods for small samples is also discussed in [McNeish2016] (abstract read; no 
 shrinkage covariance estimation for few groups [Walther2025a]. blavaan implements Bayesian SEM [MerkleRosseel2018].
 
 **Small numbers of clusters and effective sample size.** The group-level N is the main restriction on multilevel regression
-accuracy [MaasHox2005]. ML-SEM mediation needs about 100 clusters according to one review, while published studies have a
-median of 44 [McNeish2017]. The design effect rule of thumb (ignore clustering below 2) was never studied systematically
+accuracy [MaasHox2005]. A cautionary simulation note on MSEM mediation with small samples says ML-SEM needs about 100 clusters and that the
+median published study has 44 [McNeish2017] (abstract, read in part). The design effect rule of thumb (ignore clustering below 2) was never studied systematically
 [LaiKwok2015]. Power and sample-size results exist for multilevel mediation in three-level cluster-randomized trials
 [Kelcey2020]. INFERENCE: no source combines clusters, cluster size and ICC into one rule for a between-level indirect effect.
 
@@ -202,7 +202,7 @@ keys: LOCAL = run or help page on this machine; UG = Mplus User's Guide text; WE
 
 ### 3.1 Estimation engines
 
-| Row | lavaan 0.7-3 | Mplus (UG 8th ed.) | OpenMx 2.22.11 | blavaan 0.6-1 | Stata (`gsem`, `sem`, `mixed`) | medfit 0.16.0 |
+| Row | lavaan 0.7-3 | Mplus (UG 8th ed.) | OpenMx 2.22.11 | blavaan 0.6-1 | Stata (`gsem`, `sem`; `mixed` unverified) | medfit 0.16.0 |
 |---|---|---|---|---|---|---|
 | Structures | two-level via `level:` blocks and `cluster=`; observed and latent (LOCAL fit, WEB tutorial) | TWOLEVEL, THREELEVEL, CROSSCLASSIFIED, COMPLEX TWOLEVEL (UG) | multilevel via primary/join keys and `mxExpectationRAM(between=)` (LOCAL help); official example not found | two-level random intercept, complete continuous data (WEB summary, secondary) | `gsem` random intercepts with `M1[id]` notation (WEB, Example 38g); `sem` single level | native SEM single level (`R/sem-fit.R:96-98` refuses `level:`); 2-1-1 via lmer; 1-1-1 two-level via lavaan adapter |
 | Estimators | ML, MLR, EM (`optim_method = "em"`), DWLS/ULS for ordered (LOCAL help) | MUML, ML, MLR, MLF, WLS family, BAYES (UG table) | ML (`mxFitFunctionML`, `fellner` option) (LOCAL help) | Bayes (Stan/JAGS) | `gsem` adaptive quadrature (stated generally; unverified here) | native ML single level; lmer REML (2-1-1); two-level ML delegated to lavaan |
@@ -225,7 +225,7 @@ keys: LOCAL = run or help page on this machine; UG = Mplus User's Guide text; WE
 | `brms` / Stan | multivariate formulas, `set_rescor(TRUE)`, shared varying-effect labels correlate varying effects across responses (WEB vignette); mediation example not read [burkner2017brms], [Carpenter2017] |
 | `piecewiseSEM` 2.3.1 | imports lme4 and nlme; mixed-effects component models claimed in the paper, not stated on CRAN (unverified) [lefcheck2016piecewisesem] |
 | `lavaan.mi` 0.1-1, `semTools` 0.5-10 | pool lavaan fits over imputations; extension functions; multilevel features not seen on the CRAN pages (unverified) |
-| `semopy` (Python) | random effects from linear mixed models (arXiv abstract); two-level SEM not described (unverified) [igolkina2020semopy] |
+| `semopy` (Python) | the 2020 paper describes the package [igolkina2020semopy]; semopy 2 adds random effects from linear mixed models per the arXiv abstract at <https://arxiv.org/abs/2106.01140> (preprint, metadata unverified); two-level SEM not described (unverified) |
 | `StructuralEquationModels.jl` | ML, GLS, FIML, multigroup; multilevel not mentioned on the docs front page (unverified) |
 | MLmed | SPSS macro for multilevel mediation (WEB); 2-1-1 random-slope support unverified |
 | Mplus via `MplusAutomation` | not checked; Mplus itself is in 3.1 |
@@ -262,7 +262,7 @@ Top five by value to medfit: G2, G1, G3, G5, G4.
 ### 5.1 What `R/` has at `91f4c39b`
 
 - **Native engine:** single level only. The parser reads `level:` lines (`R/sem-parse.R:322-326`); the fitter errors on any
-  row with `level != 1` (`R/sem-fit.R:96-98`). No `cluster` argument exists in `fit_sem()`.
+  row with `level != 1` (`R/sem-fit.R:96-98`). `fit_sem()` has no `cluster` argument, and `fit_mediation(engine = "native")` stops if `cluster` is supplied (`R/fit-sem.R:451-452`).
 - **2-1-1:** `ClusterMediationData` through `fit_mediation(engine = "lmer", cluster = )`, Kenward-Roger intervals
   (`R/extract-lmer.R`, `R/fit-lmer.R`).
 - **1-1-1:** `TwoLevelMediationData` (`R/classes-twolevel.R`) built by `extract_mediation(<two-level lavaan fit>)`
@@ -307,9 +307,10 @@ The literature adds four things:
 1. **A start-value and oracle path through EM.** Liang and Bentler's EM for unbalanced two-level SEM [LiangBentler2004] is a
    natural independent estimator and a robust start; lavaan also offers EM (section 3). INFERENCE.
 2. **A decision on level-2 variance parametrization.** Hard floors in SLSQP (the plan's choice, the same device as the #213 fix)
-   versus unconstrained matrix-log or Cholesky parametrizations [Pinheiro1996] (tier B, title only) versus a penalty
-   [Chung2013] (tier B, title only). INFERENCE: a boundary solution is an infinite parameter value under log-Cholesky, which
-   changes SEs and LR behavior; the choice should be an experiment, not an assumption.
+   versus an unconstrained parametrization of the covariance matrix [Pinheiro1996] (tier B: the title says only
+   "unconstrained parametrizations"; the Cholesky and matrix-log forms are background knowledge) versus a penalized
+   likelihood that avoids boundary variance estimates [Chung2013] (abstract). INFERENCE: a boundary solution is an infinite
+   parameter value under a log-type parametrization, which changes SEs and LR behavior; the choice should be an experiment, not an assumption.
 3. **The boundary LR law** for any between-level variance null [SelfLiang1987], [Stoel2006], so `anova()` for two-level
    fits should not report a plain chi-square p value when a variance is at its bound.
 4. **A sandwich** [YuanBentler2002] only after the likelihood is trusted (S6).
@@ -332,7 +333,7 @@ test suite per a file listing; content unread), and, as a speculative extra, Sta
 **S5 (latent mediators).** Needs cross-level equality in the constraint machinery plus a per-level admissibility story.
 Latent contextual models have well-documented small-sample trouble that Bayesian estimation reduces [Zitzmann2016],
 [DepaoliClifton2015]; between-level misfit is hard to detect with conventional indices [Hsu2015]; cluster-level factor
-models in lavaan have their own evaluation recipe [Jak2021] (tier B). INFERENCE: S5 should follow S4's oracle and
+models in lavaan have their own evaluation recipe [Jak2021] (abstract read). INFERENCE: S5 should follow S4's oracle and
 reliability cells, not run in parallel, and its first oracle must be lavaan on a latent fixture (the plan notes lavaan already
 reports negative variances with `converged = TRUE` there).
 
@@ -351,7 +352,7 @@ reports negative variances with `converged = TRUE` there).
 
 ## 6. New research ideas
 
-Cross-disciplinary sources below are mostly **tier B (title only)**; the transfer claims are labeled. Nothing here is a
+Where a cross-disciplinary source is tier B (title only), the table says so; the transfer claims are labeled. Nothing here is a
 finding.
 
 ### 6.1 Ranked ideas
@@ -361,11 +362,11 @@ finding.
 | I1 | **Two-level model-based constrained-optimization (MBCO-style) tests** for the within and between indirect effects (a times b = 0 at one level or both), splitting the zero-product null into exact linear branches per level (as medfit does single-level) and using a boundary-aware reference law | G3 | no source read combines product nulls, boundary variances and two levels; MBCO itself: **[CITE]** | medium after S4; the branch machinery exists (`.sem_fit_branches()`) | lavaan refits with a = 0 or b = 0 per level; Monte Carlo null calibration; the O8 hand likelihood |
 | I2 | **A formal test of equal indirect effects across levels** (a_w b_w = a_b b_b) as a nonlinear equality constraint, replacing the descriptive contrast | G3 | the current contrast is descriptive by design; a test needs the constrained fit | medium after S4; nonlinear rows exist | lavaan constrained fit (nonlinear constraints in two-level unverified); parametric bootstrap under the null |
 | I3 | **Manifest-versus-latent cluster-mean diagnostic**: medfit already has both routes (lmer cluster-mean centering and lavaan latent means); the gap between their between-level paths flags latent-mean bias as cluster size and ICC change [Ludtke2008], [Mundlak1978], [Bell2015] | G2 | a built-in diagnostic using two routes in one package is not described in sources read; econometrics transfer is SPECULATIVE | high (both routes shipped) | simulation with known between and within truth, over n_j and ICC |
-| I4 | **Few-cluster robust inference for products of coefficients:** CR2-type or wild-cluster adjustments applied to the between-level indirect effect from cluster scores [Cameron2008], [Pustejovsky2018], [Imbens2016] (all tier B) | G7 | SPECULATIVE transfer from econometrics to a product of two path estimates | medium after S6 | cluster bootstrap callbacks already shipped; coverage grid |
+| I4 | **Few-cluster robust inference for products of coefficients:** small-cluster adjustments (a degrees-of-freedom correction [Imbens2016], small-sample variance estimators [Pustejovsky2018], bootstrap improvements for clustered errors [Cameron2008]) applied to the between-level indirect effect from cluster scores; the abstracts address regression, not products of coefficients | G7 | SPECULATIVE transfer from econometric regression to a product of two path estimates | medium after S6 | cluster bootstrap callbacks already shipped; coverage grid |
 | I5 | **Conditional-AIC-style criterion for two-level SEM** using effective degrees of freedom [VaidaBlanchard2005], [GrevenKneib2010] | G6 | nothing found for latent-variable multilevel SEM | low to medium; theory first | leave-cluster-out predictive log-likelihood |
-| I6 | **Interference-aware reading of the between-level path:** state the assumptions under which a between a-path times b-path is a spillover-type indirect effect [VanderWeele2013], [Talloen2016], [Aronow2017] (tier B) | G4 | a theory note linking latent-mean SEM paths to spillover estimands was not found | theory-heavy; docs value even without proof | simulate from a structural causal model with known spillover and compare to the g-formula truth |
-| I7 | **Level-2 variance handling experiment:** floors, matrix-log and penalty compared on Heywood-prone cells [Pinheiro1996], [Chung2013] (tier B) | G2 | the comparison inside a SEM engine with constraints is not described | high (part of S4) | lavaan's Heywood fixtures; Bayesian posterior mode as reference |
-| I8 | **Automatic-differentiation oracles (Stan or TMB)** for the two-level likelihood and its gradient [Carpenter2017], [Kristensen2016] (tier B) | testing the analytic gradient | an oracle, not a method | high for p = 3; needs the Stan toolchain | the oracle itself |
+| I6 | **Interference-aware reading of the between-level path:** state the assumptions under which a between a-path times b-path is a spillover-type indirect effect [VanderWeele2013], [Talloen2016], [Aronow2017] | G4 | a theory note linking latent-mean SEM paths to spillover estimands was not found | theory-heavy; docs value even without proof | simulate from a structural causal model with known spillover and compare to the g-formula truth |
+| I7 | **Level-2 variance handling experiment:** floors, matrix-log and penalty compared on Heywood-prone cells [Pinheiro1996] (tier B: title only), [Chung2013] | G2 | the comparison inside a SEM engine with constraints is not described | high (part of S4) | lavaan's Heywood fixtures; Bayesian posterior mode as reference |
+| I8 | **Automatic-differentiation oracles (Stan or TMB)** for the two-level likelihood and its gradient [Carpenter2017] (abstract: Stan defines a log probability function), [Kristensen2016] (abstract: user-defined joint likelihood, automatic differentiation in the title) | testing the analytic gradient | an oracle, not a method | high for p = 3; needs the Stan toolchain | the oracle itself |
 | I9 | **Balanced-design closed forms** as exact start values and a check: the balanced likelihood splits into two single-level pieces [McDonaldGoldstein1989], [Muthen1994] | S4 start values | known result used as a test | high | pooled-within and between covariance fits |
 | I10 | **Two-level FIML through EM** (E-step with Gaussian conditionals; analog of [LiangBentler2004]) | G5 | not explored for medfit's engine | XL | lavaan two-level `missing = "ml"` |
 
@@ -373,146 +374,422 @@ finding.
 
 | Field | What was solved (title-level) | Multilevel SEM analog | Status |
 |---|---|---|---|
-| Mixed-model computation | profiled deviance with sparse Cholesky [Bates2015]; REML and Laplace with automatic differentiation [Wood2011], [Kristensen2016] | reduce SLSQP dimension by concentrating out means; exact gradients | SPECULATIVE; p is small, so the gain may be negligible |
-| Genetics | rotate the dense covariance to a diagonal once [Lippert2011], [Zhou2012]; average-information REML [Gilmour1995] | balanced clusters need one decomposition; cheap curvature for covariance parameters | SPECULATIVE; likely unnecessary at mediation-model sizes |
-| Econometrics | cluster-robust inference and small-cluster fixes [Cameron2015], [MacKinnon2023], [Hansen2007]; correlated random effects [Mundlak1978], [Wooldridge2019], [Bell2015] | I3, I4 | SPECULATIVE transfer |
+| Mixed-model computation | ML/REML for linear mixed models [Bates2015]; REML and marginal-likelihood estimation for semiparametric models [Wood2011]; a package in which the user defines a joint likelihood and automatic differentiation plus Laplace approximation do the rest [Kristensen2016] | exact gradients for the two-level likelihood; the idea of concentrating out mean parameters (profiling) is background knowledge, INFERENCE | SPECULATIVE; p is small, so the gain may be negligible |
+| Genetics | average-information matrix for REML variance components is computationally convenient [Gilmour1995] (abstract); fast mixed-model algorithms for association studies [Lippert2011], [Zhou2012] (tier B: titles only) | cheap curvature for covariance parameters; the eigen-rotation mechanism behind the fast algorithms is background knowledge, INFERENCE | SPECULATIVE; likely unnecessary at mediation-model sizes |
+| Econometrics | clustered errors and few clusters [Cameron2008], [Cameron2015], [Imbens2016], [Pustejovsky2018], [MacKinnon2023] (abstracts); the Mundlak correction for correlated lower-level covariates and higher-level residuals [Bell2015] (abstract), [Mundlak1978] (tier B); [Hansen2007], [Wooldridge2019] (tier B) | I3, I4 | SPECULATIVE transfer |
 | Psychometrics | multilevel IRT [Fox2001], [Kamata2001], [Adams1997] | latent mediators with item-level data (S5 extension) | SPECULATIVE |
 | Ecology | hierarchical Bayesian uncertainty accounting [Cressie2009], [Clark2005] | small-J priors | SPECULATIVE; not medfit's lane |
 | Network and interference | general interference [Aronow2017], [OgburnEtAl2022] | I6 | SPECULATIVE |
-| Numerical methods | log-Cholesky parametrization [Pinheiro1996]; penalized boundary estimation [Chung2013]; manifold geometry of covariance matrices [Pennec2006] | I7 | the Pinheiro and Chung transfers are most direct; Pennec is SPECULATIVE |
+| Numerical methods | unconstrained parametrizations of covariance matrices [Pinheiro1996] (tier B: title only); penalized likelihood against boundary variance estimates [Chung2013]; a Riemannian framework for tensor computing [Pennec2006] (tier B: title only) | I7 | the Chung transfer is most direct; Pinheiro and Pennec are SPECULATIVE |
 
-Several entries rest on title-level evidence (tier B). Treat the map as a reading list, not as established transfers.
+Treat the map as a reading list, not as established transfers.
 
 ---
 
 ## 7. References
 
-References are cited by key. Each entry is rendered from the Crossref record of its DOI on 2026-11-11 (title, authors, year,
-journal, DOI). Tier A: abstract read; tier B: metadata only (claims limited to the title).
+References are cited by key. Each entry is the Crossref BibTeX record of its DOI fetched on 2026-11-11, rekeyed to this
+note's citation keys (Hox 2012 comes from DataCite). Tier A: abstract read; tier B: metadata only (claims limited to the title).
 
-- **[Adams1997]** Adams, R., Wilson, M., Wu, M. (1997). Multilevel Item Response Models: An Approach to Errors in Variables Regression. Journal of Educational and Behavioral Statistics 22(1), 47-76. doi:[10.3102/10769986022001047](https://doi.org/10.3102/10769986022001047) (tier B)
-- **[Andrews2001]** Andrews, D. (2001). Testing When a Parameter is on the Boundary of the Maintained Hypothesis. Econometrica 69(3), 683-734. doi:[10.1111/1468-0262.00210](https://doi.org/10.1111/1468-0262.00210) (tier A)
-- **[Aronow2017]** Aronow, P., Samii, C. (2017). Estimating average causal effects under general interference, with application to a social network experiment. The Annals of Applied Statistics 11(4), 1912-1947. doi:[10.1214/16-aoas1005](https://doi.org/10.1214/16-aoas1005) (tier B)
-- **[AsparouhovHamakerMuthen2018]** Asparouhov, T., Hamaker, E., Muthén, B. (2018). Dynamic Structural Equation Models. Structural Equation Modeling: A Multidisciplinary Journal 25(3), 359-388. doi:[10.1080/10705511.2017.1406803](https://doi.org/10.1080/10705511.2017.1406803) (tier A)
-- **[AsparouhovMuthen2019]** Asparouhov, T., Muthén, B. (2019). Latent Variable Centering of Predictors and Mediators in Multilevel and Time-Series Models. Structural Equation Modeling: A Multidisciplinary Journal 26(1), 119-142. doi:[10.1080/10705511.2018.1511375](https://doi.org/10.1080/10705511.2018.1511375) (tier B)
-- **[AsparouhovMuthen2021]** Asparouhov, T., Muthén, B. (2021). Bayesian estimation of single and multilevel models with latent variable interactions. Structural Equation Modeling: A Multidisciplinary Journal 28(2), 314-328. doi:[10.1080/10705511.2020.1761808](https://doi.org/10.1080/10705511.2020.1761808) (tier A)
-- **[AsparouhovMuthen2026]** Asparouhov, T., Muthén, B. (2026). Three-Level Dynamic Structural Equation Modeling. Structural Equation Modeling: A Multidisciplinary Journal 33(2), 281-309. doi:[10.1080/10705511.2025.2608122](https://doi.org/10.1080/10705511.2025.2608122) (tier A)
-- **[BaiPoon2009]** Bai, Y., Poon, W. (2009). Using Mx to Analyze Cross-Level Effects in Two-Level Structural Equation Models. Structural Equation Modeling: A Multidisciplinary Journal 16(1), 163-178. doi:[10.1080/10705510802561527](https://doi.org/10.1080/10705510802561527) (tier A)
-- **[BarendseRosseel2023]** Barendse, M., Rosseel, Y. (2023). Multilevel SEM with random slopes in discrete data using the pairwise maximum likelihood. British Journal of Mathematical and Statistical Psychology 76(2), 327-352. doi:[10.1111/bmsp.12294](https://doi.org/10.1111/bmsp.12294) (tier A)
-- **[Bates2015]** Bates, D., Mächler, M., Bolker, B., Walker, S. (2015). Fitting Linear Mixed-Effects Models Using lme4. Journal of Statistical Software 67(1). doi:[10.18637/jss.v067.i01](https://doi.org/10.18637/jss.v067.i01) (tier B)
-- **[BauerPreacherGil2006]** Bauer, D., Preacher, K., Gil, K. (2006). Conceptualizing and testing random indirect effects and moderated mediation in multilevel models: New procedures and recommendations.. Psychological Methods 11(2), 142-163. doi:[10.1037/1082-989x.11.2.142](https://doi.org/10.1037/1082-989x.11.2.142) (tier A)
-- **[Bell2015]** Bell, A., Jones, K. (2015). Explaining Fixed Effects: Random Effects Modeling of Time-Series Cross-Sectional and Panel Data. Political Science Research and Methods 3(1), 133-153. doi:[10.1017/psrm.2014.7](https://doi.org/10.1017/psrm.2014.7) (tier B)
-- **[BolgerEtAl2019]** Bolger, N., Zee, K., Rossignac-Milon, M., Hassin, R. (2019). Causal processes in psychology are heterogeneous.. Journal of Experimental Psychology: General 148(4), 601-618. doi:[10.1037/xge0000558](https://doi.org/10.1037/xge0000558) (tier A)
-- **[BollenDavis2009]** Bollen, K., Davis, W. (2009). Two Rules of Identification for Structural Equation Models. Structural Equation Modeling: A Multidisciplinary Journal 16(3), 523-536. doi:[10.1080/10705510903008261](https://doi.org/10.1080/10705510903008261) (tier A)
-- **[Cameron2008]** Cameron, A., Gelbach, J., Miller, D. (2008). Bootstrap-Based Improvements for Inference with Clustered Errors. Review of Economics and Statistics 90(3), 414-427. doi:[10.1162/rest.90.3.414](https://doi.org/10.1162/rest.90.3.414) (tier B)
-- **[Cameron2015]** Colin Cameron, A., Miller, D. (2015). A Practitioner’s Guide to Cluster-Robust Inference. Journal of Human Resources 50(2), 317-372. doi:[10.3368/jhr.50.2.317](https://doi.org/10.3368/jhr.50.2.317) (tier B)
-- **[Carpenter2017]** Carpenter, B., Gelman, A., Hoffman, M., Lee, D., Goodrich, B., Betancourt, M., et al. (2017). Stan : A Probabilistic Programming Language. Journal of Statistical Software 76(1). doi:[10.18637/jss.v076.i01](https://doi.org/10.18637/jss.v076.i01) (tier B)
-- **[ChengLi2026]** Cheng, C., Li, F. (2026). Semiparametric causal mediation analysis of cluster-randomized trials for indirect and spillover effects. Biometrics 82(1). doi:[10.1093/biomtc/ujag017](https://doi.org/10.1093/biomtc/ujag017) (tier A)
-- **[Chung2013]** Chung, Y., Rabe-Hesketh, S., Dorie, V., Gelman, A., Liu, J. (2013). A Nondegenerate Penalized Likelihood Estimator for Variance Parameters in Multilevel Models. Psychometrika 78(4), 685-709. doi:[10.1007/s11336-013-9328-2](https://doi.org/10.1007/s11336-013-9328-2) (tier B)
-- **[Clark2005]** Clark, J. (2005). Why environmental scientists are becoming Bayesians. Ecology Letters 8(1), 2-14. doi:[10.1111/j.1461-0248.2004.00702.x](https://doi.org/10.1111/j.1461-0248.2004.00702.x) (tier B)
-- **[Cressie2009]** Cressie, N., Calder, C., Clark, J., Hoef, J., Wikle, C. (2009). Accounting for uncertainty in ecological analysis: the strengths and limitations of hierarchical statistical modeling. Ecological Applications 19(3), 553-570. doi:[10.1890/07-0744.1](https://doi.org/10.1890/07-0744.1) (tier B)
-- **[CroonVanVeldhoven2007]** Croon, M., van Veldhoven, M. (2007). Predicting group-level outcome variables from variables measured at the individual level: A latent variable multilevel model.. Psychological Methods 12(1), 45-57. doi:[10.1037/1082-989x.12.1.45](https://doi.org/10.1037/1082-989x.12.1.45) (tier A)
-- **[DepaoliClifton2015]** Depaoli, S., Clifton, J. (2015). A Bayesian Approach to Multilevel Structural Equation Modeling With Continuous and Dichotomous Outcomes. Structural Equation Modeling: A Multidisciplinary Journal 22(3), 327-351. doi:[10.1080/10705511.2014.937849](https://doi.org/10.1080/10705511.2014.937849) (tier A)
-- **[DiMariaDidelez2024]** Di Maria, C., Didelez, V. (2024). Longitudinal mediation analysis with multilevel and latent growth models: a separable effects causal approach. BMC Medical Research Methodology 24(1). doi:[10.1186/s12874-024-02358-4](https://doi.org/10.1186/s12874-024-02358-4) (tier A)
-- **[EndersDuKeller2020]** Enders, C., Du, H., Keller, B. (2020). A model-based imputation procedure for multilevel regression models with random coefficients, interaction effects, and nonlinear terms.. Psychological Methods 25(1), 88-112. doi:[10.1037/met0000228](https://doi.org/10.1037/met0000228) (tier A)
-- **[EndersKellerLevy2018]** Enders, C., Keller, B., Levy, R. (2018). A fully conditional specification approach to multilevel imputation of categorical and continuous variables.. Psychological Methods 23(2), 298-317. doi:[10.1037/met0000148](https://doi.org/10.1037/met0000148) (tier A)
-- **[EndersTofighi2007]** Enders, C., Tofighi, D. (2007). Centering predictor variables in cross-sectional multilevel models: A new look at an old issue.. Psychological Methods 12(2), 121-138. doi:[10.1037/1082-989x.12.2.121](https://doi.org/10.1037/1082-989x.12.2.121) (tier A)
-- **[FalkSavchenko2026]** Falk, C., Savchenko, E. (2026). Computationally efficient interval estimation for the 1-1-1 multilevel mediation analysis model in R: A replication of Bauer, Preacher, and Gil (2006). . doi:[10.31234/osf.io/ms39n_v2](https://doi.org/10.31234/osf.io/ms39n_v2) (tier A)
-- **[Fox2001]** Fox, J., Glas, C. (2001). Bayesian Estimation of a Multilevel IRT Model Using Gibbs Sampling. Psychometrika 66(2), 271-288. doi:[10.1007/bf02294839](https://doi.org/10.1007/bf02294839) (tier B)
-- **[Gilmour1995]** Gilmour, A., Thompson, R., Cullis, B. (1995). Average Information REML: An Efficient Algorithm for Variance Parameter Estimation in Linear Mixed Models. Biometrics 51(4), 1440. doi:[10.2307/2533274](https://doi.org/10.2307/2533274) (tier B)
-- **[GrevenKneib2010]** Greven, S., Kneib, T. (2010). On the behaviour of marginal and conditional AIC in linear mixed models. Biometrika 97(4), 773-789. doi:[10.1093/biomet/asq042](https://doi.org/10.1093/biomet/asq042) (tier A)
-- **[GrilliRampichini2007]** Grilli, L., Rampichini, C. (2007). Multilevel Factor Models for Ordinal Variables. Structural Equation Modeling: A Multidisciplinary Journal 14(1), 1-25. doi:[10.1080/10705510709336734](https://doi.org/10.1080/10705510709336734) (tier A)
-- **[GrundLudtkeRobitzsch2018]** Grund, S., Lüdtke, O., Robitzsch, A. (2018). Multiple Imputation of Missing Data for Multilevel Models. Organizational Research Methods 21(1), 111-149. doi:[10.1177/1094428117703686](https://doi.org/10.1177/1094428117703686) (tier A)
-- **[HamakerEtAl2018]** Hamaker, E., Asparouhov, T., Brose, A., Schmiedek, F., Muthén, B. (2018). At the Frontiers of Modeling Intensive Longitudinal Data: Dynamic Structural Equation Models for the Affective Measurements from the COGITO Study. Multivariate Behavioral Research 53(6), 820-841. doi:[10.1080/00273171.2018.1446819](https://doi.org/10.1080/00273171.2018.1446819) (tier A)
-- **[Hansen2007]** Hansen, C. (2007). Asymptotic properties of a robust variance matrix estimator for panel data when is large. Journal of Econometrics 141(2), 597-620. doi:[10.1016/j.jeconom.2006.10.009](https://doi.org/10.1016/j.jeconom.2006.10.009) (tier B)
-- **[Hayes2015]** Hayes, A. (2015). An Index and Test of Linear Moderated Mediation. Multivariate Behavioral Research 50(1), 1-22. doi:[10.1080/00273171.2014.962683](https://doi.org/10.1080/00273171.2014.962683) (tier A)
-- **[HongDeutschHill2015]** Hong, G., Deutsch, J., Hill, H. (2015). Ratio-of-Mediator-Probability Weighting for Causal Mediation Analysis in the Presence of Treatment-by-Mediator Interaction. Journal of Educational and Behavioral Statistics 40(3), 307-340. doi:[10.3102/1076998615583902](https://doi.org/10.3102/1076998615583902) (tier A)
-- **[Hox2012]** Hox, Joop J.C.M., Van De Schoot, Rens, Matthijsse, Suzette (2012). How few countries will do? Comparative survey analysis from a Bayesian perspective. Survey Research Methods. doi:[10.18148/srm/2012.v6i2.5033](https://doi.org/10.18148/srm/2012.v6i2.5033) (tier A)
-- **[HoxMaas2001]** Hox, J., Maas, C. (2001). The Accuracy of Multilevel Structural Equation Modeling With Pseudobalanced Groups and Small Samples. Structural Equation Modeling: A Multidisciplinary Journal 8(2), 157-174. doi:[10.1207/s15328007sem0802_1](https://doi.org/10.1207/s15328007sem0802_1) (tier A)
-- **[HoxMaasBrinkhuis2010]** Hox, J., Maas, C., Brinkhuis, M. (2010). The effect of estimation method and sample size in multilevel structural equation modeling. Statistica Neerlandica 64(2), 157-170. doi:[10.1111/j.1467-9574.2009.00445.x](https://doi.org/10.1111/j.1467-9574.2009.00445.x) (tier A)
-- **[Hsu2015]** Hsu, H., Kwok, O., Lin, J., Acosta, S. (2015). Detecting Misspecified Multilevel Structural Equation Models with Common Fit Indices: A Monte Carlo Study. Multivariate Behavioral Research 50(2), 197-215. doi:[10.1080/00273171.2014.977429](https://doi.org/10.1080/00273171.2014.977429) (tier A)
-- **[HudgensHalloran2008]** Hudgens, M., Halloran, M. (2008). Toward Causal Inference With Interference. Journal of the American Statistical Association 103(482), 832-842. doi:[10.1198/016214508000000292](https://doi.org/10.1198/016214508000000292) (tier A)
-- **[ImaiKeeleTingley2010]** Imai, K., Keele, L., Tingley, D. (2010). A general approach to causal mediation analysis.. Psychological Methods 15(4), 309-334. doi:[10.1037/a0020761](https://doi.org/10.1037/a0020761) (tier A)
-- **[Imbens2016]** Imbens, G., Kolesár, M. (2016). Robust Standard Errors in Small Samples: Some Practical Advice. Review of Economics and Statistics 98(4), 701-712. doi:[10.1162/rest_a_00552](https://doi.org/10.1162/rest_a_00552) (tier B)
-- **[Jak2021]** Jak, S., Jorgensen, T., Rosseel, Y. (2021). Evaluating Cluster-Level Factor Models with lavaan and Mplus. Psych 3(2), 134-152. doi:[10.3390/psych3020012](https://doi.org/10.3390/psych3020012) (tier B)
-- **[JakCheung2026]** Jak, S., Cheung, M. (2026). Fitting two-level structural equation models to summary statistics: Leveling up meta-analytic structural equation modeling.. Psychological Methods. doi:[10.1037/met0000864](https://doi.org/10.1037/met0000864) (tier A)
-- **[JongerlingLaurenceauHamaker2015]** Jongerling, J., Laurenceau, J., Hamaker, E. (2015). A Multilevel AR(1) Model: Allowing for Inter-Individual Differences in Trait-Scores, Inertia, and Innovation Variance. Multivariate Behavioral Research 50(3), 334-349. doi:[10.1080/00273171.2014.1003772](https://doi.org/10.1080/00273171.2014.1003772) (tier A)
-- **[Kamata2001]** Kamata, A. (2001). Item Analysis by the Hierarchical Generalized Linear Model. Journal of Educational Measurement 38(1), 79-93. doi:[10.1111/j.1745-3984.2001.tb01117.x](https://doi.org/10.1111/j.1745-3984.2001.tb01117.x) (tier B)
-- **[Kelcey2020]** Kelcey, B., Xie, Y., Spybrook, J., Dong, N. (2021). Power and Sample Size Determination for Multilevel Mediation in Three-Level Cluster-Randomized Trials. Multivariate Behavioral Research 56(3), 496-513. doi:[10.1080/00273171.2020.1738910](https://doi.org/10.1080/00273171.2020.1738910) (tier A)
-- **[KennyKorchmarosBolger2003]** Kenny, D., Korchmaros, J., Bolger, N. (2003). Lower level mediation in multilevel models.. Psychological Methods 8(2), 115-128. doi:[10.1037/1082-989x.8.2.115](https://doi.org/10.1037/1082-989x.8.2.115) (tier A)
-- **[KleinMoosbrugger2000]** Klein, A., Moosbrugger, H. (2000). Maximum Likelihood Estimation of Latent Interaction Effects with the LMS Method. Psychometrika 65(4), 457-474. doi:[10.1007/bf02296338](https://doi.org/10.1007/bf02296338) (tier A)
-- **[Kristensen2016]** Kristensen, K., Nielsen, A., Berg, C., Skaug, H., Bell, B. (2016). TMB : Automatic Differentiation and Laplace Approximation. Journal of Statistical Software 70(5). doi:[10.18637/jss.v070.i05](https://doi.org/10.18637/jss.v070.i05) (tier B)
-- **[KrullMacKinnon2001]** Krull, J., MacKinnon, D. (2001). Multilevel Modeling of Individual and Group Level Mediated Effects. Multivariate Behavioral Research 36(2), 249-277. doi:[10.1207/s15327906mbr3602_06](https://doi.org/10.1207/s15327906mbr3602_06) (tier A)
-- **[Lai2021boot]** Lai, M. (2021). Bootstrap Confidence Intervals for Multilevel Standardized Effect Size. Multivariate Behavioral Research 56(4), 558-578. doi:[10.1080/00273171.2020.1746902](https://doi.org/10.1080/00273171.2020.1746902) (tier A)
-- **[LaiKwok2015]** Lai, M., Kwok, O. (2015). Examining the Rule of Thumb of Not Using Multilevel Modeling: The “Design Effect Smaller Than Two” Rule. The Journal of Experimental Education 83(3), 423-438. doi:[10.1080/00220973.2014.907229](https://doi.org/10.1080/00220973.2014.907229) (tier A)
-- **[Lee1990]** LEE, S. (1990). Multilevel analysis of structural equation models. Biometrika 77(4), 763-772. doi:[10.1093/biomet/77.4.763](https://doi.org/10.1093/biomet/77.4.763) (tier A)
-- **[LeeKim2026]** Lee, S., Kim, S. (2026). Comparing Bayesian random coefficient prediction and latent interaction models for multilevel moderated mediation. Frontiers in Psychology 16. doi:[10.3389/fpsyg.2025.1543330](https://doi.org/10.3389/fpsyg.2025.1543330) (tier A)
-- **[LiJia2026]** Li, Y., Jia, F. (2026). Addressing Small Sample Concerns for Multilevel Mediation in MSEM Framework: A Comparison of Alternative Strategies. Structural Equation Modeling: A Multidisciplinary Journal, 1-21. doi:[10.1080/10705511.2026.2679039](https://doi.org/10.1080/10705511.2026.2679039) (tier A)
-- **[LiangBentler2004]** Liang, J., Bentler, P. (2004). An EM Algorithm for Fitting Two-Level Structural Equation Models. Psychometrika 69(1), 101-122. doi:[10.1007/bf02295842](https://doi.org/10.1007/bf02295842) (tier A)
-- **[Lippert2011]** Lippert, C., Listgarten, J., Liu, Y., Kadie, C., Davidson, R., Heckerman, D. (2011). FaST linear mixed models for genome-wide association studies. Nature Methods 8(10), 833-835. doi:[10.1038/nmeth.1681](https://doi.org/10.1038/nmeth.1681) (tier B)
-- **[Ludtke2008]** Lüdtke, O., Marsh, H., Robitzsch, A., Trautwein, U., Asparouhov, T., Muthén, B. (2008). The multilevel latent covariate model: A new, more reliable approach to group-level effects in contextual studies.. Psychological Methods 13(3), 203-229. doi:[10.1037/a0012869](https://doi.org/10.1037/a0012869) (tier A)
-- **[Ludtke2011]** Lüdtke, O., Marsh, H., Robitzsch, A., Trautwein, U. (2011). A 2 × 2 taxonomy of multilevel latent contextual models: Accuracy–bias trade-offs in full and partial error correction models.. Psychological Methods 16(4), 444-467. doi:[10.1037/a0024376](https://doi.org/10.1037/a0024376) (tier A)
-- **[LudtkeRobitzschGrund2017]** Lüdtke, O., Robitzsch, A., Grund, S. (2017). Multiple imputation of missing data in multilevel designs: A comparison of different strategies.. Psychological Methods 22(1), 141-165. doi:[10.1037/met0000096](https://doi.org/10.1037/met0000096) (tier A)
-- **[MaasHox2005]** Maas, C., Hox, J. (2005). Sufficient Sample Sizes for Multilevel Modeling. Methodology 1(3), 86-92. doi:[10.1027/1614-2241.1.3.86](https://doi.org/10.1027/1614-2241.1.3.86) (tier A)
-- **[MacKinnon2023]** MacKinnon, J., Nielsen, M., Webb, M. (2023). Cluster-robust inference: A guide to empirical practice. Journal of Econometrics 232(2), 272-299. doi:[10.1016/j.jeconom.2022.04.001](https://doi.org/10.1016/j.jeconom.2022.04.001) (tier B)
-- **[MarshEtAl2009]** Marsh, H., Lüdtke, O., Robitzsch, A., Trautwein, U., Asparouhov, T., Muthén, B., et al. (2009). Doubly-Latent Models of School Contextual Effects: Integrating Multilevel and Structural Equation Approaches to Control Measurement and Sampling Error. Multivariate Behavioral Research 44(6), 764-802. doi:[10.1080/00273170903333665](https://doi.org/10.1080/00273170903333665) (tier A)
-- **[McDonaldGoldstein1989]** McDonald, R., Goldstein, H. (1989). Balanced versus unbalanced designs for linear structural relations in two‐level data. British Journal of Mathematical and Statistical Psychology 42(2), 215-232. doi:[10.1111/j.2044-8317.1989.tb00911.x](https://doi.org/10.1111/j.2044-8317.1989.tb00911.x) (tier A)
-- **[McNeish2016]** McNeish, D. (2016). On Using Bayesian Methods to Address Small Sample Problems. Structural Equation Modeling: A Multidisciplinary Journal 23(5), 750-773. doi:[10.1080/10705511.2016.1186549](https://doi.org/10.1080/10705511.2016.1186549) (tier A)
-- **[McNeish2017]** McNeish, D. (2017). Multilevel Mediation With Small Samples: A Cautionary Note on the Multilevel Structural Equation Modeling Framework. Structural Equation Modeling: A Multidisciplinary Journal 24(4), 609-625. doi:[10.1080/10705511.2017.1280797](https://doi.org/10.1080/10705511.2017.1280797) (tier A)
-- **[McNeishHamaker2020]** McNeish, D., Hamaker, E. (2020). A primer on two-level dynamic structural equation models for intensive longitudinal data in Mplus.. Psychological Methods 25(5), 610-635. doi:[10.1037/met0000250](https://doi.org/10.1037/met0000250) (tier A)
-- **[MehtaNeale2005]** Mehta, P., Neale, M. (2005). People are variables too: Multilevel structural equations modeling.. Psychological Methods 10(3), 259-284. doi:[10.1037/1082-989x.10.3.259](https://doi.org/10.1037/1082-989x.10.3.259) (tier A)
-- **[MerkleRosseel2018]** Merkle, E., Rosseel, Y. (2018). blavaan : Bayesian Structural Equation Models via Parameter Expansion. Journal of Statistical Software 85(4). doi:[10.18637/jss.v085.i04](https://doi.org/10.18637/jss.v085.i04) (tier A)
-- **[Mundlak1978]** Mundlak, Y. (1978). On the Pooling of Time Series and Cross Section Data. Econometrica 46(1), 69. doi:[10.2307/1913646](https://doi.org/10.2307/1913646) (tier B)
-- **[Muthen1994]** MUTHÉN, B. (1994). Multilevel Covariance Structure Analysis. Sociological Methods & Research 22(3), 376-398. doi:[10.1177/0049124194022003006](https://doi.org/10.1177/0049124194022003006) (tier A)
-- **[MuthenAsparouhov2012]** Muthén, B., Asparouhov, T. (2012). Bayesian structural equation modeling: A more flexible representation of substantive theory.. Psychological Methods 17(3), 313-335. doi:[10.1037/a0026802](https://doi.org/10.1037/a0026802) (tier A)
-- **[MuthenSatorra1995]** Muthen, B., Satorra, A. (1995). Complex Sample Data in Structural Equation Modeling. Sociological Methodology 25, 267. doi:[10.2307/271070](https://doi.org/10.2307/271070) (tier A)
-- **[Neubauer2023]** Neubauer, A., Brose, A., Schmiedek, F. (2023). How within-person effects shape between-person differences: A multilevel structural equation modeling perspective.. Psychological Methods 28(5), 1069-1086. doi:[10.1037/met0000481](https://doi.org/10.1037/met0000481) (tier A)
-- **[Niu2024]** Niu, C. (2024). Impact of missing data and ICC on full information maximum-likelihood estimation in multilevel SEMs. Model Assisted Statistics and Applications 19(1), 49-59. doi:[10.3233/mas-231444](https://doi.org/10.3233/mas-231444) (tier A)
-- **[OgburnEtAl2022]** Ogburn, E., Sofrygin, O., Díaz, I., van der Laan, M. (2024). Causal Inference for Social Network Data. Journal of the American Statistical Association 119(545), 597-611. doi:[10.1080/01621459.2022.2131557](https://doi.org/10.1080/01621459.2022.2131557) (tier A)
-- **[OgburnVanderWeele2014]** Ogburn, E., VanderWeele, T. (2014). Causal Diagrams for Interference. Statistical Science 29(4), 559-578. doi:[10.1214/14-sts501](https://doi.org/10.1214/14-sts501) (tier A)
-- **[OhnishiLi2025]** Ohnishi, Y., Li, F. (2026). A Bayesian Nonparametric Approach to Mediation and Spillover Effects with Multiple Mediators in Cluster-Randomized Trials. Journal of the American Statistical Association 121(553), 716-728. doi:[10.1080/01621459.2025.2544366](https://doi.org/10.1080/01621459.2025.2544366) (tier A)
-- **[Pennec2006]** Pennec, X., Fillard, P., Ayache, N. (2006). A Riemannian Framework for Tensor Computing. International Journal of Computer Vision 66(1), 41-66. doi:[10.1007/s11263-005-3222-z](https://doi.org/10.1007/s11263-005-3222-z) (tier B)
-- **[Pinheiro1996]** Pinheiro, J., Bates, D. (1996). Unconstrained parametrizations for variance-covariance matrices. Statistics and Computing 6(3), 289-296. doi:[10.1007/bf00140873](https://doi.org/10.1007/bf00140873) (tier B)
-- **[Pituch2008]** Pituch, K., Stapleton, L. (2008). The Performance of Methods to Test Upper-Level Mediation in the Presence of Nonnormal Data. Multivariate Behavioral Research 43(2), 237-267. doi:[10.1080/00273170802034844](https://doi.org/10.1080/00273170802034844) (tier A)
-- **[PituchStapleton2012]** Pituch, K., Stapleton, L. (2012). Distinguishing Between Cross- and Cluster-Level Mediation Processes in the Cluster Randomized Trial. Sociological Methods & Research 41(4), 630-670. doi:[10.1177/0049124112460380](https://doi.org/10.1177/0049124112460380) (tier A)
-- **[Preacher2010]** Preacher, K., Zyphur, M., Zhang, Z. (2010). A general multilevel SEM framework for assessing multilevel mediation.. Psychological Methods 15(3), 209-233. doi:[10.1037/a0020141](https://doi.org/10.1037/a0020141) (tier A)
-- **[Preacher2011]** Preacher, K., Zhang, Z., Zyphur, M. (2011). Alternative Methods for Assessing Mediation in Multilevel Data: The Advantages of Multilevel SEM. Structural Equation Modeling: A Multidisciplinary Journal 18(2), 161-182. doi:[10.1080/10705511.2011.557329](https://doi.org/10.1080/10705511.2011.557329) (tier A)
-- **[PreacherRuckerHayes2007]** Preacher, K., Rucker, D., Hayes, A. (2007). Addressing Moderated Mediation Hypotheses: Theory, Methods, and Prescriptions. Multivariate Behavioral Research 42(1), 185-227. doi:[10.1080/00273170701341316](https://doi.org/10.1080/00273170701341316) (tier A)
-- **[PreacherZhangZyphur2016]** Preacher, K., Zhang, Z., Zyphur, M. (2016). Multilevel structural equation models for assessing moderation within and across levels of analysis.. Psychological Methods 21(2), 189-205. doi:[10.1037/met0000052](https://doi.org/10.1037/met0000052) (tier A)
-- **[Pustejovsky2018]** Pustejovsky, J., Tipton, E. (2018). Small-Sample Methods for Cluster-Robust Variance Estimation and Hypothesis Testing in Fixed Effects Models. Journal of Business & Economic Statistics 36(4), 672-683. doi:[10.1080/07350015.2016.1247004](https://doi.org/10.1080/07350015.2016.1247004) (tier B)
-- **[QinHong2017]** Qin, X., Hong, G. (2017). A Weighting Method for Assessing Between-Site Heterogeneity in Causal Mediation Mechanism. Journal of Educational and Behavioral Statistics 42(3), 308-340. doi:[10.3102/1076998617694879](https://doi.org/10.3102/1076998617694879) (tier A)
-- **[QinHongDeutschBein2019]** Qin, X., Hong, G., Deutsch, J., Bein, E. (2019). Multisite Causal Mediation Analysis in the Presence of Complex Sample and Survey Designs and Non-Random Non-Response. Journal of the Royal Statistical Society Series A: Statistics in Society 182(4), 1343-1370. doi:[10.1111/rssa.12446](https://doi.org/10.1111/rssa.12446) (tier A)
-- **[RabeHesketh2004]** Rabe-Hesketh, S., Skrondal, A., Pickles, A. (2004). Generalized Multilevel Structural Equation Modeling. Psychometrika 69(2), 167-190. doi:[10.1007/bf02295939](https://doi.org/10.1007/bf02295939) (tier A)
-- **[Rhemtulla2012]** Rhemtulla, M., Brosseau-Liard, P., Savalei, V. (2012). When can categorical variables be treated as continuous? A comparison of robust continuous and categorical SEM estimation methods under suboptimal conditions.. Psychological Methods 17(3), 354-373. doi:[10.1037/a0029315](https://doi.org/10.1037/a0029315) (tier A)
-- **[RyuWest2009]** Ryu, E., West, S. (2009). Level-Specific Evaluation of Model Fit in Multilevel Structural Equation Modeling. Structural Equation Modeling: A Multidisciplinary Journal 16(4), 583-601. doi:[10.1080/10705510903203466](https://doi.org/10.1080/10705510903203466) (tier A)
-- **[SavaleiKolenikov2008]** Savalei, V., Kolenikov, S. (2008). Constrained versus unconstrained estimation in structural equation modeling.. Psychological Methods 13(2), 150-170. doi:[10.1037/1082-989x.13.2.150](https://doi.org/10.1037/1082-989x.13.2.150) (tier A)
-- **[SchermellehEngelEtAl2014]** Schermelleh-Engel, K., Kerwer, M., Klein, A. (2014). Evaluation of model fit in nonlinear multilevel structural equation modeling. Frontiers in Psychology 5. doi:[10.3389/fpsyg.2014.00181](https://doi.org/10.3389/fpsyg.2014.00181) (tier A)
-- **[SchultzbergMuthen2018]** Schultzberg, M., Muthén, B. (2018). Number of Subjects and Time Points Needed for Multilevel Time-Series Analysis: A Simulation Study of Dynamic Structural Equation Modeling. Structural Equation Modeling: A Multidisciplinary Journal 25(4), 495-515. doi:[10.1080/10705511.2017.1392862](https://doi.org/10.1080/10705511.2017.1392862) (tier A)
-- **[SelfLiang1987]** Self, S., Liang, K. (1987). Asymptotic Properties of Maximum Likelihood Estimators and Likelihood Ratio Tests under Nonstandard Conditions. Journal of the American Statistical Association 82(398), 605-610. doi:[10.1080/01621459.1987.10478472](https://doi.org/10.1080/01621459.1987.10478472) (tier A)
-- **[Smid2019]** Smid, S., McNeish, D., Miočević, M., van de Schoot, R. (2020). Bayesian Versus Frequentist Estimation for Structural Equation Models in Small Sample Contexts: A Systematic Review. Structural Equation Modeling: A Multidisciplinary Journal 27(1), 131-161. doi:[10.1080/10705511.2019.1577140](https://doi.org/10.1080/10705511.2019.1577140) (tier A)
-- **[Stapleton2002]** Stapleton, L. (2002). The Incorporation of Sample Weights Into Multilevel Structural Equation Models. Structural Equation Modeling: A Multidisciplinary Journal 9(4), 475-502. doi:[10.1207/s15328007sem0904_2](https://doi.org/10.1207/s15328007sem0904_2) (tier A)
-- **[Stoel2006]** Stoel, R., Garre, F., Dolan, C., van den Wittenboer, G. (2006). On the likelihood ratio test in structural equation modeling when parameters are subject to boundary constraints.. Psychological Methods 11(4), 439-455. doi:[10.1037/1082-989x.11.4.439](https://doi.org/10.1037/1082-989x.11.4.439) (tier A)
-- **[StramLee1994]** Stram, D., Lee, J. (1994). Variance Components Testing in the Longitudinal Mixed Effects Model. Biometrics 50(4), 1171. doi:[10.2307/2533455](https://doi.org/10.2307/2533455) (tier A)
-- **[Talloen2016]** Talloen, W., Moerkerke, B., Loeys, T., De Naeghel, J., Van Keer, H., Vansteelandt, S. (2016). Estimation of Indirect Effects in the Presence of Unmeasured Confounding for the Mediator–Outcome Relationship in a Multilevel 2-1-1 Mediation Model. Journal of Educational and Behavioral Statistics 41(4), 359-391. doi:[10.3102/1076998616636855](https://doi.org/10.3102/1076998616636855) (tier A)
-- **[TchetgenVanderWeele2012]** Tchetgen, E., VanderWeele, T. (2012). On causal inference in the presence of interference. Statistical Methods in Medical Research 21(1), 55-75. doi:[10.1177/0962280210386779](https://doi.org/10.1177/0962280210386779) (tier A)
-- **[TofighiKelley2016]** Tofighi, D., Kelley, K. (2016). Assessing Omitted Confounder Bias in Multilevel Mediation Models. Multivariate Behavioral Research 51(1), 86-105. doi:[10.1080/00273171.2015.1105736](https://doi.org/10.1080/00273171.2015.1105736) (tier A)
-- **[VaidaBlanchard2005]** Vaida, F., Blanchard, S. (2005). Conditional Akaike information for mixed-effects models. Biometrika 92(2), 351-370. doi:[10.1093/biomet/92.2.351](https://doi.org/10.1093/biomet/92.2.351) (tier A)
-- **[VanderWeele2013]** Vanderweele, T., Hong, G., Jones, S., Brown, J. (2013). Mediation and Spillover Effects in Group-Randomized Trials: A Case Study of the 4Rs Educational Intervention. Journal of the American Statistical Association 108(502), 469-482. doi:[10.1080/01621459.2013.779832](https://doi.org/10.1080/01621459.2013.779832) (tier A)
-- **[VanderWeele2014]** VanderWeele, T. (2014). A Unification of Mediation and Interaction. Epidemiology 25(5), 749-761. doi:[10.1097/ede.0000000000000121](https://doi.org/10.1097/ede.0000000000000121) (tier A)
-- **[Walther2025a]** Walther, J., Hecht, M., Zitzmann, S. (2025). Shrinking Small Sample Problems in Multilevel Structural Equation Modeling via Regularization of the Sample Covariance Matrix. Structural Equation Modeling: A Multidisciplinary Journal 32(1), 46-65. doi:[10.1080/10705511.2024.2380919](https://doi.org/10.1080/10705511.2024.2380919) (tier A)
-- **[WangPreacher2015]** Wang, L., Preacher, K. (2015). Moderated Mediation Analysis Using Bayesian Methods. Structural Equation Modeling: A Multidisciplinary Journal 22(2), 249-263. doi:[10.1080/10705511.2014.935256](https://doi.org/10.1080/10705511.2014.935256) (tier A)
-- **[Wood2011]** Wood, S. (2011). Fast Stable Restricted Maximum Likelihood and Marginal Likelihood Estimation of Semiparametric Generalized Linear Models. Journal of the Royal Statistical Society Series B: Statistical Methodology 73(1), 3-36. doi:[10.1111/j.1467-9868.2010.00749.x](https://doi.org/10.1111/j.1467-9868.2010.00749.x) (tier B)
-- **[Wooldridge2019]** Wooldridge, J. (2019). Correlated random effects models with unbalanced panels. Journal of Econometrics 211(1), 137-150. doi:[10.1016/j.jeconom.2018.12.010](https://doi.org/10.1016/j.jeconom.2018.12.010) (tier B)
-- **[YuanBentler2000]** Yuan, K., Bentler, P. (2000). 5. Three Likelihood-Based Methods for Mean and Covariance Structure Analysis with Nonnormal Missing Data. Sociological Methodology 30(1), 165-200. doi:[10.1111/0081-1750.00078](https://doi.org/10.1111/0081-1750.00078) (tier A)
-- **[YuanBentler2002]** Yuan, K., Bentler, P. (2002). On Normal Theory Based Inference for Multilevel Models with Distributional Violations. Psychometrika 67(4), 539-561. doi:[10.1007/bf02295130](https://doi.org/10.1007/bf02295130) (tier A)
-- **[YuanBentler2003]** Yuan, K., Bentler, P. (2003). Eight test statistics for multilevel structural equation models. Computational Statistics & Data Analysis 44(1-2), 89-107. doi:[10.1016/s0167-9473(02)00349-3](https://doi.org/10.1016/s0167-9473(02)00349-3) (tier B)
-- **[YuanBentler2007]** Yuan, K., Bentler, P. (2007). 3. Multilevel Covariance Structure Analysis by Fitting Multiple Single-Level Models. Sociological Methodology 37(1), 53-82. doi:[10.1111/j.1467-9531.2007.00182.x](https://doi.org/10.1111/j.1467-9531.2007.00182.x) (tier A)
-- **[Zhang2009]** Zhang, Z., Zyphur, M., Preacher, K. (2009). Testing Multilevel Mediation Using Hierarchical Linear Models. Organizational Research Methods 12(4), 695-719. doi:[10.1177/1094428108327450](https://doi.org/10.1177/1094428108327450) (tier A)
-- **[Zhou2012]** Zhou, X., Stephens, M. (2012). Genome-wide efficient mixed-model analysis for association studies. Nature Genetics 44(7), 821-824. doi:[10.1038/ng.2310](https://doi.org/10.1038/ng.2310) (tier B)
-- **[ZiglerYe2019]** Zigler, C., Ye, F. (2019). A Comparison of Multilevel Mediation Modeling Methods: Recommendations for Applied Researchers. Multivariate Behavioral Research 54(3), 338-359. doi:[10.1080/00273171.2018.1527676](https://doi.org/10.1080/00273171.2018.1527676) (tier A)
-- **[Zitzmann2016]** Zitzmann, S., Lüdtke, O., Robitzsch, A., Marsh, H. (2016). A Bayesian Approach for Estimating Multilevel Latent Contextual Models. Structural Equation Modeling: A Multidisciplinary Journal 23(5), 661-679. doi:[10.1080/10705511.2016.1207179](https://doi.org/10.1080/10705511.2016.1207179) (tier A)
-- **[burkner2017brms]** Bürkner, P. (2017). brms : An R Package for Bayesian Multilevel Models Using Stan. Journal of Statistical Software 80(1). doi:[10.18637/jss.v080.i01](https://doi.org/10.18637/jss.v080.i01) (tier B)
-- **[igolkina2020semopy]** Igolkina, A., Meshcheryakov, G. (2020). semopy: A Python Package for Structural Equation Modeling. Structural Equation Modeling: A Multidisciplinary Journal 27(6), 952-963. doi:[10.1080/10705511.2019.1704289](https://doi.org/10.1080/10705511.2019.1704289) (tier B)
-- **[lefcheck2016piecewisesem]** Lefcheck, J. (2016). piecewiseSEM : Piecewise structural equation modelling in r for ecology, evolution, and systematics. Methods in Ecology and Evolution 7(5), 573-579. doi:[10.1111/2041-210x.12512](https://doi.org/10.1111/2041-210x.12512) (tier B)
-- **[tingley2014mediation]** Tingley, D., Yamamoto, T., Hirose, K., Keele, L., Imai, K. (2014). mediation : R Package for Causal Mediation Analysis. Journal of Statistical Software 59(5). doi:[10.18637/jss.v059.i05](https://doi.org/10.18637/jss.v059.i05) (tier B)
-- **[vuorre2018bmlm]** Vuorre, M., Bolger, N. (2018). Within-subject mediation analysis for experimental data in cognitive psychology and neuroscience. Behavior Research Methods 50(5), 2125-2143. doi:[10.3758/s13428-017-0980-9](https://doi.org/10.3758/s13428-017-0980-9) (tier B)
+```bibtex
+% tier A
+@article{Adams1997, title={Multilevel Item Response Models: An Approach to Errors in Variables Regression}, volume={22}, ISSN={1935-1054}, DOI={10.3102/10769986022001047}, number={1}, journal={Journal of Educational and Behavioral Statistics}, publisher={American Educational Research Association (AERA)}, author={Adams, Raymond J. and Wilson, Mark and Wu, Margaret}, year={1997}, month=Mar, pages={47–76} }
+
+% tier A
+@article{Andrews2001, title={Testing When a Parameter is on the Boundary of the Maintained Hypothesis}, volume={69}, ISSN={1468-0262}, DOI={10.1111/1468-0262.00210}, number={3}, journal={Econometrica}, publisher={The Econometric Society}, author={Andrews, Donald W. K.}, year={2001}, month=May, pages={683–734} }
+
+% tier A
+@article{Aronow2017, title={Estimating average causal effects under general interference, with application to a social network experiment}, volume={11}, ISSN={1941-7330}, DOI={10.1214/16-aoas1005}, number={4}, journal={The Annals of Applied Statistics}, publisher={Institute of Mathematical Statistics}, author={Aronow, Peter M. and Samii, Cyrus}, year={2017}, month=Dec, pages={1912–1947} }
+
+% tier A
+@article{AsparouhovHamakerMuthen2018, title={Dynamic Structural Equation Models}, volume={25}, ISSN={1532-8007}, DOI={10.1080/10705511.2017.1406803}, number={3}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Asparouhov, Tihomir and Hamaker, Ellen L. and Muthén, Bengt}, year={2017}, month=Dec, pages={359–388} }
+
+% tier B
+@article{AsparouhovMuthen2019, title={Latent Variable Centering of Predictors and Mediators in Multilevel and Time-Series Models}, volume={26}, ISSN={1532-8007}, DOI={10.1080/10705511.2018.1511375}, number={1}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Asparouhov, Tihomir and Muthén, Bengt}, year={2018}, month=Sept, pages={119–142} }
+
+% tier A
+@article{AsparouhovMuthen2021, title={Bayesian estimation of single and multilevel models with latent variable interactions}, volume={28}, ISSN={1532-8007}, DOI={10.1080/10705511.2020.1761808}, number={2}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Asparouhov, Tihomir and Muthén, Bengt}, year={2020}, month=June, pages={314–328} }
+
+% tier A
+@article{AsparouhovMuthen2026, title={Three-Level Dynamic Structural Equation Modeling}, volume={33}, ISSN={1532-8007}, DOI={10.1080/10705511.2025.2608122}, number={2}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Asparouhov, Tihomir and Muthén, Bengt}, year={2026}, month=Jan, pages={281–309} }
+
+% tier A
+@article{BaiPoon2009, title={Using Mx to Analyze Cross-Level Effects in Two-Level Structural Equation Models}, volume={16}, ISSN={1532-8007}, DOI={10.1080/10705510802561527}, number={1}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Bai, Yun and Poon, Wai-Yin}, year={2009}, month=Jan, pages={163–178} }
+
+% tier A
+@article{BarendseRosseel2023, title={Multilevel
+                    <scp>SEM</scp>
+                    with random slopes in discrete data using the pairwise maximum likelihood}, volume={76}, ISSN={2044-8317}, DOI={10.1111/bmsp.12294}, number={2}, journal={British Journal of Mathematical and Statistical Psychology}, publisher={Wiley}, author={Barendse, Maria T. and Rosseel, Yves}, year={2023}, month=Jan, pages={327–352} }
+
+% tier A
+@article{Bates2015, title={Fitting Linear Mixed-Effects Models Using
+                    <b>lme4</b>}, volume={67}, ISSN={1548-7660}, DOI={10.18637/jss.v067.i01}, number={1}, journal={Journal of Statistical Software}, publisher={Foundation for Open Access Statistic}, author={Bates, Douglas and Mächler, Martin and Bolker, Ben and Walker, Steve}, year={2015} }
+
+% tier A
+@article{BauerPreacherGil2006, title={Conceptualizing and testing random indirect effects and moderated mediation in multilevel models: New procedures and recommendations.}, volume={11}, ISSN={1082-989X}, DOI={10.1037/1082-989x.11.2.142}, number={2}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Bauer, Daniel J. and Preacher, Kristopher J. and Gil, Karen M.}, year={2006}, pages={142–163} }
+
+% tier A
+@article{Bell2015, title={Explaining Fixed Effects: Random Effects Modeling of Time-Series Cross-Sectional and Panel Data}, volume={3}, ISSN={2049-8489}, DOI={10.1017/psrm.2014.7}, number={1}, journal={Political Science Research and Methods}, publisher={Cambridge University Press (CUP)}, author={Bell, Andrew and Jones, Kelvyn}, year={2014}, month=May, pages={133–153} }
+
+% tier A
+@article{BolgerEtAl2019, title={Causal processes in psychology are heterogeneous.}, volume={148}, ISSN={0096-3445}, DOI={10.1037/xge0000558}, number={4}, journal={Journal of Experimental Psychology: General}, publisher={American Psychological Association (APA)}, author={Bolger, Niall and Zee, Katherine S. and Rossignac-Milon, Maya and Hassin, Ran R.}, year={2019}, month=Apr, pages={601–618} }
+
+% tier A
+@article{BollenDavis2009, title={Two Rules of Identification for Structural Equation Models}, volume={16}, ISSN={1532-8007}, DOI={10.1080/10705510903008261}, number={3}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Bollen, Kenneth A. and Davis, Walter R.}, year={2009}, month=July, pages={523–536} }
+
+% tier A
+@article{Cameron2008, title={Bootstrap-Based Improvements for Inference with Clustered Errors}, volume={90}, ISSN={1530-9142}, DOI={10.1162/rest.90.3.414}, number={3}, journal={Review of Economics and Statistics}, publisher={MIT Press}, author={Cameron, A. Colin and Gelbach, Jonah B. and Miller, Douglas L.}, year={2008}, month=Aug, pages={414–427} }
+
+% tier A
+@article{Cameron2015, title={A Practitioner’s Guide to Cluster-Robust Inference}, volume={50}, ISSN={1548-8004}, DOI={10.3368/jhr.50.2.317}, number={2}, journal={Journal of Human Resources}, publisher={University of Wisconsin Press}, author={Colin Cameron, A. and Miller, Douglas L.}, year={2015}, pages={317–372} }
+
+% tier A
+@article{Carpenter2017, title={<i>Stan</i>
+                    : A Probabilistic Programming Language}, volume={76}, ISSN={1548-7660}, DOI={10.18637/jss.v076.i01}, number={1}, journal={Journal of Statistical Software}, publisher={Foundation for Open Access Statistic}, author={Carpenter, Bob and Gelman, Andrew and Hoffman, Matthew D. and Lee, Daniel and Goodrich, Ben and Betancourt, Michael and Brubaker, Marcus and Guo, Jiqiang and Li, Peter and Riddell, Allen}, year={2017} }
+
+% tier A
+@article{ChengLi2026, title={Semiparametric causal mediation analysis of cluster-randomized trials for indirect and spillover effects}, volume={82}, ISSN={1541-0420}, DOI={10.1093/biomtc/ujag017}, number={1}, journal={Biometrics}, publisher={Oxford University Press (OUP)}, author={Cheng, Chao and Li, Fan}, year={2026}, month=Jan }
+
+% tier A
+@article{Chung2013, title={A Nondegenerate Penalized Likelihood Estimator for Variance Parameters in Multilevel Models}, volume={78}, ISSN={1860-0980}, DOI={10.1007/s11336-013-9328-2}, number={4}, journal={Psychometrika}, publisher={Cambridge University Press (CUP)}, author={Chung, Yeojin and Rabe-Hesketh, Sophia and Dorie, Vincent and Gelman, Andrew and Liu, Jingchen}, year={2013}, month=Oct, pages={685–709} }
+
+% tier A
+@article{Clark2005, title={Why environmental scientists are becoming Bayesians}, volume={8}, ISSN={1461-0248}, DOI={10.1111/j.1461-0248.2004.00702.x}, number={1}, journal={Ecology Letters}, publisher={Wiley}, author={Clark, James S.}, year={2004}, month=Dec, pages={2–14} }
+
+% tier A
+@article{Cressie2009, title={Accounting for uncertainty in ecological analysis: the strengths and limitations of hierarchical statistical modeling}, volume={19}, ISSN={1939-5582}, DOI={10.1890/07-0744.1}, number={3}, journal={Ecological Applications}, publisher={Wiley}, author={Cressie, Noel and Calder, Catherine A. and Clark, James S. and Hoef, Jay M. Ver and Wikle, Christopher K.}, year={2009}, month=Apr, pages={553–570} }
+
+% tier A
+@article{CroonVanVeldhoven2007, title={Predicting group-level outcome variables from variables measured at the individual level: A latent variable multilevel model.}, volume={12}, ISSN={1082-989X}, DOI={10.1037/1082-989x.12.1.45}, number={1}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Croon, Marcel A. and van Veldhoven, Marc J. P. M.}, year={2007}, month=Mar, pages={45–57} }
+
+% tier A
+@article{DepaoliClifton2015, title={A Bayesian Approach to Multilevel Structural Equation Modeling With Continuous and Dichotomous Outcomes}, volume={22}, ISSN={1532-8007}, DOI={10.1080/10705511.2014.937849}, number={3}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Depaoli, Sarah and Clifton, James P.}, year={2015}, month=Mar, pages={327–351} }
+
+% tier A
+@article{DiMariaDidelez2024, title={Longitudinal mediation analysis with multilevel and latent growth models: a separable effects causal approach}, volume={24}, ISSN={1471-2288}, DOI={10.1186/s12874-024-02358-4}, number={1}, journal={BMC Medical Research Methodology}, publisher={Springer Science and Business Media LLC}, author={Di Maria, Chiara and Didelez, Vanessa}, year={2024}, month=Oct }
+
+% tier A
+@article{EndersDuKeller2020, title={A model-based imputation procedure for multilevel regression models with random coefficients, interaction effects, and nonlinear terms.}, volume={25}, ISSN={1082-989X}, DOI={10.1037/met0000228}, number={1}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Enders, Craig K. and Du, Han and Keller, Brian T.}, year={2020}, month=Feb, pages={88–112} }
+
+% tier A
+@article{EndersKellerLevy2018, title={A fully conditional specification approach to multilevel imputation of categorical and continuous variables.}, volume={23}, ISSN={1082-989X}, DOI={10.1037/met0000148}, number={2}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Enders, Craig K. and Keller, Brian T. and Levy, Roy}, year={2018}, month=June, pages={298–317} }
+
+% tier A
+@article{EndersTofighi2007, title={Centering predictor variables in cross-sectional multilevel models: A new look at an old issue.}, volume={12}, ISSN={1082-989X}, DOI={10.1037/1082-989x.12.2.121}, number={2}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Enders, Craig K. and Tofighi, Davood}, year={2007}, pages={121–138} }
+
+% tier A
+@article{FalkSavchenko2026, title={Computationally efficient interval estimation for the 1-1-1 multilevel mediation analysis model in R: A replication of Bauer, Preacher, and Gil (2006)}, DOI={10.31234/osf.io/ms39n_v2}, publisher={Center for Open Science}, author={Falk, Carl F. and Savchenko, Elizabeth}, year={2026}, month=Oct }
+
+% tier A
+@article{Fox2001, title={Bayesian Estimation of a Multilevel IRT Model Using Gibbs Sampling}, volume={66}, ISSN={1860-0980}, DOI={10.1007/bf02294839}, number={2}, journal={Psychometrika}, publisher={Cambridge University Press (CUP)}, author={Fox, Jean-Paul and Glas, Cees A. W.}, year={2001}, month=June, pages={271–288} }
+
+% tier A
+@article{Gilmour1995, title={Average Information REML: An Efficient Algorithm for Variance Parameter Estimation in Linear Mixed Models}, volume={51}, ISSN={0006-341X}, DOI={10.2307/2533274}, number={4}, journal={Biometrics}, publisher={JSTOR}, author={Gilmour, Arthur R. and Thompson, Robin and Cullis, Brian R.}, year={1995}, month=Dec, pages={1440} }
+
+% tier A
+@article{GrevenKneib2010, title={On the behaviour of marginal and conditional AIC in linear mixed models}, volume={97}, ISSN={0006-3444}, DOI={10.1093/biomet/asq042}, number={4}, journal={Biometrika}, publisher={Oxford University Press (OUP)}, author={Greven, Sonja and Kneib, Thomas}, year={2010}, month=July, pages={773–789} }
+
+% tier A
+@article{GrilliRampichini2007, title={Multilevel Factor Models for Ordinal Variables}, volume={14}, ISSN={1532-8007}, DOI={10.1080/10705510709336734}, number={1}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Grilli, Leonardo and Rampichini, Carla}, year={2007}, month=Jan, pages={1–25} }
+
+% tier A
+@article{GrundLudtkeRobitzsch2018, title={Multiple Imputation of Missing Data for Multilevel Models: Simulations and Recommendations}, volume={21}, ISSN={1552-7425}, DOI={10.1177/1094428117703686}, number={1}, journal={Organizational Research Methods}, publisher={SAGE Publications}, author={Grund, Simon and Lüdtke, Oliver and Robitzsch, Alexander}, year={2017}, month=May, pages={111–149} }
+
+% tier A
+@article{HamakerEtAl2018, title={At the Frontiers of Modeling Intensive Longitudinal Data: Dynamic Structural Equation Models for the Affective Measurements from the COGITO Study}, volume={53}, ISSN={1532-7906}, DOI={10.1080/00273171.2018.1446819}, number={6}, journal={Multivariate Behavioral Research}, publisher={Informa UK Limited}, author={Hamaker, E. L. and Asparouhov, T. and Brose, A. and Schmiedek, F. and Muthén, B.}, year={2018}, month=Apr, pages={820–841} }
+
+% tier B
+@article{Hansen2007, title={Asymptotic properties of a robust variance matrix estimator for panel data when is large}, volume={141}, ISSN={0304-4076}, DOI={10.1016/j.jeconom.2006.10.009}, number={2}, journal={Journal of Econometrics}, publisher={Elsevier BV}, author={Hansen, Christian B.}, year={2007}, month=Dec, pages={597–620} }
+
+% tier A
+@article{Hayes2015, title={An Index and Test of Linear Moderated Mediation}, volume={50}, ISSN={1532-7906}, DOI={10.1080/00273171.2014.962683}, number={1}, journal={Multivariate Behavioral Research}, publisher={Informa UK Limited}, author={Hayes, Andrew F.}, year={2015}, month=Jan, pages={1–22} }
+
+% tier A
+@article{HongDeutschHill2015, title={Ratio-of-Mediator-Probability Weighting for Causal Mediation Analysis in the Presence of Treatment-by-Mediator Interaction}, volume={40}, ISSN={1935-1054}, DOI={10.3102/1076998615583902}, number={3}, journal={Journal of Educational and Behavioral Statistics}, publisher={American Educational Research Association (AERA)}, author={Hong, Guanglei and Deutsch, Jonah and Hill, Heather D.}, year={2015}, month=June, pages={307–340} }
+
+% tier A
+@article{Hox2012,
+  author = {Hox, Joop J.C.M. and Van De Schoot, Rens and Matthijsse, Suzette},
+  title = {How few countries will do? Comparative survey analysis from a Bayesian perspective},
+  year = {2012},
+  journal = {Survey Research Methods},
+  doi = {10.18148/srm/2012.v6i2.5033}
+}
+
+% tier A
+@article{HoxMaas2001, title={The Accuracy of Multilevel Structural Equation Modeling With Pseudobalanced Groups and Small Samples}, volume={8}, ISSN={1532-8007}, DOI={10.1207/s15328007sem0802_1}, number={2}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Hox, Joop J. and Maas, Cora J. M.}, year={2001}, month=Apr, pages={157–174} }
+
+% tier A
+@article{HoxMaasBrinkhuis2010, title={The effect of estimation method and sample size in multilevel structural equation modeling}, volume={64}, ISSN={1467-9574}, DOI={10.1111/j.1467-9574.2009.00445.x}, number={2}, journal={Statistica Neerlandica}, publisher={Wiley}, author={Hox, Joop J. and Maas, Cora J. M. and Brinkhuis, Matthieu J. S.}, year={2010}, month=Apr, pages={157–170} }
+
+% tier A
+@article{Hsu2015, title={Detecting Misspecified Multilevel Structural Equation Models with Common Fit Indices: A Monte Carlo Study}, volume={50}, ISSN={1532-7906}, DOI={10.1080/00273171.2014.977429}, number={2}, journal={Multivariate Behavioral Research}, publisher={Informa UK Limited}, author={Hsu, Hsien-Yuan and Kwok, Oi-man and Lin, Jr Huang and Acosta, Sandra}, year={2015}, month=Mar, pages={197–215} }
+
+% tier A
+@article{HudgensHalloran2008, title={Toward Causal Inference With Interference}, volume={103}, ISSN={1537-274X}, DOI={10.1198/016214508000000292}, number={482}, journal={Journal of the American Statistical Association}, publisher={Informa UK Limited}, author={Hudgens, Michael G and Halloran, M. Elizabeth}, year={2008}, month=June, pages={832–842} }
+
+% tier A
+@article{ImaiKeeleTingley2010, title={A general approach to causal mediation analysis.}, volume={15}, ISSN={1082-989X}, DOI={10.1037/a0020761}, number={4}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Imai, Kosuke and Keele, Luke and Tingley, Dustin}, year={2010}, pages={309–334} }
+
+% tier A
+@article{Imbens2016, title={Robust Standard Errors in Small Samples: Some Practical Advice}, volume={98}, ISSN={1530-9142}, DOI={10.1162/rest_a_00552}, number={4}, journal={Review of Economics and Statistics}, publisher={MIT Press}, author={Imbens, Guido W. and Kolesár, Michal}, year={2016}, month=Oct, pages={701–712} }
+
+% tier A
+@article{Jak2021, title={Evaluating Cluster-Level Factor Models with lavaan and Mplus}, volume={3}, ISSN={2624-8611}, DOI={10.3390/psych3020012}, number={2}, journal={Psych}, publisher={MDPI AG}, author={Jak, Suzanne and Jorgensen, Terrence D. and Rosseel, Yves}, year={2021}, month=May, pages={134–152} }
+
+% tier A
+@article{JakCheung2026, title={Fitting two-level structural equation models to summary statistics: Leveling up meta-analytic structural equation modeling.}, ISSN={1082-989X}, DOI={10.1037/met0000864}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Jak, Suzanne and Cheung, Mike W. -L.}, year={2026}, month=Aug }
+
+% tier A
+@article{JongerlingLaurenceauHamaker2015, title={A Multilevel AR(1) Model: Allowing for Inter-Individual Differences in Trait-Scores, Inertia, and Innovation Variance}, volume={50}, ISSN={1532-7906}, DOI={10.1080/00273171.2014.1003772}, number={3}, journal={Multivariate Behavioral Research}, publisher={Informa UK Limited}, author={Jongerling, Joran and Laurenceau, Jean-Philippe and Hamaker, Ellen L.}, year={2015}, month=May, pages={334–349} }
+
+% tier A
+@article{Kamata2001, title={Item Analysis by the Hierarchical Generalized Linear Model}, volume={38}, ISSN={1745-3984}, DOI={10.1111/j.1745-3984.2001.tb01117.x}, number={1}, journal={Journal of Educational Measurement}, publisher={Wiley}, author={Kamata, Akihito}, year={2001}, month=Mar, pages={79–93} }
+
+% tier A
+@article{Kelcey2020, title={Power and Sample Size Determination for Multilevel Mediation in Three-Level Cluster-Randomized Trials}, volume={56}, ISSN={1532-7906}, DOI={10.1080/00273171.2020.1738910}, number={3}, journal={Multivariate Behavioral Research}, publisher={Informa UK Limited}, author={Kelcey, Ben and Xie, Yanli and Spybrook, Jessaca and Dong, Nianbo}, year={2020}, month=Apr, pages={496–513} }
+
+% tier A
+@article{KennyKorchmarosBolger2003, title={Lower level mediation in multilevel models.}, volume={8}, ISSN={1082-989X}, DOI={10.1037/1082-989x.8.2.115}, number={2}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Kenny, David A. and Korchmaros, Josephine D. and Bolger, Niall}, year={2003}, pages={115–128} }
+
+% tier A
+@article{KleinMoosbrugger2000, title={Maximum Likelihood Estimation of Latent Interaction Effects with the LMS Method}, volume={65}, ISSN={1860-0980}, DOI={10.1007/bf02296338}, number={4}, journal={Psychometrika}, publisher={Cambridge University Press (CUP)}, author={Klein, Andreas and Moosbrugger, Helfried}, year={2000}, month=Dec, pages={457–474} }
+
+% tier A
+@article{Kristensen2016, title={<b>TMB</b>
+                    : Automatic Differentiation and Laplace Approximation}, volume={70}, ISSN={1548-7660}, DOI={10.18637/jss.v070.i05}, number={5}, journal={Journal of Statistical Software}, publisher={Foundation for Open Access Statistic}, author={Kristensen, Kasper and Nielsen, Anders and Berg, Casper W. and Skaug, Hans and Bell, Bradley M.}, year={2016} }
+
+% tier A
+@article{KrullMacKinnon2001, title={Multilevel Modeling of Individual and Group Level Mediated Effects}, volume={36}, ISSN={1532-7906}, DOI={10.1207/s15327906mbr3602_06}, number={2}, journal={Multivariate Behavioral Research}, publisher={Informa UK Limited}, author={Krull, Jennifer L. and MacKinnon, David P.}, year={2001}, month=Apr, pages={249–277} }
+
+% tier A
+@article{Lai2021boot, title={Bootstrap Confidence Intervals for Multilevel Standardized Effect Size}, volume={56}, ISSN={1532-7906}, DOI={10.1080/00273171.2020.1746902}, number={4}, journal={Multivariate Behavioral Research}, publisher={Informa UK Limited}, author={Lai, Mark H. C.}, year={2020}, month=Apr, pages={558–578} }
+
+% tier A
+@article{LaiKwok2015, title={Examining the Rule of Thumb of Not Using Multilevel Modeling: The “Design Effect Smaller Than Two” Rule}, volume={83}, ISSN={1940-0683}, DOI={10.1080/00220973.2014.907229}, number={3}, journal={The Journal of Experimental Education}, publisher={Informa UK Limited}, author={Lai, Mark H. C. and Kwok, Oi-man}, year={2014}, month=July, pages={423–438} }
+
+% tier A
+@article{Lee1990, title={Multilevel analysis of structural equation models}, volume={77}, ISSN={1464-3510}, DOI={10.1093/biomet/77.4.763}, number={4}, journal={Biometrika}, publisher={Oxford University Press (OUP)}, author={LEE, SIK-YUM}, year={1990}, pages={763–772} }
+
+% tier A
+@article{LeeKim2026, title={Comparing Bayesian random coefficient prediction and latent interaction models for multilevel moderated mediation}, volume={16}, ISSN={1664-1078}, DOI={10.3389/fpsyg.2025.1543330}, journal={Frontiers in Psychology}, publisher={Frontiers Media SA}, author={Lee, Sooyong and Kim, Soyoung}, year={2026}, month=Mar }
+
+% tier A
+@article{LiJia2026, title={Addressing Small Sample Concerns for Multilevel Mediation in MSEM Framework: A Comparison of Alternative Strategies}, ISSN={1532-8007}, DOI={10.1080/10705511.2026.2679039}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Li, Yue and Jia, Fan}, year={2026}, month=July, pages={1–21} }
+
+% tier A
+@article{LiangBentler2004, title={An EM Algorithm for Fitting Two-Level Structural Equation Models}, volume={69}, ISSN={1860-0980}, DOI={10.1007/bf02295842}, number={1}, journal={Psychometrika}, publisher={Cambridge University Press (CUP)}, author={Liang, Jiajuan and Bentler, Peter M.}, year={2004}, month=Mar, pages={101–122} }
+
+% tier B
+@article{Lippert2011, title={FaST linear mixed models for genome-wide association studies}, volume={8}, ISSN={1548-7105}, DOI={10.1038/nmeth.1681}, number={10}, journal={Nature Methods}, publisher={Springer Science and Business Media LLC}, author={Lippert, Christoph and Listgarten, Jennifer and Liu, Ying and Kadie, Carl M and Davidson, Robert I and Heckerman, David}, year={2011}, month=Sept, pages={833–835} }
+
+% tier A
+@article{Ludtke2008, title={The multilevel latent covariate model: A new, more reliable approach to group-level effects in contextual studies.}, volume={13}, ISSN={1082-989X}, DOI={10.1037/a0012869}, number={3}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Lüdtke, Oliver and Marsh, Herbert W. and Robitzsch, Alexander and Trautwein, Ulrich and Asparouhov, Tihomir and Muthén, Bengt}, year={2008}, month=Sept, pages={203–229} }
+
+% tier A
+@article{Ludtke2011, title={A 2 × 2 taxonomy of multilevel latent contextual models: Accuracy–bias trade-offs in full and partial error correction models.}, volume={16}, ISSN={1082-989X}, DOI={10.1037/a0024376}, number={4}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Lüdtke, Oliver and Marsh, Herbert W. and Robitzsch, Alexander and Trautwein, Ulrich}, year={2011}, month=Dec, pages={444–467} }
+
+% tier A
+@article{LudtkeRobitzschGrund2017, title={Multiple imputation of missing data in multilevel designs: A comparison of different strategies.}, volume={22}, ISSN={1082-989X}, DOI={10.1037/met0000096}, number={1}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Lüdtke, Oliver and Robitzsch, Alexander and Grund, Simon}, year={2017}, month=Mar, pages={141–165} }
+
+% tier A
+@article{MaasHox2005, title={Sufficient Sample Sizes for Multilevel Modeling}, volume={1}, ISSN={1614-2241}, DOI={10.1027/1614-2241.1.3.86}, number={3}, journal={Methodology}, publisher={Hogrefe Publishing Group}, author={Maas, Cora J. M. and Hox, Joop J.}, year={2005}, month=Jan, pages={86–92} }
+
+% tier A
+@article{MacKinnon2023, title={Cluster-robust inference: A guide to empirical practice}, volume={232}, ISSN={0304-4076}, DOI={10.1016/j.jeconom.2022.04.001}, number={2}, journal={Journal of Econometrics}, publisher={Elsevier BV}, author={MacKinnon, James G. and Nielsen, Morten Ørregaard and Webb, Matthew D.}, year={2023}, month=Feb, pages={272–299} }
+
+% tier A
+@article{MarshEtAl2009, title={Doubly-Latent Models of School Contextual Effects: Integrating Multilevel and Structural Equation Approaches to Control Measurement and Sampling Error}, volume={44}, ISSN={1532-7906}, DOI={10.1080/00273170903333665}, number={6}, journal={Multivariate Behavioral Research}, publisher={Informa UK Limited}, author={Marsh, Herbert W. and Lüdtke, Oliver and Robitzsch, Alexander and Trautwein, Ulrich and Asparouhov, Tihomir and Muthén, Bengt and Nagengast, Benjamin}, year={2009}, month=Nov, pages={764–802} }
+
+% tier A
+@article{McDonaldGoldstein1989, title={Balanced versus unbalanced designs for linear structural relations in two‐level data}, volume={42}, ISSN={2044-8317}, DOI={10.1111/j.2044-8317.1989.tb00911.x}, number={2}, journal={British Journal of Mathematical and Statistical Psychology}, publisher={Wiley}, author={McDonald, Roderick P. and Goldstein, Harvey}, year={1989}, month=Nov, pages={215–232} }
+
+% tier A
+@article{McNeish2016, title={On Using Bayesian Methods to Address Small Sample Problems}, volume={23}, ISSN={1532-8007}, DOI={10.1080/10705511.2016.1186549}, number={5}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={McNeish, Daniel}, year={2016}, month=June, pages={750–773} }
+
+% tier A
+@article{McNeish2017, title={Multilevel Mediation With Small Samples: A Cautionary Note on the Multilevel Structural Equation Modeling Framework}, volume={24}, ISSN={1532-8007}, DOI={10.1080/10705511.2017.1280797}, number={4}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={McNeish, Daniel}, year={2017}, month=Feb, pages={609–625} }
+
+% tier A
+@article{McNeishHamaker2020, title={A primer on two-level dynamic structural equation models for intensive longitudinal data in Mplus.}, volume={25}, ISSN={1082-989X}, DOI={10.1037/met0000250}, number={5}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={McNeish, Daniel and Hamaker, Ellen L.}, year={2020}, month=Oct, pages={610–635} }
+
+% tier A
+@article{MehtaNeale2005, title={People are variables too: Multilevel structural equations modeling.}, volume={10}, ISSN={1082-989X}, DOI={10.1037/1082-989x.10.3.259}, number={3}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Mehta, Paras D. and Neale, Michael C.}, year={2005}, month=Sept, pages={259–284} }
+
+% tier A
+@article{MerkleRosseel2018, title={<b>blavaan</b>
+                    : Bayesian Structural Equation Models via Parameter Expansion}, volume={85}, ISSN={1548-7660}, DOI={10.18637/jss.v085.i04}, number={4}, journal={Journal of Statistical Software}, publisher={Foundation for Open Access Statistic}, author={Merkle, Edgar C. and Rosseel, Yves}, year={2018} }
+
+% tier B
+@article{Mundlak1978, title={On the Pooling of Time Series and Cross Section Data}, volume={46}, ISSN={0012-9682}, DOI={10.2307/1913646}, number={1}, journal={Econometrica}, publisher={JSTOR}, author={Mundlak, Yair}, year={1978}, month=Jan, pages={69} }
+
+% tier A
+@article{Muthen1994, title={Multilevel Covariance Structure Analysis}, volume={22}, ISSN={1552-8294}, DOI={10.1177/0049124194022003006}, number={3}, journal={Sociological Methods &amp; Research}, publisher={SAGE Publications}, author={MUTHÉN, BENGT O.}, year={1994}, month=Feb, pages={376–398} }
+
+% tier A
+@article{MuthenAsparouhov2012, title={Bayesian structural equation modeling: A more flexible representation of substantive theory.}, volume={17}, ISSN={1082-989X}, DOI={10.1037/a0026802}, number={3}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Muthén, Bengt and Asparouhov, Tihomir}, year={2012}, month=Sept, pages={313–335} }
+
+% tier A
+@article{MuthenSatorra1995, title={Complex Sample Data in Structural Equation Modeling}, volume={25}, ISSN={0081-1750}, DOI={10.2307/271070}, journal={Sociological Methodology}, publisher={JSTOR}, author={Muthen, Bengt O. and Satorra, Albert}, year={1995}, pages={267} }
+
+% tier A
+@article{Neubauer2023, title={How within-person effects shape between-person differences: A multilevel structural equation modeling perspective.}, volume={28}, ISSN={1082-989X}, DOI={10.1037/met0000481}, number={5}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Neubauer, Andreas B. and Brose, Annette and Schmiedek, Florian}, year={2023}, month=Oct, pages={1069–1086} }
+
+% tier A
+@article{Niu2024, title={Impact of missing data and ICC on full information maximum-likelihood estimation in multilevel SEMs}, volume={19}, ISSN={1875-9068}, DOI={10.3233/mas-231444}, number={1}, journal={Model Assisted Statistics and Applications}, publisher={SAGE Publications}, author={Niu, Chunling}, year={2024}, month=Mar, pages={49–59} }
+
+% tier A
+@article{OgburnEtAl2022, title={Causal Inference for Social Network Data}, volume={119}, ISSN={1537-274X}, DOI={10.1080/01621459.2022.2131557}, number={545}, journal={Journal of the American Statistical Association}, publisher={Informa UK Limited}, author={Ogburn, Elizabeth L. and Sofrygin, Oleg and Díaz, Iván and van der Laan, Mark J.}, year={2022}, month=Dec, pages={597–611} }
+
+% tier A
+@article{OgburnVanderWeele2014, title={Causal Diagrams for Interference}, volume={29}, ISSN={2168-8745}, DOI={10.1214/14-sts501}, number={4}, journal={Statistical Science}, publisher={Institute of Mathematical Statistics}, author={Ogburn, Elizabeth L. and VanderWeele, Tyler J.}, year={2014}, month=Nov, pages={559–578} }
+
+% tier A
+@article{OhnishiLi2025, title={A Bayesian Nonparametric Approach to Mediation and Spillover Effects with Multiple Mediators in Cluster-Randomized Trials}, volume={121}, ISSN={1537-274X}, DOI={10.1080/01621459.2025.2544366}, number={553}, journal={Journal of the American Statistical Association}, publisher={Informa UK Limited}, author={Ohnishi, Yuki and Li, Fan}, year={2025}, month=Oct, pages={716–728} }
+
+% tier B
+@article{Pennec2006, title={A Riemannian Framework for Tensor Computing}, volume={66}, ISSN={1573-1405}, DOI={10.1007/s11263-005-3222-z}, number={1}, journal={International Journal of Computer Vision}, publisher={Springer Science and Business Media LLC}, author={Pennec, Xavier and Fillard, Pierre and Ayache, Nicholas}, year={2006}, month=Jan, pages={41–66} }
+
+% tier B
+@article{Pinheiro1996, title={Unconstrained parametrizations for variance-covariance matrices}, volume={6}, ISSN={1573-1375}, DOI={10.1007/bf00140873}, number={3}, journal={Statistics and Computing}, publisher={Springer Science and Business Media LLC}, author={Pinheiro, Jos� C. and Bates, Douglas M.}, year={1996}, month=Sept, pages={289–296} }
+
+% tier A
+@article{Pituch2008, title={The Performance of Methods to Test Upper-Level Mediation in the Presence of Nonnormal Data}, volume={43}, ISSN={1532-7906}, DOI={10.1080/00273170802034844}, number={2}, journal={Multivariate Behavioral Research}, publisher={Informa UK Limited}, author={Pituch, Keenan A. and Stapleton, Laura M.}, year={2008}, month=June, pages={237–267} }
+
+% tier A
+@article{PituchStapleton2012, title={Distinguishing Between Cross- and Cluster-Level Mediation Processes in the Cluster Randomized Trial}, volume={41}, ISSN={1552-8294}, DOI={10.1177/0049124112460380}, number={4}, journal={Sociological Methods &amp; Research}, publisher={SAGE Publications}, author={Pituch, Keenan A. and Stapleton, Laura M.}, year={2012}, month=Oct, pages={630–670} }
+
+% tier A
+@article{Preacher2010, title={A general multilevel SEM framework for assessing multilevel mediation.}, volume={15}, ISSN={1082-989X}, DOI={10.1037/a0020141}, number={3}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Preacher, Kristopher J. and Zyphur, Michael J. and Zhang, Zhen}, year={2010}, pages={209–233} }
+
+% tier A
+@article{Preacher2011, title={Alternative Methods for Assessing Mediation in Multilevel Data: The Advantages of Multilevel SEM}, volume={18}, ISSN={1532-8007}, DOI={10.1080/10705511.2011.557329}, number={2}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Preacher, Kristopher J. and Zhang, Zhen and Zyphur, Michael J.}, year={2011}, month=Apr, pages={161–182} }
+
+% tier A
+@article{PreacherRuckerHayes2007, title={Addressing Moderated Mediation Hypotheses: Theory, Methods, and Prescriptions}, volume={42}, ISSN={1532-7906}, DOI={10.1080/00273170701341316}, number={1}, journal={Multivariate Behavioral Research}, publisher={Informa UK Limited}, author={Preacher, Kristopher J. and Rucker, Derek D. and Hayes, Andrew F.}, year={2007}, month=June, pages={185–227} }
+
+% tier A
+@article{PreacherZhangZyphur2016, title={Multilevel structural equation models for assessing moderation within and across levels of analysis.}, volume={21}, ISSN={1082-989X}, DOI={10.1037/met0000052}, number={2}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Preacher, Kristopher J. and Zhang, Zhen and Zyphur, Michael J.}, year={2016}, month=June, pages={189–205} }
+
+% tier A
+@article{Pustejovsky2018, title={Small-Sample Methods for Cluster-Robust Variance Estimation and Hypothesis Testing in Fixed Effects Models}, volume={36}, ISSN={1537-2707}, DOI={10.1080/07350015.2016.1247004}, number={4}, journal={Journal of Business &amp; Economic Statistics}, publisher={Informa UK Limited}, author={Pustejovsky, James E. and Tipton, Elizabeth}, year={2017}, month=June, pages={672–683} }
+
+% tier A
+@article{QinHong2017, title={A Weighting Method for Assessing Between-Site Heterogeneity in Causal Mediation Mechanism}, volume={42}, ISSN={1935-1054}, DOI={10.3102/1076998617694879}, number={3}, journal={Journal of Educational and Behavioral Statistics}, publisher={American Educational Research Association (AERA)}, author={Qin, Xu and Hong, Guanglei}, year={2017}, month=Mar, pages={308–340} }
+
+% tier A
+@article{QinHongDeutschBein2019, title={Multisite Causal Mediation Analysis in the Presence of Complex Sample and Survey Designs and Non-Random Non-Response}, volume={182}, ISSN={1467-985X}, DOI={10.1111/rssa.12446}, number={4}, journal={Journal of the Royal Statistical Society Series A: Statistics in Society}, publisher={Oxford University Press (OUP)}, author={Qin, Xu and Hong, Guanglei and Deutsch, Jonah and Bein, Edward}, year={2019}, month=Apr, pages={1343–1370} }
+
+% tier A
+@article{RabeHesketh2004, title={Generalized Multilevel Structural Equation Modeling}, volume={69}, ISSN={1860-0980}, DOI={10.1007/bf02295939}, number={2}, journal={Psychometrika}, publisher={Cambridge University Press (CUP)}, author={Rabe-Hesketh, Sophia and Skrondal, Anders and Pickles, Andrew}, year={2004}, month=June, pages={167–190} }
+
+% tier A
+@article{Rhemtulla2012, title={When can categorical variables be treated as continuous? A comparison of robust continuous and categorical SEM estimation methods under suboptimal conditions.}, volume={17}, ISSN={1082-989X}, DOI={10.1037/a0029315}, number={3}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Rhemtulla, Mijke and Brosseau-Liard, Patricia É. and Savalei, Victoria}, year={2012}, month=Sept, pages={354–373} }
+
+% tier A
+@article{RyuWest2009, title={Level-Specific Evaluation of Model Fit in Multilevel Structural Equation Modeling}, volume={16}, ISSN={1532-8007}, DOI={10.1080/10705510903203466}, number={4}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Ryu, Ehri and West, Stephen G.}, year={2009}, month=Oct, pages={583–601} }
+
+% tier A
+@article{SavaleiKolenikov2008, title={Constrained versus unconstrained estimation in structural equation modeling.}, volume={13}, ISSN={1082-989X}, DOI={10.1037/1082-989x.13.2.150}, number={2}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Savalei, Victoria and Kolenikov, Stanislav}, year={2008}, pages={150–170} }
+
+% tier A
+@article{SchermellehEngelEtAl2014, title={Evaluation of model fit in nonlinear multilevel structural equation modeling}, volume={5}, ISSN={1664-1078}, DOI={10.3389/fpsyg.2014.00181}, journal={Frontiers in Psychology}, publisher={Frontiers Media SA}, author={Schermelleh-Engel, Karin and Kerwer, Martin and Klein, Andreas G.}, year={2014}, month=Mar }
+
+% tier A
+@article{SchultzbergMuthen2018, title={Number of Subjects and Time Points Needed for Multilevel Time-Series Analysis: A Simulation Study of Dynamic Structural Equation Modeling}, volume={25}, ISSN={1532-8007}, DOI={10.1080/10705511.2017.1392862}, number={4}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Schultzberg, Mårten and Muthén, Bengt}, year={2017}, month=Dec, pages={495–515} }
+
+% tier A
+@article{SelfLiang1987, title={Asymptotic Properties of Maximum Likelihood Estimators and Likelihood Ratio Tests under Nonstandard Conditions}, volume={82}, ISSN={1537-274X}, DOI={10.1080/01621459.1987.10478472}, number={398}, journal={Journal of the American Statistical Association}, publisher={Informa UK Limited}, author={Self, Steven G. and Liang, Kung-Yee}, year={1987}, month=June, pages={605–610} }
+
+% tier A
+@article{Smid2019, title={Bayesian Versus Frequentist Estimation for Structural Equation Models in Small Sample Contexts: A Systematic Review}, volume={27}, ISSN={1532-8007}, DOI={10.1080/10705511.2019.1577140}, number={1}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Smid, Sanne C. and McNeish, Daniel and Miočević, Milica and van de Schoot, Rens}, year={2019}, month=May, pages={131–161} }
+
+% tier A
+@article{Stapleton2002, title={The Incorporation of Sample Weights Into Multilevel Structural Equation Models}, volume={9}, ISSN={1532-8007}, DOI={10.1207/s15328007sem0904_2}, number={4}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Stapleton, Laura M.}, year={2002}, month=Oct, pages={475–502} }
+
+% tier A
+@article{Stoel2006, title={On the likelihood ratio test in structural equation modeling when parameters are subject to boundary constraints.}, volume={11}, ISSN={1082-989X}, DOI={10.1037/1082-989x.11.4.439}, number={4}, journal={Psychological Methods}, publisher={American Psychological Association (APA)}, author={Stoel, Reinoud D. and Garre, Francisca Galindo and Dolan, Conor and van den Wittenboer, Godfried}, year={2006}, pages={439–455} }
+
+% tier A
+@article{StramLee1994, title={Variance Components Testing in the Longitudinal Mixed Effects Model}, volume={50}, ISSN={0006-341X}, DOI={10.2307/2533455}, number={4}, journal={Biometrics}, publisher={JSTOR}, author={Stram, Daniel O. and Lee, Jae Won}, year={1994}, month=Dec, pages={1171} }
+
+% tier A
+@article{Talloen2016, title={Estimation of Indirect Effects in the Presence of Unmeasured Confounding for the Mediator–Outcome Relationship in a Multilevel 2-1-1 Mediation Model}, volume={41}, ISSN={1935-1054}, DOI={10.3102/1076998616636855}, number={4}, journal={Journal of Educational and Behavioral Statistics}, publisher={American Educational Research Association (AERA)}, author={Talloen, Wouter and Moerkerke, Beatrijs and Loeys, Tom and De Naeghel, Jessie and Van Keer, Hilde and Vansteelandt, Stijn}, year={2016}, month=Aug, pages={359–391} }
+
+% tier A
+@article{TchetgenVanderWeele2012, title={On causal inference in the presence of interference}, volume={21}, ISSN={1477-0334}, DOI={10.1177/0962280210386779}, number={1}, journal={Statistical Methods in Medical Research}, publisher={SAGE Publications}, author={Tchetgen, Eric J Tchetgen and VanderWeele, Tyler J}, year={2010}, month=Nov, pages={55–75} }
+
+% tier A
+@article{TofighiKelley2016, title={Assessing Omitted Confounder Bias in Multilevel Mediation Models}, volume={51}, ISSN={1532-7906}, DOI={10.1080/00273171.2015.1105736}, number={1}, journal={Multivariate Behavioral Research}, publisher={Informa UK Limited}, author={Tofighi, Davood and Kelley, Ken}, year={2016}, month=Jan, pages={86–105} }
+
+% tier A
+@article{VaidaBlanchard2005, title={Conditional Akaike information for mixed-effects models}, volume={92}, ISSN={0006-3444}, DOI={10.1093/biomet/92.2.351}, number={2}, journal={Biometrika}, publisher={Oxford University Press (OUP)}, author={Vaida, Florin and Blanchard, Suzette}, year={2005}, month=June, pages={351–370} }
+
+% tier A
+@article{VanderWeele2013, title={Mediation and Spillover Effects in Group-Randomized Trials: A Case Study of the 4Rs Educational Intervention}, volume={108}, ISSN={1537-274X}, DOI={10.1080/01621459.2013.779832}, number={502}, journal={Journal of the American Statistical Association}, publisher={Informa UK Limited}, author={Vanderweele, Tyler J. and Hong, Guanglei and Jones, Stephanie M. and Brown, Joshua L.}, year={2013}, month=June, pages={469–482} }
+
+% tier A
+@article{VanderWeele2014, title={A Unification of Mediation and Interaction: A 4-Way Decomposition}, volume={25}, ISSN={1044-3983}, DOI={10.1097/ede.0000000000000121}, number={5}, journal={Epidemiology}, publisher={Ovid Technologies (Wolters Kluwer Health)}, author={VanderWeele, Tyler J.}, year={2014}, month=Sept, pages={749–761} }
+
+% tier A
+@article{Walther2025a, title={Shrinking Small Sample Problems in Multilevel Structural Equation Modeling via Regularization of the Sample Covariance Matrix}, volume={32}, ISSN={1532-8007}, DOI={10.1080/10705511.2024.2380919}, number={1}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Walther, Julia-Kim and Hecht, Martin and Zitzmann, Steffen}, year={2024}, month=Aug, pages={46–65} }
+
+% tier A
+@article{WangPreacher2015, title={Moderated Mediation Analysis Using Bayesian Methods}, volume={22}, ISSN={1532-8007}, DOI={10.1080/10705511.2014.935256}, number={2}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Wang, Lijuan (Peggy) and Preacher, Kristopher J.}, year={2014}, month=Sept, pages={249–263} }
+
+% tier A
+@article{Wood2011, title={Fast Stable Restricted Maximum Likelihood and Marginal Likelihood Estimation of Semiparametric Generalized Linear Models}, volume={73}, ISSN={1467-9868}, DOI={10.1111/j.1467-9868.2010.00749.x}, number={1}, journal={Journal of the Royal Statistical Society Series B: Statistical Methodology}, publisher={Oxford University Press (OUP)}, author={Wood, Simon N.}, year={2010}, month=Sept, pages={3–36} }
+
+% tier B
+@article{Wooldridge2019, title={Correlated random effects models with unbalanced panels}, volume={211}, ISSN={0304-4076}, DOI={10.1016/j.jeconom.2018.12.010}, number={1}, journal={Journal of Econometrics}, publisher={Elsevier BV}, author={Wooldridge, Jeffrey M.}, year={2019}, month=July, pages={137–150} }
+
+% tier A
+@article{YuanBentler2000, title={5. Three Likelihood-Based Methods for Mean and Covariance Structure Analysis with Nonnormal Missing Data}, volume={30}, ISSN={1467-9531}, DOI={10.1111/0081-1750.00078}, number={1}, journal={Sociological Methodology}, publisher={SAGE Publications}, author={Yuan, Ke-Hai and Bentler, Peter M.}, year={2000}, month=Aug, pages={165–200} }
+
+% tier A
+@article{YuanBentler2002, title={On Normal Theory Based Inference for Multilevel Models with Distributional Violations}, volume={67}, ISSN={1860-0980}, DOI={10.1007/bf02295130}, number={4}, journal={Psychometrika}, publisher={Cambridge University Press (CUP)}, author={Yuan, Ke-Hai and Bentler, Peter M.}, year={2002}, month=Dec, pages={539–561} }
+
+% tier B
+@article{YuanBentler2003, title={Eight test statistics for multilevel structural equation models}, volume={44}, ISSN={0167-9473}, DOI={10.1016/s0167-9473(02)00349-3}, number={1-2}, journal={Computational Statistics &amp; Data Analysis}, publisher={Elsevier BV}, author={Yuan, Ke-Hai and Bentler, Peter M.}, year={2003}, month=Oct, pages={89–107} }
+
+% tier A
+@article{YuanBentler2007, title={3. Multilevel Covariance Structure Analysis by Fitting Multiple Single-Level Models}, volume={37}, ISSN={1467-9531}, DOI={10.1111/j.1467-9531.2007.00182.x}, number={1}, journal={Sociological Methodology}, publisher={SAGE Publications}, author={Yuan, Ke-Hai and Bentler, Peter M.}, year={2007}, month=Aug, pages={53–82} }
+
+% tier A
+@article{Zhang2009, title={Testing Multilevel Mediation Using Hierarchical Linear Models: Problems and Solutions}, volume={12}, ISSN={1552-7425}, DOI={10.1177/1094428108327450}, number={4}, journal={Organizational Research Methods}, publisher={SAGE Publications}, author={Zhang, Zhen and Zyphur, Michael J. and Preacher, Kristopher J.}, year={2008}, month=Dec, pages={695–719} }
+
+% tier B
+@article{Zhou2012, title={Genome-wide efficient mixed-model analysis for association studies}, volume={44}, ISSN={1546-1718}, DOI={10.1038/ng.2310}, number={7}, journal={Nature Genetics}, publisher={Springer Science and Business Media LLC}, author={Zhou, Xiang and Stephens, Matthew}, year={2012}, month=June, pages={821–824} }
+
+% tier A
+@article{ZiglerYe2019, title={A Comparison of Multilevel Mediation Modeling Methods: Recommendations for Applied Researchers}, volume={54}, ISSN={1532-7906}, DOI={10.1080/00273171.2018.1527676}, number={3}, journal={Multivariate Behavioral Research}, publisher={Informa UK Limited}, author={Zigler, Christina K. and Ye, Feifei}, year={2019}, month=Jan, pages={338–359} }
+
+% tier A
+@article{Zitzmann2016, title={A Bayesian Approach for Estimating Multilevel Latent Contextual Models}, volume={23}, ISSN={1532-8007}, DOI={10.1080/10705511.2016.1207179}, number={5}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Zitzmann, Steffen and Lüdtke, Oliver and Robitzsch, Alexander and Marsh, Herbert W.}, year={2016}, month=Aug, pages={661–679} }
+
+% tier A
+@article{burkner2017brms, title={<b>brms</b>
+                    : An
+                    <i>R</i>
+                    Package for Bayesian Multilevel Models Using
+                    <i>Stan</i>}, volume={80}, ISSN={1548-7660}, DOI={10.18637/jss.v080.i01}, number={1}, journal={Journal of Statistical Software}, publisher={Foundation for Open Access Statistic}, author={Bürkner, Paul-Christian}, year={2017} }
+
+% tier A
+@article{igolkina2020semopy, title={semopy: A Python Package for Structural Equation Modeling}, volume={27}, ISSN={1532-8007}, DOI={10.1080/10705511.2019.1704289}, number={6}, journal={Structural Equation Modeling: A Multidisciplinary Journal}, publisher={Informa UK Limited}, author={Igolkina, Anna A. and Meshcheryakov, Georgy}, year={2020}, month=Feb, pages={952–963} }
+
+% tier A
+@article{lefcheck2016piecewisesem, title={<scp>piecewiseSEM</scp>
+                    : Piecewise structural equation modelling in
+                    <scp>r</scp>
+                     for ecology, evolution, and systematics}, volume={7}, ISSN={2041-210X}, DOI={10.1111/2041-210x.12512}, number={5}, journal={Methods in Ecology and Evolution}, publisher={Wiley}, author={Lefcheck, Jonathan S.}, editor={Freckleton, Robert}, year={2015}, month=Dec, pages={573–579} }
+
+% tier A
+@article{tingley2014mediation, title={<b>mediation</b>
+                    :
+                    <i>R</i>
+                    Package for Causal Mediation Analysis}, volume={59}, ISSN={1548-7660}, DOI={10.18637/jss.v059.i05}, number={5}, journal={Journal of Statistical Software}, publisher={Foundation for Open Access Statistic}, author={Tingley, Dustin and Yamamoto, Teppei and Hirose, Kentaro and Keele, Luke and Imai, Kosuke}, year={2014} }
+
+% tier B
+@article{vuorre2018bmlm, title={Within-subject mediation analysis for experimental data in cognitive psychology and neuroscience}, volume={50}, ISSN={1554-3528}, DOI={10.3758/s13428-017-0980-9}, number={5}, journal={Behavior Research Methods}, publisher={Springer Science and Business Media LLC}, author={Vuorre, Matti and Bolger, Niall}, year={2017}, month=Dec, pages={2125–2143} }
+```
+
