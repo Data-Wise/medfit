@@ -4,7 +4,7 @@
 > **Adversarial review (2026-11-07):** `dev` (`ecbfb19f`) exposes the unadmitted
 > `bootstrap_mediation(source_fit=)` route with no guard while `DESCRIPTION` still
 > reads `0.16.0`, the released version. Maintainer chose a guard on dev
-> (2026-11-07); in PR #382 against dev (full suite passed locally; CI running), unmerged. Default next-release content is no
+> (2026-11-07); it merged as PR #382 (`ba50f998`). Default next-release content is no
 > expanded FIML and no source-fit inference unless admitted. See the
 > [review table](PLAN-FIML-next-release-model-expansion-2026-11-01.md#adversarial-review-2026-11-07-static-no-runtime-checks-no-study-run).
 
@@ -1892,11 +1892,11 @@ historical checklists. Current dispositions:
    pooling away failed cells or treating unadmitted variants as supported.
    The [expansion plan](PLAN-FIML-next-release-model-expansion-2026-11-01.md)
    breaks FI-G0 into bounded steps before covariates, parallel and serial models.
-   **FI-G1 status (2026-11-08):** one- and two-covariate bounded FIML fitting and
-   extraction are implemented and numerically verified locally on
-   `feature/fiml-g1-covariates` (unpushed, unmerged); independent QA, the R4
-   refusal evidence and statistical admission are pending, and source-fit
-   intervals stay withheld.
+   **FI-G0 to FI-G3 status (2026-11-11):** bounded FIML fitting and extraction for
+   one or two covariates, two parallel mediators and two-mediator serial models are
+   merged into dev (PRs #383, #384, #385 to #392; `git log` has the commits);
+   statistical admission is still pending (the models are verified against lavaan,
+   not calibrated for coverage) and source-fit intervals stay withheld.
    The [stage-0 guard design](PLAN-FIML-stage0-release-guard-2026-11-01.md)
    addresses a candidate if simple-model inference remains unadmitted; the
    [admission plan](PLAN-FIML-statistical-admission-2026-11-01.md) retains the
@@ -1926,6 +1926,16 @@ historical checklists. Current dispositions:
    not cover inference validation. An unaffordable inference pilot requires an
    explicit rebudget/defer decision or a separately authorized measured
    optimization task; it does not silently reopen performance work.
+
+2b. **Multilevel mediation (2026-11-11):** the lavaan two-level (1-1-1) adapter
+   (`TwoLevelMediationData`, `twolevel_statistic()`; PRs #396, #397, #400, #403 to
+   #405), its hardening (#412) and the contrast rule (#415: the contrast is `NA` only
+   when both a and b are equated across levels) are on dev, unreleased. Next steps:
+   the contrast rule is done; **S4** (native two-level fitter) and **S5** (latent
+   mediators in a two-level model) stay NO-GO as written, per the literature review
+   (`specs/LIT-multilevel-sem-gaps-2026-11-11.md`); planning release 0.17.0 is
+   not authorized. The ten-chapter book is a separate private repository, not linked
+   from this tree or the website.
 
 3. **Separate ownership:** missingmed reconciles its existing consumer checkpoint
    against the released tag before a thin FIML adapter is considered. Raw-data

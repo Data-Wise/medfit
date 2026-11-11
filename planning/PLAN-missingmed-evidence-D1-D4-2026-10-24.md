@@ -1,6 +1,6 @@
 # Plan: integrate missingmed's T5 evidence work (D1-D4) into medfit
 
-Status: draft, 2026-10-24. Starts after 0.14.0 ships (release PR #333). Owner: the medfit session (the author's
+Status: COMPLETE: the D1-D4 evidence contract shipped in v0.14.1 (PRs #336-#342; see `.STATUS`). Was a draft of 2026-10-24. Started after 0.14.0 ships (release PR #333). Owner: the medfit session (the author's
 decision, relayed by the missingmed session). Target release: 0.15.0 or a 0.14.x minor, decided at Checkpoint 1.
 
 ## Why
