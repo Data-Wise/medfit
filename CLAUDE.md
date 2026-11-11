@@ -530,6 +530,10 @@ no behavior worth preserving. Ship it with a NEWS behavior-change note and at le
 version bump, and check dependents' usage first (decided 2026-09-24,
 `planning/specs/GRILL-0.5.0-release-2026-09-24.md`).
 
+**Exemption — experimental APIs:** an API labeled experimental (the two-level adapter: `TwoLevelMediationData`,
+`twolevel_statistic()`, `nie(level = )`) may change without the deprecation period; the label appears in the Rd
+pages and NEWS (decided 2026-11-11, `planning/DECISIONS-0.17.0-release-grill-2026-11-11.md`).
+
 ---
 
 ## Common Pitfalls
