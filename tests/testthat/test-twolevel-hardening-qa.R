@@ -19,11 +19,12 @@ qa_td <- function(a, b, cp, level = "within") {
 
 test_that("QA1: the PM threshold is sqrt(eps) * max(|NIE|, |NDE|), at hand-computed boundaries", {
   # nie = 1, nde = -1 + d  =>  te = d, threshold = 1.4901161e-08 * 1
-  below <- 1.4e-8; above <- 1.6e-8
+  below <- 1.4e-8
+  above <- 1.6e-8
   expect_true(is.na(val(suppressWarnings(pm(qa_td(1, 1, -1 + below))))))
   expect_equal(val(pm(qa_td(1, 1, -1 + above))), 1 / above, tolerance = 1e-6)
-  # the max is over |NIE| and |NDE|: nie = 1, nde = -1.5 + d (max = 1.5) puts the threshold at 2.235e-8
-  expect_true(is.na(val(suppressWarnings(pm(qa_td(1, 1, -1.5 + 0.5 + 2e-8))))) == FALSE)  # te = 0.5 + ...: defined
+  # nie = 1, nde = -1 + 2e-8 => te = 2e-8 > threshold 1.49e-8, so PM is defined
+  expect_false(is.na(val(pm(qa_td(1, 1, -1 + 2e-8)))))
   # te = nie + nde; nie = -2, nde = 2 + 2.0e-8 => te 2.0e-8, thr = 2 * 1.49e-8 = 2.98e-8 => undefined
   expect_true(is.na(val(suppressWarnings(pm(qa_td(-2, 1, 2 + 2e-8))))))
   # same te with the max governed by the larger effect, nie = -2, nde = 2 + 4e-8 => te 4e-8 > 2.98e-8 => defined
@@ -46,7 +47,9 @@ test_that("QA1: pm() on real fits is numerically identical to NIE / TE and warns
   for (nm in c("base", "fixed_x_false", "robust", "x_small_between", "shared_label", "j20")) {
     td <- tl_extract(tl_fixture(nm))
     for (lv in c("within", "between")) {
-      a <- S7::prop(td, paste0("a_", lv)); b <- S7::prop(td, paste0("b_", lv)); cp <- S7::prop(td, paste0("c_prime_", lv))
+      a <- S7::prop(td, paste0("a_", lv))
+      b <- S7::prop(td, paste0("b_", lv))
+      cp <- S7::prop(td, paste0("c_prime_", lv))
       expect_no_warning(p <- pm(td, level = lv))
       expect_identical(unname(val(p)), a * b / (a * b + cp), info = paste(nm, lv))
     }
@@ -102,7 +105,10 @@ test_that("QA4: bootstrap_mediation() with a refit statistic resolves the call's
 test_that("QA5/6: every real extractor output passes the strengthened validator", {
   skip_on_cran()
   d <- tl_sim()
-  dn <- d; set.seed(9); dn$M[sample(nrow(dn), 50)] <- NA; dn$X[sample(nrow(dn), 30)] <- NA
+  dn <- d
+  set.seed(9)
+  dn$M[sample(nrow(dn), 50)] <- NA
+  dn$X[sample(nrow(dn), 30)] <- NA
   set.seed(4)
   keep <- unlist(lapply(split(seq_len(nrow(d)), d$id), function(ix) ix[seq_len(sample(2:5, 1))]))
   fits <- list(
@@ -114,8 +120,10 @@ test_that("QA5/6: every real extractor output passes the strengthened validator"
     weak_icc = tl_fit(tl_sim(sd_xb = 0.15)),
     fixed_between = tl_fit(d, "level: 1\n M ~ a*X\n Y ~ b*M + cp*X\nlevel: 2\n M ~ a2*X\n Y ~ 0.9*M + cp2*X\n"),
     fixed_within = tl_fit(d, "level: 1\n M ~ 0.4*X\n Y ~ b*M + cp*X\nlevel: 2\n M ~ a2*X\n Y ~ b2*M + cp2*X\n"),
-    fixed_between_within_only = tl_fit(tl_sim(x_mode = "centered"),
-      "level: 1\n M ~ a*X\n Y ~ b*M + cp*X\nlevel: 2\n M ~ 0.3*X\n Y ~ b2*M + cp2*X\n")
+    fixed_between_within_only = tl_fit(
+      tl_sim(x_mode = "centered"),
+      "level: 1\n M ~ a*X\n Y ~ b*M + cp*X\nlevel: 2\n M ~ 0.3*X\n Y ~ b2*M + cp2*X\n"
+    )
   )
   for (nm in names(fits)) {
     td <- tl_extract(fits[[nm]])
@@ -129,15 +137,20 @@ test_that("QA5/6: every real extractor output passes the strengthened validator"
 test_that("QA6: each new validator rule fires on its own planted defect", {
   expect_error(tl_td(n_obs = 499L), "n_obs must equal")
   expect_error(tl_td(fixed_paths = "a_other"), "fixed_paths must name")
-  est <- c(a_within = 0.4, b_within = 0.5, c_prime_within = 0.3, a_between = 0.7, b_between = NA, c_prime_between = -0.1)
+  est <- c(a_within = 0.4, b_within = 0.5, c_prime_within = 0.3, a_between = 0.7, b_between = NA,
+           c_prime_between = -0.1)
   expect_error(tl_td(estimates = est), "finite")
-  vc <- diag(0.01, 6); dimnames(vc) <- list(names(est), names(est)); vc[1, 2] <- 0.005
+  vc <- diag(0.01, 6)
+  dimnames(vc) <- list(names(est), names(est))
+  vc[1, 2] <- 0.005
   est[5] <- 1.5
   expect_error(tl_td(estimates = est, vcov = vc), "symmetric")
-  vc[1, 2] <- 0; vc[3, 3] <- -0.01
+  vc[1, 2] <- 0
+  vc[3, 3] <- -0.01
   expect_error(tl_td(estimates = est, vcov = vc), "non-negative")
   # tolerance side: a roundoff-sized asymmetry and a roundoff-sized negative diagonal are accepted
-  vc[3, 3] <- 0.01; vc[1, 2] <- 1e-12
+  vc[3, 3] <- 0.01
+  vc[1, 2] <- 1e-12
   expect_no_error(tl_td(estimates = est, vcov = vc))
 })
 
