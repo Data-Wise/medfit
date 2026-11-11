@@ -125,7 +125,7 @@ Candidates, in recommended order:
 3. **Housekeeping:** triage #369, #357, #360, #320, #249 (close or restate), decide #376, merge or close the two dependabot PRs, close or retitle #394 to the remaining slices.
 4. **0.17.0 release prep** (separate release goal, not authorized yet): version bump, NEWS, tag, `main`, GitHub release.
 5. **Deferred and unauthorized:** FIML admission studies, the Hopper stage-0 run, medsim P0, native two-level fitter (S4), latent mediators (S5).
-6. **Book** (private repo `Data-Wise/medfit-book`): follow-up session running (render check, outline).
+6. **Book** (private repo `Data-Wise/medfit-book`): PR #1 (render check, outline, setup fix) merged as `dd0f0cb9`. The book is now actively developed by its owner (retitled *Mediation and Latent Variable Modeling with medfit*, chapter 0 and a code appendix added, local branch `codex/chapter-labels-design` unpushed); medfit sessions leave it as is and only read it.
 
 ## Risks and mitigations
 

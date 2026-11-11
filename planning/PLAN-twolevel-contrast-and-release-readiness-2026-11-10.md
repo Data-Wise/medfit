@@ -69,6 +69,7 @@ without an oracle transcript. **Dependencies:** Tasks 2, 3. **Size:** S.
 ## Phase 3: book and housekeeping
 
 ### Task 5: book chapter 9 follows the rules (repo `Data-Wise/medfit-book`)
+**Coordination note (2026-11-11):** the book repo is under active separate work (retitled; chapter 0 and an appendix added; the work sits on the unpushed local branch `codex/chapter-labels-design`, 6 commits ahead of `draft`). A chapter 9 edit must be made on top of that branch with the book owner's agreement, never from a medfit session on `draft`; until that branch is pushed or merged, this task is blocked, not skipped.
 **Acceptance criteria:** [ ] the contrast paragraph matches Task 2; [ ] the chapter's equated-path chunks run against the `dev` install
 (`scripts/render-check.sh` passes); [ ] PR #1 (render check and outline) is reviewed and merged first. **Release dependency:** the reviewed
 chapter update, rendered against the exact release candidate, is a gate of Task 7 (no release candidate with the package and the book disagreeing).
