@@ -769,8 +769,11 @@ S7::method(decompose, ClusterMediationData) <- function(x, ...) {
   "nie_between", "nde_between", "te_between", "pm_between", "nie_contrast"
 )
 
-# PM = NIE / TE is defined only for a finite TE away from zero; the one place the rule lives.
-.twolevel_te_defined <- function(te) is.finite(te) & abs(te) >= .Machine$double.eps
+# PM = NIE / TE is defined only for a finite, nonzero TE that is not negligible next to the effects it sums:
+# |TE| >= sqrt(eps) * max(|NIE|, |NDE|). The one place the rule lives; callers pass the level's NIE and NDE.
+.twolevel_te_defined <- function(te, nie, nde) {
+  is.finite(te) & te != 0 & abs(te) >= sqrt(.Machine$double.eps) * pmax(abs(nie), abs(nde))
+}
 
 # All effects as a named vector, with no condition signaled: NA where the between level is unidentified, where
 # |TE| is below machine epsilon (PM) and for a contrast that is zero by constraint.
@@ -780,7 +783,7 @@ S7::method(decompose, ClusterMediationData) <- function(x, ...) {
     b <- S7::prop(x, paste0("b_", level))
     cp <- S7::prop(x, paste0("c_prime_", level))
     te <- a * b + cp
-    pm <- if (.twolevel_te_defined(te)) a * b / te else NA_real_
+    pm <- if (.twolevel_te_defined(te, a * b, cp)) a * b / te else NA_real_
     stats::setNames(c(a * b, cp, te, pm), paste0(c("nie", "nde", "te", "pm"), "_", level))
   }
   out <- c(per_level("within"), per_level("between"), nie_contrast = NA_real_)
@@ -823,7 +826,9 @@ S7::method(decompose, ClusterMediationData) <- function(x, ...) {
   value <- eff[terms]
   if (identical(type, "pm")) {
     te <- eff[paste0("te_", levels)]
-    if (any(is.finite(te) & abs(te) < .Machine$double.eps)) {
+    nie_l <- eff[paste0("nie_", levels)]
+    nde_l <- eff[paste0("nde_", levels)]
+    if (any(is.finite(te) & !.twolevel_te_defined(te, nie_l, nde_l))) {
       warning("Total effect is approximately zero; proportion mediated is undefined.", call. = FALSE)
     }
   }

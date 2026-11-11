@@ -41,9 +41,20 @@
   tryCatch(lavaan::vcov(fit), error = function(e) NULL)
 }
 
-# lavaan warns while it evaluates post.check; the adapter signals its own classed warning instead.
+# lavaan warns while it evaluates post.check; the adapter signals its own classed warning instead. An
+# inadmissible solution (a negative variance, a non-positive-definite matrix) is a FALSE value, not an error
+# (lavaan::lavInspect(fit, "post.check") returned FALSE for such fits and TRUE for non-converged and `se = "none"`
+# fits in the probe behind this helper), so no error is expected and any error propagates.
 .twolevel_admissible <- function(fit) {
-  isTRUE(tryCatch(suppressWarnings(lavaan::lavInspect(fit, "post.check")), error = function(e) FALSE))
+  isTRUE(suppressWarnings(lavaan::lavInspect(fit, "post.check")))
+}
+
+# The lavaan version that made the fit, from the fit's own `@version` slot ("0.7-3" is normalized to "0.7.3");
+# the installed version only when the slot is empty or unparsable.
+.twolevel_fit_version <- function(fit) {
+  v <- tryCatch(as.character(numeric_version(fit@version[1L])), error = function(e) character(0))
+  if (length(v) != 1L || is.na(v)) v <- as.character(utils::packageVersion("lavaan"))
+  v
 }
 
 # Rows of the parameter table for the three paths at both levels, in the order a, b, c' within then
@@ -337,9 +348,10 @@
   equal <- if (identified) .twolevel_cross_equal(pt, key) else character(0)
   rows <- if (identified) seq_len(6L) else within
   est <- stats::setNames(key$est[rows], key$path[rows])
-  se <- suppressWarnings(sqrt(diag(V6)))
   # A within-only object keeps the audit rows but not between numbers it says do not exist
   shown <- if (identified) rep(TRUE, 6L) else key$level == "within"
+  se <- rep(NA_real_, 6L)
+  se[shown] <- .safe_se(diag(V6)[shown], "the two-level fit")
   table <- data.frame(
     path = key$path, level = key$level, lhs = key$lhs, op = key$op, rhs = key$rhs, label = key$label,
     free = key$free, est = ifelse(shown, key$est, NA_real_), se = ifelse(shown, unname(se), NA_real_),
@@ -371,7 +383,7 @@
     se_type = as.character(opts$se)[1L],
     estimator = as.character(opts$estimator)[1L],
     missing = as.character(opts$missing)[1L],
-    lavaan_version = as.character(utils::packageVersion("lavaan")),
+    lavaan_version = .twolevel_fit_version(object),
     call = paste(deparse(object@call), collapse = " "),
     between_parameterization = "latent",
     data = NULL,

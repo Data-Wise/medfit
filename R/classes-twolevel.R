@@ -36,8 +36,10 @@
 #' @param fixed_x,information,h1_information,se_type,estimator,missing How the fit was made, read from it.
 #' @param lavaan_version,call Character scalars: provenance of the fit.
 #' @param between_parameterization Character scalar: `"latent"` (cluster means are latent).
-#' @param data Data frame or `NULL`: the data, when cheap to keep.
-#' @param source_package Character scalar: `"lavaan"`.
+#' @param data Data frame or `NULL`: always `NULL` for the lavaan adapter (the fit is never refit and the data
+#'   are not copied); kept for the contract shared with the other mediation classes, which read `@data`.
+#' @param source_package Character scalar: `"lavaan"`; kept for the dependents contract shared with the other
+#'   mediation classes (`tests/testthat/test-dependents-contract.R` pins it across classes).
 #'
 #' @return A `TwoLevelMediationData` S7 object.
 #'
@@ -173,6 +175,9 @@ TwoLevelMediationData <- S7::new_class(
     if (anyNA(self@cluster_sizes) || any(self@cluster_sizes < 1L)) {
       return("cluster_sizes must all be at least 1")
     }
+    if (self@n_obs != sum(self@cluster_sizes)) {
+      return("n_obs must equal sum(cluster_sizes)")
+    }
 
     # --- Diagnostics ---
     icc <- self@icc
@@ -197,8 +202,21 @@ TwoLevelMediationData <- S7::new_class(
     if (!identical(rownames(self@vcov), nms) || !identical(colnames(self@vcov), nms)) {
       return("vcov dimnames must equal names(estimates)")
     }
+    if (any(!is.finite(self@estimates))) {
+      return("estimates must be finite")
+    }
     if (any(!is.finite(self@vcov))) {
       return("vcov must be finite")
+    }
+    vscale <- max(1, abs(self@vcov))
+    if (max(abs(self@vcov - t(self@vcov))) > 1e-8 * vscale) {
+      return("vcov must be symmetric")
+    }
+    if (any(diag(self@vcov) < -1e-8 * vscale)) {
+      return("the diagonal of vcov (the variances) must be non-negative")
+    }
+    if (!all(self@fixed_paths %in% nms)) {
+      return("fixed_paths must name rows of estimates")
     }
     if (!identified && any(between_rows %in% nms)) {
       return("a within-only object must not carry between rows in estimates and vcov")
@@ -308,7 +326,11 @@ S7::method(summary, TwoLevelMediationData) <- function(object, level = 0.95, ...
                         conf_low = unname(est - z * se), conf_high = unname(est + z * se),
                         row.names = names(est))
   p <- paths(object)
-  p_se <- sqrt(diag(object@vcov)[match(names(p), rownames(object@vcov))])
+  # A path with no row in vcov (the between paths of a within-only object) has no SE; only rows that exist
+  # are checked for an invalid variance.
+  p_idx <- match(names(p), rownames(object@vcov))
+  p_se <- rep(NA_real_, length(p))
+  p_se[!is.na(p_idx)] <- .safe_se(diag(object@vcov)[p_idx[!is.na(p_idx)]], "the two-level paths")
   structure(
     list(
       effects = effects,

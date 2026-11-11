@@ -403,7 +403,9 @@ $$
 $$
 
 and the contrast is $\text{NIE}_w - \text{NIE}_b$. No cross-level total effect or proportion mediated is
-defined. $\text{PM}_\ell$ is `NA` when $|\text{TE}_\ell|$ is below machine epsilon.
+defined. $\text{PM}_\ell$ is `NA`, with a warning, when $\text{TE}_\ell$ is zero or
+$|\text{TE}_\ell| < \sqrt{\epsilon}\,\max(|\text{NIE}_\ell|, |\text{NDE}_\ell|)$ ($\epsilon$ machine precision): a total
+effect that is only the rounding residue of two opposite-signed effects is not a denominator.
 
 ### Delta method with the cross-level covariance
 
