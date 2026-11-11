@@ -16,7 +16,8 @@ permissions: read-all
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    # Pinned to ubuntu-24.04: setup-r hung at apt-get update on ubuntu-26.04 (mirror timeouts, PR #376 2026-11-11).
+    runs-on: ubuntu-24.04
     # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default.
     timeout-minutes: 15
     env:
