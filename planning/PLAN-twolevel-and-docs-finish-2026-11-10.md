@@ -17,8 +17,10 @@ out of scope, stop conditions: they apply to every task here).
 | 5 D2b chapter 9 | done | #407 merged |
 | 6 D2b chapter 10 | done | #409 merged (`a2ac942e`) |
 | 7 D7 book CI render | dropped | maintainer decision 2026-11-10: the book is not published online; #408 closed unmerged, no book workflow |
-| 7b book move | in review | book moved to private `Data-Wise/medfit-book` (Quarto, tome scaffold, 34 commits of history kept, HTML and PDF render verified); removal PR #410 to dev |
-| 8 D6 final gate, Checkpoints A and B | pending | spelling, urlchecker, check_pkgdown, evaluated site build and links; the book render now belongs to the book repo |
+| 7b book move | done | book moved to private `Data-Wise/medfit-book` (Quarto, tome scaffold, 34 commits of history kept, HTML 10 chapters and 278-page PDF verified); removal PR #410 merged `55c9a8b2` on green exact head `d06aeaea`, ancestry verified |
+| 8 D6 final gate | done (partial) | check_pkgdown clean, urlchecker 48/48, hosted pkgdown green on #410; spelling 4 old false positives (covariate's, overidentified, reparameterization, rowwise) not added to WORDLIST; no separate local full evaluated-site build or link crawl beyond hosted pkgdown |
+| Checkpoint A | done | dev at `55c9a8b2`: full suite 210 files / 2321 tests / 19611 expectations / 0 failed / 7 skipped; lint 0 on isolated install; risk-tier low |
+| Checkpoint B | done with D7 replaced | D7 dropped by maintainer (book not published); everything else merged |
 
 Also merged this session outside the task list: #402 (helper-name clash fix, `ce898ac7`), docs D1 #398, D3 #399, D5 #401.
 
