@@ -1,0 +1,155 @@
+---
+title: "Two-level mediation: a step-by-step workflow"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+This guide walks one analysis from a `lavaan` fit to a reported result, and says what to check at each step.
+It uses the same simulated data as [Two-level mediation](model-twolevel.html), which is the reference page for
+every option; read that page when a step here needs more detail. The route needs `lavaan` (Suggests).
+
+```{r}
+#| label: setup
+library(medfit)
+library(generics)
+has_lavaan <- requireNamespace("lavaan", quietly = TRUE)
+```
+
+## Step 1: fit the same regressions at both levels
+
+Treatment, mediator and outcome are measured on level-1 units nested in clusters. Write the same three
+regressions at `level: 1` (within) and `level: 2` (between) and fit with `cluster =`.
+
+```{r}
+#| label: data
+set.seed(2026)
+J <- 100
+n <- 5
+id <- rep(seq_len(J), each = n)
+xb <- rnorm(J)[id]
+xw <- rnorm(J * n)
+x <- xb + xw
+m <- 0.4 * xw + 0.7 * xb + 0.5 * rnorm(J)[id] + rnorm(J * n)
+mbar <- ave(m, id)
+y <- 0.3 * xw + 0.2 * xb + 0.5 * (m - mbar) + 0.9 * mbar + 0.5 * rnorm(J)[id] + rnorm(J * n)
+d <- data.frame(id = id, X = x, M = m, Y = y)
+
+model <- "
+  level: 1
+    M ~ X
+    Y ~ M + X
+  level: 2
+    M ~ X
+    Y ~ M + X
+"
+```
+
+```{r}
+#| label: fit
+#| eval: !expr has_lavaan
+fit <- lavaan::sem(model, data = d, cluster = "id")
+```
+
+## Step 2: extract, then check the fit before reading any effect
+
+`extract_mediation()` reads the fit and never refits. Name the three roles; the paths are found by variable
+name and level, not by label.
+
+```{r}
+#| label: extract
+#| eval: !expr has_lavaan
+td <- extract_mediation(fit, treatment = "X", mediator = "M", outcome = "Y")
+```
+
+Three properties decide whether the between-level numbers can be trusted. Read them first.
+
+```{r}
+#| label: checks
+#| eval: !expr has_lavaan
+td@icc
+td@between_identified
+td@admissible
+td@n_clusters
+td@cross_level_equal
+```
+
+| Check | What it means | If it fails |
+|---|---|---|
+| `between_identified` | the treatment and the mediator vary enough between clusters (ICC at least 0.01) | only the within effects are returned; between effects and the contrast stop with class `medfit_between_unidentified` |
+| `admissible` | lavaan's post-check passed (no negative variance) | inspect the fit; standard errors on a negative variance are `NA` with a `medfit_warning_vcov_diagonal` warning |
+| `n_clusters` | fewer than 50 clusters triggers a warning (a judgment, not a published cutoff) | treat between results as rough |
+| `cross_level_equal` | paths constrained equal across levels (`a`, `b`, or both) | with both equated the contrast is `NA` by constraint |
+
+## Step 3: read the effects at each level
+
+```{r}
+#| label: effects
+#| eval: !expr has_lavaan
+nie(td)
+nie(td, level = "between")
+tidy(td, conf_int = TRUE)
+```
+
+The within and between indirect effects are separate quantities: $a_w b_w$ and $a_b b_b$. Standard errors use
+the delta method over the joint covariance, so the covariance between a within and a between slope is part of
+every one. The intervals are Wald intervals.
+
+## Step 4: treat the contrast as descriptive
+
+`nie(td, level = "contrast")` is the within effect minus the between effect. It is returned unless both `a`
+and `b` are equated across levels. It describes a difference between two quantities; it is not a test that
+the levels differ.
+
+```{r}
+#| label: contrast
+#| eval: !expr has_lavaan
+nie(td, level = "contrast")
+```
+
+## Step 5: choose an interval
+
+The delta-method interval from Step 3 is the default. When you want a distribution-based interval, use the
+cluster bootstrap: pass the `lavaan` fit to `twolevel_statistic()` and give `bootstrap_mediation()` the data
+and `cluster =`. Whole clusters are resampled and the model is refitted in every replicate. The example uses 30
+replicates only to keep the page fast; use several hundred in a real analysis.
+
+```{r}
+#| label: bootstrap
+#| eval: !expr has_lavaan
+b <- bootstrap_mediation(
+  twolevel_statistic(fit, "nie_between", treatment = "X", mediator = "M", outcome = "Y"),
+  method = "nonparametric", data = d, cluster = "id", n_boot = 30, seed = 1
+)
+c(estimate = b@estimate, lower = b@ci_lower, upper = b@ci_upper, n_used = b@n_boot)
+```
+
+Report the percentile interval (`ci_lower`, `ci_upper`), not the standard deviation of the draws: refits with a
+negative between variance are kept, and at a few dozen clusters they give heavy tails. Replicates that fail
+are excluded and counted in a warning, so check `n_boot` in the result.
+
+## Step 6: report
+
+State, at minimum: the number of clusters and the cluster sizes; the ICC of the treatment and the mediator;
+whether the fit was admissible; the within and between indirect effects with their intervals and the interval
+type; and, if you give the contrast, that it is descriptive. `summary(td)` prints the provenance of the fit and
+the assumptions in full.
+
+```{r}
+#| label: summary
+#| eval: !expr has_lavaan
+glance(td)
+```
+
+## When something goes wrong
+
+Each condition carries a class. The [Troubleshooting guide](guide-troubleshooting.html#two-level-mediation)
+lists every two-level message with its cause and fix, and [Which interval should I use?](guide-intervals.html)
+compares the interval types.

@@ -14,7 +14,7 @@ read_text <- function(p) paste(readLines(p, warn = FALSE), collapse = "\n")
 
 test_that("every guide is in the articles index and the Guides menu", {
   guides <- guide_names()
-  expect_length(guides, 4L)
+  expect_length(guides, 6L)
   pk <- read_text(root_path("_pkgdown.yml"))
   for (g in guides) {
     expect_true(grepl(paste0("articles/", g, "`"), pk, fixed = TRUE), info = paste(g, "index"))
