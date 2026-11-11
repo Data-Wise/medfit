@@ -121,7 +121,7 @@ State of `dev` at `55c9a8b2`: two-level adapter and docs complete; 0.17.0 not bu
 Candidates, in recommended order:
 
 1. **Hardening PR from the two-level code review** (correctness first; not yet fixed): the proportion-mediated threshold `.Machine$double.eps` is too lax (`R/generics-effects.R`), `lavaan_version` records the installed rather than the fitting version, `.twolevel_admissible` swallows errors, the refit environment is `rlang::caller_env()`, unclassed `stop()` in `twolevel_statistic()`, validator gaps, an unguarded `sqrt(diag(vcov))`, and redundant `source_package`/`data` slots.
-2. **Decide the two open statistical questions** (maintainer decision, not unattended): the contrast when only `a` or `b` is equated across levels (currently `NA`), and algebraic cross-level equalities (`a1 - a2 == 0`).
+2. **Implement the two decided contrast/equality rules** (decided 2026-11-10, see the ledger): QUEUED behind the hardening PR (both edit `R/classes-twolevel.R`; one at a time). Start a test-first session after the hardening PR merges, then update book chapter 9 in `medfit-book`.
 3. **Housekeeping:** triage #369, #357, #360, #320, #249 (close or restate), decide #376, merge or close the two dependabot PRs, close or retitle #394 to the remaining slices.
 4. **0.17.0 release prep** (separate release goal, not authorized yet): version bump, NEWS, tag, `main`, GitHub release.
 5. **Deferred and unauthorized:** FIML admission studies, the Hopper stage-0 run, medsim P0, native two-level fitter (S4), latent mediators (S5).
