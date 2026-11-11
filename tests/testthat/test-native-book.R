@@ -1,7 +1,7 @@
-# Consistency guard for the repository-only book (book/chapters/01..09): the chapters exist and are listed in
+# Consistency guard for the repository-only book (book/chapters/01..10): the chapters exist and are listed in
 # book/_quarto.yml in order, every chapter link resolves, the book is off the package website, the identities
-# chapters 5, 6 and 7 teach hold, and chapter 9 (the lavaan two-level adapter) runs from its setup chunk alone and
-# reproduces its oracles.
+# chapters 5, 6 and 7 teach hold, chapter 9 (the lavaan two-level adapter) and chapter 10 (2-1-1 cluster mediation)
+# run from their setup chunk alone and reproduce their oracles.
 
 root_path <- function(...) testthat::test_path("..", "..", ...)
 
@@ -11,14 +11,14 @@ book_dir <- function() {
   d
 }
 
-book_chapters <- function() list.files(file.path(book_dir(), "chapters"), pattern = "^0[0-9]-.*\\.qmd$")
+book_chapters <- function() list.files(file.path(book_dir(), "chapters"), pattern = "^[0-9]{2}-.*\\.qmd$")
 
 read_text <- function(p) paste(readLines(p, warn = FALSE), collapse = "\n")
 
-test_that("the nine chapters exist, numbered 1 to 9, and are listed in _quarto.yml in order", {
+test_that("the ten chapters exist, numbered 1 to 10, and are listed in _quarto.yml in order", {
   ch <- book_chapters()
-  expect_length(ch, 9L)
-  expect_identical(as.integer(sub("^0([0-9])-.*$", "\\1", ch)), 1:9)
+  expect_length(ch, 10L)
+  expect_identical(as.integer(sub("^([0-9]{2})-.*$", "\\1", ch)), 1:10)
   yml <- read_text(file.path(book_dir(), "_quarto.yml"))
   pos <- vapply(ch, function(g) regexpr(paste0("chapters/", g), yml, fixed = TRUE)[[1]], numeric(1))
   expect_true(all(pos > 0))
@@ -28,7 +28,7 @@ test_that("the nine chapters exist, numbered 1 to 9, and are listed in _quarto.y
 test_that("every relative chapter link resolves", {
   for (g in book_chapters()) {
     txt <- read_text(file.path(book_dir(), "chapters", g))
-    links <- unique(regmatches(txt, gregexpr("\\]\\((0[0-9]-[a-z0-9-]+\\.qmd)", txt))[[1]])
+    links <- unique(regmatches(txt, gregexpr("\\]\\(([0-9]{2}-[a-z0-9-]+\\.qmd)", txt))[[1]])
     targets <- gsub("^\\]\\(", "", links)
     missing <- targets[!file.exists(file.path(book_dir(), "chapters", targets))]
     expect_identical(missing, character(), info = g)
@@ -325,4 +325,99 @@ test_that("chapter 9: planted defects in the chapter's hand likelihood are caugh
     env <- run_chapter_chunks(sub(defects[[nm]][1], defects[[nm]][2], txt, fixed = TRUE))
     expect_gt(env$ll_rel_diff, 1e-6, label = paste("relative gap with defect", nm))
   }
+})
+
+ch10_path <- function() file.path(book_dir(), "chapters", "10-cluster.qmd")
+
+test_that("chapter 10 is listed in _quarto.yml and linked from the preface", {
+  expect_true(file.exists(ch10_path()))
+  expect_match(read_text(file.path(book_dir(), "_quarto.yml")), "    - chapters/10-cluster.qmd", fixed = TRUE)
+  expect_match(read_text(file.path(book_dir(), "index.qmd")),
+               "10. Cluster-randomized mediation (2-1-1)", fixed = TRUE)
+  expect_false(grepl("fit_sem\\s*<-\\s*function", read_text(ch10_path())))
+})
+
+test_that("chapter 10 runs from its setup chunk alone and its oracles hold", {
+  skip_if_not_installed("lme4")
+  skip_if_not_installed("pbkrtest")
+  skip_on_cran()
+  env <- run_chapter_chunks(read_text(ch10_path()))
+  keys <- c("a", "c_prime", "b_within", "b_between")
+  # paths: lm on cluster means and the within regression, the reduced-form coefficient for te()
+  expect_lt(env$paths_gap, 1e-8)
+  expect_lt(env$te_gap, 1e-8)
+  expect_equal(unname(paths(env$x_fit)), unname(paths(env$x_ext)), tolerance = 1e-8)
+  # the chapter's hand oracle is the helper harness's fit on the harness's own balanced data
+  sim <- sim_cluster211(J = 30, sizes = 8, seed = 5)
+  expect_equal(unname(env$hand_paths(sim$data, "cluster")),
+               unname(paths(fit_cluster211(sim$data))[c("a", "b_within", "b_between", "c_prime")]),
+               tolerance = 1e-6)
+  # term detection by value: raw parameterization and a rescaled mean term give the same paths and covariance
+  expect_identical(env$x_raw@parameterization, "raw")
+  expect_equal(unname(paths(env$x_raw)), unname(paths(env$x_ext)), tolerance = 1e-8)
+  expect_equal(env$x_raw@vcov[keys, keys], env$x_ext@vcov[keys, keys], tolerance = 1e-8)
+  expect_equal(unname(paths(env$x_10)), unname(paths(env$x_ext)), tolerance = 1e-8)
+  expect_match(env$no_mean_msg, "no cluster-mean term", fixed = TRUE)
+  # exact own and spillover by counterfactual prediction
+  expect_equal(env$own_exact, env$a_hat * (env$b_w + (env$b_b - env$b_w) / env$n_j), tolerance = 1e-8)
+  expect_equal(env$spill_exact, env$a_hat * (env$b_b - env$b_w) * (env$n_j - 1) / env$n_j, tolerance = 1e-8)
+  expect_equal(env$own_exact + env$spill_exact, env$a_hat * env$b_b, tolerance = 1e-8)
+  expect_equal(unname(env$dec[["own"]] + env$dec[["spillover"]]), unname(env$dec[["nie"]]), tolerance = 1e-12)
+  # D11: quiet at ten members per cluster; the warning is the one the chapter captured, and its gap is the hand gap
+  expect_no_warning(decompose(env$x_ext))
+  expect_equal(medfit:::.cluster_own_gap(env$x_trio), env$gap_hand, tolerance = 1e-12)
+  expect_gt(env$gap_hand, 0.5 * env$own_se)
+  expect_match(env$trio_warning, sprintf("off by about %.3g", env$gap_hand), fixed = TRUE)
+  # covariance: only the mediator-outcome blocks are zero by construction
+  expect_true(all(env$cross_block == 0))
+  expect_lt(abs(env$V["b_within", "b_between"]), 1e-10)
+  expect_gt(abs(env$V["c_prime", "b_between"]), 1e-4)
+  # delta method by hand equals tidy() and the package's own gradient code
+  expect_lt(env$delta_gap, 1e-8)
+  expect_equal(unname(env$se_hand), unname(medfit:::.effect_se(env$x_ext, names(env$se_hand))), tolerance = 1e-8)
+  # Kenward-Roger: df equal the OLS df on cluster means and the within-cluster regression, interval equals lm's
+  n_cl <- env$n_cl
+  expect_equal(unname(env$x_kr@kr_df[keys]), c(n_cl - 2, n_cl - 3, nrow(env$pair) - n_cl - 1, n_cl - 3),
+               tolerance = 1e-6)
+  expect_equal(unname(confint(env$x_kr)["a", ]), unname(confint(env$lm_a)["X", ]), tolerance = 1e-6)
+  expect_equal(unname(env$var_adjusted), unname(env$var_model), tolerance = 1e-6)
+  est <- paths(env$x_kr)
+  se <- sqrt(diag(env$x_kr@vcov))[names(est)]
+  expect_equal(unname(confint(env$x_kr)[names(est), 1]),
+               unname(est - stats::qt(0.975, env$x_kr@kr_df[names(est)]) * se), tolerance = 1e-10)
+  eff <- confint(env$x_kr, parm = "effects")
+  expect_equal(unname(eff[, 1]),
+               unname(medfit:::.cluster_effect_vec(env$x_kr)[rownames(eff)] -
+                        stats::qnorm(0.975) * medfit:::.effect_se(env$x_kr, rownames(eff))), tolerance = 1e-10)
+  # bootstrap: the hand replay of the draws equals the stored replicates; the interval is percentile
+  expect_lt(max(abs(env$replay - env$boot@boot_estimates)), 1e-8)
+  expect_equal(c(env$boot@ci_lower, env$boot@ci_upper),
+               unname(stats::quantile(env$boot@boot_estimates, c(0.025, 0.975))), tolerance = 1e-12)
+  expect_identical(env$boot@n_boot, 40L)
+  expect_identical(length(unique(env$relabeled$school)), 40L)
+  expect_lt(length(unique(env$kept_ids$school)), 40L)
+  expect_gt(abs(env$nie_of(env$relabeled) - env$nie_of(env$kept_ids)), 1e-6)
+})
+
+test_that("chapter 10: planted defects in the chapter's hand computations are caught", {
+  skip_if_not_installed("lme4")
+  skip_if_not_installed("pbkrtest")
+  skip_on_cran()
+  txt <- read_text(ch10_path())
+  defect <- function(from, to) {
+    expect_true(grepl(from, txt, fixed = TRUE), info = from)
+    # the no-relabeling defect refits on fewer than 25 clusters, which raises the few-cluster advisory
+    suppressWarnings(run_chapter_chunks(sub(from, to, txt, fixed = TRUE)))
+  }
+  # the NIE gradient read from the within path instead of the between path
+  env <- defect("nie = c(a = b_b, b_between = a_hat),", "nie = c(a = b_b, b_within = a_hat),")
+  expect_gt(env$delta_gap, 1e-3)
+  # the bootstrap replay without relabeling: a cluster drawn twice is counted once
+  env <- defect("function(ids) nie_of(medfit:::.relabel_clusters(dat_fit, \"school\", ids))",
+                "function(ids) nie_of(dat_fit[dat_fit$school %in% ids, ])")
+  expect_gt(max(abs(env$replay - env$boot@boot_estimates)), 1e-4)
+  # a biased within slope in the hand oracle
+  env <- defect("b_w <- sum(m_dev * (d[[y]] - y_bar)) / sum(m_dev^2)",
+                "b_w <- 1.05 * sum(m_dev * (d[[y]] - y_bar)) / sum(m_dev^2)")
+  expect_gt(env$paths_gap, 1e-3)
 })

@@ -4,6 +4,7 @@ This book opens the engines and model classes of the medfit R package and shows 
 Chapters 1 to 8 open the native maximum-likelihood engine (`fit_sem()`, `fit_mediation(engine = "native")`,
 `SEMFit`) as of medfit 0.16.0, with the bounded FIML scope of the development version noted below. Chapter 9
 opens the adapter that reads a two-level `lavaan` fit into `TwoLevelMediationData`, in the development version.
+Chapter 10 opens `ClusterMediationData`, the 2-1-1 cluster-randomized design fitted with `lme4`.
 It is reference material kept in the package repository (`book/`); it is not part of the package website.
 
 Chapters, in order:
@@ -18,6 +19,9 @@ Chapters, in order:
 8. Bounded FIML: learning from partially observed rows.
 9. The lavaan two-level adapter and `TwoLevelMediationData`: the estimand, the parameter-table keying, the joint-covariance
    sub-block, the contrast standard error, the two-level likelihood as an oracle, and the bootstrap.
+10. Cluster-randomized mediation (2-1-1): `ClusterMediationData` from `lme4` fits, term detection by value, the NIE
+    as a x b_between with its own and spillover split, the block-diagonal covariance and the hand delta method,
+    Kenward-Roger intervals, and the cluster bootstrap replayed by hand.
 
 How the optimizer is tested, and the decisions behind its solver, are on the package website:
 [Quality control of the optimizer](https://data-wise.github.io/medfit/articles/quality-control.html).
