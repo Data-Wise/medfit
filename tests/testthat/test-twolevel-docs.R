@@ -52,6 +52,8 @@ test_that("the model page runs and its claims hold against lm and lavaan", {
   def <- def[def$op == ":=", ]
   ce <- tidy(env$td_eq, type = "effects")
   ce <- ce[ce$term == "nie_contrast", ]
+  expect_identical(nrow(ce), 1L)
+  expect_false(is.na(env$eff_eq[env$eff_eq$term == "nie_contrast", ]$estimate))
   expect_equal(ce$estimate, def$est, tolerance = 1e-4)
   expect_equal(ce$std_error, def$se, tolerance = 1e-4)
   expect_false(is.na(nie(env$td_eq, level = "between")))

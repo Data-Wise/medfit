@@ -257,8 +257,10 @@ shared <- "
 fit_eq <- suppressWarnings(lavaan::sem(shared, data = d, cluster = "id"))
 td_eq <- extract_mediation(fit_eq, treatment = "X", mediator = "M", outcome = "Y")
 td_eq@cross_level_equal
-tidy(td_eq, type = "effects")[c("nie_contrast"), ]
-lavaan::parameterEstimates(fit_eq)[lavaan::parameterEstimates(fit_eq)$op == ":=", c("est", "se")]
+eff_eq <- tidy(td_eq, type = "effects")
+eff_eq[eff_eq$term == "nie_contrast", ]
+pe_eq <- lavaan::parameterEstimates(fit_eq)
+pe_eq[pe_eq$op == ":=", c("est", "se")]
 nie(td_eq, level = "between")
 ```
 
