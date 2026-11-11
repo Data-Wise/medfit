@@ -138,3 +138,42 @@ test_that("effects of a lavaan fit match lavaan's own := definitions (O3, estima
   expect_equal(val(nie(td, level = "contrast")), a[1] * a[2] - a[4] * a[5], tolerance = 1e-12)
   expect_equal(val(te(td)), a[1] * a[2] + a[3], tolerance = 1e-12)
 })
+
+
+# --- Hardening 1: PM is defined only for a TE away from zero relative to the effect scale ---
+
+# A valid object with a_within * b_within = 1 and the given within c'.
+tl_td_pm <- function(cp) {
+  est <- c(a_within = 1, b_within = 1, c_prime_within = cp, a_between = 0.7, b_between = 1.5,
+           c_prime_between = -0.1)
+  tl_td(a_within = 1, b_within = 1, c_prime_within = cp, estimates = est)
+}
+
+test_that("pm() uses a relative tolerance: TE near zero relative to NIE and NDE is undefined", {
+  # a*b = 1, c' = -1 + 1e-9: TE = 1e-9 is above machine epsilon but far below sqrt(eps) * 1
+  td_tiny <- tl_td_pm(-1 + 1e-9)
+  expect_warning(p <- pm(td_tiny), "approximately zero")
+  expect_true(is.na(val(p)))
+  expect_true(is.na(val(tidy_pm <- twolevel_statistic(td_tiny, "pm_within")(td_tiny@estimates))))
+
+  # c' = -1 + 1e-6: TE = 1e-6 is above the relative threshold, so PM is finite (about 1e6)
+  td_ok <- tl_td_pm(-1 + 1e-6)
+  expect_no_warning(p_ok <- pm(td_ok))
+  expect_true(is.finite(val(p_ok)))
+  expect_equal(val(p_ok), 1 / (1e-6), tolerance = 1e-6)
+  expect_equal(twolevel_statistic(td_ok, "pm_within")(td_ok@estimates), val(p_ok))
+
+  # an exact zero stays undefined, with the warning
+  td_zero <- tl_td_pm(-1)
+  expect_warning(p0 <- pm(td_zero), "approximately zero")
+  expect_true(is.na(val(p0)))
+  expect_true(is.na(twolevel_statistic(td_zero, "pm_within")(td_zero@estimates)))
+})
+
+test_that("the PM gradient and SE use the same relative rule", {
+  td_tiny <- tl_td_pm(-1 + 1e-9)
+  g <- .effect_gradients_twolevel(td_tiny)
+  expect_true(all(is.na(g$pm_within)))
+  td_ok <- tl_td_pm(-1 + 1e-6)
+  expect_false(anyNA(.effect_gradients_twolevel(td_ok)$pm_within))
+})

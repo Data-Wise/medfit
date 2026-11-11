@@ -143,8 +143,9 @@ twolevel_statistic <- function(x,
     nde = row("c_prime"),
     te = row("a") * row("b") + row("c_prime"),
     pm = {
-      te <- row("a") * row("b") + row("c_prime")
-      if (.twolevel_te_defined(te)) row("a") * row("b") / te else NA_real_
+      nie <- row("a") * row("b")
+      te <- nie + row("c_prime")
+      if (.twolevel_te_defined(te, nie, row("c_prime"))) nie / te else NA_real_
     }
   ))
 }
