@@ -1872,6 +1872,25 @@ Integration is successful when:
 The 0.16 release/test/docs milestones are complete. Do not reopen them from
 historical checklists. Current dispositions:
 
+**Reconciliation 2026-11-11 (delivery states, from `git log origin/dev`).** The statements below that FIML expansion
+(FI-G0 onward) is planned or unauthorized are history: the stages are merged to `dev`. `origin/main..origin/dev` is 234 files
+(+26,472 / -6,695 lines) with the version still 0.16.0. Nothing below is released or statistically admitted.
+
+| Work | Delivery state | Merged as |
+|---|---|---|
+| Release guard: every non-`NULL` FIML `source_fit` refused with `medfit_error_fiml_inference_unavailable` | merged-dev | #382 |
+| FI-G0 kernel, FI-G1 one or two covariates, FI-G2 parallel mediators | merged-dev, numerically verified, not admitted | #383, #384 |
+| FI-G3 serial mediators, saturated and chain, 0 to 2 covariates; serial print and summary | merged-dev, numerically verified, not admitted | #385 to #390, #392 |
+| Two-level mediation, lavaan adapter (#394 S0 to S2): class, extraction, effects, `twolevel_statistic()`, O8 oracle, lavaan floor 0.7-3 | merged-dev | #395, #396, #397, #400, #402 to #405 |
+| Two-level hardening and the contrast rule (unless both `a` and `b` are equated) with numeric equality detection | merged-dev | #412, #415 |
+| Docs: site audit, workflow and architecture guides, `CONTRIBUTING.md`, condition-docs guard; the book moved to a private repository | merged-dev | #393, #403, #410, #416, #417 |
+| CI: lint, pkgdown and risk-tier pinned to `ubuntu-24.04`; lint timeout 35 minutes | merged-dev | #411, #414 |
+| Native two-level fitter (S4) and latent mediators (S5) | NO-GO as written; not started | issue #394 |
+| FIML statistical admission (stage 0 and the 11 variants) | unresolved; nothing submitted | `PLAN-FIML-statistical-admission-2026-11-01.md` |
+| 0.17.0 release | **not authorized**; checklist drafted | `PLAN-0.17.0-release-checklist-2026-11-11.md` (planning branch) |
+
+Open: Dependabot #381; issues #369, #320 and #394 (to be retitled to S4 and S5).
+
 1. **Roadmap reconciliation merged via PR #377 (2026-10-31):** one current board and
    [clause-level issue dispositions](ISSUE-369-reconciliation-2026-10-31.md).
    Existing issue #369 tracks administrative follow-through; #249 retains
@@ -1968,10 +1987,10 @@ untested; no admission study ran.
 | Order | Milestone and scope | Accountable owner | Completion criterion | Current state |
 |---|---|---|---|---|
 | 1 | FI-B0: existing-model inference contract and verification scope | Maintainer decides; planning agent drafts | Reviewed bounded API/failure/test contract and local verification limits; existing defaults preserved; statistical admission tracked separately | Reviewed contract merged via #378; bounded execution authorized 2026-11-01 |
-| 2 | FI-B1 / FI-B2: row-bootstrap and Gaussian parameter-draw intervals for the existing simple FIML model | `medfit-implementer`; `medfit-oracle-qa`; `medfit-docs`; `medfit-gates` | Each method passes its complete admission stage, regression/local gates, documented limits and executed teaching example | **Delivery state: merged-dev, not admitted, not released; criterion not yet met.** Local numerical QA and verification passed in #379. Public route unguarded on dev until the R1 guard branch merges (decided 2026-11-07) |
-| 3 | FI-G0 / FI-G1: generic preparation, then one/two continuous covariates | Implementation owner; independent oracle QA | Old-model behavior preserved; each covariate variant independently admitted with extraction and both interval methods; refusal tests for unadmitted topologies pass before each slice merges to dev | Planned after existing-model inference; G0 kernel changes stay off dev until the stage-0 decision |
-| 4 | FI-G2: two parallel mediators, 0-2 covariates, independent/correlated mediator residuals | Implementation owner; independent oracle QA | Each of six variants independently admitted; full effect covariance and both interval methods verified | Planned after covariate stage |
-| 5 | FI-G3: two serial mediators, 0-2 covariates, independent disturbances and declared shortcuts | Implementation owner; independent oracle QA | Each of three variants independently admitted; every-path totals and both interval methods verified | Planned after parallel stage |
+| 2 | FI-B1 / FI-B2: row-bootstrap and Gaussian parameter-draw intervals for the existing simple FIML model | `medfit-implementer`; `medfit-oracle-qa`; `medfit-docs`; `medfit-gates` | Each method passes its complete admission stage, regression/local gates, documented limits and executed teaching example | **Delivery state: merged-dev, not admitted, not released; criterion not yet met.** Local numerical QA and verification passed in #379. Public source-fit route refused fail-closed by the guard merged as #382 |
+| 3 | FI-G0 / FI-G1: generic preparation, then one/two continuous covariates | Implementation owner; independent oracle QA | Old-model behavior preserved; each covariate variant independently admitted with extraction and both interval methods; refusal tests for unadmitted topologies pass before each slice merges to dev | **merged-dev, numerically verified with independent QA (#383, #384), not admitted, not released**; the stage-0 concern was answered by the #382 guard (`PLAN-FIML-stage0-release-guard-2026-11-01.md`; the 2026-11-07 decision is in a planning file not yet on `dev`) |
+| 4 | FI-G2: two parallel mediators, 0-2 covariates, independent/correlated mediator residuals | Implementation owner; independent oracle QA | Each of six variants independently admitted; full effect covariance and both interval methods verified | **merged-dev, numerically verified (#383, #384), not admitted, not released** |
+| 5 | FI-G3: two serial mediators, 0-2 covariates, independent disturbances and declared shortcuts | Implementation owner; independent oracle QA | Each of three variants independently admitted; every-path totals and both interval methods verified | **merged-dev, numerically verified (#385 to #390, #392), not admitted, not released** |
 | Each stage | FI-TRACK / FI-DOCS / review checkpoint | Stage owner; docs owner; independent reviewer | Evidence, roadmap/status and support matrix agree; help/site/minibook match admitted scope | Required within the stage, not a new audit campaign |
 
 Stage owners must be assigned before activation; roles above are responsibilities,
@@ -1986,7 +2005,7 @@ The active plan records gates, docs ownership and cumulative resource limits.
 The frozen numerical checks pass all 78 paired native/lavaan comparisons (156 public fits).
 They establish fixture-level agreement, not coverage calibration or general affordability.
 Earlier failed gates and verification deviations remain in the execution plan; the later local verification passed.
-**Integration:** planning PR #378 and implementation PR #379 merged to dev; statistical simulation/admission and release remain deferred.
+**Integration:** planning PR #378 and implementation PR #379 merged to dev; statistical simulation/admission and release remain deferred. FI-G0 to FI-G3 later merged to dev behind the #382 guard (see the 2026-11-11 reconciliation above).
 Version assignment follows accepted capability and a separate release decision;
 no feature date, release or dev-to-main merge is authorized here. The
 efficiency baseline stays separate; robust SEs, likelihood-based inference and
