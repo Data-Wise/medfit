@@ -13,4 +13,4 @@ is authorized by this file. The roadmap's current board owns the queue.
 ## Open, not decided here
 
 - The version bump goes in a release-prep PR (the dev convention); its timing and the NEWS wording are not decided.
-- The 0.17.0 release checklist lives on an unpushed branch of another session; fold these four rows into it when it lands.
+- The 0.17.0 release checklist is `planning/PLAN-0.17.0-release-checklist-2026-11-11.md`; it already carries these four rows.
