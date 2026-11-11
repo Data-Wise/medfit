@@ -1886,8 +1886,9 @@ historical checklists. Current dispositions:
 | Docs: site audit, workflow and architecture guides, `CONTRIBUTING.md`, condition-docs guard; the book moved to a private repository | merged-dev | #393, #403, #410, #416, #417 |
 | CI: lint, pkgdown and risk-tier pinned to `ubuntu-24.04`; lint timeout 35 minutes | merged-dev | #411, #414 |
 | Native two-level fitter (S4) and latent mediators (S5) | NO-GO as written; not started | issue #394 |
+| Multilevel implementation gaps IG1 to IG7 (register, unblock conditions U1 to U5) | planned, nothing authorized | `PLAN-multilevel-implementation-gaps-2026-11-11.md` |
 | FIML statistical admission (stage 0 and the 11 variants) | unresolved; nothing submitted | `PLAN-FIML-statistical-admission-2026-11-01.md` |
-| 0.17.0 release | **not authorized**; checklist drafted | `PLAN-0.17.0-release-checklist-2026-11-11.md` (planning branch) |
+| 0.17.0 release | **not authorized**; checklist drafted | `PLAN-0.17.0-release-checklist-2026-11-11.md` (PR #420) |
 
 Open: Dependabot #381; issues #369, #320 and #394 (to be retitled to S4 and S5).
 
@@ -1953,7 +1954,8 @@ Open: Dependabot #381; issues #369, #320 and #394 (to be retitled to S4 and S5).
    the contrast rule is done; **S4** (native two-level fitter) and **S5** (latent
    mediators in a two-level model) stay NO-GO as written, per the literature review
    (`specs/LIT-multilevel-sem-gaps-2026-11-11.md`); planning release 0.17.0 is
-   not authorized. The ten-chapter book is a separate private repository, not linked
+   not authorized. Implementation gaps (S4, S6, two-level tests, random slopes, more than one mediator) and the conditions
+   that unblock S4 are registered in `PLAN-multilevel-implementation-gaps-2026-11-11.md`. The ten-chapter book is a separate private repository, not linked
    from this tree or the website.
 
 3. **Separate ownership:** missingmed reconciles its existing consumer checkpoint
