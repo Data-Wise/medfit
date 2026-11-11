@@ -173,6 +173,9 @@ TwoLevelMediationData <- S7::new_class(
     if (anyNA(self@cluster_sizes) || any(self@cluster_sizes < 1L)) {
       return("cluster_sizes must all be at least 1")
     }
+    if (self@n_obs != sum(self@cluster_sizes)) {
+      return("n_obs must equal sum(cluster_sizes)")
+    }
 
     # --- Diagnostics ---
     icc <- self@icc
@@ -197,8 +200,21 @@ TwoLevelMediationData <- S7::new_class(
     if (!identical(rownames(self@vcov), nms) || !identical(colnames(self@vcov), nms)) {
       return("vcov dimnames must equal names(estimates)")
     }
+    if (any(!is.finite(self@estimates))) {
+      return("estimates must be finite")
+    }
     if (any(!is.finite(self@vcov))) {
       return("vcov must be finite")
+    }
+    vscale <- max(1, abs(self@vcov))
+    if (max(abs(self@vcov - t(self@vcov))) > 1e-8 * vscale) {
+      return("vcov must be symmetric")
+    }
+    if (any(diag(self@vcov) < -1e-8 * vscale)) {
+      return("the diagonal of vcov (the variances) must be non-negative")
+    }
+    if (!all(self@fixed_paths %in% nms)) {
+      return("fixed_paths must name rows of estimates")
     }
     if (!identified && any(between_rows %in% nms)) {
       return("a within-only object must not carry between rows in estimates and vcov")

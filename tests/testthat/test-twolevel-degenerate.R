@@ -59,8 +59,9 @@ test_that("planted defect: admissibility from post.check alone is caught", {
     },
     .package = "medfit"
   )
-  td <- tl_extract(fit)
-  expect_false(tl_within_only_ok(td))
+  # The defect keeps the identified flag on a fit whose between block has negative variances. It used to be
+  # visible only as a wrong flag; the validator now refuses the object outright (a stronger catch).
+  expect_error(tl_extract(fit), "non-negative")
 })
 
 test_that("a treatment with a between SD of 0.05 passes post.check but is flagged weak", {

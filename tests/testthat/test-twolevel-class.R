@@ -111,3 +111,38 @@ test_that("print flags equated paths and fixed paths", {
   expect_match(out, "equated across levels: a", fixed = TRUE)
   expect_match(out, "fixed: c_prime_between", fixed = TRUE)
 })
+
+
+# --- Hardening 6: validator gaps ---
+
+test_that("the validator rejects non-finite estimates, an asymmetric or negative-variance vcov", {
+  td <- tl_td()
+  est <- td@estimates
+  est[["b_between"]] <- Inf
+  expect_error(tl_td(estimates = est), "estimates must be finite")
+  est <- td@estimates
+  est[["a_within"]] <- NA_real_
+  expect_error(tl_td(estimates = est), "estimates must be finite")
+
+  vc <- td@vcov
+  vc[1, 2] <- vc[1, 2] + 0.5
+  expect_error(tl_td(vcov = vc), "symmetric")
+  vc <- td@vcov
+  vc[2, 2] <- -0.01
+  expect_error(tl_td(vcov = vc), "diagonal")
+  # a tiny asymmetry from floating point is accepted
+  vc <- td@vcov
+  vc[1, 2] <- 1e-14
+  expect_no_error(tl_td(vcov = vc))
+})
+
+test_that("the validator rejects fixed_paths that are not path rows of the estimates", {
+  expect_error(tl_td(fixed_paths = "a_other"), "fixed_paths")
+  expect_error(tl_td(within_only = TRUE, fixed_paths = "a_between"), "fixed_paths")
+  expect_no_error(tl_td(fixed_paths = c("a_within", "c_prime_between")))
+})
+
+test_that("the validator requires n_obs to equal the sum of cluster_sizes", {
+  expect_error(tl_td(n_obs = 499L), "n_obs")
+  expect_error(tl_td(n_obs = 501L), "cluster_sizes")
+})
