@@ -12,6 +12,8 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Single mediator &rsaquo; Treatment-by-mediator interaction</p>
+
 When the effect of the mediator depends on the treatment, the outcome model
 carries a `treatment * mediator` term and the effect splits into four parts.
 Part of the [Models](models.html) collection.
@@ -25,6 +27,7 @@ Part of the [Models](models.html) collection.
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 ```
@@ -159,6 +162,10 @@ tryCatch(anova(sem, sem), error = function(e) conditionMessage(e))
   [supported class](model-native.html#product-terms): recursive, no residual covariance between
   outcomes, free coefficients and intercepts, none shared. Without the product,
   `decomposition = "four_way"` is refused with a message that says to add it.
+
+::: {.next-action}
+**Next:** Choose an interval: [Which interval should I use?](guide-intervals.html)
+:::
 
 ## Related
 

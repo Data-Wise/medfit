@@ -12,6 +12,8 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Single mediator &rsaquo; The regmedint engine</p>
+
 `engine = "regmedint"` computes the effects from the closed-form regression
 formulas of VanderWeele, with analytical standard errors. It needs the suggested
 `regmedint` package. Part of the [Models](models.html) collection.
@@ -25,6 +27,7 @@ formulas of VanderWeele, with analytical standard errors. It needs the suggested
 
 ```{r}
 #| label: setup
+#| include: false
 #| eval: !expr requireNamespace("regmedint", quietly = TRUE)
 library(medfit)
 library(generics)
@@ -71,6 +74,10 @@ c(regmedint = unname(nie(fit_rm)), glm = unname(nie(fit_glm)))
   covariates.
 - Engine-specific settings go through `engine_args`; the reference level of the
   mediator for the controlled direct effect is `m_star`.
+
+::: {.next-action}
+**Next:** Choose an interval: [Which interval should I use?](guide-intervals.html)
+:::
 
 ## Related
 
