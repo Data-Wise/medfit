@@ -1,6 +1,6 @@
 # Stage-0 FIML inference: release guard design
 
-**Status: proposed for review; no code changes or release authorized.** The
+**Status: COMPLETE (reconciled 2026-11-11): the guard merged as #382 (`medfit_error_fiml_inference_unavailable`). Earlier status: proposed for review; no code changes or release authorized.** The
 next-release goal remains expanded FIML fitting for covariates, parallel and
 serial models, subject to each variant's existing numerical and statistical
 admission. This design addresses only the already-merged simple-model
