@@ -71,6 +71,16 @@
 #' }
 #' }
 #'
+#' @usage
+#' TwoLevelMediationData(
+#'   a_within, b_within, c_prime_within, a_between, b_between, c_prime_between,
+#'   estimates, vcov, parameter_table, treatment, mediator, outcome, cluster, n_obs,
+#'   n_clusters, cluster_sizes, icc, between_identified, admissible, converged,
+#'   cross_level_equal, fixed_paths, source, fixed_x, information, h1_information,
+#'   se_type, estimator, missing, lavaan_version, call, between_parameterization,
+#'   data, source_package
+#' )
+#'
 #' @export
 TwoLevelMediationData <- S7::new_class(
   "TwoLevelMediationData",

@@ -5,71 +5,12 @@
 \title{TwoLevelMediationData Class}
 \usage{
 TwoLevelMediationData(
-  a_within = integer(0),
-  b_within = integer(0),
-  c_prime_within = integer(0),
-  a_between = integer(0),
-  b_between = integer(0),
-  c_prime_between = integer(0),
-  estimates = integer(0),
-  vcov = (function (.data) 
- {
-    
-    stop(sprintf("S3 class <\%s> doesn't have a constructor", class[[1]]), call. =
-    FALSE)
- })(),
-  parameter_table = (function (.data = list(), row.names = NULL) 
- {
-     if
-    (is.null(row.names)) {
-         list2DF(.data)
-     }
-     else {
-         out <-
-    list2DF(.data, length(row.names))
-         attr(out, "row.names") <- row.names
-      
-      out
-     }
- })(),
-  treatment = character(0),
-  mediator = character(0),
-  outcome = character(0),
-  cluster = character(0),
-  n_obs = integer(0),
-  n_clusters = integer(0),
-  cluster_sizes = integer(0),
-  icc = integer(0),
-  between_identified = logical(0),
-  admissible = logical(0),
-  converged = logical(0),
-  cross_level_equal = character(0),
-  fixed_paths = character(0),
-  source = character(0),
-  fixed_x = logical(0),
-  information = character(0),
-  h1_information = character(0),
-  se_type = character(0),
-  estimator = character(0),
-  missing = character(0),
-  lavaan_version = character(0),
-  call = character(0),
-  between_parameterization = character(0),
-  data = (function (.data = list(), row.names = NULL) 
- {
-     if (is.null(row.names)) {
-
-            list2DF(.data)
-     }
-     else {
-         out <- list2DF(.data,
-    length(row.names))
-         attr(out, "row.names") <- row.names
-         out
-     }
-
-    })(),
-  source_package = character(0)
+  a_within, b_within, c_prime_within, a_between, b_between, c_prime_between,
+  estimates, vcov, parameter_table, treatment, mediator, outcome, cluster, n_obs,
+  n_clusters, cluster_sizes, icc, between_identified, admissible, converged,
+  cross_level_equal, fixed_paths, source, fixed_x, information, h1_information,
+  se_type, estimator, missing, lavaan_version, call, between_parameterization,
+  data, source_package
 )
 }
 \arguments{
