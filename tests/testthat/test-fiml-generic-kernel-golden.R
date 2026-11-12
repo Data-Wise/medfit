@@ -57,8 +57,13 @@ for (direct in c(TRUE, FALSE)) {
         expect_identical(a$table[key], b$table[key])
         expect_equal(a$table$est, b$table$est, tolerance = 1e-6)
         expect_equal(a$table$se, b$table$se, tolerance = 1e-6)
-        expect_identical(a$likelihood[c("method", "x_policy", "n_obs", "k", "rows", "selected", "variables")],
-                         b$likelihood[c("method", "x_policy", "n_obs", "k", "rows", "selected", "variables")])
+        expect_identical(a$likelihood[c("method", "x_policy", "n_obs", "k", "rows", "variables")],
+                         b$likelihood[c("method", "x_policy", "n_obs", "k", "rows", "variables")])
+        # `selected` is which.min() over the accepted attempts' likelihoods. Attempts that reach the same optimum tie
+        # to about 1e-9, so which one wins is platform noise; require a valid selection, not the same index.
+        sel <- a$likelihood$selected
+        expect_true(a$attempts$accepted[sel])
+        expect_lt(a$attempts$nll[sel] - min(a$attempts$nll[a$attempts$accepted]), 1e-7)
         expect_equal(a$likelihood$nll, b$likelihood$nll, tolerance = 1e-7)
         expect_equal(a$likelihood$jacobian, b$likelihood$jacobian, tolerance = 1e-12)
         expect_equal(a$effects[c("nie", "nde", "te")], b$effects[c("nie", "nde", "te")], tolerance = 1e-6)
@@ -67,12 +72,11 @@ for (direct in c(TRUE, FALSE)) {
         expect_equal(a$effects$estimates, b$effects$estimates, tolerance = 1e-6)
         expect_equal(a$effects$vcov, b$effects$vcov, tolerance = 1e-6)
       }
-      # Attempt ledgers: solver, start and acceptance are identical; statuses and likelihoods agree.
-      ka <- c("solver", "start", "first_status", "status", "accepted", "reason")
-      expect_identical(a$attempts[ka], b$attempts[ka])
-      # A failed fit's ledger records where each start stalled, which differs across platforms; only successful fits
-      # pin the attempt likelihoods and stationarity.
+      # A failed fit's ledger records where each start stalled and why (status, reason), which differs across
+      # platforms; only successful fits pin the ledger: solver, start and acceptance identical; likelihoods agree.
       if (!b$error) {
+        ka <- c("solver", "start", "first_status", "status", "accepted", "reason")
+        expect_identical(a$attempts[ka], b$attempts[ka])
         expect_equal(a$attempts$nll, b$attempts$nll, tolerance = 1e-7)
         expect_lt(max(abs(a$attempts$stationarity - b$attempts$stationarity), 0, na.rm = TRUE), 1e-6)
       }
