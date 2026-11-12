@@ -220,6 +220,7 @@ test_that("incomplete data: the cross-equation covariance blocks are not zero", 
 
 # ---- V6: rowwise likelihood and independent Hessian ----------------------------------------------------------------
 test_that("the objective is the rowwise likelihood and the covariance inverts an independent Hessian", {
+  skip_if_not_installed("numDeriv")
   for (kind in c("mar", "sparse")) {
     d <- sb_data(kind)
     f <- sb_fit(d)
