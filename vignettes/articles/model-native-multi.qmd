@@ -12,6 +12,8 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Clusters and latent variables &rsaquo; Native engine: several mediators and weights</p>
+
 Serial and parallel mediators, and sampling weights, with the native engine. Part
 of the [Models](models.html) collection; the fourth of five
 [native engine](model-native.html) pages.
@@ -31,6 +33,7 @@ length 1" for more. For several, fit with `fit_sem()` and extract.
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 covs <- "covariate1 + covariate2"
@@ -109,6 +112,10 @@ errors are not valid under inverse-probability weighting.
   need not match.
 - **The sandwich treats observations as independent**, so it does not handle
   survey clusters, strata or replicate weights.
+
+::: {.next-action}
+**Next:** Choose an interval: [Which interval should I use?](guide-intervals.html)
+:::
 
 ## Related
 

@@ -12,6 +12,8 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Clusters and latent variables &rsaquo; Native engine: constraints and the MBCO test</p>
+
 Fix, bound or equate parameters, and test the indirect effect with one call.
 Part of the [Models](models.html) collection; the third of five
 [native engine](model-native.html) pages.
@@ -25,6 +27,7 @@ Part of the [Models](models.html) collection; the third of five
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 base <- "
@@ -143,6 +146,10 @@ anova(tied, free)
   model.
 - **Equal labels are one parameter.** Giving two paths the same label equates them
   without a constraint line.
+
+::: {.next-action}
+**Next:** Add several mediators and weights: [Native: several mediators and weights](model-native-multi.html)
+:::
 
 ## Related
 

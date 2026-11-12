@@ -15,7 +15,7 @@ template:
     heading_font: { google: "Montserrat" }
     code_font: { google: "Fira Code" }
     # Controls the global base font size (Default is 1rem)
-    font-size-base: 0.925rem
+    font-size-base: 1rem
 
 home:
   title: "medfit: Infrastructure for Mediation Analysis in R"
@@ -45,7 +45,7 @@ logo:
 
 navbar:
   structure:
-    left:  [home, reference, models, guides, cookbook, articles, qc, ecosystem, status, news]
+    left:  [home, reference, models, guides, cookbook, articles, project, news]
     right: [search, github]
   components:
     home:
@@ -214,16 +214,13 @@ navbar:
         href: articles/native-defaults-0-15.html
       - text: "Quality control of the optimizer"
         href: articles/quality-control.html
-    qc:
-      text: Quality control
-      href: articles/quality-control.html
-    ecosystem:
-      text: Ecosystem
-      href: https://data-wise.github.io/mediationverse/articles/ecosystem.html
-    status:
-      icon: fas fa-chart-line
-      text: Status
+    project:
+      text: Project
       menu:
+      - text: "Quality control of the optimizer"
+        href: articles/quality-control.html
+      - text: "Ecosystem"
+        href: https://data-wise.github.io/mediationverse/articles/ecosystem.html
       - text: "Package Status Dashboard"
         href: https://github.com/data-wise/mediationverse/blob/main/STATUS.md
       - text: "Development Roadmap"
@@ -338,14 +335,17 @@ articles:
       - '`articles/guide-glossary`'
       - '`articles/guide-twolevel-tutorial`'
       - '`articles/guide-architecture`'
+      - '`articles/syntax-crosswalk`'
+      - '`articles/lavaan-comparison`'
+      - '`articles/probmed-comparison`'
+      - '`articles/rmediation-comparison`'
+  - title: "Native engine"
+    desc: "Fit models from syntax: quickstart, tutorial, guide and defaults"
+    contents:
       - '`articles/native-defaults-0-15`'
       - '`articles/native-quickstart`'
       - '`articles/native-tutorial`'
       - '`articles/native-guide`'
-      - '`articles/lavaan-comparison`'
-      - '`articles/probmed-comparison`'
-      - '`articles/rmediation-comparison`'
-      - '`articles/syntax-crosswalk`'
       - '`articles/example-gpa`'
   - title: "Detailed guides"
     contents:

@@ -12,6 +12,8 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Clusters and latent variables &rsaquo; Native engine: paths and defined parameters</p>
+
 Write the model as syntax and fit it by maximum likelihood with no other package.
 This is the first of five pages on the native engine.
 Part of the [Models](models.html) collection.
@@ -31,12 +33,12 @@ The five pages: this one (paths and defined parameters),
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 ```
 
-These examples use the default listwise path. For the separate unreleased
-bounded FIML opt-in and its narrower support, see the
+These examples use the default listwise path. For the separate bounded FIML opt-in (0.16.0 and 0.17.0) and its narrower support, see the
 [native guide](native-guide.html#bounded-fiml).
 
 ## Fit it
@@ -254,6 +256,10 @@ a table row or a property that exists today keeps its meaning. This matters for 
 Limits (a categorical mediator or outcome, for example): they will arrive as additions, not as a rename of
 `g_b`-style dummy names or of the `m:x` product name. A test (`test-api-freeze.R`) pins the current names.
 Numerical fixes are not breaking changes.
+
+::: {.next-action}
+**Next:** Add a latent mediator: [Native: a latent mediator](model-native-latent.html)
+:::
 
 ## Related
 

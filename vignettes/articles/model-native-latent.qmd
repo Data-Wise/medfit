@@ -12,6 +12,8 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Clusters and latent variables &rsaquo; Native engine: a latent mediator</p>
+
 The mediator is a construct measured by several indicators, and you want its
 indirect effect without first averaging the indicators into a score. Part of the
 [Models](models.html) collection; the second of five
@@ -26,6 +28,7 @@ indirect effect without first averaging the indicators into a score. Part of the
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 ```
@@ -96,6 +99,10 @@ One simulated dataset shows the direction, not the size of the difference.
 - **One latent mediator per `fit_mediation(engine = "native")` call**, as with
   any single mediator; for several, use `fit_sem()` and
   [extract](model-native-multi.html) the structure.
+
+::: {.next-action}
+**Next:** Add constraints and the MBCO test: [Native: constraints and MBCO](model-native-constraints.html)
+:::
 
 ## Related
 

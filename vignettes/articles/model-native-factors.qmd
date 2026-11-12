@@ -12,6 +12,8 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Clusters and latent variables &rsaquo; Native engine: categorical covariates</p>
+
 Use a factor, character or logical column as a covariate in syntax. Part of the
 [Models](models.html) collection, with the other [native engine](model-native.html)
 pages. This page needs medfit 0.11.0 or later
@@ -28,6 +30,7 @@ The page cuts `covariate1` into three groups to have a factor to use:
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 dat <- transform(mediation_demo,
@@ -147,6 +150,10 @@ tidy(extract_mediation(fw, treatment = "treatment", mediator = "mediator1",
 - **A refit from raw data** (a nonparametric bootstrap that calls `fit_sem()` on each
   resample) rebuilds the factor each time, so a level missing from a character column's
   resample changes the reference level.
+
+::: {.next-action}
+**Next:** Fix an error or warning: [Troubleshooting](guide-troubleshooting.html)
+:::
 
 ## Related
 

@@ -12,10 +12,10 @@ execute:
   echo: true
 ---
 
-One treatment, one mediator, one outcome: the model behind most mediation
-analyses. This page runs it three ways and reads the result. Part of the
-[Models](models.html) collection; for a one-page lookup see the
-[Reference Card](refcard.html).
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Single mediator &rsaquo; Simple mediation</p>
+
+**For:** one treatment, one mediator, one outcome. **You get:** the paths a, b and c', the indirect effect and its interval.
+Part of the [Models](models.html) collection; a one-page lookup is the [Reference Card](refcard.html).
 
 | | |
 |---|---|
@@ -26,18 +26,18 @@ analyses. This page runs it three ways and reads the result. Part of the
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 covs <- c("covariate1", "covariate2")
 ```
 
-## When to use it
+## Use it when
 
-Use it when one mediator carries the effect of the treatment and you have no
-reason to expect a treatment-by-mediator interaction. If the mediator and the
-outcome interact with the treatment, see [interaction](model-interaction.html);
-for two or more mediators see [serial](model-serial.html) and
-[parallel](model-parallel.html).
+| Use this page when | Use another page when |
+|---|---|
+| one mediator carries the effect and the outcome is continuous | the mediator interacts with treatment: [interaction](model-interaction.html) |
+| you have no reason to expect a treatment-by-mediator interaction | two or more mediators: [serial](model-serial.html) or [parallel](model-parallel.html) |
 
 ## Route 1: one line
 
@@ -112,6 +112,10 @@ For a bootstrap interval see [Bootstrap Inference](bootstrap.html).
 - The default `glm` engine is maximum likelihood on independent observations;
   for clustered data see
   [Cookbook recipe 9](cookbook.html#cluster-randomized-trial).
+
+::: {.next-action}
+**Next:** Add an interval: [Bootstrap Inference](bootstrap.html)
+:::
 
 ## Related
 

@@ -12,6 +12,11 @@
   object). The lavaan floor is now `>= 0.7-3`.
 * **Known issue.** `compare_lr()`: lavaan's product-null fit returns an LR above medfit's reference on about 30% of
   gate runs; medfit flags it correctly (#320, open).
+* **Known issues, open.** #369 (reconcile the #249 and #357 task lists with the merged comparison-engine and sign-branch
+  work; bookkeeping, no behavior change) and #394 (a native joint two-level fitter, S4, and latent mediators, S5, remain;
+  both no-go for now, and object-based cluster bootstrap dispatch stays deferred).
+* **Packaging.** RMediation joins `Suggests`; `TwoLevelMediationData` has a names-only `@usage` block so R CMD check
+  stays clean (#426).
 * GitHub-only release; CRAN stays on hold (#83).
 
 ## Documentation
@@ -57,7 +62,7 @@
   `(a_w - a_b) b`, each with a delta-method SE from the joint covariance, equal to lavaan's `:=` definition
   (still descriptive, not a test). With both equated it is `NA` (zero by constraint) with
   `medfit_warning_twolevel_constrained`, and `twolevel_statistic("nie_contrast")` raises
-  `medfit_error_twolevel_constrained`. Behavior change for the development version only (the adapter is unreleased).
+  `medfit_error_twolevel_constrained`. Behavior change relative to the pre-release adapter on `dev`; no released version had the old rule.
 * `cross_level_equal` also finds an equality lavaan keeps as two parameters (for example `a^2 - a2^2 == 0`):
   a path is recorded as equated when the estimated difference of its two level estimates and the variance of that
   difference are both effectively zero (defaults `1e-6` relative to `max(1, |estimate|)` and `1e-10` relative to
@@ -98,7 +103,7 @@
   `medfit_error_twolevel_constrained`. `bootstrap_mediation()` now accepts a `TwoLevelMediationData`
   as `mediation_data`. Object-based cluster bootstrap dispatch is still deferred (#394).
 
-* Hardening of the two-level adapter (all within the development version, no change to a valid fit's numbers):
+* Hardening of the two-level adapter (all before the first release of the adapter, no change to a valid fit's numbers):
   * Behavior change: the `TwoLevelMediationData` validator now rejects non-finite `estimates`, a `vcov` that is not
     symmetric or has a negative diagonal, `fixed_paths` that are not rows of `estimates`, and `n_obs` that differs from
     `sum(cluster_sizes)`. The constructor errors on such objects instead of storing them, so a bad object fails at

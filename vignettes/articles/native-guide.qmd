@@ -226,7 +226,7 @@ Bounded FIML was introduced in 0.16.0 and is unavailable
 in released 0.15.0. Ordinary calls still delete incomplete model rows listwise.
 The explicit opt-in below fits numeric continuous observed variables: X to M
 to Y (three variables) with a free or exactly zero direct path, independent
-Gaussian disturbances and free intercepts. After 0.16.0 the development version
+Gaussian disturbances and free intercepts. From 0.17.0 the opt-in
 also fits the same model with one covariate or two covariates (see
 [covariates](#bounded-fiml-covariates)), two parallel mediators (see
 [parallel mediators](#bounded-fiml-parallel)) and the two-mediator serial forms, saturated or
@@ -319,7 +319,7 @@ See [Methods and Formulas](methods.html#bounded-fiml) for the likelihood.
 
 ### Covariates {#bounded-fiml-covariates}
 
-Development version only; not in 0.16.0. The opt-in also fits one covariate
+New in 0.17.0; not in 0.16.0. The opt-in also fits one covariate
 `Z`, or two covariates `Z1` and `Z2`, written as `M ~ X + Z` and
 `Y ~ M + X + Z` (two covariates: `M ~ X + Z1 + Z2`, `Y ~ M + X + Z1 + Z2`).
 The exogenous variables have a free joint covariance with independent
@@ -346,7 +346,7 @@ own error (`medfit_error_fiml_covariate_source_fit`).
 
 ### Parallel mediators {#bounded-fiml-parallel}
 
-Development version only; not in 0.16.0. The opt-in also fits two parallel
+New in 0.17.0; not in 0.16.0. The opt-in also fits two parallel
 mediators, written `M1 ~ X`, `M2 ~ X` and `Y ~ M1 + M2` (the direct path
 `Y ~ X` is free, fixed at exactly zero, or omitted). Any variable may be
 incomplete. The rules:
@@ -387,7 +387,7 @@ covariates `medfit_error_fiml_covariate_source_fit`).
 
 ### Serial mediators {#bounded-fiml-serial}
 
-Development version only; not in 0.16.0. The opt-in also fits two serial
+New in 0.17.0; not in 0.16.0. The opt-in also fits two serial
 mediators in two forms, each with no, one or two covariates: the saturated forward
 graph `M1 ~ X`, `M2 ~ M1 + X` and `Y ~ M1 + M2 + X`, and the pure chain
 `M1 ~ X`, `M2 ~ M1` and `Y ~ M2` (in both the direct path `Y ~ X` is free, fixed

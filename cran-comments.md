@@ -1,3 +1,5 @@
+<!-- Historical: this file records the 0.3.2 CRAN submission. CRAN is on hold (#83); do not sync it to a GitHub release. -->
+
 ## R CMD check results
 
 0 errors | 0 warnings | 0 notes (expected)
