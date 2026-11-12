@@ -18,7 +18,7 @@ model, from one mediator to a latent variable.
 > **In one line:** `med()` runs a mediation analysis, `quick()` prints it, and
 > `nie()`, `nde()`, `te()`, `pm()` and `tidy()` read it.
 
-## Bounded FIML in 0.16.0
+## Bounded FIML (0.16.0 and 0.17.0)
 
 medfit 0.16.0 added explicit `fit_sem(missing = "fiml", fixed_x = FALSE)` for
 three-variable Gaussian random-X mediation, preserving listwise defaults. medfit 0.17.0
@@ -35,7 +35,7 @@ remain unavailable. Source-fit retained-row and Gaussian parameter-draw interval
 (`bootstrap_mediation(source_fit = ...)`) are implemented but withheld: the call is
 refused until statistical admission is decided. `glance()` on the source SEMFit retains likelihood/IC fields.
 See the [native guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
-for settings and limits. Website publication remains a separate step.
+for settings and limits.
 
 ## What's new
 
@@ -275,7 +275,7 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")  # minimum of two likelihood-ratio tes
 | `ParallelMediationData` | Mediators side by side; indirect effect is the sum of a_j * b_j |
 | `JointMediationData` | Joint natural effects of several mediators with products |
 | `ClusterMediationData` | Treatment assigned to clusters (2-1-1): own-mediator and spillover parts |
-| `TwoLevelMediationData` | A two-level `lavaan` fit with X, M and Y on level-1 units (1-1-1): the indirect effect at the within and the between level (development version) |
+| `TwoLevelMediationData` | A two-level `lavaan` fit with X, M and Y on level-1 units (1-1-1): the indirect effect at the within and the between level (0.17.0, experimental) |
 | `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | Bounded FIML fits (`fit_sem(missing = "fiml")`): X to M to Y, two parallel mediators, two serial mediators (see above) |
 | `SEMFit` | A native-engine fit; `extract_mediation()` turns it into the classes above |
 | `BootstrapResult` | Point estimates, intervals and the bootstrap distribution |

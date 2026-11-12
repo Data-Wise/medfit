@@ -21,7 +21,7 @@ Keep partly observed rows instead of deleting them. Part of the
 | **Class returned** | `FIMLMediationData` (simple), `FIMLParallelMediationData` (parallel) and `FIMLSerialMediationData` (serial) |
 | **Route** | `fit_sem(model, data, missing = "fiml", fixed_x = FALSE)` then `extract_mediation()`, or `fit_mediation(engine = "native", engine_args = list(missing = "fiml", ...))` |
 | **Standard errors** | observed information, model-based; delta-method effect intervals |
-| **Availability** | simple model from 0.16.0; covariates, parallel and serial forms in the development version |
+| **Availability** | simple model from 0.16.0; covariates, parallel and serial forms from 0.17.0 |
 
 ```{r}
 #| label: setup
