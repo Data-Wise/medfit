@@ -166,4 +166,4 @@ Not verified: a rendered site build (not run here), external URL liveness (`urlc
 * **Merge order.** Stage 3 edits `native-guide.qmd`, `model-native.qmd` and `native-tutorial.qmd`, which PR #431 (S5a prose slice)
   also edits later: stage 3 lands first and is limited to version words and structure, with no rename of any file, URL or menu
   label containing "native".
-* **Rendered pass** on the live site: see section 6 of `planning/PROPOSAL-docs-adhd-design-2026-11-12.md` (new findings F11 to F16).
+* **Rendered pass** on the live site: see section 9 of `planning/PROPOSAL-docs-adhd-design-2026-11-12.md` (new findings F11 to F16).
