@@ -170,6 +170,7 @@ test_that("the chain's likelihood-ratio statistic against the saturated fit equa
 # ---- V6: rowwise likelihood and independent Hessian ------------------------------------------------------------------
 
 test_that("the objective is the rowwise likelihood and the covariance inverts an independent Hessian", {
+  skip_if_not_installed("numDeriv")
   for (v in c("saturated", "chain")) {
     for (cell in list(c("mar", "free"), c("sparse", "zero"))) {
       kind <- cell[1L]

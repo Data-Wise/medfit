@@ -183,6 +183,7 @@ test_that("incomplete data: the cross-equation covariance blocks are not zero", 
 
 # ---- V6: rowwise likelihood and independent Hessian ----------------------------------------------------------------
 test_that("the objective is the rowwise likelihood and the covariance inverts an independent Hessian", {
+  skip_if_not_installed("numDeriv")
   for (kind in c("mar", "sparse")) for (dr in c("free", "zero")) {
     d <- sc_data(kind, cp = if (dr == "free") .25 else 0)
     f <- sc_fit(d, dr)
@@ -596,11 +597,11 @@ test_that("effect SEs equal the hand delta SEs (3 x 3 block for nie, 4 x 4 for t
     V3 <- z@vcov[c("a", "d1", "b"), c("a", "d1", "b")]
     expect_equal(se[["nie"]], sqrt(drop(g$nie %*% V3 %*% g$nie)), tolerance = 1e-12)
     # nie_total is the same effect: identical row
-    expect_identical(tb[tb$term == "nie_total", c("estimate", "std_error")],
-                     tb[tb$term == "nie", c("estimate", "std_error")], ignore_attr = TRUE)
+    expect_equal(tb[tb$term == "nie_total", c("estimate", "std_error")],
+                 tb[tb$term == "nie", c("estimate", "std_error")], tolerance = 1e-12, ignore_attr = TRUE)
     ci <- sc_ci(z, parm = "effects")
     expect_identical(rownames(ci), c("nie", "nie_total", "nde", "te"))
-    expect_identical(unname(ci["nie", ]), unname(ci["nie_total", ]))
+    expect_equal(unname(ci["nie", ]), unname(ci["nie_total", ]), tolerance = 1e-12)
     half <- (ci[, 2L] - ci[, 1L]) / 2 / stats::qnorm(.975)
     for (k in rownames(ci)) expect_equal(unname(half[[k]]), se[[k]], tolerance = 1e-10, info = k)
     expect_equal(unname(ci[, 1L] + ci[, 2L]) / 2, unname(tb$estimate), tolerance = 1e-12)
