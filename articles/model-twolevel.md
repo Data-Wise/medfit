@@ -545,8 +545,8 @@ b_par
     N bootstrap samples: 1000
 
     95% Confidence Interval:
-      Lower:   0.2901
-      Upper:   0.8234
+      Lower:   0.2980
+      Upper:   0.8209
 
 ``` r
 b_cl <- bootstrap_mediation(
