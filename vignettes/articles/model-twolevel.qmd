@@ -16,6 +16,8 @@ Treatment, mediator and outcome are all measured on the same level-1 units (stud
 nested in clusters (schools, clinics, people), and you want the indirect effect at the within level and at
 the between level. Part of the [Models](models.html) collection.
 
+**Experimental.** The two-level API (`TwoLevelMediationData`, `extract_mediation()` on two-level fits, `nie(level = )`, `twolevel_statistic()`) may change in a later release without the usual deprecation period.
+
 | | |
 |---|---|
 | **Structure** | X, M and Y on level-1 units, with a within part and a between (cluster) part each (a "1-1-1" design) |
@@ -23,7 +25,7 @@ the between level. Part of the [Models](models.html) collection.
 | **Indirect effect** | $a_w b_w$ at the within level and $a_b b_b$ at the between level; their difference is a descriptive contrast |
 | **Route** | `extract_mediation()` on a two-level `lavaan` fit (`level:` blocks, `cluster =`) |
 | **Needs** | `lavaan` (Suggests) |
-| **Availability** | the development version |
+| **Availability** | version 0.17.0 (**experimental**) |
 
 If the treatment is assigned to whole clusters (a 2-1-1 design), use the
 [cluster-randomized page](model-cluster.html) instead. If you have a single-level fit that only sets
