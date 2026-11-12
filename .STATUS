@@ -1,3 +1,7 @@
+# 0.17.0 release prep started — 2026-11-11 MST
+
+# Branch feature/release-prep-0.17.0: DESCRIPTION 0.17.0, NEWS release summary (FIML numerically verified not admitted; two-level experimental; #320 known issue), experimental label in the two Rd pages, README and article version strings. Checklist R1 done on the branch, R2 full local gates pending. No tag, main merge or release: P1, P2, P3 and P5 of the checklist are open.
+
 # Multilevel implementation gaps registered — 2026-11-11 MST
 
 # planning/PLAN-multilevel-implementation-gaps-2026-11-11.md: gaps IG1 to IG7 and unblock conditions U1 to U5 for S4, from the literature review (ranking stays in specs/LIT-multilevel-sem-gaps-2026-11-11.md section 5). Roadmap board row and item 2b point at it. Planning only: nothing authorized, S4 and S5 remain NO-GO as written, no release.

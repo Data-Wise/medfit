@@ -20,9 +20,9 @@ model, from one mediator to a latent variable.
 
 ## Bounded FIML in 0.16.0
 
-medfit 0.16.0 adds explicit `fit_sem(missing = "fiml", fixed_x = FALSE)` for
-three-variable Gaussian random-X mediation, preserving listwise defaults. The
-development version also fits one or two covariates, two parallel mediators
+medfit 0.16.0 added explicit `fit_sem(missing = "fiml", fixed_x = FALSE)` for
+three-variable Gaussian random-X mediation, preserving listwise defaults. medfit 0.17.0
+also fits one or two covariates, two parallel mediators
 (with zero, one or two covariates) and two-mediator serial models (the saturated graph
 or the pure chain, with up to two covariates; implemented and verified against lavaan, not calibrated for coverage). It is
 unavailable in 0.15.0 and earlier. Observed/model SEs and
@@ -41,6 +41,7 @@ for settings and limits. Website publication remains a separate step.
 
 | Version | What you get |
 |---|---|
+| **0.17.0** | bounded FIML with one or two covariates, two parallel and two serial mediators (numerically verified, not statistically admitted); `extract_mediation()` on a two-level `lavaan` fit returns `TwoLevelMediationData` (experimental); lavaan floor 0.7-3 |
 | **0.16.0** | A supported single nonzero-product equality now searches both sign branches independently, with explicit coverage evidence rather than a global-optimum claim. Corrected observed-information and sandwich standard errors under active nonlinear constraints, including solver variance floors; expected information retains its Fisher definition. Active-boundary covariance is a local tangent approximation. Only explicit covariance diagnostics retain an accepted likelihood; other errors propagate. See [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html#constraints) and NEWS. |
 | **0.15.0** | The native defaults flip: `fit_sem()`/`fit_mediation(engine = "native")` now fix the exogenous observed variables (`fixed_x`) and estimate the mean structure (`meanstructure = TRUE`) when you leave them unset, as lavaan does. Explicit arguments are kept, so `fixed_x = FALSE` and `meanstructure = FALSE` restore the old fit; the once-per-session warning is gone and `options(medfit.native_defaults)` is ignored (removed in 0.16.0). See the [0.15.0 defaults article](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html) and NEWS. |
 | **0.14.1** | The outcome ledger for native fits: every zero-product branch and `mbco_sem()` null keeps its outcome (`fit@diagnostics$ledger`, `$ledger` on the errors); literal `a == 0` / nonzero contradictions are certified empty, not fitted; branch maps and an overflow-safe 64-branch cap; a covariance-stage failure is a typed error (`medfit_sem_covariance_error`) that `mbco_sem()` retains for a null. A literal contradiction now stops before the optimizer (see NEWS). |
@@ -359,7 +360,7 @@ If you use medfit in your research, please cite:
 
 ```
 Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.16.0. https://data-wise.github.io/medfit/
+R package version 0.17.0. https://data-wise.github.io/medfit/
 ```
 
 For the entry matching your installed version, run `citation("medfit")`.

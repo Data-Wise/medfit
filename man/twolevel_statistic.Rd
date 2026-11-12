@@ -31,12 +31,13 @@ A function of one argument returning a number: a named parameter vector for a
 \link{TwoLevelMediationData}, a data frame for a \code{lavaan} fit.
 }
 \description{
+\strong{Experimental.} The interface may change without the usual deprecation period.
+}
+\details{
 Builds the scalar \code{statistic_fn} that \code{\link[=bootstrap_mediation]{bootstrap_mediation()}} needs for one effect of a two-level
 (1-1-1) mediation model, so the within and the between indirect effect and their contrast can be
 bootstrapped without writing the callback by hand. The form of the callback depends on the first
 argument:
-}
-\details{
 \itemize{
 \item \code{x} a \link{TwoLevelMediationData}: the callback for \code{method = "parametric"} (and \code{"plugin"}). It takes
 the named parameter vector drawn from \eqn{N(\hat\theta, \hat\Sigma)}{N(estimates, vcov)}, so the
