@@ -152,3 +152,33 @@ pages link to (`#route-1-one-line` etc. are not linked from elsewhere; `grep 'mo
 Stage 3 applies the audit's stale fixes first (version words, README, NEWS), then the home page and `model-simple` as the
 pilot, then the other 14 model pages by template. Stage 4 adds the gates P1, P5, P6, P7, P8, P9 beside the release-docs gates.
 Not verified here: a rendered preview of the proposed pages (this stage changes no page).
+
+## 9. Rendered pass on the live site (2026-11-12, https://data-wise.github.io/medfit/)
+
+Method: built-in browser at 1280 px and 375 px (phone preset), DOM measurements by script, and a Lighthouse audit (mobile for
+the home page, desktop for `model-simple`). Evidence, not opinion; "not verified" is listed at the end.
+
+| # | Finding | Evidence | Fix in this proposal |
+|---|---|---|---|
+| F11 | **The first screen of the home page is the FIML paragraph and the What's new table, not install or an example.** | At 1280x800 the first-screen elements are the H1, three short paragraphs, H2 "Bounded FIML in 0.16.0", an 11-line paragraph, H2 "What's new" and its table. At 375x812 the screen is the badges, the lead and the first 9 lines of the FIML paragraph. | Section 4 (reorder); P4 |
+| F12 | **"Pick your model" starts 4,594 px down an 8,639 px page** (53%); Install starts at 2,928 px, the 60-second example at 3,281 px. | `getBoundingClientRect` + `scrollY`, desktop. | Section 4 |
+| F13 | **Body text is 14.8 px with a 22.2 px line, and a paragraph is about 776 px wide (about 105 characters).** The longest paragraph is 11 lines. | computed style of the first `main p`; the usual comfortable measure is 60 to 80 characters. | P8: base 16 px, 1.6 line height, `main` max width about 70 ch |
+| F14 | **Model page: the first screen is mostly setup noise.** On `model-simple`, after the lead and the facts table, the first screen shows `library(medfit)`, "Attaching package: 'medfit'", the "masked from package:stats: decompose" message, `library(generics)` and its message, before any content. | first-screen elements and screenshot, 1280x800. | Stage 3: `#| include: false` (or `message: false`) on every setup chunk of the 15 model pages; a gate (stage 4) fails a model page whose first code output on screen is a package-attach message |
+| F15 | **Contrast fails Lighthouse AA on both pages.** Home (mobile): the version label "0.17.0" in the navbar 2.57:1 (#909294 on #e9e9ea) and the developer role text 4.28:1. Model page (desktop): 10 nodes: the same version label and every navbar item 4.25 to 4.48:1 (#676a6d on #e9e9ea; the active "Models" button 4.25:1). Required 4.5:1. | Lighthouse `color-contrast`, axe 4.12. Scores: home mobile Accessibility 96, `model-simple` desktop 97. | P8: `pkgdown/extra.css` darkens the navbar text and `small.nav-text` to at least 4.5:1; the stage 4 gate computes the ratios from the CSS values |
+| F16 | **No breadcrumb, no meta description on the model page, a layout shift on the home page.** Breadcrumb element absent on `model-simple`; Lighthouse `meta-description` fails there (SEO 92); home page CLS 0.114 (budget 0.1). The page does have a skip link ("Skip to contents"), one H1, a main landmark, an "On this page" list, and no horizontal overflow at 375 px (all tables 351 px wide). | DOM checks and Lighthouse. | P7 (breadcrumb); stage 3 adds a one-sentence `description:` to each model page's front matter, the same sentence as the lead; the CLS cause (the badges and logo load without reserved size) is an open item |
+
+Confirmed good, keep: skip link, single H1, landmark, "On this page" list, no overflow on a phone, best-practices score 100.
+
+Not verified here: keyboard focus order and a visible focus ring (a programmatic `focus()` shows no outline, which proves nothing
+about `:focus-visible` with the keyboard; needs a manual Tab pass), screen-reader output, hover states of the menus, the dark-mode
+theme, and the logo's `alt` (the script counts `alt=""` as missing; the logo is decorative). A Lighthouse run is a sample of one
+load per page; the CLS figure varies by run.
+
+### Additions to P-rules from the pass
+
+* P8 gets numbers: base font at least 16 px; text measure at most 80 characters; navbar text and the version label at least 4.5:1;
+  checked by a stage 4 gate on `pkgdown/extra.css` values plus a Lighthouse run in the release checklist (not CI).
+* P10 (new): **no setup noise.** A model page's first screen shows its lead, facts table and first example, not package-attach
+  messages (F14).
+* Decision 5 for the maintainer: add `pkgdown/extra.css` with the contrast, font-size and measure rules (recommended: yes; it is
+  the same file as decision 3).

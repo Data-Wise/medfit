@@ -152,3 +152,18 @@ Not verified: a rendered site build (not run here), external URL liveness (`urlc
    `native-guide.qmd:229,322,349,390`; make `model-fiml.qmd` the single FIML source.
 4. `.STATUS`, `CLAUDE.md` status lines, `cran-comments.md` header line: after the release session reports, to avoid colliding
    with its edits.
+
+## 6. Addendum (2026-11-12, after v0.17.0 was released and #433 back-merged main into dev)
+
+* **Release state.** v0.17.0 is released (tag at `6b9a943c`, GitHub release 2026-11-12, tagged install verified, site shows 0.17.0).
+  F5 now reads: `CLAUDE.md:651` ("not released, release not authorized"), `CLAUDE.md:666`/`:669` and `.STATUS:5-8` need the
+  released state; the stage 3 wait on the release session (section 5, item 4) is no longer needed. F8: the GitHub release notes
+  exist; deriving them from the NEWS release summary stays the rule the stage 4 gate checks.
+* **Line fix.** The README "2,200+ `test_that()` blocks" claim is at `README.md:335` (F1 cited `:332`, the heading).
+* **NEWS F2 additions.** The 0.17.0 entry also omits the #426 packaging items (RMediation added to Suggests, a names-only
+  `@usage` block for `TwoLevelMediationData`, both merged in `e608ac7c`), and the known-issues list needs #369 and #394 (both open)
+  next to #320.
+* **Merge order.** Stage 3 edits `native-guide.qmd`, `model-native.qmd` and `native-tutorial.qmd`, which PR #431 (S5a prose slice)
+  also edits later: stage 3 lands first and is limited to version words and structure, with no rename of any file, URL or menu
+  label containing "native".
+* **Rendered pass** on the live site: see section 6 of `planning/PROPOSAL-docs-adhd-design-2026-11-12.md` (new findings F11 to F16).
