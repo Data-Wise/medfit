@@ -1,6 +1,6 @@
 # Next-release plan: additional FIML mediation models
 
-**Status: planning only, 2026-11-01.** The maintainer requests more FIML models
+**Status: IMPLEMENTED on dev (reconciled 2026-11-11): the covariate, parallel and serial models merged as #382 to #392; statistical admission, timing pilots, studies and release remain deferred. Earlier status: planning only, 2026-11-01.** The maintainer requests more FIML models
 in the next release, starting with covariates, parallel and serial mediation.
 The target below is the existing 11-variant roadmap, not a guarantee that an
 unadmitted model will ship. Version, date, implementation activation, admission

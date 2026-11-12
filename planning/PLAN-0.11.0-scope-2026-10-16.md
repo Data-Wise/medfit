@@ -1,6 +1,6 @@
 # PLAN: medfit 0.11.0 scope (2026-10-16)
 
-**Status:** APPROVED 2026-10-16, revised 2026-10-16 (harness and test matrix added) and 2026-10-17 (progress, the reliability regression, the label decision, Checkpoint 2 result) by the author (Option B; D2 floor only with nonlinear constraints, D3 reversed 2026-10-17: drop the label when tested enough, D4 no F7, D5 latent means 1.0; D1 closed 2026-10-17: not forced). Produced by a read-only Plan agent (Opus) from
+**Status:** COMPLETE: released as v0.11.0 (tag at `35941ee`, 2026-10-17; status line reconciled 2026-11-11). Earlier status: APPROVED 2026-10-16, revised 2026-10-16 (harness and test matrix added) and 2026-10-17 (progress, the reliability regression, the label decision, Checkpoint 2 result) by the author (Option B; D2 floor only with nonlinear constraints, D3 reversed 2026-10-17: drop the label when tested enough, D4 no F7, D5 latent means 1.0; D1 closed 2026-10-17: not forced). Produced by a read-only Plan agent (Opus) from
 `.STATUS`, the two 0.10.1/0.11.0 proposals, the roadmap, the specs, NEWS, and open issues and PRs. Two claims were
 re-checked by hand: PR #214 and issue #213 exist as described. Not verified: that CRAN 0.3.2 fails under development
 S7 (inferred from the shared nullable-union pattern), the S7 1.0 CRAN date, whether #214 passes medfit's suite, and

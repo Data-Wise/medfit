@@ -1,3 +1,7 @@
+# Release precondition P5 resolved — 2026-11-11 MST
+
+# Three plan status lines reconciled with what shipped (PLAN-0.11.0-scope COMPLETE as v0.11.0; PLAN-FIML-stage0-release-guard COMPLETE as #382; PLAN-FIML-next-release-model-expansion IMPLEMENTED on dev, #382 to #392, admission and release deferred). ADR D-4 (unconstrained default and a solver option) set to deferred by the author: not scheduled for 0.17.0, the gate has not run. `deferred` added to the allowed ADR statuses in test-adr-front-matter.R.
+
 # 0.17.0 release prep started — 2026-11-11 MST
 
 # Branch feature/release-prep-0.17.0: DESCRIPTION 0.17.0, NEWS release summary (FIML numerically verified not admitted; two-level experimental; #320 known issue), experimental label in the two Rd pages, README and article version strings. Checklist R1 done on the branch, R2 full local gates pending. No tag, main merge or release: P1, P2, P3 and P5 of the checklist are open.

@@ -7,7 +7,7 @@ skip_if_not_installed("yaml")
 specs <- test_path("..", "..", "planning", "specs")
 adrs <- list.files(specs, pattern = "^ADR-.*\\.md$", full.names = TRUE)
 
-adr_statuses <- c("accepted", "approved", "decided", "proposed", "conditional", "superseded")
+adr_statuses <- c("accepted", "approved", "decided", "proposed", "conditional", "deferred", "superseded")
 adr_required <- c("id", "title", "status", "date")
 
 # the decisions of one ADR text, or an error string naming what is wrong with its front matter

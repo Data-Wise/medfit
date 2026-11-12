@@ -27,7 +27,7 @@ Task 7 of `PLAN-twolevel-contrast-and-release-readiness-2026-11-10.md`. Version 
 | P2 | Book chapter 9 follows the contrast and equality rules, reviewed by the book owner (plan Task 5); blocked until the owner's branch is pushed | the book PR, merged, with its render-check run |
 | P3 | Triage of #369, #320, #394, #381 recorded (plan Task 6) | a disposition per item with a merged-PR or test link; nothing closed without one |
 | P4 | `dev` has no open feature PR the release should include | `gh pr list` output |
-| P5 | Stale plan statuses and ADR D-4 decided (the #416 audit's open items) | the user's decisions |
+| P5 | **DONE 2026-11-11**: three stale plan statuses reconciled and ADR D-4 set to deferred (author) | the docs PR |
 | P6 | **FIML ship decision: ANSWERED (maintainer, 2026-11-11 grill, recorded in `planning/DECISIONS-0.17.0-release-grill-2026-11-11.md`, PR #419).** 0.17.0 ships the covariate, parallel and serial FIML models labeled "numerically verified against lavaan, not statistically admitted"; the source-fit guard stays on | #419 merged into `dev` (`15e5b14f`, 2026-11-11) |
 | P7 | **Roadmap board reconciled**: `planning/medfit-roadmap.md` "Current board" and "Ordered delivery roadmap" stop at FIML and do not list the two-level adapter or 0.17.0; reconcile them with `.STATUS`, `CLAUDE.md` and the support claims, using the FI-TRACK states (locally verified, merged-dev, merged-main, released) | a merged planning PR |
 | P8 | Dependabot #381 (setup-uv 6 to 7) merged or closed, so no workflow change lands mid-release | PR state |
