@@ -1,21 +1,22 @@
 # 0.16 release scope: include bounded FIML
 
-Status: scope/docs merged into dev through PR #366 (`c4b76fb5`) on 2026-10-30
-after all six fast checks passed on the exact reviewed head. Post-merge dev
-coverage and Codecov patch passed on the merge commit (run `41106465575`),
-verified live at 2026-10-30 18:42 UTC. Release preparation remains. The proposed follow-up order
-and cross-package boundaries are in
-[the reconciled readiness plan](PLAN-FIML-release-and-missing-data-followups-2026-10-30.md).
-The user accepted the next step after the recommendation to include bounded FIML
-in 0.16. This supersedes earlier FIML exclusions from 0.16 in historical study,
-implementation and merge records. It does not authorize a release, dev-to-main
-merge, external submission or expensive CI now.
+Status: **released in 0.16.0** on 2026-10-31 UTC, tag/main `c37c7ee8`.
+This inclusion contract was accepted before release; it adds no feature beyond
+the bounded implementation. Final candidate/main CI, tagged install, deployment
+and cleanup evidence are in the [completed release plan](PLAN-0.16.0-GitHub-release-2026-10-30.md).
+The [roadmap current board](medfit-roadmap.md#current-board) owns future priorities;
+the [follow-up plan](PLAN-FIML-release-and-missing-data-followups-2026-10-30.md)
+owns proposed B/C/D/E scopes. No future version/date or implementation is assigned.
+
+This decision superseded earlier FIML exclusions from 0.16. It did not itself
+authorize publication; later release authorization and gates completed that work.
+CRAN remains held. Coverage is main PRs/main pushes only; expensive CI release-only.
 
 ## Included
 
 The completed bounded FIML integration from PR #364 (`a894e45e`) joins the
-existing 0.16 development changes. Inclusion changes the release assignment;
-it adds no new model, inference or optimizer guarantee.
+other shipped 0.16 changes. Inclusion assigned the bounded implementation to
+that release; it added no new model, inference or optimizer guarantee.
 
 - Exact `missing = "fiml"` opt-in through `fit_sem()` or native
   `fit_mediation()` engine arguments; listwise defaults stay unchanged.
@@ -27,9 +28,9 @@ it adds no new model, inference or optimizer guarantee.
   likelihood/AIC/BIC, unstandardized effects, covariance and normal intervals.
 - Existing explicit refusals for unsupported operations remain part of the API.
 
-Existing dev work includes D4 constrained covariance, sign-branch fitting and
-boundary-oracle regressions. Reconcile the final dev diff and NEWS before release;
-this scope note is not a claim that every dev change is automatically approved.
+Shipped 0.16 work includes D4 constrained covariance, sign-branch fitting and
+boundary-oracle regressions. The release plan records the final diff/NEWS review;
+this scope note did not automatically approve every development change.
 The coverage-scope maintenance PR #365 merged separately as `2c4bd65c`.
 
 ## Deferred
@@ -49,7 +50,10 @@ The reviewed and merged trees were identical. Post-merge dev coverage run
 The original plan retains source identities, limits and archived evidence.
 This scope decision does not claim fresh numerical verification.
 
-## Remaining acceptance before a separately authorized release
+## Completed release acceptance (historical contract)
+
+All release stages below completed under the release plan. Retain their contract
+for provenance; do not treat this as an open 0.16 checklist.
 
 - Reconcile the full 0.16 change list and open issues against dev and NEWS.
 - Preserve the explicit model/support limits, opt-in defaults and refusal rules
@@ -66,7 +70,11 @@ This scope decision does not claim fresh numerical verification.
   tagging/publishing. No release merge, tag, deployment or submission is authorized
   by this scope decision.
 
-## Immediate next step
+## Completed integration receipts (historical snapshots)
+
+Current future priorities are in the roadmap current board. October 30 receipts
+below retain their original evidence scope; later publication supersedes any
+then-current authorization, branch or deployment state.
 
 PRs #365/#366 and the regression-oracle/minibook clarification PR #367 are merged
 with author authorization. Post-#367 dev coverage and Codecov patch passed
@@ -89,16 +97,14 @@ as `04b7ac8c`: continuous Gaussian random-X fixture, executed direct/wrapper
 examples, regression guard and local docs/render/user-visual gates all pass.
 All three exact-head fast checks passed before merge; branch/worktree cleanup
 and the 423-file hash-verified archive are complete. The wider bounded-FIML
-website/help source audit is now complete locally on codex/fiml-docs-audit
-(tested docs d29421a5); see `AUDIT-FIML-public-docs-2026-10-30.md`. Confirmed
-README/help/article gaps are repaired; ten affected HTML artifacts rendered
-and content/local-link inspected. Final local suite/lint/built check pass. This
-new audit branch is not pushed or published; no live-site or browser-visual
-review is claimed. Publication review and actual release-candidate acceptance
-remain separate; do not repeat the completed audit without new evidence.
-New diagnostics and missingmed adoption remain separate milestones. Release
-preparation/execution needs its own authorization;
-expensive CI remains deferred until release to main.
+website/help source audit subsequently merged through PR #372 (`d5785171`)
+and shipped in v0.16.0. Its tested docs were d29421a5; see
+`AUDIT-FIML-public-docs-2026-10-30.md`. Confirmed README/help/article gaps are
+repaired; ten affected HTML artifacts passed content/link inspection and final
+local suite/lint/built checks passed. Release publication and live-site content
+verification followed separately; no browser-visual claim is added here.
+Completed release cleanup and evidence archives are in the release plan.
+New diagnostics and missingmed adoption remain separately scoped proposals.
 
 ## Release-wording synchronization — 2026-10-30
 

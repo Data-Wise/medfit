@@ -17,8 +17,10 @@ permissions: read-all
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
-    # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default.
-    timeout-minutes: 45
+    # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default. The 0.17.0 suite
+    # runs about 22 minutes on a laptop (FIML files are 71% of it) and 30 minutes on the macOS runner; 45 cancelled
+    # the Linux and Windows jobs on the 0.17.0 release PR.
+    timeout-minutes: 90
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
@@ -70,8 +72,9 @@ jobs:
   # bootstrap; see rforge docs/specs/PROPOSAL-cran-incoming-hardening.)
   noSuggests:
     runs-on: ubuntu-latest
-    # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default.
-    timeout-minutes: 30
+    # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default. The 0.17.0 run took
+    # 20 minutes (8 before the FIML expansion).
+    timeout-minutes: 45
 
     name: ubuntu-latest (release, noSuggests)
 

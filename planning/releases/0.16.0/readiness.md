@@ -1,6 +1,6 @@
 # medfit 0.16.0 GitHub release readiness
 
-Status: authorized release preparation; not cleared for publication. Snapshot: 2026-10-30 MDT.
+Status: complete; v0.16.0 published and live website verified on 2026-10-31 UTC. The preparation checklist and local receipts below are historical; final closure follows.
 
 The user authorized “do next and release to github.” The active plan is planning/PLAN-0.16.0-GitHub-release-2026-10-30.md. This supersedes the packet's earlier preparation-only authorization boundary. CRAN remains out of scope. Coverage remains main PRs/main pushes only; full release CI is required on the main-targeting candidate.
 
@@ -29,3 +29,13 @@ An unexplained numeric/default/capability/dependent regression or missing gate s
 ## Local candidate gate receipt
 
 1,785 tests / 9,796 assertions, zero failures/errors, four explained warnings and two skips; lint zero, spelling/47 URLs clean; full site/book exit0; 20 HTML content/link inspections (not browser-visual). Corrected homepage guide link; finaldocs33tests/285assertions PASS. Rebuilt source Status:OK. Five actual dependent suites pass both pinned versions (1,782tests/7,216assertions each, no new failures); medrobust has no medfit dependency at its pinned source and its extra unrelated suite was stopped, not counted. Detailed hashes/warnings/scope receipt saved in ignored workspace. Hosted release clearance pending.
+
+## Published release and deployment receipt — 2026-10-31 UTC
+
+GitHub v0.16.0 was published at 06:57:16 UTC from main `c37c7ee8b1cd1e47d0d61f3d55b0a5fce335c7cc` via release PR #374 (merge commit; reviewed dev head `f1cfc01da7aedeecfbc23f5c2efbce888bd0d7ba`). All 14 exact-head PR checks passed, including six platform/noSuggests checks, both OpenBLAS shards, coverage and Codecov. Post-merge main checks passed; all six package checks reported Status: OK and overall coverage was 96.66%. The Windows path regression/dependency correction landed through #375; final local source passed 1,786 tests / 9,819 assertions with zero failures/errors, four explained warnings and two skips.
+
+The published tag matches main. An isolated install from GitHub's tagged source passed the bounded FIML smoke check (199 retained rows, nine coefficients, finite likelihood/covariance). Release: https://github.com/Data-Wise/medfit/releases/tag/v0.16.0 . Website: https://data-wise.github.io/medfit/ . Release-triggered pkgdown run 41178641476 passed; Pages built `70a0fd37b1aaa25cf04776d4cc289d3ffa040f5c`. Homepage, native guide, NEWS and fit_sem reference returned HTTP 200 with current version/support content. This is live HTTP/content verification, not browser-visual inspection.
+
+Local dev was fast-forwarded to released main. Docs/release worktrees and their local/remote feature branches are absent; exact reviewed heads remain in refs/archive/pr-372-head and refs/archive/pr-375-head. Cleanup followed exact-tip and merge-ancestry checks. Ignored evidence was archived with ZIP CRC and individual SHA-256 verification: `_agents_workspace/fiml-docs-audit-merged-2026-10-31.zip` (514 files) and `_agents_workspace/release-0.16-prep-merged-2026-10-31.zip` (4,710 files), with adjacent receipts. These archives own the historical workspace paths below. Unrelated files/worktrees were preserved.
+
+medrobust work was stopped; follow-up https://github.com/Data-Wise/medrobust/issues/60 was filed and is not a compatibility pass. CRAN remains on hold. Hosted coverage remains main PRs/main pushes only; expensive CI remains release-only. No further feature work is authorized by this completion receipt.

@@ -5,12 +5,50 @@ linters: linters_with_defaults(
   )
 exclusions: list(
     "inst/doc",
+    # Mermaid chunks are diagram text, not R; lintr parses every {lang} chunk as R
+    "vignettes/articles/guide-architecture.qmd",
     "tests/testthat/helper-frozen-extract-lavaan.R",
     "tests/sim/sem-reliability.R" = list(object_usage_linter = Inf, line_length_linter = Inf),
     "tests/sim/sem-se-gate.R" = list(object_usage_linter = Inf, line_length_linter = Inf),
     "tests/sim/sem-constrained-gate.R" = list(object_usage_linter = Inf),
     "tests/sim/sem-parity-gate.R" = list(object_usage_linter = Inf),
     "tests/sim/oracle213.R" = list(object_usage_linter = Inf, line_length_linter = Inf, commented_code_linter = Inf,
-                                   object_name_linter = Inf)
+                                   object_name_linter = Inf),
+    # FIML helpers (gk_*, fo_*) are defined in other helper files, which object_usage_linter cannot see
+    "tests/testthat/helper-fiml-generic.R" = list(object_usage_linter = Inf),
+    # two-level effect helpers use tl_* fixtures defined in helper-twolevel.R
+    "tests/testthat/helper-twolevel-effects.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-docs.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-contrast.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-contrast-qa.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-effects.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-hardening-qa.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-bootstrap.R" = list(object_usage_linter = Inf),
+    "tests/testthat/helper-fiml-golden.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g1-covariate.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g1-two-covariates.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g2-parallel.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g2-residual-covariance.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-parallel-covariates.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-baseline.R" = list(object_usage_linter = Inf),
+    # S1b helpers (sb_*) live in helper-fiml-serial.R, which object_usage_linter cannot see
+    "tests/testthat/helper-fiml-serial.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-serial-saturated.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-serial-effects.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-serial-defects.R" = list(object_usage_linter = Inf),
+    # S2 helpers (sc_*) live in helper-fiml-serial2-chain.R and use the sb_* helpers
+    "tests/testthat/helper-fiml-serial2-chain.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-serial-chain.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-serial-chain-defects.R" = list(object_usage_linter = Inf),
+    # S3 helpers (s3_*) live in helper-fiml-serial3.R and use the sb_* helpers
+    "tests/testthat/helper-fiml-serial3.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-serial-covariate.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-serial-covariate-defects.R" = list(object_usage_linter = Inf),
+    # S4 helpers (s4_*) live in helper-fiml-serial4.R and use the sb_* and s3_* helpers
+    "tests/testthat/helper-fiml-serial4.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-serial-two-cov.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-g3-serial-two-cov-defects.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-generic-kernel-fourvar.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-fiml-generic-kernel-oracle.R" = list(object_usage_linter = Inf)
   )
 encoding: "UTF-8"

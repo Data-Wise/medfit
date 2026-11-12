@@ -20,15 +20,20 @@ model, from one mediator to a latent variable.
 
 ## Bounded FIML in 0.16.0
 
-medfit 0.16.0 adds explicit `fit_sem(missing = "fiml", fixed_x = FALSE)` for
-three-variable Gaussian random-X mediation, preserving listwise defaults. It is
+medfit 0.16.0 added explicit `fit_sem(missing = "fiml", fixed_x = FALSE)` for
+three-variable Gaussian random-X mediation, preserving listwise defaults. medfit 0.17.0
+also fits one or two covariates, two parallel mediators
+(with zero, one or two covariates) and two-mediator serial models (the saturated graph
+or the pure chain, with up to two covariates; implemented and verified against lavaan, not calibrated for coverage). It is
 unavailable in 0.15.0 and earlier. Observed/model SEs and
 unstandardized effects and normal intervals are supported. The model requires
 continuous X, M and Y, a free or exactly zero direct path, independent Gaussian
 disturbances, free intercepts and ignorable missingness under that joint model.
 Native `fit_mediation()` uses `engine_args` for the same opt-in. Extracted FIML
-objects refuse `quick()`, `pm()` and `glance()`; fit tests, bootstrap, profiles and
-MBCO are deferred. `glance()` on the source SEMFit retains likelihood/IC fields.
+objects refuse `quick()`, `pm()` and `glance()`; fit tests, profiles and MBCO
+remain unavailable. Source-fit retained-row and Gaussian parameter-draw intervals
+(`bootstrap_mediation(source_fit = ...)`) are implemented but withheld: the call is
+refused until statistical admission is decided. `glance()` on the source SEMFit retains likelihood/IC fields.
 See the [native guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
 for settings and limits. Website publication remains a separate step.
 
@@ -36,6 +41,7 @@ for settings and limits. Website publication remains a separate step.
 
 | Version | What you get |
 |---|---|
+| **0.17.0** | bounded FIML with one or two covariates, two parallel and two serial mediators (numerically verified, not statistically admitted); `extract_mediation()` on a two-level `lavaan` fit returns `TwoLevelMediationData` (experimental); lavaan floor 0.7-3 |
 | **0.16.0** | A supported single nonzero-product equality now searches both sign branches independently, with explicit coverage evidence rather than a global-optimum claim. Corrected observed-information and sandwich standard errors under active nonlinear constraints, including solver variance floors; expected information retains its Fisher definition. Active-boundary covariance is a local tangent approximation. Only explicit covariance diagnostics retain an accepted likelihood; other errors propagate. See [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html#constraints) and NEWS. |
 | **0.15.0** | The native defaults flip: `fit_sem()`/`fit_mediation(engine = "native")` now fix the exogenous observed variables (`fixed_x`) and estimate the mean structure (`meanstructure = TRUE`) when you leave them unset, as lavaan does. Explicit arguments are kept, so `fixed_x = FALSE` and `meanstructure = FALSE` restore the old fit; the once-per-session warning is gone and `options(medfit.native_defaults)` is ignored (removed in 0.16.0). See the [0.15.0 defaults article](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html) and NEWS. |
 | **0.14.1** | The outcome ledger for native fits: every zero-product branch and `mbco_sem()` null keeps its outcome (`fit@diagnostics$ledger`, `$ledger` on the errors); literal `a == 0` / nonzero contradictions are certified empty, not fitted; branch maps and an overflow-safe 64-branch cap; a covariance-stage failure is a typed error (`medfit_sem_covariance_error`) that `mbco_sem()` retains for a null. A literal contradiction now stops before the optimizer (see NEWS). |
@@ -269,6 +275,8 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")  # minimum of two likelihood-ratio tes
 | `ParallelMediationData` | Mediators side by side; indirect effect is the sum of a_j * b_j |
 | `JointMediationData` | Joint natural effects of several mediators with products |
 | `ClusterMediationData` | Treatment assigned to clusters (2-1-1): own-mediator and spillover parts |
+| `TwoLevelMediationData` | A two-level `lavaan` fit with X, M and Y on level-1 units (1-1-1): the indirect effect at the within and the between level (development version) |
+| `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | Bounded FIML fits (`fit_sem(missing = "fiml")`): X to M to Y, two parallel mediators, two serial mediators (see above) |
 | `SEMFit` | A native-engine fit; `extract_mediation()` turns it into the classes above |
 | `BootstrapResult` | Point estimates, intervals and the bootstrap distribution |
 
@@ -305,7 +313,7 @@ See [Ecosystem Coordination](https://github.com/Data-Wise/mediation-planning/blo
 |---|---|
 | Run your first model | [Get Started](https://data-wise.github.io/medfit/articles/getting-started.html) |
 | Find the page for your model | [Models](https://data-wise.github.io/medfit/articles/models.html) |
-| Copy a short recipe | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (twenty-one recipes) |
+| Copy a short recipe | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (twenty-three recipes) |
 | Look up a function or class | [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html) |
 | Understand the classes | [Introduction](https://data-wise.github.io/medfit/articles/introduction.html) |
 | Extract from fitted models | [Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html) |
@@ -324,7 +332,7 @@ on the `dev` branch; see `NEWS.md` for what each release contains.
 ### Code Quality
 
 - **Defensive Programming**: checkmate for input validation, S7 validators for class integrity
-- **Testing**: 5,700+ testthat expectations in 1,200+ test blocks (>90% coverage, enforced via codecov)
+- **Testing**: 2,200+ `test_that()` blocks (>90% coverage, enforced via codecov)
 - **CI/CD**: R CMD check, lintr, coverage reporting via GitHub Actions
 
 See the [NEWS](https://data-wise.github.io/medfit/news/index.html) for what changed in each release.
@@ -352,7 +360,7 @@ If you use medfit in your research, please cite:
 
 ```
 Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.16.0. https://data-wise.github.io/medfit/
+R package version 0.17.0. https://data-wise.github.io/medfit/
 ```
 
 For the entry matching your installed version, run `citation("medfit")`.

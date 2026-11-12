@@ -113,6 +113,15 @@
 #' }
 #' }
 #'
+#' @section Limits:
+#' A two-level fit (`lavaan::sem(..., cluster = )` with `level:` blocks) returns a [TwoLevelMediationData]
+#' object with the a, b and c' paths at the within and the between level (one mediator, linear paths, no
+#' products, `standardized = FALSE`); see that class for the identification rules. Fits with more than two
+#' levels are refused with the classed error `medfit_error_lavaan_multilevel`; extraction would otherwise
+#' read the within level only.
+#' Multigroup fits (`group =`) are refused with `medfit_error_lavaan_multigroup`; extraction would otherwise
+#' return the first group's paths with the total sample size.
+#'
 #' @keywords internal
 extract_mediation_lavaan <- function(object,
                                      treatment,
@@ -132,6 +141,27 @@ extract_mediation_lavaan <- function(object,
   # A lavaan fit is wrapped (and lavaan's availability checked) by the lavaan
   # accessor; a ready-made accessor list passes through, so a native fit can be
   # extracted with lavaan absent.
+  # A two-level fit goes to the two-level adapter (TwoLevelMediationData, #394); a fit with more levels is
+  # refused before anything is read: the workers would use the within block.
+  if (inherits(object, "lavaan")) {
+    if (isTRUE(.lavaan_nlevels(object) == 2L)) {
+      .assert_lavaan_single_group(object)
+      rlang::check_dots_used()
+      return(.extract_lavaan_twolevel(
+        object,
+        treatment = treatment, mediator = mediator, outcome = outcome,
+        standardized = standardized, interaction = interaction,
+        structure = if (missing(structure)) "auto" else structure,
+        decomposition = if (missing(decomposition)) "auto" else decomposition,
+        m_star = if (missing(m_star)) NULL else m_star,
+        a_label = if (missing(a_label)) NULL else a_label,
+        b_label = if (missing(b_label)) NULL else b_label,
+        cp_label = if (missing(cp_label)) NULL else cp_label
+      ))
+    }
+    .assert_lavaan_single_level(object)
+    .assert_lavaan_single_group(object)
+  }
   acc <- .sem_as_accessors(object)
 
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---

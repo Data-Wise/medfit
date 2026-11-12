@@ -27,7 +27,7 @@ Make a verified change mergeable: evidence counts, the risk-tier checklist, lint
 The orchestrator names the mode. `pre-docs` (a docs stage follows): risk tier and checklist, lint, the focused tests, and
 the sim scripts whose covered paths changed; the full suite is not run. `final` (the default, and the only pass when no
 docs stage follows): all of that plus the full suite on the final tree. A `pre-docs` PASS is not a merge-ready PASS; only
-a `final` PASS is.
+a `final` PASS is. A `final` PASS also requires two package checks on the final tree, each with its NOTE/WARNING/ERROR result recorded and judged against the dev baseline: `scripts/check-local.sh` (the narrower local gate: it builds with `--no-build-vignettes` and checks with `--ignore-vignettes --no-tests`, without `--as-cran`), and a separate `R CMD build` plus `R CMD check --as-cran` on the built tarball (strict flavor env vars per the repo's CRAN check practice; vignette build included where the optional packages exist, otherwise say what was skipped). A missing or failed package check is a FAIL, not a PASS.
 
 ## Input
 The worktree, the earlier reports in `_agents_workspace/<task>/` (`implementer.md`, `qa.md`, and `docs.md` on the final

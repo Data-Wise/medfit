@@ -111,6 +111,17 @@ by variable names. This requires specifying \code{treatment}, \code{mediator},
 and \code{outcome} arguments.
 }
 }
+\section{Limits}{
+
+A two-level fit (\code{lavaan::sem(..., cluster = )} with \verb{level:} blocks) returns a \link{TwoLevelMediationData}
+object with the a, b and c' paths at the within and the between level (one mediator, linear paths, no
+products, \code{standardized = FALSE}); see that class for the identification rules. Fits with more than two
+levels are refused with the classed error \code{medfit_error_lavaan_multilevel}; extraction would otherwise
+read the within level only.
+Multigroup fits (\verb{group =}) are refused with \code{medfit_error_lavaan_multigroup}; extraction would otherwise
+return the first group's paths with the total sample size.
+}
+
 \examples{
 \donttest{
 if (requireNamespace("lavaan", quietly = TRUE)) {

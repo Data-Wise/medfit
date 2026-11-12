@@ -1,20 +1,32 @@
+> **Current checkpoint (2026-11-01):** FI-B1/FI-B2 merged into dev through PR #379 at `0bd99134`; local numerical QA and verification passed before integration. Statistical admission is deferred. Next-release planning targets covariate, parallel and serial FIML; implementation activation, admission gates, pilots, studies and release remain deferred. Earlier local-only and blocked-status statements below are historical.
+> Earlier status statements below are historical where inconsistent with this checkpoint.
+>
+> **Adversarial review (2026-11-07):** `dev` (`ecbfb19f`) exposes the unadmitted
+> `bootstrap_mediation(source_fit=)` route with no guard while `DESCRIPTION` still
+> reads `0.16.0`, the released version. Maintainer chose a guard on dev
+> (2026-11-07); it merged as PR #382 (`ba50f998`). Default next-release content is no
+> expanded FIML and no source-fit inference unless admitted. See the
+> [review table](PLAN-FIML-next-release-model-expansion-2026-11-01.md#adversarial-review-2026-11-07-static-no-runtime-checks-no-study-run).
+
 # medfit Package Development Roadmap
 
-> Current checkpoint (2026-10-30): released 0.15.0 is recorded in `.STATUS`;
-> bounded FIML (#364), coverage scope (#365), and planned-0.16 wording (#366)
-> are merged into dev. FIML is no longer a proposed spike. See
-> [0.16 scope](SCOPE-0.16-FIML-2026-10-30.md) and the
-> [reconciled readiness/follow-up plan](PLAN-FIML-release-and-missing-data-followups-2026-10-30.md).
-> The older version snapshots and phase schedule below are historical design
-> records, not current release status. No release or expensive CI is authorized.
+> Current checkpoint (2026-10-31 MDT): **0.16.0 is released** on GitHub at
+> `v0.16.0` / main `c37c7ee8`; the website is live. Bounded FIML, its regression
+> and teaching/docs milestones, D4 covariance corrections and nonzero-product
+> sign-branch fitting are shipped. See the completed
+> [release plan](PLAN-0.16.0-GitHub-release-2026-10-30.md).
+> This file's [Current board](#current-board) owns medfit priorities; older phase
+> schedules and the extensions plan are historical design references.
+> Future feature versions/dates are unassigned. CRAN remains held; hosted
+> coverage is main PRs/main pushes only and expensive CI is release-only.
 
 **Package**: medfit - Mediation model fitting and extraction infrastructure
-**Status**: ✅ MVP complete (Phases 1–6 + 8) → **v0.3.2 accepted + published on CRAN** (2026-07-23); **v0.14.1 current on `main`/GitHub** (2026-10-26, tag `v0.14.1`; 0.14.0 released 2026-10-24; 0.15.0 (the flip) in progress, see item 3d; v0.10.0 was 2026-10-14; GitHub-only, not CRAN-submitted by decision; 0.7.0 shipped the native SEM engine 2026-10-10, 0.8.0 to 0.10.0 added nonlinear constraints, mean structure with `fixed_x`, and the `:` product term with native four-way). Extensions A (parallel mediation), B (VanderWeele four-way interaction), and C (regmedint engine adapter) shipped in 0.4.0 (2026-08-23). 0.5.0 added (#62-#82): `mediation_demo` dataset, delta-method effect SEs for all classes, D8(b) `JointMediationData` + `joint_effects()`, Methods and Formulas article, and two behavior changes (serial `te()`/`pm()` sum every path, #81; `confint(parm = "paths")` alias lookup, #82). Ext D module 1 (2-1-1 cluster mediation: `ClusterMediationData`, `lmer` engine, Kenward-Roger, cluster bootstrap; #90-#92, #95, #100) shipped in **0.6.0** (2026-10-09, GitHub-only); the native SEM engine shipped in **0.7.0** (2026-10-10, GitHub-only; #110-#124). Next = the 0.15.0 flip (native defaults; plan `PLAN-0.15.0-native-defaults-flip-2026-10-26.md`, PR #347); latent means deferred to 1.0; CRAN deferred (#83); board in `EXTENSIONS-PLAN-2026-06-03.md`.
-**Timeline**: MVP shipped; extensions A ✅, B ✅, C ✅ (0.4.0), D8(b) ✅ (0.5.0, released 2026-09-25); native SEM ✅ (0.7.0, released 2026-10-10); C.1 blocked (CMAverse); D/E brainstormed
-**Last Updated**: 2026-10-26
+**Historical status snapshot (2026-10-26)**: ✅ MVP complete (Phases 1–6 + 8) → **v0.3.2 accepted + published on CRAN** (2026-07-23); **v0.14.1 current on `main`/GitHub** (2026-10-26, tag `v0.14.1`; 0.14.0 released 2026-10-24; 0.15.0 (the flip) in progress, see item 3d; v0.10.0 was 2026-10-14; GitHub-only, not CRAN-submitted by decision; 0.7.0 shipped the native SEM engine 2026-10-10, 0.8.0 to 0.10.0 added nonlinear constraints, mean structure with `fixed_x`, and the `:` product term with native four-way). Extensions A (parallel mediation), B (VanderWeele four-way interaction), and C (regmedint engine adapter) shipped in 0.4.0 (2026-08-23). 0.5.0 added (#62-#82): `mediation_demo` dataset, delta-method effect SEs for all classes, D8(b) `JointMediationData` + `joint_effects()`, Methods and Formulas article, and two behavior changes (serial `te()`/`pm()` sum every path, #81; `confint(parm = "paths")` alias lookup, #82). Ext D module 1 (2-1-1 cluster mediation: `ClusterMediationData`, `lmer` engine, Kenward-Roger, cluster bootstrap; #90-#92, #95, #100) shipped in **0.6.0** (2026-10-09, GitHub-only); the native SEM engine shipped in **0.7.0** (2026-10-10, GitHub-only; #110-#124). Next = the 0.15.0 flip (native defaults; plan `PLAN-0.15.0-native-defaults-flip-2026-10-26.md`, PR #347); latent means deferred to 1.0; CRAN deferred (#83); board in `EXTENSIONS-PLAN-2026-06-03.md`.
+**Historical timeline**: MVP shipped; extensions A ✅, B ✅, C ✅ (0.4.0), D8(b) ✅ (0.5.0, released 2026-09-25); native SEM ✅ (0.7.0, released 2026-10-10); C.1 blocked (CMAverse); D/E brainstormed
+**Reconciled**: 2026-10-31 (historical phase details retained)
 
-> **Note:** Phases 7/7b/7c below are the detailed *design reference*. The current,
-> prioritized board lives in `planning/EXTENSIONS-PLAN-2026-06-03.md`.
+> **Design references:** Phases 7/7b/7c and `EXTENSIONS-PLAN-2026-06-03.md`
+> retain historical designs. They do not override the current board below.
 
 ---
 
@@ -32,14 +44,14 @@
 **Title**: Infrastructure for Mediation Model Fitting and Extraction
 **Description**: Provides S7-based infrastructure for fitting mediation models, extracting path coefficients, and performing bootstrap inference. Designed as a foundation package for probmed, RMediation, and medrobust.
 
-**Version**: 0.1.0 (MVP); current 0.7.0 (CRAN: 0.3.2)
+**Historical specification snapshot**: 0.1.0 (MVP), later annotated at 0.7.0; use DESCRIPTION for the current version/dependencies.
 **License**: GPL-3
 **R Version**: >= 4.1.0
 **Repository**: https://github.com/data-wise/medfit
 
 ### Dependencies
 
-**Imports** (current DESCRIPTION):
+**Imports** (historical DESCRIPTION snapshot):
 - S7 (>= 0.1.0)
 - stats
 - methods
@@ -47,7 +59,7 @@
 - generics
 - MASS (mvrnorm in the default parametric bootstrap; moved from Suggests for CRAN)
 
-**Suggests** (current DESCRIPTION):
+**Suggests** (historical DESCRIPTION snapshot):
 - lavaan (>= 0.6-0) - SEM extraction
 - regmedint - `fit_mediation(engine = "regmedint")`
 - sandwich - `se_type = "sandwich"`
@@ -1855,31 +1867,176 @@ Integration is successful when:
 
 ---
 
-## Next Actions
+## Current board
 
-The original week-by-week plan is complete. Current next actions:
+The 0.16 release/test/docs milestones are complete. Do not reopen them from
+historical checklists. Current dispositions:
+
+**Reconciliation 2026-11-11 (delivery states, from `git log origin/dev`).** The statements below that FIML expansion
+(FI-G0 onward) is planned or unauthorized are history: the stages are merged to `dev`. `origin/main..origin/dev` is 234 files
+(+26,472 / -6,695 lines) with the version still 0.16.0. Nothing below is released or statistically admitted.
+
+| Work | Delivery state | Merged as |
+|---|---|---|
+| Release guard: every non-`NULL` FIML `source_fit` refused with `medfit_error_fiml_inference_unavailable` | merged-dev | #382 |
+| FI-G0 kernel, FI-G1 one or two covariates, FI-G2 parallel mediators | merged-dev, numerically verified, not admitted | #383, #384 |
+| FI-G3 serial mediators, saturated and chain, 0 to 2 covariates; serial print and summary | merged-dev, numerically verified, not admitted | #385 to #390, #392 |
+| Two-level mediation, lavaan adapter (#394 S0 to S2): class, extraction, effects, `twolevel_statistic()`, O8 oracle, lavaan floor 0.7-3 | merged-dev | #395, #396, #397, #400, #402 to #405 |
+| Two-level hardening and the contrast rule (unless both `a` and `b` are equated) with numeric equality detection | merged-dev | #412, #415 |
+| Docs: site audit, workflow and architecture guides, `CONTRIBUTING.md`, condition-docs guard; the book moved to a private repository | merged-dev | #393, #403, #410, #416, #417 |
+| CI: lint, pkgdown and risk-tier pinned to `ubuntu-24.04`; lint timeout 35 minutes | merged-dev | #411, #414 |
+| Native two-level fitter (S4) and latent mediators (S5) | NO-GO as written; not started | issue #394 |
+| Multilevel implementation gaps IG1 to IG7 (register, unblock conditions U1 to U5) | planned, nothing authorized | `PLAN-multilevel-implementation-gaps-2026-11-11.md` |
+| FIML statistical admission (stage 0 and the 11 variants) | unresolved; nothing submitted | `PLAN-FIML-statistical-admission-2026-11-01.md` |
+| 0.17.0 release | **not authorized**; checklist drafted | `PLAN-0.17.0-release-checklist-2026-11-11.md` (PR #420) |
+
+Open: Dependabot #381; issues #369, #320 and #394 (to be retitled to S4 and S5).
+
+1. **Roadmap reconciliation merged via PR #377 (2026-10-31):** one current board and
+   [clause-level issue dispositions](ISSUE-369-reconciliation-2026-10-31.md).
+   Existing issue #369 tracks administrative follow-through; #249 retains
+   unresolved solver/standardization/source-sync clauses, while #320 remains a
+   known external-engine limitation. FI-B1/FI-B2 are merged to dev; model-expansion implementation is not authorized.
+2. **Next-release FIML expansion, planning only:**
+   **FIML inference and observed-model expansion**
+   ([paired plan](PLAN-FIML-inference-and-observed-models-2026-10-31.md)):
+   FI-B0 contract -> FI-B1 incomplete-row bootstrap -> FI-B2 joint Gaussian
+   parameter draws -> FI-G0 generic kernel -> FI-G1 covariates -> FI-G2 parallel
+   -> FI-G3 serial. The 11-variant registry includes correlated parallel residuals
+   and covariate combinations; every variant needs separate admission evidence.
+   **Q12 recorded:** target >=90% per-cell and >=80% complete-stage admission
+   power at true coverage .95 / interval availability .98, with lower-performance
+   sensitivity reporting; rejection floors are unchanged. **Q13 recorded:**
+   first admit inference for the existing simple FIML model, then admit each of
+   the 11 approved variants through its own complete, preregistered stage. No
+   pooling away failed cells or treating unadmitted variants as supported.
+   The [expansion plan](PLAN-FIML-next-release-model-expansion-2026-11-01.md)
+   breaks FI-G0 into bounded steps before covariates, parallel and serial models.
+   **FI-G0 to FI-G3 status (2026-11-11):** bounded FIML fitting and extraction for
+   one or two covariates, two parallel mediators and two-mediator serial models are
+   merged into dev (PRs #383, #384, #385 to #392; `git log` has the commits);
+   statistical admission is still pending (the models are verified against lavaan,
+   not calibrated for coverage) and source-fit intervals stay withheld.
+   The [stage-0 guard design](PLAN-FIML-stage0-release-guard-2026-11-01.md)
+   addresses a candidate if simple-model inference remains unadmitted; the
+   [admission plan](PLAN-FIML-statistical-admission-2026-11-01.md) retains the
+   separate statistical decisions and deferred studies.
+   The [FI-B0 checklist](DECISION-FI-B0-existing-model-inference-2026-10-31.md)
+   now fixes the API/failure/test contract and three bounded numerical/resource
+   defaults. Local read-only review found no blocking design findings; no runtime
+   checks were run. The maintainer authorized bounded implementation on 2026-11-01 MST:
+   `medfit-implementer` owns code/tests and `medfit-oracle-qa` owns independent QA. The large simulation grid, timing pilot and statistical
+   resource agreement are deferred. Q12 and Q13 are recorded (above); the stage-0
+   admission study itself is unauthorized, unscheduled and unbudgeted, so
+   admission for release stays unresolved.
+   PR #377 merged the prior planning packet as `da0d9edc`; `ff200ee9` reconciled
+   its status. PR #378 merged the reviewed FI-B0 follow-up into dev as
+   `5e845007`; bounded FI-B1/FI-B2 implementation then merged as #379
+   (`0bd99134`). Expansion (FI-G0 onward) remains unauthorized, and FI-G0 must
+   not merge to dev before the stage-0 decision (plan finding R2).
+   The [evidence index](studies/fiml-inference-gates/README.md) distinguishes
+   the preserved historical packet hashes from current reconciliation hashes.
+   The [bounded execution plan](PLAN-FIML-bounded-inference-implementation-2026-11-01.md)
+   preserves the implementation and verification history; statistical studies and release remain unauthorized.
+   The separate eight-cell
+   [FIML efficiency baseline](PLAN-FIML-release-and-missing-data-followups-2026-10-30.md#d-computational-efficiency-baseline-measurement-before-optimization)
+   retains 32 fits per implementation, 64 total with lavaan. No meaningful
+   repeated-workflow bottleneck means stop optimization and reassess; no release
+   just for a benchmark. It is not a prerequisite for inference design and does
+   not cover inference validation. An unaffordable inference pilot requires an
+   explicit rebudget/defer decision or a separately authorized measured
+   optimization task; it does not silently reopen performance work.
+
+2b. **Multilevel mediation (2026-11-11):** the lavaan two-level (1-1-1) adapter
+   (`TwoLevelMediationData`, `twolevel_statistic()`; PRs #396, #397, #400, #403 to
+   #405), its hardening (#412) and the contrast rule (#415: the contrast is `NA` only
+   when both a and b are equated across levels) are on dev, unreleased. Next steps:
+   the contrast rule is done; **S4** (native two-level fitter) and **S5** (latent
+   mediators in a two-level model) stay NO-GO as written, per the literature review
+   (`specs/LIT-multilevel-sem-gaps-2026-11-11.md`); planning release 0.17.0 is
+   not authorized. Implementation gaps (S4, S6, two-level tests, random slopes, more than one mediator) and the conditions
+   that unblock S4 are registered in `PLAN-multilevel-implementation-gaps-2026-11-11.md`. The ten-chapter book is a separate private repository, not linked
+   from this tree or the website.
+
+3. **Separate ownership:** missingmed reconciles its existing consumer checkpoint
+   against the released tag before a thin FIML adapter is considered. Raw-data
+   diagnostics are an independent additive scope; MI/IPW/sensitivity views follow
+   separately. medfit success does not close missingmed acceptance gates.
+4. **Deferred, unassigned:** fixed-X/weighted FIML, robust/expected SEs,
+   profile/MBCO, latent/categorical/multilevel/interaction FIML, correlated serial
+   disturbances, unbounded graphs, caching/parallel optimization and CRAN each
+   require their own scope and authorization. Row bootstrap, parameter draws
+   and the 11 observed-Gaussian variants are now planned design above, not
+   deferred and not shipped. Existing complete-data support implies no FIML support.
+5. **Progress contract (FI-TRACK, planned only):** use namespaced task IDs,
+   per-model/method evidence and separate check outcomes from delivery states.
+   Distinguish locally verified, merged-dev, merged-main, released and
+   reverted/withdrawn; each completion state requires its named gate/review and
+   source/merge/release receipt. Reconcile this board, the active plan, `.STATUS`
+   and support claims at checkpoints. No percentage or optimizer success proves
+   admission; no new hosted job or automatic issue/publication action is implied.
+
+### Ordered delivery roadmap
+
+Roadmap reconciliation merged through PR #377. The
+[FI-B0 implementation checklist](DECISION-FI-B0-existing-model-inference-2026-10-31.md)
+was reviewed and integrated into dev through PR #378.
+It names the backward-compatible inference entry point, independent checks and
+bounded verification limits. FI-B1/FI-B2 subsequently passed local verification
+and merged through PR #379. Affordability and statistical admission remain
+untested; no admission study ran.
+
+| Order | Milestone and scope | Accountable owner | Completion criterion | Current state |
+|---|---|---|---|---|
+| 1 | FI-B0: existing-model inference contract and verification scope | Maintainer decides; planning agent drafts | Reviewed bounded API/failure/test contract and local verification limits; existing defaults preserved; statistical admission tracked separately | Reviewed contract merged via #378; bounded execution authorized 2026-11-01 |
+| 2 | FI-B1 / FI-B2: row-bootstrap and Gaussian parameter-draw intervals for the existing simple FIML model | `medfit-implementer`; `medfit-oracle-qa`; `medfit-docs`; `medfit-gates` | Each method passes its complete admission stage, regression/local gates, documented limits and executed teaching example | **Delivery state: merged-dev, not admitted, not released; criterion not yet met.** Local numerical QA and verification passed in #379. Public source-fit route refused fail-closed by the guard merged as #382 |
+| 3 | FI-G0 / FI-G1: generic preparation, then one/two continuous covariates | Implementation owner; independent oracle QA | Old-model behavior preserved; each covariate variant independently admitted with extraction and both interval methods; refusal tests for unadmitted topologies pass before each slice merges to dev | **merged-dev, numerically verified with independent QA (#383, #384), not admitted, not released**; the stage-0 concern was answered by the #382 guard (`PLAN-FIML-stage0-release-guard-2026-11-01.md`; the 2026-11-07 decision is in a planning file not yet on `dev`) |
+| 4 | FI-G2: two parallel mediators, 0-2 covariates, independent/correlated mediator residuals | Implementation owner; independent oracle QA | Each of six variants independently admitted; full effect covariance and both interval methods verified | **merged-dev, numerically verified (#383, #384), not admitted, not released** |
+| 5 | FI-G3: two serial mediators, 0-2 covariates, independent disturbances and declared shortcuts | Implementation owner; independent oracle QA | Each of three variants independently admitted; every-path totals and both interval methods verified | **merged-dev, numerically verified (#385 to #390, #392), not admitted, not released** |
+| Each stage | FI-TRACK / FI-DOCS / review checkpoint | Stage owner; docs owner; independent reviewer | Evidence, roadmap/status and support matrix agree; help/site/minibook match admitted scope | Required within the stage, not a new audit campaign |
+
+Stage owners must be assigned before activation; roles above are responsibilities,
+not claims that agents are running. The approved 11-variant expansion remains
+two covariate + six parallel + three serial variants, in addition to inference
+for the already released simple model. A separate complete admission decision
+is required for each stage; one passing stage does not admit the rest.
+
+**Execution:** bounded FI-B1/FI-B2 implementation and local verification authorized on
+2026-11-01 MST. Code/tests: `medfit-implementer`; independent QA: `medfit-oracle-qa`.
+The active plan records gates, docs ownership and cumulative resource limits.
+The frozen numerical checks pass all 78 paired native/lavaan comparisons (156 public fits).
+They establish fixture-level agreement, not coverage calibration or general affordability.
+Earlier failed gates and verification deviations remain in the execution plan; the later local verification passed.
+**Integration:** planning PR #378 and implementation PR #379 merged to dev; statistical simulation/admission and release remain deferred. FI-G0 to FI-G3 later merged to dev behind the #382 guard (see the 2026-11-11 reconciliation above).
+Version assignment follows accepted capability and a separate release decision;
+no feature date, release or dev-to-main merge is authorized here. The
+efficiency baseline stays separate; robust SEs, likelihood-based inference and
+the other deferred scopes above are not prerequisites for this roadmap closeout.
+
+### Historical release sequence and backlog
+
+The original week-by-week plan is complete. Entries below preserve release/design
+history; old dates or incomplete task references are not the current queue:
+
 
 1. ~~Release 0.6.0 (Ext D module 1)~~ — done 2026-10-09; see `planning/specs/PLAN-multilevel-mediation-2-1-1-2026-10-08.md` and `.STATUS`. Module 2 (1-1-1, random slopes) follows
+   Literature review, gaps and ideas for multilevel SEM (2026-11-11): `planning/specs/LIT-multilevel-sem-gaps-2026-11-11.md`.
 2. ~~Release 0.7.0 (native SEM engine)~~ — done 2026-10-10; see `planning/specs/PLAN-medfit-0-7-0-release-2026-10-10.md` and `.STATUS`.
 3. ~~0.8.0 to 0.10.0 (native SEM hardening, nonlinear constraints, mean structure and `fixed_x`, the `:` product term and four-way)~~ — done 2026-10-11 to 2026-10-14; see `.STATUS`.
-3b. ~~**0.11.0 to 0.13.0**~~: released 2026-10-17 to 2026-10-24 (GitHub-only; see `.STATUS`). 0.11.0: factor covariates, S7 compatibility, the #213 fix, the native gates in `tests/sim/run-gates.R`, and dropping the "experimental" label; see `planning/PLAN-0.11.0-scope-2026-10-16.md`. Release, T5e and the T6 hygiene are open.
+3b. ~~**0.11.0 to 0.13.0**~~: released 2026-10-17 to 2026-10-24 (GitHub-only; see `.STATUS`). 0.11.0: factor covariates, S7 compatibility, the #213 fix, the native gates in `tests/sim/run-gates.R`, and dropping the "experimental" label; see `planning/PLAN-0.11.0-scope-2026-10-16.md`. The old note that release/T5e/T6 were open is historical; consult the completed release plan for their final dispositions.
 3c. ~~**0.14.0 (released 2026-10-24; 0.14.1 on 2026-10-26): native defaults, warn half.**~~ `fit_sem()` warns once per session when
     `fixed_x` or `meanstructure` is unset; `options(medfit.native_defaults = "0.15")` opts in to the new defaults
     (lenient `fixed_x` subset); pinned-SE fix (R-1); `compare_lr()` accepts `fixed_x` and saturated means in lavaan
     and OpenMx; the native-defaults oracle matrix gate (557 rows, 0 block). T1 to T9 merged (#315-#328), Checkpoints
     A and B approved; T10 and Checkpoint C done (release). Plan:
     `planning/PLAN-0.14.0-native-defaults-2026-10-24.md`.
-3d. **0.15.0 (in progress; readiness-gated, earliest 2026-12-24): the flip.** `fixed_x = TRUE` (explicit character
-    subset, E-13) and `meanstructure = TRUE` become the defaults; `options(medfit.native_defaults)` is ignored with a
-    note; AIC/BIC keep medfit's own parameter count, documented. Done: T1 (#320 re-measured: lavaan 18/60, OpenMx
-    13/60 above reference, a documented limit), T2 (E-5 product-column check); T3 and T4 in PR #347 (pending merge).
-    Open: T5a-c (docs and website), T6 (gate pins), T7 (dependents), T8 (release). Plan:
-    `planning/PLAN-0.15.0-native-defaults-flip-2026-10-26.md`; spec `specs/SPEC-0-15-release-2026-10-26.md`.
-3e. **0.16.0 (planned, unreleased):** bounded FIML (`missing = "fiml"`) is implemented and merged into dev;
-    see `SCOPE-0.16-FIML-2026-10-30.md` for limits and the reconciled readiness plan for proposed test/docs work.
-    The obsolete defaults option is already removed on dev (#351; NEWS). CRAN submission remains deferred;
-    it is not a prerequisite silently inherited from this old candidate list.
-4. **Next CRAN release** — trigger still open (`planning/specs/GRILL-0.5.0-release-2026-09-24.md`)
+3d. **0.15.0 released (2026-10-26):** native fixed-X/meanstructure defaults
+    flipped; see `PLAN-0.15.0-native-defaults-flip-2026-10-26.md` and NEWS.
+3e. **0.16.0 released (2026-10-31 UTC):** bounded FIML, covariance/sign-branch
+    corrections and public docs/Chapter 8 shipped. The obsolete defaults option
+    was removed. See `PLAN-0.16.0-GitHub-release-2026-10-30.md` for final evidence;
+    `SCOPE-0.16-FIML-2026-10-30.md` retains its bounded inclusion contract.
+4. **Historical CRAN trigger** — the old 0.5.0 trigger is superseded by the current explicit CRAN hold; no submission is authorized.
 5. **Ext C.1 (CMAverse)** — blocked; see `planning/EXTENSIONS-PLAN-2026-06-03.md`
 6. **Categorical variables (backlog, added 2026-10-17, none scheduled; each needs a named consumer and an independent oracle before it starts):**
 
@@ -1912,7 +2069,12 @@ The original week-by-week plan is complete. Current next actions:
 
 ---
 
-**Status**: ✅ ALL MVP PHASES COMPLETE + Extensions A, B, C COMPLETE (v0.4.0) + D8(b) (v0.5.0, GitHub + r-universe) → v0.3.2 on CRAN
+## Historical status snapshot (2026-10-10; superseded)
+
+This retained snapshot is not the current queue or a live deployment receipt.
+Use the [Current board](#current-board) for priorities and release dispositions.
+
+**Historical status**: ✅ ALL MVP PHASES COMPLETE + Extensions A, B, C COMPLETE (v0.4.0) + D8(b) (v0.5.0, GitHub + r-universe) → v0.3.2 on CRAN
 
 **Completed**:
 - ✅ Phase 1: Package Setup (CI/CD, documentation, Dependabot)
@@ -1930,15 +2092,16 @@ The original week-by-week plan is complete. Current next actions:
 - ✅ D8(b): `JointMediationData` + `joint_effects()` (#76/#77, 0.5.0)
 - ✅ Post-0.4.0 (0.5.0, released 2026-09-25): `mediation_demo` (#62-#67), effect SEs for all classes (#69-#75), Methods and Formulas article (#79), four-way factor covariates (#78), joint SEs with `data =` (#80), serial total effect (#81, behavior change), `confint()` path alias lookup (#82, behavior change); articles evaluate at site build
 
-**Current**:
+**Historical availability (2026-10-10)**:
 - 🚀 v0.3.2 live on CRAN (known bugs in pinned #83); v0.5.0 on `main`/GitHub/r-universe
 - 🎨 pkgdown site deployed at https://data-wise.github.io/medfit/ (0.5.0, including the Methods and Formulas article)
 
-**Future Development**:
+**Historical future-development notes**:
 - Next CRAN release (carries 0.5.0's fixes) — trigger open
 - Ext C.1: CMAverse adapter — blocked (not on CRAN; simulation-based effects have no slot)
 - Ext D module 2 (1-1-1, random slopes, sigma_ab) / Ext E (longitudinal) — brainstormed, not spec'd; Ext D module 1 is built (see Next Actions)
 - Phase 7b design (estimation-engine UI) has no standalone increment; `decompose()` shipped, no `Decomposition` class
 
-**Next Review**: After the 0.8.0 release
-**Last Updated**: 2026-10-10
+**Historical review trigger**: after 0.8.0 (obsolete)
+**Snapshot date**: 2026-10-10
+**Current-board reconciliation**: 2026-10-31 MDT; inference design remains blocked before implementation.

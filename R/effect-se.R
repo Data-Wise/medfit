@@ -96,6 +96,33 @@
 }
 
 
+#' Standard Errors from Variances, NA Where a Variance Is Invalid
+#'
+#' `sqrt()` of a negative variance is a silent `NaN` (or a bare base warning). This returns `sqrt(v)` for finite
+#' non-negative `v` (bit-identical to `sqrt()`), `NA` for a negative, missing or non-finite entry, and signals ONE
+#' classed warning, `medfit_warning_vcov_diagonal`, for the whole vector when any entry is invalid.
+#'
+#' @param v Numeric vector of variances (a diagonal of a covariance matrix), optionally named.
+#' @param where Character scalar: what the variances belong to, for the warning message.
+#' @return Numeric vector of standard errors, the names of `v` kept.
+#' @keywords internal
+#' @noRd
+.safe_se <- function(v, where) {
+  ok <- is.finite(v) & v >= 0
+  if (!all(ok)) {
+    rlang::warn(
+      sprintf(paste0("A variance on the diagonal of the covariance matrix of %s is negative or missing; ",
+                     "its standard error is NA."), where),
+      class = "medfit_warning_vcov_diagonal"
+    )
+  }
+  out <- rep(NA_real_, length(v))
+  out[ok] <- sqrt(v[ok])
+  names(out) <- names(v)
+  out
+}
+
+
 #' Variance of a Linear Combination of Parameters
 #'
 #' `t(g) %*% Sigma %*% g` over the sub-block of `vc` named by `g`.
@@ -184,6 +211,9 @@
   if (S7::S7_inherits(x, ClusterMediationData)) {
     return(.effect_gradients_cluster(x))
   }
+  if (S7::S7_inherits(x, TwoLevelMediationData)) {
+    return(.effect_gradients_twolevel(x))
+  }
 
   if (S7::S7_inherits(x, MediationData)) {
     a <- x@a_path
@@ -235,6 +265,48 @@
     own = c(a = bw, b_within = a),
     spillover = c(a = bb - bw, b_between = a, b_within = -a)
   )
+}
+
+
+#' Effect Gradients for a TwoLevelMediationData Object
+#'
+#' Per level `l`: NIE_l = a_l b_l, NDE_l = c'_l, TE_l = NIE_l + c'_l, PM_l = NIE_l / TE_l (quotient rule, `NA`
+#' when `|TE_l|` is below `sqrt(eps) * max(|NIE_l|, |NDE_l|)`); the contrast is NIE_within - NIE_between.
+#' Gradients are named over the alias rows (`a_within`, ..., `c_prime_between`) of `@vcov`, so the cross-level
+#' covariances enter `g' V g`. A
+#' between term of a within-only object has no rows in `@vcov` and so gets `NA` from `.effect_se_or_na()`; a
+#' contrast that is zero by constraint (both a and b equated across levels) is named by a row `@vcov` does not have, for
+#' the same reason.
+#'
+#' @param x A TwoLevelMediationData object.
+#' @return Named list: effect key (`nie_within`, ..., `nie_contrast`) -> named gradient over `@vcov`.
+#' @keywords internal
+#' @noRd
+.effect_gradients_twolevel <- function(x) {
+  per_level <- function(level) {
+    row <- function(p) paste0(p, "_", level)
+    a <- S7::prop(x, row("a"))
+    b <- S7::prop(x, row("b"))
+    cp <- S7::prop(x, row("c_prime"))
+    g_nie <- stats::setNames(c(b, a), c(row("a"), row("b")))
+    g_nde <- stats::setNames(1, row("c_prime"))
+    g_te <- .add_gradients(g_nie, g_nde)
+    nie <- a * b
+    te <- nie + cp
+    g_pm <- if (.twolevel_te_defined(te, nie, cp)) {
+      .add_gradients(g_nie / te, g_te * (-nie / te^2))
+    } else {
+      g_te * NA_real_
+    }
+    stats::setNames(list(g_nie, g_nde, g_te, g_pm), paste0(c("nie", "nde", "te", "pm"), "_", level))
+  }
+  out <- c(per_level("within"), per_level("between"))
+  out$nie_contrast <- if (.twolevel_contrast_available(x)) {
+    .add_gradients(out$nie_within, -out$nie_between)
+  } else {
+    c(nie_contrast_unavailable = NA_real_)
+  }
+  out
 }
 
 

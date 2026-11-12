@@ -1,6 +1,6 @@
 # Issue #360: active residual-variance boundary regression
 
-Status: COMPLETE LOCALLY, verified 2026-10-29; PR #363 submitted to dev; namespace lint repair awaiting hosted CI. Base: origin/dev 06a69005abca601fbbb98f7e95387fa11cc1f3c9.
+Status: COMPLETE: merged into dev via PR #363 (`edcf23d8`, 2026-10-30). Local verification 2026-10-29. Base: origin/dev 06a69005abca601fbbb98f7e95387fa11cc1f3c9.
 Source: https://github.com/Data-Wise/medfit/issues/360.
 Worktree: .worktrees/issue-360-boundary-regression; branch feature/issue-360-boundary-regression.
 

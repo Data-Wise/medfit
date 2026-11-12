@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-31",
+  "source_branch": "codex/fiml-inference-models-design",
+  "source_base": "f1aaf332",
+  "destination_branch": "codex/roadmap-reconciliation",
+  "destination_parent": "cc3fd887245fa01026439d4c103fc2be020d1a01",
+  "source_sha256": {
+    "planning/PLAN-FIML-inference-and-observed-models-2026-10-31.md": "0c56eb80c38e430a60364ad6f3999e7082ce02c3e197c0b81410aa0f42694b4c",
+    "planning/studies/fiml-inference-gates/availability.csv": "bfe449117a560d606ac7df4a21c1bdb31e473be64d9f486c1b79273b8509ee00",
+    "planning/studies/fiml-inference-gates/coverage.csv": "598c11c6a1c5cf6b61e557371b22dc645fcf1586d3260ec6052105a843009a35",
+    "planning/studies/fiml-inference-gates/families.csv": "350caceb0790d785ae17f22b03a65af8396516dc20d15a38105ff2e3be96985f",
+    "planning/studies/fiml-inference-gates/gate-probabilities.R": "44b70f3e3a142a0527005bd47136d0435b17b3aee717f2b2593ab78bab140443",
+    "planning/studies/fiml-inference-gates/joint.csv": "35c6e9f6ef776da5cf79da75822af520ef2c1c3449fb41c6566e64682df39de0",
+    "planning/studies/fiml-inference-gates/opus-inference-original.json": "683274895bb9471253213d7ac675ec36cf746c519f0a2d533a50b1abe842cf39",
+    "planning/studies/fiml-inference-gates/opus-revision-review.json": "aed4a137b260a6597d93be7576c2559c8ddb46e44e32e5cc0e85b7185d4ba293",
+    "planning/studies/fiml-inference-gates/opus-roadmap-original.json": "5bde7f05b545f1fba9a62117d71d266d216035341475a18d9b06cc787343bf00",
+    "planning/studies/fiml-inference-gates/refit.csv": "260062988080df594bfed4ee8c84facc347a8ccf2395b6ab2a8635fa0ef2bf20",
+    "planning/studies/fiml-inference-gates/report.md": "238488ded93948807e4e6920b83018c1f0d279a93949c0394379f1f4b71976ef",
+    "planning/studies/fiml-inference-gates/revised-documents.sha256": "5e403978e0816c6c03b31022a1ffa251a22d544e3e89f2fb19fc4fe4330c8c04"
+  },
+  "note": "Original source retained; JSON/script/CSV byte copies. Plan/report updated for assembly. Original receipt renamed preassembly-revised-documents.sha256. No calculations rerun."
+}

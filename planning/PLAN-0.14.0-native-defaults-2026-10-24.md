@@ -1,6 +1,6 @@
 # PLAN: medfit 0.14.0, native defaults (warn release)
 
-**Date:** 2026-10-24. **Status:** revision 2, awaiting approval (revision 1 failed a Codex adversarial review: four
+**Date:** 2026-10-24. **Status:** COMPLETE: released as v0.14.0 (release PR #333, merged 2026-10-25; GitHub-only). Revision 2 was approved and executed (revision 1 failed a Codex adversarial review: four
 findings, all addressed below; see "Revision log").
 **Spec:** `planning/specs/SPEC-native-defaults-2026-10-24.md` (approved; R-1 to R-12).
 **ADR:** `planning/specs/ADR-native-defaults-2026-10-24.md` (E-1 to E-15, all decided).

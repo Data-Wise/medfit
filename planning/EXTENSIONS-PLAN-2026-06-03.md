@@ -1,4 +1,10 @@
-# medfit Extensions Plan (post-v0.2.0)
+# medfit Extensions Plan (historical design archive)
+
+Current release/priorities are owned by [the roadmap current board](medfit-roadmap.md#current-board).
+This archive preserves the 2026-06/09 extension inventory; statements such as
+"not implemented" describe that snapshot, not released 0.16.0. In particular,
+2-1-1 cluster mediation/lme4 support shipped in 0.6.0; later multilevel extensions
+remain separate designs. This archive schedules no future release.
 
 **Created:** 2026-06-03 · **Updated:** 2026-09-25 · **Package state:** v0.3.2 on CRAN; **v0.5.0**
 released on `main`/GitHub/r-universe (2026-09-25, tag `v0.5.0`, not CRAN-submitted by decision),
@@ -9,8 +15,9 @@ interactions** (D8(b)) all shipped; extraction (lm/glm/lavaan), fitting (GLM + r
 with delta-method effect SEs) are all in place. CMAverse (Ext C.1) remains, blocked; Ext D/E are
 brainstormed, not spec'd.
 
-This plan supersedes the status framing in `medfit-roadmap.md` (whose detailed Phase 7/7b/7c
-*designs* remain the reference — this doc is the prioritized, current **board**).
+Historical authority statement (superseded on 2026-10-31): this file formerly
+served as the prioritized board. Its designs remain references; the roadmap
+current board now owns scheduling and shipped/open/deferred dispositions.
 
 ---
 
@@ -26,7 +33,7 @@ over-engineering, type-safe via validators. This is the established medfit patte
 
 ---
 
-## The board
+## Historical extension board
 
 ### 🟢 Quick wins (≤ 1 day each)
 | # | Item | Why now |

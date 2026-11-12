@@ -4,11 +4,11 @@ Active tasks, implementation plan, and progress tracking.
 
 ---
 
-## 🎯 Current Focus: 0.15.0 (native defaults flip)
+## 🎯 Current Focus: two-level mediation (#394) and docs completion
 
-**Status:** 0.3.2 on CRAN (2026-07-23); **0.14.1 on main/GitHub** (tag `v0.14.1`, 2026-10-26); 0.15.0 T1-T2 done, T3-T4 in PR #347
-**Next:** Merge PR #347, then T5a-c (docs/website), T6, T7, T8. The live task list is `planning/PLAN-0.15.0-native-defaults-flip-2026-10-26.md`; the sections below are 0.8.0-era history
-**Updated:** 2026-10-26
+**Status:** 0.3.2 on CRAN (2026-07-23); **0.16.0 on main/GitHub** (tag `v0.16.0`, GitHub-only, CRAN held); `dev` carries bounded FIML for covariates, parallel and serial forms (not statistically admitted) and the two-level `lavaan` adapter (#396, #397)
+**Next:** two-level effects and bootstrap (#394, other sessions); the docs-completion plan (draft, 2026-11-10). Live task lists are the `planning/PLAN-*.md` files named in `CLAUDE.md`; the sections below are 0.8.0-era history
+**Updated:** 2026-11-10
 
 > Decided 2026-09-24 (`specs/GRILL-0.5.0-release-2026-09-24.md`): 0.5.0 is **GitHub-only**;
 > #81/#82 are correctness fixes, exempt from the deprecation period. CRAN 0.3.2 users are
@@ -37,7 +37,7 @@ Active tasks, implementation plan, and progress tracking.
 - [ ] **Additional Vignette Ideas**
   - [x] "Mediation Analysis Workflow" (end-to-end example) — covered by Getting Started on
         `mediation_demo` (#63, #67)
-  - [ ] "Comparing medfit with other packages"
+  - [x] "Comparing medfit with other packages" — `lavaan-comparison` article (the probmed and RMediation comparisons are D5 of the docs-completion plan)
   - [ ] "Extending medfit" (for developers)
 
 ### Low Priority / Future ⚪

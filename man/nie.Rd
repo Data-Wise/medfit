@@ -14,7 +14,10 @@ estimate (with a warning if the statistic was not an NIE).}
 
 \item{...}{Additional arguments passed to methods. For a
 \code{SerialMediationData}, \code{type = c("chain", "total")} selects the
-chain-specific (default) or the total indirect effect (see Details).}
+chain-specific (default) or the total indirect effect (see Details). For a
+\code{TwoLevelMediationData}, \code{level = c("within", "between", "contrast", "both")}
+selects the level (within is the default; the contrast, within minus
+between, is descriptive and exists for \code{nie()} only).}
 }
 \value{
 A numeric scalar of class \code{mediation_effect} carrying a \code{type}

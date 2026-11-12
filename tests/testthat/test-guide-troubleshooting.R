@@ -532,3 +532,31 @@ test_that("the guide quotes every evidence-error class and fragment this block t
     expect_true(grepl(frag, txt, fixed = TRUE), info = frag)
   }
 })
+
+# ---- the muffling recipe quoted in "Silence one message or warning" ----
+
+test_that("the withCallingHandlers recipe silences the lenient fixed_x note by class and only by that class", {
+  syn <- "mediator1 ~ treatment\noutcome ~ mediator1 + treatment\ntreatment ~~ treatment"
+  # without the recipe the note is shown (the case can fail)
+  shown <- testthat::capture_messages(fit_sem(syn, data = mediation_demo))
+  expect_true(any(grepl("the `fixed_x` default leaves", shown, fixed = TRUE)))
+  # with the recipe, as the guide writes it, nothing reaches the console
+  quiet <- testthat::capture_messages(
+    withCallingHandlers(
+      fit_sem(syn, data = mediation_demo),
+      medfit_message_fixed_x_lenient = function(m) invokeRestart("muffleMessage")
+    )
+  )
+  expect_length(quiet, 0L)
+  # a handler for a class the note does not carry leaves it printing (planted defect)
+  wrong <- testthat::capture_messages(
+    withCallingHandlers(
+      fit_sem(syn, data = mediation_demo),
+      medfit_message_not_a_class = function(m) invokeRestart("muffleMessage")
+    )
+  )
+  expect_true(any(grepl("the `fixed_x` default leaves", wrong, fixed = TRUE)))
+  skip_if_not(file.exists(guide_path()), "vignettes are not available (installed or built package)")
+  txt <- paste(readLines(guide_path(), warn = FALSE), collapse = "\n")
+  expect_true(grepl("medfit_message_fixed_x_lenient = function(m) invokeRestart(\"muffleMessage\")", txt, fixed = TRUE))
+})

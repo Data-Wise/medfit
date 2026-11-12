@@ -1,3 +1,283 @@
+# medfit 0.17.0
+
+## Release summary
+
+* **Bounded FIML expansion.** Covariates (one or two), two parallel mediators and two serial mediators (the saturated
+  graph or the pure chain) are fitted by `fit_sem(missing = "fiml", fixed_x = FALSE)`. They are **numerically verified
+  against lavaan, not statistically admitted**: no interval coverage is established, and every non-`NULL` `source_fit`
+  still stops with `medfit_error_fiml_inference_unavailable` before any draw, refit or worker.
+* **Two-level mediation (experimental).** `extract_mediation()` on a two-level `lavaan` fit returns
+  `TwoLevelMediationData`; `nie(level = )`, `twolevel_statistic()` and the contrast are **experimental** and may change
+  without the usual two-month deprecation period (the native two-level fitter, a later milestone, could change the
+  object). The lavaan floor is now `>= 0.7-3`.
+* **Known issue.** `compare_lr()`: lavaan's product-null fit returns an LR above medfit's reference on about 30% of
+  gate runs; medfit flags it correctly (#320, open).
+* GitHub-only release; CRAN stays on hold (#83).
+
+## Documentation
+
+* Two new Guides articles: "Two-level workflow, step by step" (`guide-twolevel-tutorial`, a checked, evaluated
+  walkthrough from a `lavaan` fit to a reported result) and "How medfit is organized" (`guide-architecture`, Mermaid
+  diagrams of the classes, engines and generics). The Troubleshooting guide now lists `medfit_warning_vcov_diagonal`
+  and `medfit_error_search_evidence`. A new `CONTRIBUTING.md` describes the branch flow, the local gates and the hosted
+  checks. `test-condition-docs.R` fails when a classed condition in `R/` is named nowhere in the docs.
+
+* The native-engine book (ten chapters, 1 to 8 on the native engine, 9 on the lavaan two-level adapter and 10 on 2-1-1
+  cluster mediation, titled "The medfit engines and model classes") has moved out of this repository into its own private
+  repository, with its history, and is no longer published or linked from the package website. `book/` is removed from the
+  source tree; the identities its chapters teach stay tested here (`test-native-identities.R`, formerly part of
+  `test-native-book.R`), and the oracles for the two-level adapter and cluster mediation stay in `test-twolevel-*.R` and
+  `test-cluster-211.R`. Links from the native guide, quickstart, tutorial, model page, cookbook and defaults article to the
+  book are removed.
+
+* New model page "Two-level mediation (1-1-1)" (`model-twolevel`), cookbook recipe 23, a methods section
+  (the estimand, the delta method with the cross-level covariance, the caveats), troubleshooting rows for the
+  two-level conditions, and glossary terms. The page states the estimand's limits: fixed slopes (the average
+  with random slopes is ab + sigma_ab), latent rather than manifest cluster means, a contrast that is
+  descriptive and not a test, and thresholds (50 clusters, ICC 0.01 and 0.05) that are judgments. The page
+  and recipe also show `twolevel_statistic()` and say to report the percentile interval of a cluster
+  bootstrap, not the standard deviation of its draws (inadmissible refits are kept, which gives the between
+  effects heavy tails).
+* New articles "probmed and medfit" and "RMediation and medfit": what each dependent adds, which medfit
+  objects it accepts (a feature table whose statuses a test checks against live calls into probmed 0.4.1 and
+  RMediation 1.11.1, skipped when they are absent), and one worked example each.
+
+## Changes
+
+* The Suggests floor for `lavaan` is now `>= 0.7-3` (was `>= 0.6-0`), set by the two-level adapter. The two-level and
+  `extract-lavaan-multilevel` tests pass on lavaan 0.7-3 (the version every hosted CI leg installs) and 0.7-2, and fail on 0.6-19
+  and 0.6-12: those versions refuse a cluster bootstrap in a multilevel fit (`se = "bootstrap"` must be `"none"`, `"standard"`
+  or `"robust.huber.white"`), and 0.6-12 also differs at about 1e-8 on single-level cluster-robust paths. Whether the adapter
+  works on 0.7-0 and 0.7-1 is unverified (neither is on CRAN).
+
+## Added
+
+* The two-level contrast `NIE_within - NIE_between` is now returned unless **both** `a` and `b` are equated across
+  levels (it was `NA` when either was). With only `a` equated it is `a (b_w - b_b)`, with only `b` equated
+  `(a_w - a_b) b`, each with a delta-method SE from the joint covariance, equal to lavaan's `:=` definition
+  (still descriptive, not a test). With both equated it is `NA` (zero by constraint) with
+  `medfit_warning_twolevel_constrained`, and `twolevel_statistic("nie_contrast")` raises
+  `medfit_error_twolevel_constrained`. Behavior change for the development version only (the adapter is unreleased).
+* `cross_level_equal` also finds an equality lavaan keeps as two parameters (for example `a^2 - a2^2 == 0`):
+  a path is recorded as equated when the estimated difference of its two level estimates and the variance of that
+  difference are both effectively zero (defaults `1e-6` relative to `max(1, |estimate|)` and `1e-10` relative to
+  the summed variances; options `medfit.twolevel_equal_diff` and `medfit.twolevel_equal_var`). The correlation of
+  the two estimates is not used: correlation -1, or +1 between proportional unequal paths, does not imply equality.
+
+* `extract_mediation()` on a two-level `lavaan` fit (`level:` blocks, `cluster =`) now returns
+  the new `TwoLevelMediationData`: the a, b and c' paths at the within and the between
+  level (one mediator, linear, no products, latent cluster means), read from the fit's
+  parameter table by free-parameter index with the sub-block of the joint covariance, plus
+  per-variable ICCs. Behavior change: this call was refused in the previous development
+  version (#395) and returned the within level only before that. When the between level
+  is not identified (a treatment or mediator ICC below 0.01, a non-finite or non-positive
+  definite between covariance) the object is within-only and warns with
+  `medfit_between_unidentified`; a non-converged fit without a usable within block errors
+  with `medfit_error_twolevel_unusable`. Three-level and multigroup fits are still refused.
+  Bootstrap callbacks are `twolevel_statistic()` (below).
+
+* `TwoLevelMediationData` has effects and inference. `nie()`, `nde()`, `te()` and `pm()` take
+  `level = "within"` (the default), `"between"` or `"both"`; `nie(level = "contrast")` is the
+  within minus between indirect effect (descriptive, not a test; no contrast exists for
+  `nde()`, `te()` or `pm()`, which error with `medfit_error_twolevel_level`). `paths()`,
+  `decompose()`, `coef()`, `vcov()`, `nobs()`, `confint()`, `tidy()`, `glance()` and
+  `summary()` work through the one delta-method gradient builder, over the joint covariance
+  of the paths, so the cross-level covariance enters the contrast SE. Between effects of a
+  within-only object are `NA` with `medfit_between_unidentified`; the contrast is `NA` with
+  `medfit_warning_twolevel_constrained` when both a and b are equated across levels. Intervals are
+  Wald (no small-sample correction).
+
+* `twolevel_statistic()` builds the scalar callback `bootstrap_mediation()` needs for a two-level
+  effect (`nie_within`, `nie_between`, `nie_contrast`, the other per-level effects and the six
+  paths). Given a `TwoLevelMediationData` it is the parametric callback; given a two-level `lavaan`
+  fit (plus `treatment`, `mediator`, `outcome`) it refits the fit's own model on each cluster
+  resample, with a cluster drawn twice refitted as two clusters. A refit that errors, warns, does
+  not converge or leaves the between level unidentified is a failed replicate, excluded and counted
+  in the bootstrap warning. A between effect of a within-only object and the contrast of a fit with
+  `a` and `b` both equated across levels raise `medfit_between_unidentified` and
+  `medfit_error_twolevel_constrained`. `bootstrap_mediation()` now accepts a `TwoLevelMediationData`
+  as `mediation_data`. Object-based cluster bootstrap dispatch is still deferred (#394).
+
+* Hardening of the two-level adapter (all within the development version, no change to a valid fit's numbers):
+  * Behavior change: the `TwoLevelMediationData` validator now rejects non-finite `estimates`, a `vcov` that is not
+    symmetric or has a negative diagonal, `fixed_paths` that are not rows of `estimates`, and `n_obs` that differs from
+    `sum(cluster_sizes)`. The constructor errors on such objects instead of storing them, so a bad object fails at
+    creation rather than returning wrong effects later.
+  * `pm()` (with its standard error and the `twolevel_statistic()` callback) is `NA` with the existing warning
+    when `|TE| < sqrt(eps) * max(|NIE|, |NDE|)` at that level (was: below `eps`), so a near-zero total effect gives
+    `NA` instead of a huge proportion. The rule is stated in the methods article.
+  * An invalid variance on the diagonal of `vcov` (negative, missing or non-finite) gives an `NA` standard error and
+    one `medfit_warning_vcov_diagonal`, in the path standard errors of `summary()` and in the extractor's
+    audit table, instead of a silent `NaN`.
+  * `lavaan_version` records the version of the lavaan that fitted the model (`"0.7-3"` is stored as `"0.7.3"`), not
+    the installed one.
+  * The admissibility check on a refit no longer swallows errors: an error in reading the fit now stops instead of
+    counting as inadmissible.
+  * `twolevel_statistic()` captures the refit environment when it is called, not when the callback first runs, so the
+    objects named in the fit's call (data, control lists) resolve in the environment that built the callback;
+    `?twolevel_statistic` documents this. An input that is neither a `TwoLevelMediationData` nor a two-level lavaan fit
+    is now the classed error `medfit_error_twolevel_unsupported`.
+  * The `source_package` and `data` slots stay, documented as kept for the dependents contract shared with the other
+    mediation classes (`data` is always `NULL` for the lavaan adapter).
+
+* `print()` and `summary()` of a serial FIML object (`FIMLSerialMediationData`) now name
+  the variant (saturated, or the pure chain without shortcut paths) and the covariates
+  on the line under the chain. The printed numbers are unchanged.
+
+* Bounded Gaussian random-X FIML now also fits the two serial forms (the saturated
+  graph and the pure chain) with TWO observed covariates `Z1` and `Z2`, both predicting
+  `M1`, `M2` and `Y`, with the same three disturbance zeros written. The three
+  exogenous covariances (`X ~~ Z1`, `X ~~ Z2`, `Z1 ~~ Z2`) are all written or none:
+  a partial set is refused with a reason that names it, and every exogenous variable
+  needs a written `Y` path (free, or at most one fixed at exactly zero). The saturated
+  model has 27 free parameters (26 with the direct path fixed) and is just identified
+  with a free direct path; the chain has 25 (24), with 2 (3) degrees of freedom. The
+  extracted paths are the treatment's coefficients, never a covariate's. In the
+  saturated graph with a free direct path either covariate may be named the
+  treatment; with a fixed-zero direct path the variable carrying the fixed zero is the
+  only valid treatment and naming another one says so (a classed
+  `medfit_error_fiml_extract_unsupported`). In the pure chain the treatment is
+  structural, the exogenous variable with no path to `M2`: leaving a variable out of
+  the equation of `M2` makes it the treatment (exactly one variable may be left out),
+  and naming a covariate is refused. Three or more covariates stay refused. Verified
+  against lavaan (estimates, covariance, logLik, `:=` effects, the relabeled
+  treatment for each covariate), a closed-form equation-wise OLS oracle, an
+  independent rowwise likelihood and Hessian, and OpenMx; not calibrated for coverage
+  or statistically admitted.
+
+* Bounded Gaussian random-X FIML now also fits the two serial forms (the saturated
+  graph and the pure chain) with ONE observed covariate `Z`: `M1 ~ X + Z`,
+  `M2 ~ M1 + X + Z` (saturated) or `M2 ~ M1 + Z` (chain), `Y ~ ... + X + Z`, with the
+  same three disturbance zeros written, a free covariance of `X` and `Z`, and every
+  exogenous variable needing a written `Y` path (free, or at most one fixed at
+  exactly zero, which makes that variable the treatment). The saturated model has 20
+  free parameters (19 with the direct path fixed) and is just identified with a free
+  direct path; the chain has 18 (17), with 2 (3) degrees of freedom. The extracted
+  paths are the treatment's coefficients (`a`, `a2`, `d1`, `b1`, `b`, `c_prime`, or
+  `a`, `d1`, `b`, `c_prime` for the chain) with the full covariance from the fitted
+  information; the covariate's coefficients are never paths and the covariate is
+  recorded in `fit_context`. In the saturated graph with a free direct path a
+  covariate may be named the treatment; in the pure chain the treatment is the
+  structural variable with no path to `M2` and naming a covariate is refused with
+  `medfit_error_fiml_extract_unsupported`. Effects, per-effect origin rules and
+  consumer refusals are those of the no-covariate forms. A second covariate is the
+  entry above; three or more stay refused. Verified against lavaan (estimates, covariance, logLik, `:=` effects,
+  the relabeled covariate treatment), a closed-form equation-wise OLS oracle, an
+  independent rowwise likelihood and Hessian, and OpenMx; not calibrated for
+  coverage or statistically admitted.
+
+* Bounded Gaussian random-X FIML now also fits the pure chain of two serial
+  mediators with no covariates: `M1 ~ X`, `M2 ~ M1`, `Y ~ M2` (plus `Y ~ X` free,
+  `0*X` or omitted), with `X -> M2` and `M1 -> Y` absent and the same three
+  disturbance zeros written. Unlike the saturated graph the chain is
+  overidentified (12 free parameters, 11 with the direct path fixed, against 14
+  moments: 2 and 3 degrees of freedom), so its likelihood is a restriction the data
+  can reject; a pair of variables that is never observed together fits more often
+  than in the saturated graph. A graph with exactly one shortcut, or a fixed or
+  labeled shortcut, is still refused. `extract_mediation()` returns a
+  `FIMLSerialMediationData` object whose paths are `a`, `d1`, `b` and `c_prime`
+  (no `a2` or `b1` exist) with the 4 x 4 covariance from the fitted information;
+  `nie()` and `nie(type = "total")` are the same effect `a * d1 * b`, `te()` adds
+  `c_prime`, and the standard errors of both indirect rows are withheld together
+  only where at least two of `a`, `d1`, `b` are exactly zero. `paths()`, `tidy()`,
+  `coef(type = "paths")`, `summary()` and `confint()` list the four paths
+  (`c_prime` with value 0 and standard error 0 when it is fixed). `pm()`,
+  `quick()`, `glance()` and bootstrap intervals stay refused, and
+  `bootstrap_mediation(source_fit = )` stays withheld. The predictor lists of an
+  extracted serial object must now match its variant exactly. Verified against
+  lavaan (restriction test, estimates, covariance and effects), OpenMx for one
+  cell and an independent likelihood; not calibrated for coverage or statistically admitted.
+
+* Bounded Gaussian random-X FIML now also fits two serial mediators in the saturated
+  forward graph with no covariates: `M1 ~ X`, `M2 ~ M1 + X`, `Y ~ M1 + M2 + X`
+  (the direct path free, `0*X` or omitted) with the three disturbance zeros
+  written (`M1 ~~ 0*M2`, `M1 ~~ 0*Y`, `M2 ~~ 0*Y`; an omitted or free statement is
+  refused). The model has 14 free parameters (13 with the direct path fixed), is
+  just identified with the direct path free, in which case it fails closed when a
+  pair of variables is never observed together (with the direct path fixed some
+  such pairs still fit). `extract_mediation()` needs both mediators
+  in the fitted order (the reversed order is refused) and returns a
+  `FIMLSerialMediationData` object with the full covariance of `a`, `a2`, `d1`,
+  `b1`, `b` and `c_prime`; `nie()` is the chain effect and
+  `nie(type = "total")` the sum of every indirect path, both with delta-method
+  standard errors from the full covariance. `paths()`, `tidy()`,
+  `coef(type = "paths")`, `summary()` and `confint()` report all six paths, and
+  `confint(parm = "effects")` also reports `nie_total`. The standard error of an
+  indirect effect is withheld only where its delta gradient is exactly zero
+  (per effect). `pm()`, `quick()`, `glance()` and bootstrap intervals are refused
+  for these objects, and `bootstrap_mediation(source_fit = )` stays withheld
+  (`medfit_error_fiml_serial_source_fit` behind the guard). Serial
+  models with covariates and other serial shapes stay refused. Verified against
+  lavaan (and OpenMx for one cell), the unrestricted multivariate normal
+  maximum likelihood and an independent likelihood; not calibrated for coverage or
+  statistically admitted.
+
+* Bounded Gaussian random-X FIML now also fits two parallel mediators with one
+  or two observed covariates (`M1 ~ X + Z`, `M2 ~ X + Z`, `Y ~ M1 + M2 + X + Z`,
+  and the two-covariate analogue), in both residual forms (`M1 ~~ 0*M2` written,
+  or the free, label-less `M1 ~~ M2`), each with a free or exactly zero direct
+  path. The covariate rules are those of the one-mediator covariate form: every
+  covariate enters both mediator equations and the outcome equation, the exogenous
+  variables have a free joint covariance (write every pair or none), every
+  exogenous variable needs a written `Y` path (one may be fixed at zero and is
+  then the treatment), and any variable may be incomplete. The free-parameter
+  count is 18 to 20 with one covariate and 25 to 27 with two. With no `Y` path
+  fixed at zero, `extract_mediation()` may name any exogenous variable as the
+  treatment; it returns a `FIMLParallelMediationData` object with the full
+  covariance of `a1`, `a2`, `b1`, `b2` and `c_prime` (covariate coefficients stay
+  in the fitted covariance, not among the paths). Serial mediators with
+  covariates, three or more mediators and three or more covariates stay refused.
+  The fits are verified against lavaan (and OpenMx for one cell) and an
+  independent likelihood, not calibrated for coverage or statistically admitted;
+  `bootstrap_mediation(source_fit = )` stays withheld and a covariate parallel fit
+  is also refused with `medfit_error_fiml_covariate_source_fit`.
+
+* Bounded Gaussian random-X FIML (`fit_sem(missing = "fiml", fixed_x = FALSE)`
+  and `extract_mediation()`) now also fits two parallel mediators without
+  covariates: `M1 ~ X`, `M2 ~ X`, `Y ~ M1 + M2` with a free or exactly zero direct
+  path. Independent residuals need `M1 ~~ 0*M2` written (an omitted statement is
+  refused, since lavaan's default would free it); a free, label-less `M1 ~~ M2`
+  fits the mediator residual covariance. The free-parameter count is 12 or 13
+  (independent) and 13 or 14 (free covariance). A labeled, fixed nonzero, bounded,
+  tied or constrained covariance is refused, as are serial mediators and three or
+  more mediators (parallel mediators with covariates are described in the entry above). `extract_mediation()`
+  returns a `FIMLParallelMediationData` object with the full covariance of
+  `a1`, `a2`, `b1`, `b2` and `c_prime`, so the standard error of the sum of the
+  indirect effects keeps the cross-path terms. Extraction refusals for this form
+  have class `medfit_error_fiml_extract_unsupported`. The fits are numerically
+  verified, not calibrated for coverage or statistically admitted; delta-method
+  Wald intervals are available, while `bootstrap_mediation(source_fit = )` stays
+  withheld (`medfit_error_fiml_inference_unavailable`) and a parallel fit is also
+  refused with `medfit_error_fiml_parallel_source_fit`. At an exact origin (every
+  `a_j` and `b_j` equal to 0) the delta gradient of the NIE is zero, so `tidy()` and
+  `confint(parm = "effects")` withhold the NIE interval (NA plus a note), as for the
+  single-mediator FIML object.
+
+* Bounded Gaussian random-X FIML (`fit_sem(missing = "fiml", fixed_x = FALSE)`
+  and `extract_mediation()`) now also fits one covariate `Z` or two covariates
+  `Z1`, `Z2` besides X, M and Y: `M ~ X + covariates`, `Y ~ M + X + covariates`,
+  a free joint covariance among the exogenous variables (write every pair or
+  none; a partial set is refused), independent disturbances, any variable
+  incomplete, and a free or exactly zero direct path. Both outcome paths are
+  required. With no fixed outcome path any exogenous variable may be the
+  treatment in `extract_mediation()`; with exactly one fixed at zero, that variable
+  is. Three or more covariates, a covariate on one equation only, residual
+  covariances, constraints, interactions, serial models and covariates combined with
+  parallel mediators stay refused.
+  The fits are implemented and numerically verified against lavaan and an
+  independent likelihood; they are not calibrated for coverage or statistically
+  admitted, and neither are their normal intervals. `bootstrap_mediation(source_fit = )`
+  stays withheld for every FIML fit, and covariate fits are also refused with
+  `medfit_error_fiml_covariate_source_fit`. Fits with three variables are unchanged.
+
+* Bounded FIML retained-row and Gaussian parameter-draw intervals for the simple
+  model are implemented behind `bootstrap_mediation(source_fit = ..., effect = ...)`
+  but **withheld**: every non-`NULL` `source_fit` is refused with the classed error
+  `medfit_error_fiml_inference_unavailable` before any other check, draw or refit,
+  until statistical admission is decided. They have numerical verification only;
+  no interval coverage has been established. Calls without `source_fit` and
+  FIML fitting and extraction are unchanged.
+
 # medfit 0.16.0
 
 ## Added
@@ -15,9 +295,10 @@
 * Bounded FIML integration adds exact `missing = "fiml"` opt-in to
   `fit_sem()` and native `fit_mediation()` engine arguments, preserving listwise defaults
   and positional calls. It retains partially observed rows for three-variable Gaussian
-  random-X mediation with a free or zero direct path. Explicit `fixed_x = FALSE`, a mean
-  structure, observed/model SEs, no weights and the validated fixed-start protocol are
-  required. Likelihood/IC summaries and unstandardized extracted effects are supported;
+  random-X mediation with a free or zero direct path, assuming ignorable missingness
+  under that joint model. Choosing FIML does not establish MAR or protect against MNAR.
+  Explicit `fixed_x = FALSE`, a mean structure, observed/model SEs, no weights and
+  the validated fixed-start protocol are required. Likelihood/IC summaries and unstandardized extracted effects are supported;
   model tests, bootstrap, profiles and MBCO remain unavailable.
 
 * Native fits with one supported nonzero-product equality now fit both sign branches independently before choosing
@@ -28,6 +309,15 @@
   covariance is reported as unavailable and triggers no additional fit.
 
 ## Fixed
+
+* `extract_mediation()` on a lavaan fit with more than one level (`level:` blocks with
+  `cluster =`) now stops with the classed error `medfit_error_lavaan_multilevel`. It used to
+  return an ordinary `MediationData` built from the within block alone, with `n_obs` equal
+  to the total number of rows. This is a correctness fix (behavior change, no deprecation
+  period): fit a single-level model, or use the two-level adapter planned in #394.
+  A multigroup lavaan fit (`group =`) is likewise refused, with
+  `medfit_error_lavaan_multigroup`; it used to return the first group's paths with the total
+  sample size. Single-level, single-group fits (also with `cluster =` robust SEs) are unchanged.
 
 * Generic help and the README now distinguish bounded FIML normal summaries
   from deferred bootstrap, proportion-mediated and comparison operations, including
@@ -88,7 +378,7 @@ stay valid values, and an explicit argument is always kept as given.
   no mean structure, and against it medfit's AIC is larger by 2k and its BIC by k log n (k = the observed means not
   fixed; k = 2 in the worked example of the article). The conditional `logLik()` equals lavaan's.
 * In 0.15.0 missing data stays listwise deletion, with no `missing =` argument or FIML.
-  The later bounded opt-in FIML feature is planned for unreleased 0.16.
+  Bounded opt-in FIML was introduced in 0.16.0.
 * `compare_lr()` runs on fits made under the new defaults. Its known limit (#320) is unchanged by the flip: on the pinned
   design (15 seeds by 4 cells) the lavaan run ended above medfit's reference in 18 of 60 runs and OpenMx in 13 of 60,
   the same counts as before, with no mislabeled row.

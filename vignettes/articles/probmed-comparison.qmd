@@ -1,0 +1,90 @@
+---
+title: "probmed and medfit"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+probmed builds on medfit: it reads a medfit mediation object and reports the probability of a mediated
+shift (P_med), a standardized effect size, with its sensitivity and alternative estimators. medfit supplies the
+fitting, extraction, effects and bootstrap. This page runs both on one fit and lists which medfit objects probmed
+accepts, with a status for each row that a test checks against a live call on each build.
+
+| | |
+|---|---|
+| **Use medfit when** | you want the indirect, direct and total effects with delta-method or bootstrap intervals, or any model class medfit supports |
+| **Use probmed when** | you want P_med and its sensitivity analysis for a one-mediator or a parallel-mediator model |
+| **Both** | share one object: probmed calls `extract_mediation()` and reads the `MediationData` properties, so a medfit fit is the input to either |
+
+The statements below were checked against probmed 0.4.1 (a GitHub release, not on CRAN) with medfit 0.16.0. probmed
+is not a dependency of medfit, so the chunks run only where probmed 0.4.1 or later is installed; a site built
+without it shows the code and the numbers quoted in the text.
+
+```{r}
+#| label: setup
+library(medfit)
+library(generics)
+ok <- requireNamespace("probmed", quietly = TRUE) && utils::packageVersion("probmed") >= "0.4.1"
+```
+
+## The same fit in both
+
+```{r}
+#| label: both
+#| eval: !expr ok
+fit <- fit_mediation(outcome ~ treatment + mediator1, mediator1 ~ treatment,
+                     data = mediation_demo, treatment = "treatment", mediator = "mediator1")
+c(nie = nie(fit), nde = nde(fit))
+p <- probmed::pmed(fit, n_boot = 500, seed = 1)
+c(p_med = p@estimate, lower = p@ci_lower, upper = p@ci_upper)
+```
+
+On `mediation_demo` the indirect effect is 0.325 and the direct effect 0.041. P_med is 0.569 with a 95% interval
+of about 0.536 to 0.608 (500 parametric bootstrap draws, seed 1). The two answer different questions: the indirect
+effect is on the outcome's own scale; P_med is the probability that shifting the mediator from its value under
+control to its value under treatment leaves a random individual better off, so it needs no unit.
+
+The result is a `PmedResult` that also carries an indirect effect that probmed computes itself (`p@ie_estimate`, 0.329 here). It need not equal
+the `nie(fit)` of medfit (0.325); read effects from medfit and P_med from probmed.
+
+## Which medfit objects probmed accepts
+
+A fit from `fit_sem()` is not read directly. Extract it first; the extracted `MediationData` is accepted.
+
+## Feature table
+
+Status describes probmed 0.4.1 acting on the medfit object in the first column.
+
+| Feature | medfit | probmed | Status |
+|---|---|---|---|
+| P_med from `MediationData` | `fit_mediation()`, `extract_mediation()` | `pmed()` | Supported |
+| P_med from `ParallelMediationData` | `extract_mediation(structure = "parallel")` | `pmed()` | Supported |
+| P_med from `SerialMediationData` | `extract_mediation()` with `mediator_models` | no method | Unsupported |
+| P_med from `InteractionMediationData` | four-way decomposition | no method | Unsupported |
+| P_med from a `SEMFit` directly | `fit_sem()` | no method | Unsupported |
+| P_med from a `SEMFit` after `extract_mediation()` | `extract_mediation(<SEMFit>)` | `pmed()` | Supported |
+| Sensitivity analysis and alternative P_med estimators | none | `pmed_sensitivity()`, `incr_pmed()`, `sobol_pmed()`, `wasserstein_pmed()` (exported) | Supported |
+
+"Unsupported" means the call fails today with a message that names the missing method, not that it never will;
+check the `NEWS.md` of probmed before relying on a row. medfit's `ClusterMediationData`, `TwoLevelMediationData`,
+`JointMediationData` and the FIML classes are not in the table: they have no probmed workflow and were not exercised
+here.
+
+## What probmed adds, and what it does not
+
+- **Adds:** P_med and its interval, `pmed_sensitivity()` (mediator-outcome confounding bias carried into P_med), and
+  alternative estimators such as `incr_pmed()`, `sobol_pmed()` and `wasserstein_pmed()` (a test checks that each is exported).
+- **Does not add:** fitting, extraction, bootstrap infrastructure, effect standard errors or any model class. A
+  new medfit class reaches probmed only when probmed writes a method for it.
+- **Contract:** the properties probmed reads from `MediationData` and `ParallelMediationData` are pinned by medfit's
+  `test-dependents-contract.R`, so a renamed property fails medfit's tests before it breaks probmed.
+
+Back to the [Reference Card](refcard.html), the [Cookbook](cookbook.html) or
+[the RMediation comparison](rmediation-comparison.html).

@@ -1,19 +1,27 @@
 # FIML release readiness and missing-data follow-ups
 
-Date: 2026-10-30. Status: A1 completed through separately authorized PR #367;
-remaining milestones are planning and review only. This document does not
-authorize further implementation. This reconciles the completed FIML milestone,
-the 0.16 scope decision, the release audit, missing-data research, and the missingmed inventory.
-It does not replace either package's detailed acceptance contracts.
+Date: 2026-10-30; reconciled 2026-10-31 MDT. Status: **A1/A2/A3 complete and
+shipped in 0.16.0**; B/C/D/E remain proposed, independently authorized scopes.
+No future version/date or implementation is assigned by this document.
+The [roadmap current board](medfit-roadmap.md#current-board) owns priorities.
+The [completed release plan](PLAN-0.16.0-GitHub-release-2026-10-30.md) owns final
+candidate/main/tag/deployment evidence (`c37c7ee8`). No completed test/docs/release
+stage needs repeating merely because an older checklist remains below.
 
-## Current state and authority
+## Authority and dated integration evidence
+
+The following October 30 receipts preserve their original verification scopes;
+later releases supersede then-current publication/authorization snapshots.
+A1 regression (#367), A2 Chapter 8 (#368), guide fixture (#371), public docs audit
+(#372), and A3 release (#374, with #375 correction) are complete. The live website
+and tagged install were verified for v0.16.0 on October 31 UTC.
 
 - Regression-oracle milestone A1 and bounded minibook preface clarification:
   merged via PR #367 (`fb879fac`) after six fast checks passed on exact head
   `9ea8b45a`. Post-merge coverage and Codecov patch passed on `fb879fac`
   (run `41147354533`; 8,789 passes, zero failures, five expected warnings,
   140 skips). Merged local branch and worktree removed; 200 evidence files archived and hash-verified. This does not
-  complete A2's proposed full teaching unit or expand model/inference support.
+  itself complete A2; A2 subsequently shipped through #368, without support expansion.
 - medfit bounded FIML: merged through PR #364 (`a894e45e`). Independent QA and
   historical local/hosted verification are recorded in
   [the completed implementation plan](PLAN-FIML-bounded-integration-2026-10-29.md).
@@ -32,8 +40,9 @@ It does not replace either package's detailed acceptance contracts.
   Both results were verified live at 2026-10-30 18:42 UTC by the authorized
   monitor. Local branch/worktree cleanup is complete; remote feature branches
   remain retained. Metadata reconciliation is local only, without a push.
-- Bounded FIML is included in **planned, unreleased 0.16**. No release, main
-  merge, deployment, submission, push, or expensive CI is authorized here.
+- Bounded FIML shipped in **0.16.0**. The original scope decision did not itself
+  authorize publication; the separately authorized release plan completed it.
+  No additional release, submission, push or expensive CI is authorized here.
 - missingmed local source: `feature/lavaan-mbco-medfit`, version 0.10.0.9000,
   clean at inspection. Its `tasks/plan.md` and `.STATUS` dated 2026-10-26/27 still
   leave D4 independent closure, D5 consumer integration, and T5 acceptance open.
@@ -70,10 +79,11 @@ MAR/ignorability and distributional assumptions are not certified by software.
 | mice | Imputation, chain diagnostics and existing missingness exploration helpers | Reuse supported public tools rather than copy their algorithms |
 | RMediation | Existing supported mediation inference integration | Do not infer new FIML support from complete-data or MI support |
 
-## A. Bounded medfit release preparation (recommended first)
+## A. Completed 0.16 release preparation (historical acceptance contracts)
 
-This is a proposed short readiness milestone. Fresh execution requires its own
-implementation/release scope; expensive checks wait for authorized release to main.
+A1/A2/A3 were completed under their recorded authorizations. Preserve the
+following acceptance contracts as history, not a fresh readiness queue. Future
+releases require their own candidate checks; no new feature is a 0.16 prerequisite.
 
 Release-gate distinction: A3 and accurate documentation of shipped behavior are
 required by existing repository rules. A1's additional fixture promotion and
@@ -163,15 +173,14 @@ Docs consistency, spelling, rendered/user-visual checks and final local gates pa
 two skips; lint clean; built check OK). Exact-head lint/pkgdown/risk-tier passed
 before merge. Merged branch/worktree cleanup and the 423-file hash-verified
 archive are complete. See `PLAN-FIML-native-guide-fixture-2026-10-30.md`.
-This closes the binary-X example gap. The wider bounded-FIML public-documentation
-audit is now complete locally under `PLAN-FIML-docs-audit-2026-10-30.md` and
-`AUDIT-FIML-public-docs-2026-10-30.md`: README, generic-help and three article
-exceptions repaired; ten HTML artifacts rendered/content-link inspected; docs
-and final local gates PASS on d29421a5 (1,785 tests/9,796 successful assertions,
-zero failures/errors, lint clean, built check OK). This audit branch is not
-pushed or published. No browser-visual/live-site inspection, manual deployment,
-release or support expansion is implied. The acceptance text below is retained
-as the completed audit contract, not a request to repeat the audit.
+This closes the binary-X example gap. The wider bounded-FIML public-docs audit
+subsequently merged through PR #372 (`d5785171`) and shipped in v0.16.0.
+`PLAN-FIML-docs-audit-2026-10-30.md` and `AUDIT-FIML-public-docs-2026-10-30.md`
+retain its source/artifact receipts. Ten affected HTML artifacts passed content/
+link inspection; the later release verified the live site separately. No
+browser-visual claim or support expansion is inferred. Audit/release branches
+and worktrees were cleaned with hash-verified archives. Acceptance text below
+is historical; do not repeat the audit without new evidence.
 
 Check both entry points, exact opt-in/defaults, random-X assumptions, row nobs,
 means, observed SEs, supported extraction and unsupported inference in help,
@@ -190,7 +199,12 @@ Check public links and the support matrix; deployment is separate authorization.
 Use existing provenance for examples if sufficient; a new exported diagnostic
 function is not a prerequisite for documenting current bounded FIML.
 
-### A3. Actual release candidate, later authorization
+### A3. Completed actual release candidate
+
+Published v0.16.0/main `c37c7ee8`; exact-head release checks, post-merge main
+checks, tagged install and live website passed. See the completed release plan
+for counts/runs and cleanup. The checklist below is the historical release
+contract and a reference for separately authorized future candidates.
 
 Before release: reconcile NEWS/full dev scope and open issues, versions/dates and
 dependent compatibility; run the repository-required local suite, numerical gates,
@@ -260,11 +274,13 @@ raw summaries first; MI/IPW/sensitivity views can follow independently.
 ## D. Computational efficiency baseline (measurement before optimization)
 
 Proposed medfit baseline: eight cells, one untimed warm-up and three timed repeats
-per cell, serially on the same machine. Three cells use N=250/1000/4000 with all
+per cell, serially on the same machine. Freeze the free/zero-direct-path
+allocation within these eight cells before execution; do not double the design
+for both parameterizations. Three cells use N=250/1000/4000 with all
 seven patterns; two use N=1000 with one/three patterns; the last three vary only
 affine scale, conditioning, or missingness versus the N=1000 seven-pattern cell.
 Freeze masks, values, seeds, repetition order, scale and conditioning values in
-the execution manifest before timing. This is 32 fits per implementation; do not
+the execution manifest before timing. This is 32 fits per implementation (64 total for medfit and lavaan); do not
 expand into a full factorial sweep. Measure
 preparation, solver calls, observed-Hessian/covariance work and repeated accessors
 separately; report elapsed-time distributions, memory, objective/derivative
@@ -306,8 +322,8 @@ variables, fixed-X or broad SEM support follows from existing MI/IPW features.
 
 | Question | Decision / what would change it |
 |---|---|
-| Is FIML done? | The bounded fitting milestone is merged; release preparation remains. Broader missing-data support is not promised. |
-| Does every suggestion block 0.16? | No. A3 and truthful shipped-feature documentation are required; extra A1 fixtures/new A2 teaching unit await scheduling and do not silently block 0.16. B is a consumer checkpoint; C/E are new milestones; D supports performance claims, not release absent a demonstrated problem. |
+| Is FIML done? | The bounded milestone, regression/docs/teaching work and 0.16.0 release are complete. Broader missing-data support remains separate and unscheduled. |
+| Does every suggestion reopen 0.16? | No. A1/A2/A3 are complete. B is a consumer checkpoint; C/E are separate feature designs; D is a proposed performance baseline. A newly demonstrated correctness defect needs its own disposition. |
 | Why more tests after green CI? | A1 addresses specific public-API fixture gaps, not a demand to rerun every historical experiment. Inventory first; retain already adequate tests. |
 | Why not one combined diagnostic API now? | Data coverage, numerical stationarity, MI convergence and MNAR sensitivity answer different questions; stabilize their meanings before a cross-package schema. |
 | Why not auto-select MI/FIML/IPW? | Diagnostics do not identify the missingness mechanism or choose the estimand; model and scientific assumptions require analyst decisions. |

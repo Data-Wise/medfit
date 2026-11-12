@@ -1,10 +1,10 @@
 # PLAN: medfit 0.15.0, native defaults flip
 
-**Date:** 2026-10-26 | **Status:** draft, awaiting approval
+**Date:** 2026-10-26 | **Status:** COMPLETE: released as v0.15.0 (tag `v0.15.0` at `e068d750`, 2026-10-26; GitHub-only)
 **Spec:** `planning/specs/SPEC-0-15-release-2026-10-26.md` | **Brainstorm:** `planning/BRAINSTORM-0-15-release-2026-10-26.md`
 **ADR:** `planning/specs/ADR-native-defaults-2026-10-24.md` (E-1 to E-15) | **Announcement:** [BREAKING] #329
 **Prior plan:** `planning/PLAN-0.14.0-native-defaults-2026-10-24.md` (0.14.0, released)
-**Release:** readiness-gated, not before 2026-12-24. Hold the flip if any gate fails (F-13).
+**Release:** readiness-gated, not before 2026-12-24. Hold the flip if any gate fails (F-13). Waived: v0.15.0 was tagged 2026-10-26, before this floor; the maintainer confirmed on 2026-11-11 that the shortened notice was deliberate (no reason recorded here).
 **Branch:** `feature/native-defaults-flip` from `origin/dev`; worktree `~/.git-worktrees/medfit/native-defaults-flip`.
 
 Task state lives in this file. Tick a task only when its harness reports all say `Verdict: PASS`.

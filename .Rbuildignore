@@ -7,6 +7,7 @@
 ^CLAUDE\.md$
 ^README\.Rmd$
 ^README\.md$
+^CONTRIBUTING\.md$
 ^\.lintr$
 ^codecov\.yml$
 ^_pkgdown\.yml$
@@ -34,7 +35,6 @@
 ^tasks$
 ^scripts$
 ^\.codex$
-^book$
 ^_agents_workspace$
 ^\.worktrees$
 ^\.agents$

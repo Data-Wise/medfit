@@ -12,8 +12,12 @@ glance_s7_object(x, ...)
 \arguments{
 \item{x}{A \link{MediationData}, \link{SerialMediationData}, \link{ParallelMediationData},
 \link{InteractionMediationData}, \link{JointMediationData}, \link{ClusterMediationData},
-\link{BootstrapResult}, or \link{SEMFit} object (a \code{SEMFit} has its own columns; see
-\link{SEMFit-methods}).}
+\link{TwoLevelMediationData}, \link{BootstrapResult}, or \link{SEMFit} object (a \code{SEMFit}
+has its own columns; see \link{SEMFit-methods}). A \code{TwoLevelMediationData} has
+within and between rows (\code{nie_within}, \code{nie_between}, \code{nie_contrast}, ...);
+the between effect rows and the contrast are \code{NA} with a classed warning
+when the between level is unidentified (the contrast also when both \code{a} and \code{b} are equated across levels)
+(between path rows are \code{NA} without one).}
 
 \item{...}{Passed to the class method: \code{type} (\code{"all"}, \code{"paths"},
 \code{"effects"}, and for interaction objects \code{"components"}), \code{conf_int}

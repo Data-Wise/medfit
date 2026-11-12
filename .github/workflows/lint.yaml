@@ -16,9 +16,12 @@ permissions: read-all
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
-    # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default.
-    timeout-minutes: 15
+    # Pinned to ubuntu-24.04: setup-r hung at apt-get update on ubuntu-26.04 (mirror timeouts, PR #376 2026-11-11).
+    runs-on: ubuntu-24.04
+    # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default. 35 minutes, not 15:
+    # on a cold R package cache (the key changes with the runner image) setup-r-dependencies compiles OpenMx
+    # from source, over 13 minutes; the cache is saved only when the job succeeds.
+    timeout-minutes: 35
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
