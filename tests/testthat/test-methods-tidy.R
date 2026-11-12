@@ -533,7 +533,20 @@ test_that("the dotted tidy() argument names still work and warn", {
     data = mediation_demo, treatment = "treatment", mediator = "mediator1"
   )
   new <- generics::tidy(fit, conf_int = TRUE, conf_level = 0.9)
-  lifecycle::expect_deprecated(old <- generics::tidy(fit, conf.int = TRUE, conf.level = 0.9))
+  # lifecycle warns once per session even at verbosity "warning", so an earlier
+  # test file can use the warning up. "error" signals every time; "quiet" gives
+  # the value to compare. Neither depends on that state.
+  withr::with_options(
+    list(lifecycle_verbosity = "error"),
+    expect_error(
+      generics::tidy(fit, conf.int = TRUE, conf.level = 0.9),
+      class = "lifecycle_error_deprecated"
+    )
+  )
+  old <- withr::with_options(
+    list(lifecycle_verbosity = "quiet"),
+    generics::tidy(fit, conf.int = TRUE, conf.level = 0.9)
+  )
   expect_equal(old, new)
   expect_true(all(c("std_error", "conf_low", "conf_high") %in% names(new)))
 })
