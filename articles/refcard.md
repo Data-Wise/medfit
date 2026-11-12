@@ -1,9 +1,10 @@
 # medfit Reference Card
 
 Quick lookup for users who already know medfit. This card describes
-medfit 0.13.0 (CRAN has 0.3.2; install from GitHub or r-universe, see
-the [home page](https://data-wise.github.io/medfit/#install)).
-Explanations are in the
+medfit 0.17.0 and the development version (CRAN has 0.3.2; install from
+GitHub or r-universe, see the [home
+page](https://data-wise.github.io/medfit/#install)). Explanations are in
+the
 [articles](https://data-wise.github.io/medfit/articles/getting-started.md);
 formulas are in [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md); task
@@ -67,6 +68,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | `lmer` pair, cluster treatment | `extract_mediation(..., cluster = )` |
 | Formulas, cluster treatment | `fit_mediation(engine = "lmer", cluster = )` with plain formulas, no `(1 \| id)` |
 | `lavaan` fit | `extract_mediation(lavaan_fit, ...)` |
+| Two-level `lavaan` fit (`level:` blocks, `cluster =`), X, M, Y on level-1 units | `extract_mediation(lavaan_fit, treatment = , mediator = , outcome = )`, a `TwoLevelMediationData`; `nie(x, level = "within" \| "between" \| "contrast" \| "both")` |
 | IPW weights | `fit_mediation(weights = , se_type = "sandwich")` |
 | Model syntax and data (observed or latent variables, constraints, `:=`) | `fit_sem(model, data)`, a `SEMFit` |
 | Model syntax, mediator by name | `fit_mediation(engine = "native", model = , treatment = , mediator = )` |
@@ -75,6 +77,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | Intercepts and means on a native fit | on by default (`meanstructure = TRUE`), with a free intercept for every observed variable you did not write; `y ~ 0*1` restricts one; `meanstructure = NULL` or `FALSE` turns the default off |
 | Log likelihood, AIC and BIC of a `SEMFit` | `logLik(fit)`, `AIC(fit1, fit2)`, `BIC(fit1, fit2)`; [`AIC()`](https://rdrr.io/r/stats/AIC.html) of a fit with a product term and one without are not comparable; the log likelihood is conditional on the fixed exogenous variables, so compare fits only with the same `fixed_x` |
 | Test of the indirect effect on a `SEMFit` (MBCO) | `mbco_sem(fit, "a", "b")`; `paths = c("a", "d", "b")` for a serial product |
+| Rows with missing values on the mediator or outcome, continuous Gaussian model | `fit_sem(model, data, missing = "fiml", fixed_x = FALSE)`, then [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) (bounded FIML; refuses outside its scope, never falls back) |
 | Check the product-null LR against lavaan or OpenMx | `compare_lr(fit, paths = c("a", "b"), engine = "lavaan")`; warns only on observed evidence |
 | Compare nested `SEMFit`s (likelihood-ratio test) | `anova(fit_full, fit_restricted)` |
 | Parameter table, one-row fit summary and intervals for a `SEMFit` | `tidy(fit)`, `glance(fit)`, `confint(fit)` |
@@ -90,19 +93,23 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | X by M term | `InteractionMediationData` | INTmed + PIE |
 | Several M with X by M | `JointMediationData` | joint over the block |
 | Cluster treatment, `lmer` | `ClusterMediationData` | \\a \\ b_B\\ |
+| Bounded FIML fit, X to M to Y | `FIMLMediationData` | \\a \\ b\\ |
+| Bounded FIML fit, two parallel mediators | `FIMLParallelMediationData` | \\\sum a_j b_j\\ |
+| Bounded FIML fit, two serial mediators | `FIMLSerialMediationData` | \\a \\ d \\ b\\ |
+| Two-level `lavaan` fit, X, M, Y on level-1 units | `TwoLevelMediationData` | \\a_w b_w\\ and \\a_b b_b\\ per level |
 
 ## Effects
 
-| Call                               | Gives                                |
-|------------------------------------|--------------------------------------|
-| `nie(x)`                           | Natural indirect effect              |
-| `nde(x)`                           | Natural direct effect                |
-| `te(x)`                            | Total effect                         |
-| `pm(x)`                            | Proportion mediated                  |
-| `paths(x)`                         | Path coefficients                    |
-| `decompose(x)`                     | Interaction, joint and cluster parts |
-| `nie(x, type = "total")`           | Every indirect path (serial)         |
-| `joint_effects(object, estimates)` | Joint effects for bootstrapping      |
+| Call | Gives |
+|----|----|
+| `nie(x)` | Natural indirect effect |
+| `nde(x)` | Natural direct effect |
+| `te(x)` | Total effect |
+| `pm(x)` | Proportion mediated |
+| `paths(x)` | Path coefficients |
+| `decompose(x)` | Interaction, joint, cluster and two-level (within, between, contrast) parts |
+| `nie(x, type = "total")` | Every indirect path (serial) |
+| `joint_effects(object, estimates)` | Joint effects for bootstrapping |
 
 ## Tables and intervals
 
@@ -131,6 +138,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | `bootstrap_mediation(f, "nonparametric", data = d)` | Resampled rows, refit |
 | `bootstrap_mediation(f, "nonparametric", data = d, cluster = "id")` | Resampled clusters, refit |
 | `bootstrap_mediation(f, "plugin", mediation_data = x)` | Point estimate only |
+| `twolevel_statistic(td_or_fit, "nie_between", ...)` | The `f` for a two-level fit: parametric from the object, cluster refit from the `lavaan` fit |
 
 Every call returns a `BootstrapResult`: use
 [`print()`](https://rdrr.io/r/base/print.html),

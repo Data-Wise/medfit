@@ -47,6 +47,8 @@ Treatment assigned to clusters, lavaan fits, and the native engine
 
 - [Cluster-randomized trials
   (2-1-1)](https://data-wise.github.io/medfit/articles/model-cluster.md):
+- [Two-level mediation
+  (1-1-1)](https://data-wise.github.io/medfit/articles/model-twolevel.md):
 - [lavaan
   fits](https://data-wise.github.io/medfit/articles/model-lavaan.md):
 - [Native engine: paths and defined
@@ -59,6 +61,8 @@ Treatment assigned to clusters, lavaan fits, and the native engine
   weights](https://data-wise.github.io/medfit/articles/model-native-multi.md):
 - [Native engine: categorical
   covariates](https://data-wise.github.io/medfit/articles/model-native-factors.md):
+- [Missing data: bounded
+  FIML](https://data-wise.github.io/medfit/articles/model-fiml.md):
 
 ### Guides
 
@@ -72,6 +76,10 @@ Upgrading, errors, intervals and terms
   use?](https://data-wise.github.io/medfit/articles/guide-intervals.md):
 - [Glossary and
   symbols](https://data-wise.github.io/medfit/articles/guide-glossary.md):
+- [Two-level mediation: a step-by-step
+  workflow](https://data-wise.github.io/medfit/articles/guide-twolevel-tutorial.md):
+- [How medfit is
+  organized](https://data-wise.github.io/medfit/articles/guide-architecture.md):
 - [Native defaults in
   0.15.0](https://data-wise.github.io/medfit/articles/native-defaults-0-15.md):
 - [Native engine in five
@@ -82,6 +90,10 @@ Upgrading, errors, intervals and terms
   guide](https://data-wise.github.io/medfit/articles/native-guide.md):
 - [lavaan and the native
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md):
+- [probmed and
+  medfit](https://data-wise.github.io/medfit/articles/probmed-comparison.md):
+- [RMediation and
+  medfit](https://data-wise.github.io/medfit/articles/rmediation-comparison.md):
 - [One model in medfit, lavaan, OpenMx and
   semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md):
 - [Worked example: study hours, engagement and

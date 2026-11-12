@@ -52,6 +52,7 @@ semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md).
 | native-defaults | lavaan fixed.x/meanstructure/sampling.weights and a hand-calculated conditional likelihood | fixedx_logical, product_free, driver | observed intercepts and means; fixed_x; native defaults (fixed_x x meanstructure) |
 | semopy | semopy 2.3.11 (MLW, ftol 1e-12, observed information), cross-checked against lavaan | medfit_shift, medfit_se, perturb, swapname, driver | observed; latent; parallel; serial |
 | fiml | lavaan observed information and independent row-wise Gaussian likelihood | wrong_n, complete_case, dropped_cov, lost_provenance, missing_guard, driver | bounded random-X FIML |
+| fiml-ext | lavaan raw-data FIML with observed information (estimates; covariance; logLik; defined indirect effect and SE) | wrong_unit, no_offset, swap_b, dropped_cov, missing_guard, parcov_drop_path, parcov_orthogonal, serial_router_off, ser_swap_db, ser_drop_cross, ser_total_gradient, ser_drop_shortcut, ser_chain_free_shortcut, ser_chain_swap_db, ser_chain_origin, ser_chain_te_gradient, ser_cov_alias, ser_cov_drop_y, ser_cov_wrong_offset, ser_chain_cov_treatment, ser_cov2_drop_gy, ser_cov2_wrong_offset, ser_cov_max_narrow, ser_k2_closed, driver | bounded random-X FIML with covariates; bounded random-X FIML with parallel mediators; bounded random-X FIML with serial mediators; bounded random-X FIML with the pure chain of serial mediators; bounded random-X FIML with serial mediators and one covariate; bounded random-X FIML with the pure chain of serial mediators and one covariate; bounded random-X FIML with serial mediators and two covariates; bounded random-X FIML with the pure chain of serial mediators and two covariates |
 
 A token in *Planted defects* is a `MUTANT=` value of the gate’s script;
 the driver (`tests/sim/run-gates.R --mutants`) also plants tolerance,
@@ -83,7 +84,7 @@ its script does not contain, or when a structure has no gate.
 | D-1 | Motivation for nlminb is reliability, not speed | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
 | D-2 | nlminb starts at the zero-product branch fits | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
 | D-3 | A branch reaches nlminb by pinning coordinates | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
-| D-4 | Unconstrained default and an option (measurement gate first) | proposed | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-4 | Unconstrained default and an option (measurement gate first) | deferred | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
 | D-5 | nlminb as a cross-check on branch fits | conditional | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
 | D-6 | Constrained default and the order of the tiered path | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
 | D-7 | Plain linear constraints stay on SLSQP until AUGLAG is measured | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |

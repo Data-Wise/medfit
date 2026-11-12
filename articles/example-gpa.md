@@ -311,9 +311,9 @@ glance(sem)[, c("nobs", "npar", "df", "chisq")]
 ```
 
     # A tibble: 1 × 4
-       nobs  npar    df    chisq
-      <int> <int> <dbl>    <dbl>
-    1   500    11     0 1.18e-28
+       nobs  npar    df chisq
+      <int> <int> <dbl> <dbl>
+    1   500    11     0     0
 
 The model is saturated (`df = 0`), so there is no global chi-square to
 read: it fits exactly by construction, and the interesting content is
@@ -659,7 +659,7 @@ c(medfit = as.character(utils::packageVersion("medfit")),
 ```
 
       medfit        R   lavaan
-    "0.16.0"  "4.6.2"  "0.7.3" 
+    "0.17.0"  "4.6.2"  "0.7.3" 
 
 Seeds: data `20261017`; bootstrap `123`; Monte Carlo `1` (n = 500) and
 `2` (n = 100). The simulation functions use

@@ -1,16 +1,17 @@
 # medfit Cookbook
 
-Twenty-one task-sized recipes. Each says when to use it, runs on
-`mediation_demo` (except the cluster and latent-mediator recipes, which
-simulate their data), and links to the article that explains it. For a
-one-page lookup see the [Reference
+Twenty-three task-sized recipes. Each says when to use it, runs on
+`mediation_demo` (except the cluster, two-level and latent-mediator
+recipes, which simulate their data), and links to the article that
+explains it. For a one-page lookup see the [Reference
 Card](https://data-wise.github.io/medfit/articles/refcard.md).
 
 These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0,
-recipe 20 and the native route in recipe 7 need 0.10.0, and recipe 21
-needs 0.11.0). CRAN has 0.3.2, which lacks `mediation_demo` and the
-native, joint and cluster functions; install from GitHub or r-universe
-(see the [home page](https://data-wise.github.io/medfit/#install)).
+recipe 20 and the native route in recipe 7 need 0.10.0, recipe 21 needs
+0.11.0, recipe 22 needs 0.16.0, and recipe 23 needs the development
+version). CRAN has 0.3.2, which lacks `mediation_demo` and the native,
+joint and cluster functions; install from GitHub or r-universe (see the
+[home page](https://data-wise.github.io/medfit/#install)).
 
 ``` r
 library(medfit)
@@ -51,6 +52,12 @@ quick(res)
 ```
 
     NIE = 0.333  | NDE = 0.206 | PM = 61.8 %
+
+``` r
+nde(res)   # one effect at a time: nie(), nde(), te(), pm()
+```
+
+    Natural Direct Effect (NDE): 0.2058
 
 More: [Getting
 Started](https://data-wise.github.io/medfit/articles/getting-started.md).
@@ -252,7 +259,7 @@ c(estimate = unname(nie(xj)), lower = boot_j@ci_lower, upper = boot_j@ci_upper)
 ```
 
      estimate     lower     upper
-    0.6560315 0.4397306 0.8950371 
+    0.6560315 0.4351678 0.8930074 
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).
@@ -544,6 +551,18 @@ rbind(reduced = glance(reduced)[, c("npar", "chisq", "AIC", "BIC")],
 
 The restricted model is the one with more degrees of freedom. A small
 chi-square difference says dropping `cp` costs little.
+
+To check a constrained likelihood ratio (the product null of an indirect
+effect) against an independent fit in lavaan or OpenMx, use
+[`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md).
+It needs one of those packages and refits the null from two starts, so
+this chunk is not run here; the [lavaan
+comparison](https://data-wise.github.io/medfit/articles/lavaan-comparison.html#checking-a-constrained-lr-against-lavaan-or-openmx)
+article runs it live.
+
+``` r
+compare_lr(full, paths = c("a", "b"), engine = "lavaan")
+```
 
 ## 15. A defined parameter and its interval
 
@@ -923,9 +942,7 @@ c(estimate = boot20@estimate, lower = boot20@ci_lower, upper = boot20@ci_upper)
         estimate        lower        upper
      0.076915831 -0.003651384  0.160267019 
 
-More: [Native engine book, the four-way
-chapter](https://github.com/Data-Wise/medfit/tree/main/book/chapters/07-four-way.qmd),
-[Native engine, product
+More: [Native engine, product
 term](https://data-wise.github.io/medfit/articles/model-native.md).
 
 ## 21. A categorical covariate in a native fit
@@ -1012,3 +1029,142 @@ More: [Native engine, paths and defined
 parameters](https://data-wise.github.io/medfit/articles/model-native.md),
 [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
 (section Factor covariates).
+
+## 22. Missing data: bounded FIML
+
+*When:* some rows are missing a value on the mediator or the outcome and
+you want to keep them rather than delete them listwise. The opt-in is
+narrow (continuous Gaussian variables, `fixed_x = FALSE`, a mean
+structure, observed information, model-based standard errors, no
+weights) and never falls back to listwise deletion. The chunk simulates
+X, M and Y and blanks every seventh mediator value. Statistically it is
+not admitted: it assumes the missingness is ignorable and its intervals
+are not calibrated for coverage.
+
+``` r
+d <- withr::with_seed(271L, {
+  n <- 400L
+  x <- .8 + stats::rnorm(n, sd = 1.1)
+  m <- -.4 + .5 * x + stats::rnorm(n, sd = .8)
+  y <- .7 + .6 * m + .25 * x + stats::rnorm(n, sd = .9)
+  data.frame(treatment = x, mediator1 = m, outcome = y)
+})
+d$mediator1[seq(1, nrow(d), by = 7)] <- NA_real_
+syntax <- "mediator1 ~ a*treatment
+outcome ~ b*mediator1 + cp*treatment"
+fit <- fit_sem(syntax, d, missing = "fiml", fixed_x = FALSE,
+               meanstructure = TRUE, information = "observed", se_type = "model")
+c(rows_kept = nobs(fit), rows_complete = sum(stats::complete.cases(d)))
+```
+
+        rows_kept rows_complete
+              400           342 
+
+``` r
+z <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1")
+tidy(z, type = "effects")
+```
+
+    # A tibble: 3 × 3
+      term  estimate std_error
+      <chr>    <dbl>     <dbl>
+    1 nie      0.279    0.0365
+    2 nde      0.247    0.0508
+    3 te       0.527    0.0457
+
+Any setting outside the validated scope stops with a classed error that
+says why (see
+[Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html#bounded-fiml-refusals)).
+More: [Bounded
+FIML](https://data-wise.github.io/medfit/articles/model-fiml.md).
+
+## 23. A two-level lavaan fit: within and between
+
+*When:* treatment, mediator and outcome are all measured on level-1
+units nested in clusters, you have a `lavaan` two-level fit (`level:`
+blocks, `cluster =`), and you want the indirect effect at each level.
+The estimand is the fixed-slope one with latent cluster means; the
+contrast between the levels is descriptive, not a test. The chunk
+simulates 100 clusters of 5.
+
+``` r
+set.seed(394)
+J <- 100
+n <- 5
+id <- rep(seq_len(J), each = n)
+xb <- rnorm(J)[id]
+xw <- rnorm(J * n)
+m <- 0.4 * xw + 0.7 * xb + 0.5 * rnorm(J)[id] + rnorm(J * n)
+y <- 0.3 * xw + 0.2 * xb + 0.5 * (m - ave(m, id)) + 0.9 * ave(m, id) + 0.5 * rnorm(J)[id] + rnorm(J * n)
+d2 <- data.frame(id = id, X = xb + xw, M = m, Y = y)
+model2 <- "
+  level: 1
+    M ~ X
+    Y ~ M + X
+  level: 2
+    M ~ X
+    Y ~ M + X
+"
+fit2 <- lavaan::sem(model2, data = d2, cluster = "id")
+z <- extract_mediation(fit2, treatment = "X", mediator = "M", outcome = "Y")
+nie(z, level = "both")
+```
+
+    Natural Indirect Effect (NIE), both levels: within = 0.2635, between = 1.1512
+
+``` r
+tidy(z, type = "effects")[c(1, 5, 9), ]
+```
+
+    # A tibble: 3 × 3
+      term         estimate std_error
+      <chr>           <dbl>     <dbl>
+    1 nie_within      0.263    0.0351
+    2 nie_between     1.15     0.235
+    3 nie_contrast   -0.888    0.244 
+
+``` r
+bootstrap_mediation(
+  twolevel_statistic(z, "nie_between"),
+  method = "parametric", mediation_data = z, n_boot = 500, seed = 1
+)
+```
+
+    BootstrapResult object
+    ======================
+
+    Method:   parametric
+    Estimate:   1.1512
+    N bootstrap samples: 500
+
+    95% Confidence Interval:
+      Lower:   0.7119
+      Upper:   1.6575
+
+[`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md)
+builds the callback for
+[`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md):
+pass the object for the parametric bootstrap, or the `lavaan` fit with
+`treatment`, `mediator`, `outcome` and `cluster =` for the cluster
+bootstrap (report its percentile interval). A treatment or mediator with
+almost no between-cluster variance gives a within-only result and the
+classed warning `medfit_between_unidentified`. More: [Two-level
+mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md).
+
+## Which recipe returns which object
+
+Every exported class and function appears in a recipe, or the table says
+why not.
+
+| Object | Recipe |
+|----|----|
+| `MediationData` | 1, 2, 3, 4 |
+| `SerialMediationData` | 5 |
+| `ParallelMediationData` | 6 |
+| `InteractionMediationData` | 7, 20 |
+| `JointMediationData` | 8 |
+| `ClusterMediationData` | 9 |
+| `SEMFit` | 11 to 21 |
+| `BootstrapResult` | 9 and 20 (returned by [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)) |
+| `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | 22 (the simple model; the parallel and serial forms are in [Bounded FIML](https://data-wise.github.io/medfit/articles/model-fiml.md)) |
+| `TwoLevelMediationData` | 23 (an [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a two-level `lavaan` fit, and [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md) for its bootstrap; see [Two-level mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md)) |

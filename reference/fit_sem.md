@@ -196,14 +196,119 @@ results, pass `fixed_x = FALSE, meanstructure = NULL`. The 0.14.x
 Explicit `missing = "fiml"` fits a joint Gaussian random-X model under
 ignorable missingness (for example, MAR with the usual ignorability
 conditions). It evaluates observed components, without imputing values.
-It supports exactly three numeric continuous observed variables in X -\>
-M -\> Y, with the X -\> Y path free or fixed exactly at zero,
-independent disturbances and free intercepts. Names and labels are
-arbitrary. Extra predictors, latent variables, products, factors,
-correlated disturbances, parameter ties, bounds, general constraints,
-defined parameters and syntax-supplied starts are not supported. Input
-checks and local numerical gates do not establish global identification,
-a global optimum or inference coverage.
+It supports numeric continuous observed variables in four shapes: X -\>
+M -\> Y (three variables), the same model with one covariate `Z`, with
+two covariates `Z1` and `Z2`, and two parallel mediators (see below).
+The X -\> Y path is free or fixed exactly at zero, intercepts are free,
+and disturbances are independent except the free mediator residual
+covariance of the parallel form. Names and labels are arbitrary.
+
+With covariates the regressions are `M ~ X + Z` and `Y ~ M + X + Z` (one
+covariate), or `M ~ X + Z1 + Z2` and `Y ~ M + X + Z1 + Z2` (two). Every
+exogenous variable needs a written path to `Y`, and every covariate path
+to `M` is free. The exogenous variables have a free joint covariance:
+write every pair (in either order) or none; a partial set is refused.
+Any variable may be incomplete. With no `Y` path fixed at zero, the
+first exogenous variable is the fit's treatment and
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+may name any exogenous variable as the treatment; with exactly one `Y`
+path fixed at zero, that variable is the treatment. Parameter counts are
+8 or 9 (three variables), 13 or 14 (one covariate) and 19 or 20 (two
+covariates), without or with the direct path. Three or more covariates,
+a covariate on one equation only, residual covariances (other than the
+parallel mediator covariance), extra predictors beyond these, latent
+variables, products, factors, correlated disturbances, parameter ties,
+bounds, general constraints, defined parameters and syntax-supplied
+starts are not supported. The covariate fits are implemented and
+numerically verified against lavaan and an independent likelihood; their
+coverage has not been calibrated or statistically admitted. Input checks
+and local numerical gates do not establish global identification, a
+global optimum or inference coverage.
+
+Two parallel mediators (`M1 ~ X`, `M2 ~ X`, `Y ~ M1 + M2`, with or
+without `Y ~ X`) are fitted in two forms. Independent residuals require
+the statement `M1 ~~ 0*M2` (either order): an omitted statement is
+refused because lavaan's default would free it. A free, label-less
+`M1 ~~ M2` fits the mediator residual covariance. A labeled, fixed
+nonzero, bounded, tied or otherwise constrained covariance is refused.
+The free-parameter count is 12 or 13 (independent residuals) and 13 or
+14 (free covariance), without or with the direct path.
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+needs both mediators named and returns a `FIMLParallelMediationData`
+object with the full path covariance of `a1`, `a2`, `b1`, `b2` and
+`c_prime`, so the sum of the indirect effects keeps every cross-path
+term. Extraction refusals for the parallel form have class
+`medfit_error_fiml_extract_unsupported`.
+
+Two parallel mediators also take one covariate `Z` or two covariates
+`Z1`, `Z2` (`M1 ~ X + Z`, `M2 ~ X + Z`, `Y ~ M1 + M2 + X + Z`, in either
+residual form). The covariate rules are those above: every exogenous
+variable has a free path to both mediators and a written path to `Y`,
+the exogenous covariance is free (write every pair or none), and any
+variable may be incomplete. With no `Y` path fixed at zero,
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+may name any exogenous variable as the treatment; with one fixed at zero
+that variable is the treatment. The free-parameter count is 18 to 20
+(one covariate) and 25 to 27 (two), without or with the direct path and
+the free residual covariance. Three or more mediators, three or more
+covariates and a covariate on only some of the equations stay refused.
+
+Two serial mediators are fitted in two forms, each with no, one or two
+covariates: the saturated forward graph `M1 ~ X`, `M2 ~ M1 + X` and
+`Y ~ M1 + M2 + X`, and the pure chain `M1 ~ X`, `M2 ~ M1` and `Y ~ M2`
+(the direct path `Y ~ X` is free, `0*X`, or omitted in both without a
+covariate), with the independence of all three disturbance pairs written
+as `M1 ~~ 0*M2`, `M1 ~~ 0*Y` and `M2 ~~ 0*Y` (either order within a
+pair; an omitted or free statement is refused). The saturated model has
+14 free parameters (13 with the direct path fixed) and is just
+identified with the direct path free, so a pair of variables that is
+never observed together makes the fit fail closed
+(`medfit_sem_fiml_error` at the numerical stage). The chain has 12 free
+parameters (11 with the direct path fixed), is overidentified (2 or 3
+degrees of freedom) and so is a restriction the data can reject; it
+fails closed for fewer unobserved pairs. A graph with exactly one of the
+two shortcuts, and a fixed or labeled shortcut, is refused. With one
+covariate `Z` it predicts `M1`, `M2` and `Y` (`M1 ~ X + Z`,
+`M2 ~ M1 + X + Z` or `M2 ~ M1 + Z`, `Y ~ ... + X + Z`), `X` and `Z` have
+a free covariance, and every exogenous variable needs a written `Y` path
+(free; at most one fixed at exactly zero, which makes that variable the
+treatment). The saturated model then has 20 free parameters (19) and the
+chain 18 (17). With two covariates `Z1` and `Z2` both predict every
+equation, the three exogenous covariances (`X ~~ Z1`, `X ~~ Z2`,
+`Z1 ~~ Z2`) are all written or none (a partial set is refused), and the
+saturated model has 27 free parameters (26) and the chain 25 (24). In
+the pure chain the treatment is structural, the variable with no path to
+`M2`: leaving a variable out of the equation of `M2` makes it the
+treatment, and exactly one variable may be left out. In the saturated
+graph with a fixed-zero direct path the variable with the fixed-zero
+path is the only valid treatment.
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+needs both mediators named in the fitted order (the reversed order is
+refused) and returns a `FIMLSerialMediationData` object with the full
+covariance of `a`, `a2` (X to M2), `d1` (M1 to M2), `b1` (M1 to Y), `b`
+and `c_prime`;
+[`nie()`](https://data-wise.github.io/medfit/reference/nie.md) is the
+chain effect `a * d1 * b`, `nie(type = "total")` adds `a2 * b + a * b1`,
+and [`paths()`](https://data-wise.github.io/medfit/reference/paths.md),
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html),
+`coef(type = "paths")` and
+[`summary()`](https://rdrr.io/r/base/summary.html) list all six paths.
+For the chain the object has the four paths `a`, `d1`, `b` and
+`c_prime`, and
+[`nie()`](https://data-wise.github.io/medfit/reference/nie.md) and
+`nie(type = "total")` are the same effect. The covariate's coefficients
+are never paths: the aliases are the treatment's. In the saturated graph
+with a free direct path a covariate may be named the treatment; in the
+pure chain naming a covariate is refused (both covariates, with the
+classed `medfit_error_fiml_extract_unsupported`). Its normal intervals
+are available;
+[`pm()`](https://data-wise.github.io/medfit/reference/pm.md),
+[`quick()`](https://data-wise.github.io/medfit/reference/quick.md),
+[`glance()`](https://generics.r-lib.org/reference/glance.html) and
+bootstrap intervals are not (`bootstrap_mediation(source_fit = )` stays
+withheld, and behind that guard a serial fit raises
+`medfit_error_fiml_serial_source_fit`). Serial models with three or more
+covariates and every other serial shape stay refused.
 
 Supply `fixed_x = FALSE` explicitly; omission, `TRUE` and named subsets
 are errors. Require `meanstructure = TRUE`, `information = "observed"`,
@@ -222,9 +327,10 @@ local identification and information checks pass. Original positional
 row IDs and pattern counts are retained.
 [`logLik()`](https://rdrr.io/r/stats/logLik.html) includes the full
 Gaussian constants, with its `df` attribute equal to the free-parameter
-count (8 or 9). AIC and BIC use that likelihood and retained row count.
-The discrepancy `f` and model-test `df` are `NA`: no saturated
-missing-data reference model is fitted.
+count (8 or 9 for three variables; see above for covariates). AIC and
+BIC use that likelihood and retained row count. The discrepancy `f` and
+model-test `df` are `NA`: no saturated missing-data reference model is
+fitted.
 
 Supported operations include SEMFit coefficient/covariance and
 likelihood summaries, parameter tidy/normal confidence intervals, and
@@ -246,18 +352,29 @@ reports likelihood/IC fields with unavailable model-test fields;
 extracted-object
 [`glance()`](https://generics.r-lib.org/reference/glance.html),
 [`quick()`](https://data-wise.github.io/medfit/reference/quick.md),
-[`pm()`](https://data-wise.github.io/medfit/reference/pm.md), bootstrap,
-profiles, MBCO and fit tests are deferred and refuse FIML objects.
-Object-aware package guards precede package-controlled
-refits/RNG/workers; opaque user callbacks and external-first dispatch
-remain outside that guarantee. Adapter/topology/numerical failures
-retain stage, reason, original parent and completed attempts; basic
-argument-type errors can occur earlier. A dedicated `fiml-1` ledger
-binds likelihood, rows, settings and attempts; the version-1 ledger
-below continues to describe listwise fits. See the Methods and Formulas
-article, Bounded FIML, for the likelihood and the native engine guide
-for the supported workflow. Bounded FIML was introduced in 0.16.0;
-released 0.15.0 does not provide this option.
+[`pm()`](https://data-wise.github.io/medfit/reference/pm.md),
+extracted-object bootstrap, profiles, MBCO and fit tests remain
+unavailable. The
+[`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
+`source_fit` intervals are implemented but withheld (refused with a
+classed error) until statistical admission is decided; a covariate fit
+is additionally refused with `medfit_error_fiml_covariate_source_fit`
+(including a parallel fit with covariates) and a parallel fit without
+covariates with `medfit_error_fiml_parallel_source_fit`, so no
+source-fit interval exists for either. Delta-method Wald intervals stay
+available for these extracted objects; as for the three-variable model,
+the NIE standard error is `NA` only at the exact origin (every a and b
+path exactly zero). Object-aware package guards precede
+package-controlled refits/RNG/workers; opaque user callbacks and
+external-first dispatch remain outside that guarantee.
+Adapter/topology/numerical failures retain stage, reason, original
+parent and completed attempts; basic argument-type errors can occur
+earlier. A dedicated `fiml-1` ledger binds likelihood, rows, settings
+and attempts; the version-1 ledger below continues to describe listwise
+fits. See the Methods and Formulas article, Bounded FIML, for the
+likelihood and the native engine guide for the supported workflow.
+Bounded FIML was introduced in 0.16.0; released 0.15.0 does not provide
+this option.
 
 ## Nonzero-product search coverage
 

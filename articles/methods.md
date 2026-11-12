@@ -46,6 +46,7 @@ on the outcome scale.
 | several mediators, not chained, no product | `ParallelMediationData` | \\\sum_j a_j b_j\\ |
 | several mediators, \\X \times M_i\\ in the outcome | `JointMediationData` | joint NIE through all mediators |
 | treatment assigned to whole clusters, `lmer` fits | `ClusterMediationData` | \\a \\ b_B\\, split into own \\a \\ b_W\\ and spillover \\a (b_B - b_W)\\ |
+| \\X\\, \\M\\, \\Y\\ on level-1 units, two-level `lavaan` fit | `TwoLevelMediationData` | \\a_w b_w\\ within and \\a_b b_b\\ between; the contrast is descriptive |
 
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
 chooses the class from the models;
@@ -433,6 +434,110 @@ treatment-by-mediator or covariate-by-mediator products, random slopes
 on anything but the within-cluster mediator term, or individual-average
 effects.
 
+## Two-level mediation (1-1-1)
+
+### Model and effects
+
+Treatment, mediator and outcome are measured on level-1 units \\i\\ in
+clusters \\j\\. In lavaan’s two-level parameterization each variable is
+a within part (a unit’s deviation from its cluster) plus a between part
+(a *latent* cluster mean), and the same three regressions hold at each
+level \\\ell \in \\w, b\\\\:
+
+\\ M = a\_\ell X + e_M, \qquad Y = b\_\ell M + c'\_\ell X + e_Y . \\
+
+Slopes are fixed: they do not vary over clusters. Per level, with
+\\\ell\\ the level,
+
+\\ \text{NIE}\_\ell = a\_\ell b\_\ell, \qquad \text{NDE}\_\ell =
+c'\_\ell, \qquad \text{TE}\_\ell = a\_\ell b\_\ell + c'\_\ell, \qquad
+\text{PM}\_\ell = \text{NIE}\_\ell / \text{TE}\_\ell , \\
+
+and the contrast is \\\text{NIE}\_w - \text{NIE}\_b\\. No cross-level
+total effect or proportion mediated is defined. \\\text{PM}\_\ell\\ is
+`NA`, with a warning, when \\\text{TE}\_\ell\\ is zero or
+\\\|\text{TE}\_\ell\| \< \sqrt{\epsilon}\\\max(\|\text{NIE}\_\ell\|,
+\|\text{NDE}\_\ell\|)\\ (\\\epsilon\\ machine precision): a total effect
+that is only the rounding residue of two opposite-signed effects is not
+a denominator.
+
+### Delta method with the cross-level covariance
+
+Let \\\hat\theta = (a_w, b_w, c'\_w, a_b, b_b, c'\_b)\\ and \\\hat V\\
+the corresponding \\6 \times 6\\ sub-block of lavaan’s joint covariance
+of the free parameters, read by free-parameter index (never by label).
+The cross-level entries such as \\\text{Cov}(\hat a_w, \hat a_b)\\ are
+carried, not set to zero. Each effect \\g(\theta)\\ has standard error
+\\\sqrt{\nabla g^\top \hat V \nabla g}\\ with
+
+| Term | Gradient over \\(a_w, b_w, c'\_w, a_b, b_b, c'\_b)\\ |
+|----|----|
+| \\\text{NIE}\_w\\ | \\(b_w, a_w, 0, 0, 0, 0)\\ |
+| \\\text{NIE}\_b\\ | \\(0, 0, 0, b_b, a_b, 0)\\ |
+| contrast | \\(b_w, a_w, 0, -b_b, -a_b, 0)\\ |
+| \\\text{NDE}\_\ell\\ | a unit vector on \\c'\_\ell\\ |
+| \\\text{TE}\_\ell\\ | the \\\text{NIE}\_\ell\\ gradient plus that unit vector |
+| \\\text{PM}\_\ell\\ | \\(\text{TE}\_\ell \nabla \text{NIE}\_\ell - \text{NIE}\_\ell \nabla \text{TE}\_\ell) / \text{TE}\_\ell^2\\ (quotient rule) |
+
+Intervals are Wald (normal); there is no small-sample correction. A path
+pair equated across levels (a shared label, an `==` constraint, or an
+algebraic equality found numerically) repeats a row and column of \\\hat
+V\\ (correlation 1). With only \\a\\ or only \\b\\ equated the contrast
+gradient above still applies, with the repeated rows carrying the
+cross-level covariance, and the contrast and its SE are reported. When
+both \\a\\ and \\b\\ are equated the contrast is zero by constraint and
+is reported `NA`. The numeric detector flags a pair when
+\\\|\hat\theta_w - \hat\theta_b\| \le 10^{-6}\max(1, \|\hat\theta_w\|,
+\|\hat\theta_b\|)\\ and \\\operatorname{Var}(\hat\theta_w -
+\hat\theta_b) \le 10^{-10}(V\_{ww} + V\_{bb})\\, never from the
+correlation alone.
+
+### Bootstrap
+
+[`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md)
+gives
+[`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
+the scalar \\g(\theta)\\ of the effect above. The parametric route draws
+\\\theta^{\*} \sim N(\hat\theta, \hat V)\\, so the cross-level
+covariance is part of every draw. The cluster route resamples whole
+clusters with replacement and refits the fit’s own model on each
+resample, a cluster drawn twice counting as two clusters. Refits that
+are inadmissible are kept, as the point estimate keeps its own; a refit
+that fails or leaves the between level unidentified is excluded and
+counted. Because boundary refits give the between effects and the
+contrast heavy tails, report the percentile interval; the plain standard
+deviation of the draws is not a standard error for them.
+
+### Caveats
+
+- **Fixed versus random slopes.** With random slopes the average
+  indirect effect is \\ab + \sigma\_{ab}\\, where \\\sigma\_{ab}\\ is
+  the covariance of the cluster-specific \\a_j\\ and \\b_j\\ (Kenny et
+  al., 2003; Bauer et al., 2006). The fixed-slope \\ab\\ equals it only
+  when \\\sigma\_{ab} = 0\\.
+- **Latent versus manifest cluster means.** The between effects use
+  latent cluster means (Lüdtke et al., 2008). Observed cluster means are
+  a different model with a different causal story (Preacher et al.,
+  2010); medfit does not offer it.
+- **The contrast is descriptive.** No source supports \\\text{NIE}\_w -
+  \text{NIE}\_b\\ as a named test; its standard error is a delta-method
+  standard error, not a test of equal indirect effects.
+- **Few clusters.** No source gives a cluster count below which the
+  estimates or the between standard errors can be trusted. The warning
+  below 50 clusters is a judgment, and the threshold is an option.
+- **`fixed.x = TRUE`.** The between standard errors are conditional on
+  the sample between-level moments of the treatment.
+- **Identification.** The between slopes need between variance in the
+  treatment and the mediator. The adapter treats an ICC below 0.01 as
+  unidentified (a within-only result) and warns between 0.01 and 0.05;
+  both cutoffs are judgments.
+
+### What is not supported
+
+Random slopes, latent or non-Gaussian variables, more than one mediator,
+product terms, standardized effects, three-level and multigroup fits,
+and manifest cluster means.
+
 ## Covariance of the estimates
 
 Every effect’s standard error comes from \\\hat\Sigma\\ (`@vcov`), whose
@@ -600,11 +705,16 @@ stated otherwise.
 ### Bounded FIML
 
 The separate `missing = "fiml"` route supports only Gaussian random-X
-simple mediation with three continuous numeric observed variables,
-independent disturbances, free intercepts and a free or exactly zero
-direct path. It assumes ignorable missingness under that model; choosing
-FIML does not validate MAR or protect against nonignorable missingness.
-See the [native
+simple mediation with three continuous numeric observed variables (or
+the development-version variants with one or two covariates and a free
+joint exogenous covariance, or with two parallel mediators, alone or
+with one or two such covariates, or with two serial mediators in the
+saturated graph or the pure chain, with up to two covariates),
+independent disturbances (the parallel form also allows a free mediator
+residual covariance), free intercepts and a free or exactly zero direct
+path. It assumes ignorable missingness under that model; choosing FIML
+does not validate MAR or protect against nonignorable missingness. See
+the [native
 guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
 for settings and API limits.
 
@@ -643,6 +753,118 @@ unavailable. No missing-data saturated reference fit, chi-square or fit
 indices are synthesized. At the NIE origin, a zero first derivative does
 not supply regular normal inference; NIE inferential fields are
 unavailable.
+
+#### Saturated serial mediators
+
+For \\X \to M_1 \to M_2 \to Y\\ with both shortcuts, the equations are
+\\M_1 = i_1 + aX + e_1\\, \\M_2 = i_2 + d_1 M_1 + a_2 X + e_2\\ and \\Y
+= i_3 + b M_2 + b_1 M_1 + c' X + e_3\\, with independent disturbances
+and a free joint distribution of \\X\\. With \\c'\\ free this has 14
+parameters, as many as the unrestricted multivariate normal has moments,
+so the maximum likelihood estimate is a one-to-one reparameterization of
+the unrestricted estimate (df 0); fixing \\c'\\ at zero is one
+restriction. The chain effect is \\a d_1 b\\, the total indirect effect
+is \\a d_1 b + a_2 b + a b_1\\ and the total effect adds \\c'\\. With
+\\\hat\Sigma\\ the fitted covariance of \\(a, a_2, d_1, b_1, b, c')\\
+taken from the full observed information, the delta gradients are \\(d_1
+b, 0, ab, 0, a d_1, 0)\\ for the chain effect and \\(d_1 b + b_1,\\ b,\\
+a b,\\ a,\\ a d_1 + a_2,\\ 0)\\ for the total indirect effect (the total
+effect adds 1 for \\c'\\). With complete data \\\hat\Sigma\\ is block
+diagonal across the three equations; with incomplete data the
+cross-equation blocks are not zero, so the standard error of the chain
+effect then involves \\\mathrm{Cov}(a, d_1)\\, \\\mathrm{Cov}(a, b)\\
+and \\\mathrm{Cov}(d_1, b)\\. The chain gradient is zero exactly when at
+least two of \\a\\, \\d_1\\, \\b\\ are zero, and the total-indirect
+gradient is zero exactly when \\a = a_2 = b = b_1 = 0\\ (\\d_1\\ free);
+only then is the corresponding standard error withheld.
+
+#### Pure-chain serial mediators
+
+The pure chain drops both shortcuts: \\M_1 = i_1 + aX + e_1\\, \\M_2 =
+i_2 + d_1 M_1 + e_2\\ and \\Y = i_3 + b M_2 + c' X + e_3\\, with
+independent disturbances and a free joint distribution of \\X\\. With
+\\c'\\ free it has 12 parameters against 14 moments (2 degrees of
+freedom; 11 parameters and 3 degrees of freedom with \\c'\\ fixed at
+zero), so unlike the saturated graph its likelihood is a restriction
+that the data can reject: the likelihood-ratio statistic
+\\2(\ell\_{\mathrm{sat}} - \ell\_{\mathrm{chain}})\\ against the
+saturated serial fit has 2 (3) degrees of freedom. The only indirect
+effect is \\a d_1 b\\, so the total indirect effect equals the chain
+effect, and the total effect adds \\c'\\. The covariance block is that
+of \\(a, d_1, b, c')\\; its gradients are \\(d_1 b,\\ a b,\\ a d_1,\\
+0)\\ for both indirect effects and \\(d_1 b,\\ a b,\\ a d_1,\\ 1)\\ for
+the total effect. With complete data the three factors of \\a d_1 b\\
+sit in three different equations and are uncorrelated, while \\b\\ and
+\\c'\\ share the outcome equation; with incomplete data the
+cross-equation blocks are not zero. Both indirect rows have a zero
+gradient exactly when at least two of \\a\\, \\d_1\\, \\b\\ are zero,
+and only then are their standard errors withheld together.
+
+#### Development source-fit intervals
+
+This route is implemented but withheld:
+`bootstrap_mediation(source_fit = ...)` raises
+`medfit_error_fiml_inference_unavailable` until statistical admission.
+The definition below is the design that admission would test.
+
+The explicit
+`bootstrap_mediation(source_fit = ..., effect = ..., method = ...)`
+route uses only an accepted bounded FIML source fit. It evaluates
+scalar, unstandardized NIE, NDE or total effect with the direct path
+free or fixed at zero. The point estimate is the original fitted effect.
+Both methods use type-7 empirical quantiles at the requested equal-tail
+probabilities.
+
+For `method = "nonparametric"`, draw N entire retained records with
+replacement, preserving each record’s observed mask and multiplicity.
+Every replicate rebuilds its means, scales and patterns and refits the
+identical model with the source’s accepted numerical protocol. It never
+substitutes complete cases or replacement successes for unresolved
+replicates.
+
+For `method = "parametric"`, let \\\hat\theta\\ contain each canonical
+free parameter once in original coordinates and let \\V\\ be its full
+matched observed/model covariance. Draw \\\theta^\* = \hat\theta + A
+z\\, with \\z \sim N(0,I)\\ and \\AA^\top=V\\, then evaluate the effect
+without refitting. Fixed zeros are excluded from the draw and remain
+exact; extracted aliases are not additional parameters. This is a
+**Gaussian parameter-draw percentile interval**, not a synthetic-data
+bootstrap. Negative nuisance-variance coordinates are not screened or
+truncated before the polynomial effect is evaluated.
+
+The factor is the symmetric correlation-root convention: with marginal
+scale matrix \\D\\, set \\C=D^{-1}VD^{-1}\\ and \\A=DC^{1/2}\\. Names
+must match the canonical parameter set exactly, all entries must be
+finite and marginal variances positive. Let \\q\\ be the number of free
+parameters and \\\epsilon\\ machine precision. Symmetry error must be at
+most \\100\epsilon q\max(1,\max\_{j,k}\|C\_{j,k}\|)\\ before
+symmetrization. Eigenvalues below \\-100\epsilon
+q\max(1,\max_j\|\lambda_j\|)\\ are refused; remaining negative
+eigenvalues are clipped to zero. Thus only roundoff errors are repaired,
+while material asymmetry or indefiniteness is refused. The diagnostics
+retain scales, eigenvalues, tolerance and any repair.
+
+Both methods target the distribution **conditional on retained nonempty
+records**. Their intended assumptions include IID jointly Gaussian
+records, ignorable MAR, distinct missingness and model parameters,
+positivity and identified information. The retention normalization must
+be independent of model parameters; independently empty MCAR records
+suffice. Dropping arbitrary value-dependent all-empty records or using
+these intervals under MNAR is outside this contract. A successful fit or
+these numerical examples do not verify those assumptions.
+
+Any required invalid, failed or nonfinite replicate withholds the whole
+interval. Interruption returns incomplete metadata, retains completed
+work and marks the current unavailable and later unattempted IDs. The
+length-`n_boot` distribution retains `NA` for unresolved IDs; no print,
+summary, tidy or changed-level
+[`confint()`](https://rdrr.io/r/stats/confint.html) accessor produces a
+survivor interval or survivor SD. An all-success distribution SD is
+descriptive, not a robust SE. Versioned `@inference` metadata records
+every requested ID, its rows or draw ID, reasons, source/RNG provenance
+and collected, retained and unresolved counts. These methods are
+development additions after 0.16.0. Statistical admission and
+interval-coverage calibration remain deferred.
 
 ### Model form
 
@@ -1168,16 +1390,29 @@ anova(fit, fit0)
 
 ## References
 
+Bauer, D. J., Preacher, K. J., & Gil, K. M. (2006). Conceptualizing and
+testing random indirect effects and moderated mediation in multilevel
+models. *Psychological Methods*, 11(2), 142–163.
+<https://doi.org/10.1037/1082-989X.11.2.142>
+
 Falk, C. F., Vogel, T. A., Hammami, S., & Miočević, M. (2024).
 Multilevel mediation analysis in R: A comparison of bootstrap and
 Bayesian approaches. *Behavior Research Methods*, 56(2), 750–764.
 <https://doi.org/10.3758/s13428-023-02079-4>
+
+Kenny, D. A., Korchmaros, J. D., & Bolger, N. (2003). Lower level
+mediation in multilevel models. *Psychological Methods*, 8(2), 115–128.
+<https://doi.org/10.1037/1082-989X.8.2.115>
 
 Lüdtke, O., Marsh, H. W., Robitzsch, A., Trautwein, U., Asparouhov, T.,
 & Muthén, B. (2008). The multilevel latent covariate model: A new, more
 reliable approach to group-level effects in contextual studies.
 *Psychological Methods*, 13(3), 203–229.
 <https://doi.org/10.1037/a0012869>
+
+Preacher, K. J., Zyphur, M. J., & Zhang, Z. (2010). A general multilevel
+SEM framework for assessing multilevel mediation. *Psychological
+Methods*, 15(3), 209–233. <https://doi.org/10.1037/a0020141>
 
 Talloen, W., Moerkerke, B., Loeys, T., De Naeghel, J., Van Keer, H., &
 Vansteelandt, S. (2016). Estimation of indirect effects in the presence

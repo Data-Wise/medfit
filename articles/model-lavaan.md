@@ -148,6 +148,18 @@ mediation](https://data-wise.github.io/medfit/articles/model-serial.md)).
   structure and a specific syntax; see [Model
   Extraction](https://data-wise.github.io/medfit/articles/extraction.md)
   for what is supported before relying on it.
+- **A two-level fit returns `TwoLevelMediationData`.** A fit with two
+  `level:` blocks (X, M and Y on level-1 units) extracts to the within
+  and between paths; see [Two-level
+  mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md)
+  for the estimand and its limits. Fits with more than two levels
+  (condition class `medfit_error_lavaan_multilevel`) or with `group =`
+  (class `medfit_error_lavaan_multigroup`) are refused. Before the
+  guard, extraction returned the within-level (or first-group) paths
+  with the total sample size, which is a wrong answer. A single-level
+  fit that only sets `cluster =` for robust standard errors still
+  extracts ([issue
+  \#394](https://github.com/Data-Wise/medfit/issues/394)).
 - To write a model as syntax **without** lavaan, with latent mediators
   and constraints, use the [native
   engine](https://data-wise.github.io/medfit/articles/model-native.md).

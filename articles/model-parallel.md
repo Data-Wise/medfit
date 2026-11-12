@@ -77,6 +77,8 @@ nie(x)
 
 ## Related
 
+[Missing data: bounded
+FIML](https://data-wise.github.io/medfit/articles/model-fiml.md) \|
 [Serial
 mediation](https://data-wise.github.io/medfit/articles/model-serial.md)
 \| [Joint

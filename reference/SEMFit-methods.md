@@ -67,9 +67,10 @@ argument.
 
 - **Bounded FIML.** Raw total Gaussian
   [`logLik()`](https://rdrr.io/r/stats/logLik.html) includes constants;
-  its `df` attribute counts the eight or nine free parameters. AIC/BIC
-  use retained N. `f` and model-test `df` are unavailable: no saturated
-  missing-data reference fit is performed. SEMFit
+  its `df` attribute counts the free parameters (8 or 9; 13 or 14 with
+  one covariate; 19 or 20 with two). AIC/BIC use retained N. `f` and
+  model-test `df` are unavailable: no saturated missing-data reference
+  fit is performed. SEMFit
   [`glance()`](https://generics.r-lib.org/reference/glance.html) retains
   likelihood/IC fields with unavailable model tests and a reason.
   Extracted-object

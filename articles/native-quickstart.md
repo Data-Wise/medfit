@@ -174,10 +174,6 @@ work as on any other fit.
   20](https://data-wise.github.io/medfit/articles/cookbook.md): a latent
   mediator, a nonlinear constraint, comparing models, defined
   parameters, bounds, checks, fixed covariates and intercepts.
-- [Native engine book (source in the
-  repository)](https://github.com/Data-Wise/medfit/tree/main/book):
-  seven chapters on the mean structure, scale, constraints, `fixed_x`,
-  inference, the product term and the four-way decomposition.
 - [lavaan and the native
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md):
   what the native engine does and does not do compared with lavaan.

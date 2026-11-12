@@ -53,6 +53,8 @@ Core S7 class definitions for mediation data structures
   : JointMediationData: Joint Natural Effects of Multiple Mediators
 - [`ClusterMediationData()`](https://data-wise.github.io/medfit/reference/ClusterMediationData.md)
   : ClusterMediationData: Cluster-Level Treatment Mediation (2-1-1)
+- [`TwoLevelMediationData()`](https://data-wise.github.io/medfit/reference/TwoLevelMediationData.md)
+  : TwoLevelMediationData Class
 - [`BootstrapResult()`](https://data-wise.github.io/medfit/reference/BootstrapResult.md)
   : BootstrapResult S7 Class
 - [`SEMFit()`](https://data-wise.github.io/medfit/reference/SEMFit.md) :
@@ -77,6 +79,8 @@ Functions for fitting and extracting mediation models
   : medfit Model Syntax
 - [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
   : Perform Bootstrap Inference for Mediation Statistics
+- [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md)
+  : Bootstrap Callback for Two-Level Mediation
 
 ## Methods
 

@@ -45,8 +45,7 @@ library(generics)
         setequal, union
 
 These examples use the default listwise path. For the separate
-unreleased three-variable FIML opt-in and its narrower support, see the
-[native
+unreleased bounded FIML opt-in and its narrower support, see the [native
 guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml).
 
 ## Fit it
@@ -401,8 +400,6 @@ Numerical fixes are not breaking changes.
 19](https://data-wise.github.io/medfit/articles/cookbook.html#observed-intercepts-and-means)
 \| [Cookbook recipe
 20](https://data-wise.github.io/medfit/articles/cookbook.html#four-way-decomposition-from-a-native-fit)
-\| [Native engine book (source in the
-repository)](https://github.com/Data-Wise/medfit/tree/main/book) \|
-[Methods and
+\| [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md) \|
 [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)

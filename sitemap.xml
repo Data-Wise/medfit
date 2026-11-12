@@ -1,20 +1,24 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://data-wise.github.io/medfit/404.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/CONTRIBUTING.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/bootstrap.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/computation-algorithms.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/cookbook.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/example-gpa.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/extraction.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/getting-started.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/articles/guide-architecture.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/guide-changes.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/guide-glossary.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/guide-intervals.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/guide-troubleshooting.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/articles/guide-twolevel-tutorial.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/index.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/introduction.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/lavaan-comparison.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/methods.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/model-cluster.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/articles/model-fiml.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/model-glm-families.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/model-interaction.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/model-joint.html</loc></url>
@@ -28,14 +32,17 @@
 <url><loc>https://data-wise.github.io/medfit/articles/model-regmedint.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/model-serial.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/model-simple.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/articles/model-twolevel.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/model-weights.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/models.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/native-defaults-0-15.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/native-guide.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/native-quickstart.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/native-tutorial.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/articles/probmed-comparison.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/quality-control.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/refcard.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/articles/rmediation-comparison.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/syntax-crosswalk.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/articles/whats-new-0-11.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/authors.html</loc></url>
@@ -50,6 +57,7 @@
 <url><loc>https://data-wise.github.io/medfit/reference/SEMFit-methods.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/SEMFit.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/SerialMediationData.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/reference/TwoLevelMediationData.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/bootstrap_mediation.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/compare_lr.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/decompose.html</loc></url>
@@ -71,5 +79,6 @@
 <url><loc>https://data-wise.github.io/medfit/reference/quick.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/te.html</loc></url>
 <url><loc>https://data-wise.github.io/medfit/reference/tidy_s7_object.html</loc></url>
+<url><loc>https://data-wise.github.io/medfit/reference/twolevel_statistic.html</loc></url>
 </urlset>
 

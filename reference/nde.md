@@ -25,7 +25,9 @@ nde(x, ...)
 
 - ...:
 
-  Additional arguments passed to methods
+  Additional arguments passed to methods. For a `TwoLevelMediationData`,
+  `level = c("within", "between", "both")` selects the level (within by
+  default).
 
 ## Value
 

@@ -31,10 +31,16 @@ glance_s7_object(x, ...)
   [InteractionMediationData](https://data-wise.github.io/medfit/reference/InteractionMediationData.md),
   [JointMediationData](https://data-wise.github.io/medfit/reference/JointMediationData.md),
   [ClusterMediationData](https://data-wise.github.io/medfit/reference/ClusterMediationData.md),
+  [TwoLevelMediationData](https://data-wise.github.io/medfit/reference/TwoLevelMediationData.md),
   [BootstrapResult](https://data-wise.github.io/medfit/reference/BootstrapResult.md),
   or [SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md)
   object (a `SEMFit` has its own columns; see
   [SEMFit-methods](https://data-wise.github.io/medfit/reference/SEMFit-methods.md)).
+  A `TwoLevelMediationData` has within and between rows (`nie_within`,
+  `nie_between`, `nie_contrast`, ...); the between effect rows and the
+  contrast are `NA` with a classed warning when the between level is
+  unidentified (the contrast also when both `a` and `b` are equated
+  across levels) (between path rows are `NA` without one).
 
 - ...:
 

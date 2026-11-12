@@ -7,10 +7,19 @@ makes no coverage claim beyond what the package’s tests show.
 The table below describes objects with the indicated inference methods.
 The [bounded FIML
 workflow](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
-currently supports normal path/effect intervals only; bootstrap
-intervals, profiles, MBCO and fit tests refuse those objects. Its local
-numerical checks do not establish interval coverage. See the native
-guide for its model and missingness assumptions.
+currently supports normal path/effect intervals. Source-fit intervals
+(retained-row FIML and joint Gaussian parameter-draw percentiles through
+explicit
+`bootstrap_mediation(source_fit = ..., effect = ..., method = ...)`
+calls) are implemented but withheld until statistical admission; the
+call raises `medfit_error_fiml_inference_unavailable`. Once admitted
+they will be conditional on retained nonempty records and withhold the
+entire interval when a required replicate fails or is interrupted.
+Statistical admission and coverage calibration remain deferred.
+Extracted-object bootstrap, profiles, MBCO and fit tests remain
+unavailable. See the native guide and [Methods and
+Formulas](https://data-wise.github.io/medfit/articles/methods.html#fiml-source-intervals)
+for assumptions and scope.
 
 ## Pick by situation
 

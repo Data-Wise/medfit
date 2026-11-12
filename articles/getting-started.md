@@ -2,9 +2,9 @@
 
 > **Note**
 >
-> This site documents medfit 0.15.0. CRAN has 0.3.2, which lacks
-> `mediation_demo` and the native, joint and cluster functions; install
-> from GitHub or r-universe (see the [home
+> This site documents medfit 0.17.0 and the development version. CRAN
+> has 0.3.2, which lacks `mediation_demo` and the native, joint and
+> cluster functions; install from GitHub or r-universe (see the [home
 > page](https://data-wise.github.io/medfit/#install)).
 
 **Four steps.** By the end you will have fitted a mediation model, read
@@ -280,7 +280,7 @@ For quick lookups: the [Reference
 Card](https://data-wise.github.io/medfit/articles/refcard.md) has every
 function on one page, and the
 [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md) has
-twenty-one short recipes. To understand the classes, read the
+twenty-three short recipes. To understand the classes, read the
 [Introduction](https://data-wise.github.io/medfit/articles/introduction.md);
 for the math behind every effect and standard error, [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md); for

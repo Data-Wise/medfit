@@ -83,6 +83,21 @@ See [Cluster-randomized
 trials](https://data-wise.github.io/medfit/articles/model-cluster.md).
 The own and spillover split is a large-cluster approximation.
 
+## Two-level mediation
+
+| Term | Meaning |
+|----|----|
+| **1-1-1 design** | treatment, mediator and outcome all measured on level-1 units nested in clusters |
+| **within effect** (`a_within`, `b_within`, `c_prime_within`) | the paths among units’ deviations from their cluster; NIE is \\a_w b_w\\ |
+| **between effect** (`a_between`, `b_between`, `c_prime_between`) | the paths among the clusters’ own levels (latent cluster means); NIE is \\a_b b_b\\ |
+| **latent cluster mean** | the cluster’s own level of a variable, treated as an unobserved quantity measured with error by the units, as in lavaan’s two-level model |
+| **ICC** | intraclass correlation: the between variance over the total, per variable (`@icc`) |
+| **contrast** | the within NIE minus the between NIE, `nie(x, level = "contrast")`; descriptive, not a test |
+| **within-only** | a `TwoLevelMediationData` whose between level is not identified: between values are `NA` |
+
+See [Two-level
+mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md).
+
 ## Inference
 
 | Term | Meaning | Page |

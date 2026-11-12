@@ -15,19 +15,31 @@ structures from fitted models. It works with:
 
 Extraction returns the S7 class that matches the structure:
 `MediationData`, `InteractionMediationData`, `SerialMediationData`,
-`ParallelMediationData`, `JointMediationData`, or
-`ClusterMediationData`. The shared interface includes
+`ParallelMediationData`, `JointMediationData`, `ClusterMediationData`,
+or, for a two-level `lavaan` fit, `TwoLevelMediationData` (see
+[Two-level
+mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md)).
+The shared interface includes
 [`nie()`](https://data-wise.github.io/medfit/reference/nie.md),
 [`confint()`](https://rdrr.io/r/stats/confint.html) and
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html), with
 operation-specific support limits. Data extracted from the [bounded FIML
 workflow](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
 support unstandardized effects and normal intervals, but refuse
+callback/extracted-data
 [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md),
 [`pm()`](https://data-wise.github.io/medfit/reference/pm.md),
 [`quick()`](https://data-wise.github.io/medfit/reference/quick.md) and
 extracted-object
-[`glance()`](https://generics.r-lib.org/reference/glance.html). Use
+[`glance()`](https://generics.r-lib.org/reference/glance.html). The
+development version also extracts the bounded one- and two-covariate
+FIML models (`treatment` names an exogenous variable; see the
+[covariates](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml-covariates)
+rules); these are verified against lavaan but not calibrated for
+coverage, and have no source-fit route. Source-fit intervals (withheld
+until statistical admission) would require the original accepted SEMFit
+via `bootstrap_mediation(source_fit = ..., effect = ..., method = ...)`;
+statistical admission remains deferred. Use
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 or the native
 [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
@@ -49,6 +61,7 @@ when you need more control or already have fitted models.
 | A treatment-by-mediator term in the outcome model | [Four-way decomposition](#treatment-mediator-interaction-four-way-decomposition) |
 | Treatment assigned to whole clusters (`lmer` fits) | [Extracting from lmer Models](#extracting-from-lmer-models-cluster-level-treatment) |
 | A `lavaan` fit | [Extracting from lavaan Models](#extracting-from-lavaan-models) |
+| A two-level `lavaan` fit (`level:` blocks) | [Two-level mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md) |
 | Model syntax with latent variables ([`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)) | [Extracting from a Native SEM Fit](#extracting-from-a-native-sem-fit) |
 
 ## Quick Comparison: med() vs extract_mediation()
@@ -661,7 +674,7 @@ boot_nie <- bootstrap_mediation(
 c(boot_nie@ci_lower, boot_nie@ci_upper)
 ```
 
-    [1] 0.4320138 0.9020381
+    [1] 0.4400159 0.9092223
 
 The fit must meet these requirements; each violation errors with its
 cause:

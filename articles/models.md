@@ -20,12 +20,14 @@ task recipes see the
 | Mediators side by side | [Parallel mediation](https://data-wise.github.io/medfit/articles/model-parallel.md) |
 | Several mediators and treatment-by-mediator products | [Joint mediation](https://data-wise.github.io/medfit/articles/model-joint.md) |
 | Treatment assigned to whole clusters | [Cluster-randomized trials](https://data-wise.github.io/medfit/articles/model-cluster.md) |
+| Treatment, mediator and outcome on units nested in clusters, within and between effects | [Two-level mediation (1-1-1)](https://data-wise.github.io/medfit/articles/model-twolevel.md) |
 | A lavaan fit | [lavaan fits](https://data-wise.github.io/medfit/articles/model-lavaan.md) |
 | A model written as syntax, with defined parameters | [Native: paths and defined parameters](https://data-wise.github.io/medfit/articles/model-native.md) |
 | A latent mediator | [Native: a latent mediator](https://data-wise.github.io/medfit/articles/model-native-latent.md) |
 | Constraints, or a test of the indirect effect | [Native: constraints and MBCO](https://data-wise.github.io/medfit/articles/model-native-constraints.md) |
 | Serial or parallel mediators, or weights, in syntax | [Native: several mediators and weights](https://data-wise.github.io/medfit/articles/model-native-multi.md) |
 | A factor, character or logical covariate in syntax | [Native: categorical covariates](https://data-wise.github.io/medfit/articles/model-native-factors.md) |
+| Rows with missing values you want to keep (FIML) | [Missing data: bounded FIML](https://data-wise.github.io/medfit/articles/model-fiml.md) |
 
 ## Capabilities at a glance
 
@@ -39,6 +41,7 @@ task recipes see the
 | Parallel | `ParallelMediationData` | `lm`/`glm`, lavaan, native via [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) | model | [parallel](https://data-wise.github.io/medfit/articles/model-parallel.md) |
 | Joint, with products | `JointMediationData` | `lm` fits | delta method, bootstrap | [joint](https://data-wise.github.io/medfit/articles/model-joint.md) |
 | Cluster-level treatment (2-1-1) | `ClusterMediationData` | `lmer` fits or `engine = "lmer"` | model, Kenward-Roger (`"kr"`) | [cluster](https://data-wise.github.io/medfit/articles/model-cluster.md) |
+| Two-level, within and between (1-1-1) | `TwoLevelMediationData` | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a two-level `lavaan` fit | delta method over the joint covariance (Wald) | [two-level](https://data-wise.github.io/medfit/articles/model-twolevel.md) |
 | Latent mediator, constraints | `SEMFit`, then extracted | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md), `engine = "native"` | model, sandwich | [native](https://data-wise.github.io/medfit/articles/model-native.md), [latent](https://data-wise.github.io/medfit/articles/model-native-latent.md) |
 | Categorical covariates (0.11.0) | `SEMFit`, then extracted | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) with a factor, character or logical column | model, sandwich | [categorical covariates](https://data-wise.github.io/medfit/articles/model-native-factors.md) |
 
@@ -78,10 +81,15 @@ one for another.
 The native column describes the default listwise path. The separate
 [bounded FIML
 workflow](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
-is limited to three numeric continuous observed variables, explicit
-random X and observed/model SEs; weights, bootstrap and fit tests are
-deferred for those objects. Bounded FIML is available from 0.16.0 and is
-unavailable in released 0.15.0.
+is limited to X, M and Y with at most two covariates, or two parallel
+mediators with up to two covariates, or the saturated or pure-chain
+two-mediator serial graph with up to two covariates (numeric,
+continuous), explicit random X and observed/model SEs; weights and fit
+tests remain unavailable. Source-fit retained-row and Gaussian
+parameter-draw intervals are implemented but withheld until statistical
+admission (the call raises `medfit_error_fiml_inference_unavailable`).
+Bounded FIML is available from 0.16.0 and is unavailable in released
+0.15.0.
 
 A weight or an SE type that an engine does not take is an error, not an
 ignored argument, so a silent change of estimand is not possible through
@@ -92,8 +100,11 @@ through `glm` gives a path product on the log-odds scale, while
 
 ## What medfit does not run
 
-- Treatment varying within clusters (1-1-1), and non-Gaussian outcomes
-  or mediators in the cluster design.
+- Treatment varying within clusters (1-1-1) in the `lmer` cluster design
+  (a two-level `lavaan` fit is extracted; see [Two-level
+  mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md)),
+  and non-Gaussian outcomes or mediators in either cluster design.
+  Random slopes, three-level and multigroup fits are not run.
 - Four-way or joint decompositions with non-Gaussian models.
 - Latent means (a free latent mean or intercept) on the native engine,
   and products with a latent variable. Observed intercepts and means

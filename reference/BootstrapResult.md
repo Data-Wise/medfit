@@ -7,7 +7,7 @@ estimates, confidence intervals, and bootstrap distribution.
 
 ``` r
 BootstrapResult(estimate, ci_lower, ci_upper, ci_level, boot_estimates,
-  n_boot, method, call)
+  n_boot, method, call, inference = list())
 ```
 
 ## Arguments
@@ -45,6 +45,13 @@ BootstrapResult(estimate, ci_lower, ci_upper, ci_level, boot_estimates,
 
   Call object or NULL: original function call
 
+- inference:
+
+  Optional list, empty by default for legacy results. Bounded FIML
+  source intervals use schema `fiml-bootstrap-1` for method/target,
+  source and RNG provenance, retained/collected counts and every
+  requested replicate outcome.
+
 ## Value
 
 A BootstrapResult S7 object
@@ -55,7 +62,12 @@ This class standardizes bootstrap inference results across different
 bootstrap methods (parametric, nonparametric, plugin).
 
 The class includes validation to ensure consistency between method type
-and required fields.
+and required fields. See
+[`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
+for the bounded FIML source route. Its failed or incomplete results
+retain length-`n_boot` distributions with unresolved `NA` values and
+withhold intervals through every accessor. The optional metadata does
+not change legacy tidy/glance columns.
 
 ## Examples
 

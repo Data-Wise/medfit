@@ -64,6 +64,36 @@ package and checked by a test, so the wording matches what you see.
 | `clusters: inference on the cluster-level paths is unreliable` (a warning, fewer than 10 clusters) | too few clusters for any model-based interval | use `bootstrap_mediation(cluster = )` for the products |
 | `fewer than 25` (a warning) | 10 to 24 clusters with model-based standard errors | add `se_type = "kr"`, and bootstrap clusters for the products |
 
+## Two-level mediation
+
+The two-level route is
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+on a `lavaan` fit with `level:` blocks (see [Two-level
+mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md)).
+Each condition carries a class, so you can handle or silence one kind.
+
+| You see | Class | Cause | Fix |
+|----|----|----|----|
+| `The between level is not identified, so only the within-level paths are returned` (a warning) | `medfit_between_unidentified` | the ICC of the treatment or the mediator is below 0.01, a between covariance is not finite or not positive definite, or the fit did not converge | read the within results, or fix the design; the between effects and the contrast are `NA` |
+| `The between-level variance of the treatment or the mediator is small` (a warning) | `medfit_warning_between_weak` | an ICC between 0.01 and 0.05 | the between results are kept but may be imprecise |
+| `The contrast NIE_within - NIE_between is NA` (a warning) | `medfit_warning_twolevel_constrained` | both a and b are equated across levels (a shared label, an `==` row or an algebraic equality), so the contrast is zero by constraint; with only one of them equated the contrast is returned | free `a` or `b` across levels to compare the levels |
+| `The lavaan fit is not admissible` (a warning) | `medfit_warning_twolevel_inadmissible` | lavaan’s `post.check` is `FALSE`, for example a negative variance | inspect the fit before using the numbers |
+| `is negative or missing; its standard error is NA` (a warning) | `medfit_warning_vcov_diagonal` | a variance on the diagonal of the two-level covariance matrix is negative, missing or not finite; one warning covers the whole vector | the affected standard errors are `NA`, not guessed; inspect the lavaan fit (often an inadmissible fit, see the row above) before using them |
+| `Two-level estimates and between-level standard errors are unreliable with few clusters` (a warning) | `medfit_warning_twolevel_few_clusters` | fewer than 50 clusters (a judgment, not a published cutoff) | treat the between results as rough; `options(medfit.twolevel_min_clusters = )` changes the threshold |
+| `is ignored for a two-level fit` (a warning, once per session) | `medfit_warning_twolevel_labels_ignored` | `a_label`, `b_label` or `cp_label` was set | none needed: the paths are read by variable names and level |
+| `standardized = TRUE is not supported for a two-level fit` | `medfit_error_twolevel_standardized` | a standardized path mixes the within and the between variances | use the unstandardized paths |
+| `A product (interaction) term is not supported for a two-level fit` | `medfit_error_twolevel_product` | a `:` term in a regression, or `interaction =` | remove the product |
+| `A two-level fit supports exactly one mediator` | `medfit_error_twolevel_unsupported` | more than one mediator | one mediator only |
+| `is not in the model at the` | `medfit_error_twolevel_unsupported` | the treatment or mediator is missing at one level (a cluster-level treatment, 2-1-1) | use `fit_mediation(engine = "lmer", cluster = )`; see [Cluster-randomized trials](https://data-wise.github.io/medfit/articles/model-cluster.md) |
+| `is not assumed to be 0` | `medfit_error_twolevel_path_missing` | a path (`M ~ X`, `Y ~ M` or `Y ~ X`) is absent at a level | add it to the model, or fix it with `0*` |
+| `The two-level fit is not usable` | `medfit_error_twolevel_unusable` | the fit did not converge, or the within covariance is missing or not positive definite | fix the fit |
+| `is defined only for nie()` | `medfit_error_twolevel_level` | `level = "contrast"` for [`nde()`](https://data-wise.github.io/medfit/reference/nde.md), [`te()`](https://data-wise.github.io/medfit/reference/te.md) or [`pm()`](https://data-wise.github.io/medfit/reference/pm.md) | use [`tidy()`](https://generics.r-lib.org/reference/tidy.html) for those contrasts |
+| `needs the between level, which is not identified` | `medfit_between_unidentified` (an error here) | [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md) was asked for a between effect or the contrast of a within-only fit | fix the between level (see the first row of this section), or bootstrap a within effect |
+| `both a and b are equated across levels` | `medfit_error_twolevel_constrained` | `twolevel_statistic(effect = "nie_contrast")` on a fit that equates both a and b across levels | bootstrap the within and the between effect separately |
+| `are required for a lavaan fit` | `medfit_error_twolevel_unsupported` | [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md) got a `lavaan` fit without `treatment`, `mediator` and `outcome` | name the three variables |
+| `The lavaan fit has more than two levels` | `medfit_error_lavaan_multilevel` | a three-level fit | fit a one- or two-level model |
+| `The lavaan fit has more than one group` | `medfit_error_lavaan_multigroup` | a multigroup fit | fit each group as its own model |
+
 ## Native engine
 
 | You see | Cause | Fix |
@@ -138,6 +168,7 @@ not infeasible: only a literal contradiction is a proof of emptiness.
 | the error message of the failing stage, with class `medfit_sem_covariance_error` | the optimizer accepted the fit, then covariance explicitly diagnosed non-positive-definite information or a negative variance; the likelihood is evidence, but the result is not a fit | inspect the model and data scale; look at `err$ledger` (`covariance` is `"failed"`, `post_fit$condition$kind` is `information_not_pd` or `negative_variance`), `err$partial` (the accepted fit without `vcov`) |
 | `likelihood retained, covariance unavailable` (a warning from [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)) | a refit null passed the optimizer, then covariance raised one of those explicit diagnostics; the MBCO statistic and p-value use its likelihood and are unchanged | read the warning for the diagnostic; no standard error was invented; look at `res$ledger$children`: the node of that null has `covariance = "failed"` |
 | `missing, malformed or unresolved SEM outcome ledger` (class `medfit_error_ledger`) | [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) was given a fit whose ledger is absent, altered, forged or from an earlier release, so its evidence cannot be trusted | refit with the current medfit and call [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) on the new fit; look at `err$ledger$rejected_evidence` holds the refused ledger, when the fit had one |
+| `invalid nonzero-product search evidence` (class `medfit_error_search_evidence`) | the internal consistency check of a nonzero-product search failed: the stored start counts, the selected branch or the optimum summary disagree with the branches that were fitted, so the result is not returned | not a model problem: refit with the current medfit, and report it with the model and data if it repeats |
 
 `medfit_error_ledger` is a class of its own:
 [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
@@ -162,6 +193,29 @@ err$ledger$children              # per-branch outcome and feasibility
 err$best_survivor                # only for `medfit_error_no_convergence` with a survivor
 ```
 
+## Bounded FIML refusals
+
+The bounded FIML opt-in ([Missing data: bounded
+FIML](https://data-wise.github.io/medfit/articles/model-fiml.md))
+refuses anything outside its validated scope rather than fitting
+something close. It never falls back to listwise deletion or another
+engine. The condition class says which case you hit:
+
+| Class | Meaning | What to do |
+|----|----|----|
+| `medfit_sem_fiml_error` | the model, data or settings are outside the validated scope: a required disturbance covariance (`M1 ~~ 0*M2`, `M1 ~~ 0*Y`, `M2 ~~ 0*Y` in a serial model) not written, a covariate missing from some equations, an incomplete set of exogenous covariances, three or more covariates, a fixed or labeled shortcut path, or a pair of variables never observed together in the saturated serial graph. The message names the reason | write the missing statements, fit the nearest supported model, or use the default listwise path |
+| `medfit_error_fiml_extract_unsupported` | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) was given names the fit cannot use: the mediators in the reverse of the fitted order, or, in the pure serial chain, a covariate named as the treatment | name the mediators in the fitted order; in the pure chain use the variable with no path to the second mediator |
+| `medfit_error_fiml_inference_unavailable` | `bootstrap_mediation(source_fit = ...)` was called; source-fit intervals are withheld until statistical admission | use the delta-method intervals from [`tidy()`](https://generics.r-lib.org/reference/tidy.html) and [`confint()`](https://rdrr.io/r/stats/confint.html) |
+| `medfit_error_fiml_serial_source_fit` | a serial FIML fit was passed as the source of a bootstrap (reached only if the guard above is lifted) | not available for serial fits |
+
+An extracted FIML object also refuses
+[`quick()`](https://data-wise.github.io/medfit/reference/quick.md),
+[`pm()`](https://data-wise.github.io/medfit/reference/pm.md) and
+[`glance()`](https://generics.r-lib.org/reference/glance.html); see the
+[native
+guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
+for the full list.
+
 ## Messages that are not errors
 
 | You see | Meaning |
@@ -169,6 +223,29 @@ err$best_survivor                # only for `medfit_error_no_convergence` with a
 | `Model-based standard errors are not valid under inverse-probability weighting` | you gave `weights` with `se_type = "model"`. Shown once per session. Add `se_type = "sandwich"` |
 | `` fit_sem(): the `fixed_x` default leaves `` | with `fixed_x` unset, the named variables carry a `~~` or `~1` statement, so they stay free and the other exogenous variables are fixed. Shown on each fit. Pass `fixed_x` explicitly to choose |
 | the estimates use fewer rows than your data has | the model fits drop rows with missing values on their variables. Since 0.8.0 [`nobs()`](https://rdrr.io/r/stats/nobs.html) and `n_obs` report the rows used; 0.7.0 and earlier reported every row of `data`, so there, count them with [`complete.cases()`](https://rdrr.io/r/stats/complete.cases.html) |
+
+### Silence one message or warning
+
+medfit’s notes and warnings carry a class, so you can silence one kind
+without hiding the rest. Muffle by class with
+[`withCallingHandlers()`](https://rdrr.io/r/base/conditions.html), never
+with [`suppressMessages()`](https://rdrr.io/r/base/message.html) or
+[`suppressWarnings()`](https://rdrr.io/r/base/warning.html), which hide
+every condition in the call. The lenient `fixed_x` note has the class
+`medfit_message_fixed_x_lenient`:
+
+``` r
+fit <- withCallingHandlers(
+  fit_sem(model, data),
+  medfit_message_fixed_x_lenient = function(m) invokeRestart("muffleMessage")
+)
+```
+
+A warning is muffled the same way with `invokeRestart("muffleWarning")`
+and the warning’s own class. Name the class from the message’s own
+`class(cnd)`: a handler for a class the condition does not carry does
+nothing, and the note still prints. Prefer passing `fixed_x` explicitly,
+which removes the cause instead of the message.
 
 ## Still stuck?
 

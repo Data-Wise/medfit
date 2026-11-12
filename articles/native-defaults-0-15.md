@@ -16,8 +16,8 @@ to the likelihood, why the structural estimates and their standard
 errors stay put, which reported numbers move, and how the change was
 checked. Every formula is in [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md); the
-derivations are in the native mini-book, chapter 1 (the mean structure)
-and chapter 4 (fixed exogenous variables).
+derivations of the mean structure and of fixed exogenous variables are
+in the same article.
 
 ## What changed and when
 

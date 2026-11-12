@@ -36,8 +36,7 @@ library(generics)
         setequal, union
 
 These examples use the default listwise path. For the separate
-unreleased three-variable FIML opt-in and its narrower support, see the
-[native
+unreleased bounded FIML opt-in and its narrower support, see the [native
 guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml).
 
 ## Step 1. Write the model
@@ -118,7 +117,7 @@ glance(fit)[, c("npar", "df", "chisq", "p_value", "AIC", "BIC")]
     # A tibble: 1 × 6
        npar    df    chisq p_value   AIC   BIC
       <int> <dbl>    <dbl>   <dbl> <dbl> <dbl>
-    1     9     0 4.59e-30      NA 2298. 2334.
+    1     9     0 3.55e-13      NA 2298. 2334.
 
 A model with no restriction has 0 degrees of freedom, so there is
 nothing to reject yet. Step 6 adds a restriction and a test.
@@ -301,10 +300,6 @@ decomposition.
   mediator, a nonlinear constraint, comparing models, defined
   parameters, bounds, checks, fixed covariates, intercepts, the four-way
   decomposition and a categorical covariate.
-- [Native engine book (source in the
-  repository)](https://github.com/Data-Wise/medfit/tree/main/book):
-  seven chapters on the mean structure, scale, constraints, `fixed_x`,
-  inference, the product term and the four-way decomposition.
 - [lavaan and the native
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md):
   what the native engine does and does not do compared with lavaan.

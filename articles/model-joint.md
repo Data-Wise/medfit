@@ -79,7 +79,7 @@ c(estimate = unname(nie(x)), lower = boot@ci_lower, upper = boot@ci_upper)
 ```
 
      estimate     lower     upper
-    0.6560315 0.4278554 0.8870219 
+    0.6560315 0.4210529 0.8812853 
 
 ## Requirements
 

@@ -29,7 +29,11 @@ nie(x, ...)
 
   Additional arguments passed to methods. For a `SerialMediationData`,
   `type = c("chain", "total")` selects the chain-specific (default) or
-  the total indirect effect (see Details).
+  the total indirect effect (see Details). For a
+  `TwoLevelMediationData`,
+  `level = c("within", "between", "contrast", "both")` selects the level
+  (within is the default; the contrast, within minus between, is
+  descriptive and exists for `nie()` only).
 
 ## Value
 

@@ -70,7 +70,27 @@ types:
   written `x:m` (or `m:x`) in the outcome equation gives the four-way
   decomposition, stored under the canonical name `m:x`; without it
   `decomposition = "four_way"` is refused by name. `interaction =` takes
-  that product written with `:`.
+  that product written with `:`. A fit from `fit_sem(missing = "fiml")`
+  extracts to a `FIMLMediationData` object for the three-variable model
+  and for the bounded one- and two-covariate models (see the Bounded
+  FIML section of
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)).
+  With covariates, `treatment` may name any exogenous variable when no
+  outcome path is fixed at zero; with exactly one outcome path fixed at
+  zero, that variable is the treatment. The other exogenous variables
+  are the covariates; three or more covariates, a covariate on one
+  equation only and every other structure are refused. A fit with two
+  parallel mediators extracts to a `FIMLParallelMediationData` object
+  when `mediator` names both mediators (`structure = "parallel"` or
+  `"auto"`); it carries the full covariance of the paths, and a refusal
+  has class `medfit_error_fiml_extract_unsupported`. With one or two
+  covariates the same rules as for the one-mediator covariate fits
+  choose the treatment. A two-mediator serial fit (the saturated graph
+  or the pure chain, with no, one or two covariates) extracts to a
+  `FIMLSerialMediationData` object when `mediator` names both mediators
+  in the fitted order (a reversed order is refused with the same class);
+  it carries the full covariance of `a`, `a2`, `d1`, `b1`, `b` and
+  `c_prime` (saturated) or of `a`, `d1`, `b` and `c_prime` (chain).
 
 - **brmsfit**: Extract from Bayesian models (future)
 

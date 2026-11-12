@@ -1,9 +1,9 @@
 # What changed since CRAN 0.3.2
 
-CRAN has medfit 0.3.2; this site documents 0.15.0 (GitHub and
-r-universe). This page lists what a 0.3.2 user needs to know before
-upgrading: numbers that change, calls that now stop with an error, and
-what is new. The full record is
+CRAN has medfit 0.3.2; this site documents 0.17.0 and the development
+version (GitHub and r-universe). This page lists what a 0.3.2 user needs
+to know before upgrading: numbers that change, calls that now stop with
+an error, and what is new. The full record is
 [NEWS](https://data-wise.github.io/medfit/news/index.html).
 
 > **The short version**
@@ -107,7 +107,8 @@ path (0.5.0).
 | 0.14.0 | a native fit that leaves `fixed_x` or `meanstructure` unset warns once per session that both defaults change in 0.15.0 (no result changes); `options(medfit.native_defaults = "0.15")` opted in early (ignored from 0.15.0) ([article](https://data-wise.github.io/medfit/articles/native-defaults-0-15.md)) |
 | 0.14.1 | the outcome ledger (`fit@diagnostics$ledger`, `$ledger` on the errors): every zero-product branch and [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) null keeps its outcome; literal contradictions are certified empty; branch maps and an overflow-safe 64-branch cap; a covariance-stage failure is the typed error `medfit_sem_covariance_error`, which [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) retains for a null ([troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html#errors-that-carry-evidence)); [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) validates its own ledger before returning |
 | 0.15.0 | the native defaults flip: a default [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) fit fixes the exogenous observed variables and fits a mean structure, as a lavaan [`sem()`](https://rdrr.io/pkg/lavaan/man/sem.html) fit with `fixed.x = TRUE` and `meanstructure = TRUE` does ([article](https://data-wise.github.io/medfit/articles/native-defaults-0-15.md)) |
-| Development | corrected observed and sandwich covariance under active nonlinear constraints, with solver variance floors included in the active set; expected Fisher information is unchanged. Only explicit covariance diagnostics retain likelihood evidence; other covariance errors propagate. Active-boundary covariance is a local tangent approximation ([methods](https://data-wise.github.io/medfit/articles/methods.html#constraints)) |
+| 0.16.0 | bounded FIML for `fit_sem(missing = "fiml", fixed_x = FALSE)` (three-variable Gaussian random-X mediation; [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) returns `FIMLMediationData`); a single nonzero-product equality searches both sign branches; corrected observed-information and sandwich standard errors under active nonlinear constraints ([guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)) |
+| 0.17.0 | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a two-level `lavaan` fit (`level:` blocks) returns the new `TwoLevelMediationData`: the a, b and c’ paths at the within and the between level, with `nie(level = )`, [`tidy()`](https://generics.r-lib.org/reference/tidy.html), [`confint()`](https://rdrr.io/r/stats/confint.html) and [`summary()`](https://rdrr.io/r/base/summary.html), and [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md) builds the callback for [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md) (parametric, or a cluster bootstrap that refits the `lavaan` fit) ([page](https://data-wise.github.io/medfit/articles/model-twolevel.md)). This call stopped with `medfit_error_lavaan_multilevel` in the previous development version, and before that returned the within level only with the total sample size. Three-level and multigroup fits are still refused. Also: corrected observed and sandwich covariance under active nonlinear constraints, with solver variance floors included in the active set; expected Fisher information is unchanged. Only explicit covariance diagnostics retain likelihood evidence; other covariance errors propagate. Active-boundary covariance is a local tangent approximation ([methods](https://data-wise.github.io/medfit/articles/methods.html#constraints)); Bounded FIML also fits one or two covariates, two parallel mediators and two serial mediators (the saturated graph or the pure chain) with up to two covariates; these refuse in 0.16.0 and are new, not a change to an existing result ([page](https://data-wise.github.io/medfit/articles/model-fiml.md)) |
 
 ## Dependencies
 

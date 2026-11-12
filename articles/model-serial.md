@@ -83,6 +83,8 @@ c(chain = unname(nie(x)), every_path = unname(nie(x, type = "total")),
 
 ## Related
 
+[Missing data: bounded
+FIML](https://data-wise.github.io/medfit/articles/model-fiml.md) \|
 [Parallel
 mediation](https://data-wise.github.io/medfit/articles/model-parallel.md)
 \| [Joint

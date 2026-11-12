@@ -18,7 +18,9 @@ bootstrap_mediation(
   ncores = NULL,
   seed = NULL,
   cluster = NULL,
-  ...
+  ...,
+  source_fit = NULL,
+  effect = NULL
 )
 ```
 
@@ -33,7 +35,8 @@ bootstrap_mediation(
 
   - For nonparametric bootstrap: receives data frame, returns scalar
 
-  - For plugin: receives named parameter vector, returns scalar
+  - For plugin: receives named parameter vector, returns scalar Omit
+    this argument when supplying `source_fit`.
 
 - method:
 
@@ -101,7 +104,22 @@ bootstrap_mediation(
 
 - ...:
 
-  Additional arguments (reserved for future use)
+  Additional arguments (reserved for future use); must be empty with
+  `source_fit`.
+
+- source_fit:
+
+  Optional accepted bounded FIML
+  [SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md),
+  supplied by name. Its original incomplete retained records, model and
+  settings are authoritative. Omit `statistic_fn`, `mediation_data`,
+  `data` and `cluster` with this route.
+
+- effect:
+
+  Scalar unstandardized effect, exactly `"nie"`, `"nde"` or `"te"`,
+  required with `source_fit` and unavailable without it. Supplied by
+  name.
 
 ## Value
 
@@ -120,13 +138,65 @@ object containing:
 
 ## Details
 
-Bounded FIML objects supplied as `mediation_data` or `data` are refused,
-including `method = "plugin"`; this entry point does not provide FIML
-bootstrap inference. Object-aware guards run before package-controlled
-RNG, workers or refits. Opaque user callbacks and external-first
-dispatch are outside that guarantee. See
+### Bounded FIML source intervals (unavailable pending admission)
+
+**Unavailable.** While statistical admission is undecided, every
+non-`NULL` `source_fit` is refused before any other check, random draw,
+refit or worker, with a classed error
+(`medfit_error_fiml_inference_unavailable`). No option or environment
+variable enables it. The text below records the implemented design and
+is not a statement that the intervals are supported.
+
+Supply `source_fit` and `effect` by name and choose `method` explicitly.
+Only accepted three-variable Gaussian random-X simple mediation fits
+from
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
-for supported normal intervals.
+are supported, with the direct path free or fixed exactly at zero. This
+route does not support callbacks, plugin estimates, clusters or
+additional arguments. Fits with one or two covariates (including two
+parallel mediators with covariates) are refused with
+`medfit_error_fiml_covariate_source_fit`, and fits with two parallel
+mediators and no covariates with `medfit_error_fiml_parallel_source_fit`
+(both checks follow the withheld-inference guard above). Bounded FIML
+objects supplied as `mediation_data` or `data` remain refused.
+Object-aware guards run before package-controlled RNG, workers or
+refits; opaque user callbacks and external-first dispatch are outside
+that guarantee.
+
+`method = "nonparametric"` gives a retained-row FIML percentile
+interval: resample entire nonempty records at fixed retained N,
+preserving missingness and duplicate rows, and refit the identical model
+with the accepted source protocol. `method = "parametric"` gives a
+Gaussian parameter-draw percentile interval, not a synthetic-data
+bootstrap: jointly draw the canonical free parameters using the full
+observed/model covariance in original coordinates, without refitting.
+The symmetric correlation-root factor permits only roundoff repairs;
+materially asymmetric or indefinite covariance is refused. Fixed zeros
+stay exact. Negative nuisance-variance draws are not filtered or
+truncated before evaluating the effect.
+
+Both routes retain the original fitted effect as the point estimate and
+use type-7 empirical quantiles. Every requested replicate is recorded in
+`@inference` (schema `fiml-bootstrap-1`), including indices or draw IDs,
+reasons, source/RNG provenance and retained/collected counts. Any
+failed, invalid or nonfinite required replicate withholds the entire
+interval. Interruption returns an incomplete length-`n_boot` result with
+interrupted/unattempted IDs and `NA` unresolved values. Print, summary,
+tidy and changed-level
+[`confint()`](https://rdrr.io/r/stats/confint.html) cannot report a
+survivor interval; tidy distribution SD is also unavailable for withheld
+results. An all-success SD is descriptive, not a robust standard error.
+
+The target is conditional on retained nonempty records. Assumptions
+include IID jointly Gaussian data, ignorable MAR with distinct
+missingness/model parameters, positivity and identified information.
+Retention normalization must be independent of model parameters;
+independently empty MCAR records suffice. Arbitrary value-dependent
+empty-row deletion and MNAR are not covered. Numerical verification does
+not establish interval coverage; statistical admission remains deferred.
+See the Methods and Formulas article, Bounded FIML, for the mathematical
+definition. These source intervals are development code added after
+0.16.0 and are withheld.
 
 ### Bootstrap Methods
 

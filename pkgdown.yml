@@ -8,14 +8,17 @@ articles:
   articles/example-gpa: example-gpa.html
   articles/extraction: extraction.html
   articles/getting-started: getting-started.html
+  articles/guide-architecture: guide-architecture.html
   articles/guide-changes: guide-changes.html
   articles/guide-glossary: guide-glossary.html
   articles/guide-intervals: guide-intervals.html
   articles/guide-troubleshooting: guide-troubleshooting.html
+  articles/guide-twolevel-tutorial: guide-twolevel-tutorial.html
   articles/introduction: introduction.html
   articles/lavaan-comparison: lavaan-comparison.html
   articles/methods: methods.html
   articles/model-cluster: model-cluster.html
+  articles/model-fiml: model-fiml.html
   articles/model-glm-families: model-glm-families.html
   articles/model-interaction: model-interaction.html
   articles/model-joint: model-joint.html
@@ -29,17 +32,20 @@ articles:
   articles/model-regmedint: model-regmedint.html
   articles/model-serial: model-serial.html
   articles/model-simple: model-simple.html
+  articles/model-twolevel: model-twolevel.html
   articles/model-weights: model-weights.html
   articles/models: models.html
   articles/native-defaults-0-15: native-defaults-0-15.html
   articles/native-guide: native-guide.html
   articles/native-quickstart: native-quickstart.html
   articles/native-tutorial: native-tutorial.html
+  articles/probmed-comparison: probmed-comparison.html
   articles/quality-control: quality-control.html
   articles/refcard: refcard.html
+  articles/rmediation-comparison: rmediation-comparison.html
   articles/syntax-crosswalk: syntax-crosswalk.html
   articles/whats-new-0-11: whats-new-0-11.html
-last_built: 2026-10-31T07:00Z
+last_built: 2026-11-12T21:36Z
 urls:
   reference: https://data-wise.github.io/medfit/reference
   article: https://data-wise.github.io/medfit/articles
