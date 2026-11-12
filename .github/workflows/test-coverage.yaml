@@ -39,8 +39,9 @@ jobs:
     # Keep a job result rather than filtering out the entire workflow.
     if: ${{ !cancelled() && (needs.coverage-scope.result != 'success' || needs.coverage-scope.outputs.run_coverage != 'false') }}
     runs-on: ubuntu-latest
-    # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default.
-    timeout-minutes: 30
+    # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default. Coverage instrumentation
+    # slows the 22-minute 0.17.0 suite well past the old 30-minute limit.
+    timeout-minutes: 75
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
