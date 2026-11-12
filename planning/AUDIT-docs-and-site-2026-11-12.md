@@ -167,3 +167,10 @@ Not verified: a rendered site build (not run here), external URL liveness (`urlc
   also edits later: stage 3 lands first and is limited to version words and structure, with no rename of any file, URL or menu
   label containing "native".
 * **Rendered pass** on the live site: see section 9 of `planning/PROPOSAL-docs-adhd-design-2026-11-12.md` (new findings F11 to F16).
+
+### F17. `decompose` masks `stats::decompose` on attach (API finding, not a docs fix)
+
+`library(medfit)` prints "The following object is masked from 'package:stats': decompose" (seen on the live `model-simple` page,
+2026-11-12). The export is medfit's `decompose()` generic (CLAUDE.md, Effect Extractors). The docs change only hides the
+message in the docs setup chunks (`#| include: false`); the export is **not** changed here. Whether to keep the name, rename it
+or document the masking is a maintainer decision (an API question, with the two-month deprecation rule if renamed).
