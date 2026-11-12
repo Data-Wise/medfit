@@ -122,10 +122,19 @@ test_that("tidy() and glance() use snake_case names; no dotted name is left", {
 })
 
 test_that("the dotted tidy() arguments still work and warn", {
-  withr::local_options(lifecycle_verbosity = "warning")
   fit <- glm_fit()
-  expect_warning(old <- generics::tidy(fit, type = "effects", conf.int = TRUE, conf.level = 0.9),
-                 "is deprecated as of medfit 0.9.0", fixed = TRUE)
+  # "error" signals every time (lifecycle warns once per session otherwise).
+  withr::with_options(
+    list(lifecycle_verbosity = "error"),
+    expect_error(
+      generics::tidy(fit, type = "effects", conf.int = TRUE, conf.level = 0.9),
+      "is deprecated as of medfit 0.9.0", fixed = TRUE
+    )
+  )
+  old <- withr::with_options(
+    list(lifecycle_verbosity = "quiet"),
+    generics::tidy(fit, type = "effects", conf.int = TRUE, conf.level = 0.9)
+  )
   expect_equal(old, generics::tidy(fit, type = "effects", conf_int = TRUE, conf_level = 0.9))
   expect_equal(names(old), c("term", "estimate", "std_error", "conf_low", "conf_high"))
 })
