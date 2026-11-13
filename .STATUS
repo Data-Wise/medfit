@@ -1,3 +1,7 @@
+# Docs pipeline stage 3: stale 0.17.0 wording fixed — 2026-11-12 MST
+
+# README (FIML heading, "Website publication" sentence, TwoLevel row), NEWS 0.17.0 ("unreleased"/"development version" wording, known issues #369 and #394, #426 packaging), guide-changes/getting-started/refcard/model-native/native-tutorial/model-fiml/native-guide version words, CLAUDE.md and cran-comments status lines now say 0.17.0 released (tag 6b9a943c). Audit planning/AUDIT-docs-and-site-2026-11-12.md, proposal planning/PROPOSAL-docs-adhd-design-2026-11-12.md.
+
 # Release precondition P5 resolved — 2026-11-11 MST
 
 # Three plan status lines reconciled with what shipped (PLAN-0.11.0-scope COMPLETE as v0.11.0; PLAN-FIML-stage0-release-guard COMPLETE as #382; PLAN-FIML-next-release-model-expansion IMPLEMENTED on dev, #382 to #392, admission and release deferred). ADR D-4 (unconstrained default and a solver option) set to deferred by the author: not scheduled for 0.17.0, the gate has not run. `deferred` added to the allowed ADR statuses in test-adr-front-matter.R.
