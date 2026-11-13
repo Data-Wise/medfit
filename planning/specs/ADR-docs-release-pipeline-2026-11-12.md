@@ -1,20 +1,20 @@
 ---
 decisions:
-  - {id: RD-1, title: "Every documentation surface has one owner and one moment it changes", status: proposed, date: 2026-11-12}
-  - {id: RD-2, title: "Version words come from DESCRIPTION; prose names a version only where a gate checks it", status: proposed, date: 2026-11-12}
-  - {id: RD-3, title: "Release docs gates live in the test suite (docs tier), not in a new workflow", status: proposed, date: 2026-11-12}
-  - {id: RD-4, title: "NEWS opens with the release heading and carries no stale wording in a release", status: proposed, date: 2026-11-12}
-  - {id: RD-5, title: "README and articles name the DESCRIPTION version and say nothing of a development version in a release", status: proposed, date: 2026-11-12}
-  - {id: RD-6, title: "README has a What's new block for the version; CITATION reads the version", status: proposed, date: 2026-11-12}
-  - {id: RD-7, title: "CLAUDE.md and .STATUS status lines name the released version", status: proposed, date: 2026-11-12}
-  - {id: RD-8, title: "The FIML caveat is a marker on the home page and the FIML page, not a counted phrase", status: proposed, date: 2026-11-12}
-  - {id: RD-9, title: "Layout rules that can fail are tests: Next block, hidden setup, short navbar, readable colors, documented exports", status: proposed, date: 2026-11-12}
-  - {id: RD-10, title: "What stays manual: release notes review, rendered-site inspection, Lighthouse, external URLs", status: proposed, date: 2026-11-12}
+  - {id: RD-1, title: "Every documentation surface has one owner and one moment it changes", status: accepted, date: 2026-11-12}
+  - {id: RD-2, title: "Version words come from DESCRIPTION; prose names a version only where a gate checks it", status: accepted, date: 2026-11-12}
+  - {id: RD-3, title: "Release docs gates live in the test suite (docs tier), not in a new workflow", status: accepted, date: 2026-11-12}
+  - {id: RD-4, title: "NEWS opens with the release heading and carries no stale wording in a release", status: accepted, date: 2026-11-12}
+  - {id: RD-5, title: "README and articles name the DESCRIPTION version and say nothing of a development version in a release", status: accepted, date: 2026-11-12}
+  - {id: RD-6, title: "README has a What's new block for the version; CITATION reads the version", status: accepted, date: 2026-11-12}
+  - {id: RD-7, title: "CLAUDE.md and .STATUS status lines name the released version", status: accepted, date: 2026-11-12}
+  - {id: RD-8, title: "The FIML caveat is a marker on the home page and the FIML page, not a counted phrase", status: accepted, date: 2026-11-12}
+  - {id: RD-9, title: "Layout rules that can fail are tests: Next block, hidden setup, short navbar, readable colors, documented exports", status: accepted, date: 2026-11-12}
+  - {id: RD-10, title: "What stays manual: release notes review, rendered-site inspection, Lighthouse, external URLs", status: accepted, date: 2026-11-12}
 ---
 
 # ADR: how medfit documents are created and updated for every release
 
-Status: PROPOSED, 2026-11-12 (stage 4 of the docs pipeline; the maintainer has not accepted it). Inputs:
+Status: ACCEPTED, 2026-11-12 (stage 4 of the docs pipeline; accepted by the maintainer in chat on 2026-11-12, PR #439 merged as proposed). Inputs:
 `planning/AUDIT-docs-and-site-2026-11-12.md` (F1 to F17), `planning/PROPOSAL-docs-adhd-design-2026-11-12.md`. Scope guard: the
 native-to-sem vocabulary belongs to `ADR-engine-vocabulary-and-controls-2026-11-12.md`; this ADR names no engine words.
 
