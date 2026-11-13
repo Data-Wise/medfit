@@ -146,8 +146,9 @@ nie(med_data)
 **More:** [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) | [Reference card](https://data-wise.github.io/medfit/articles/refcard.html) | [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html) | [What changed since CRAN 0.3.2](https://data-wise.github.io/medfit/articles/guide-changes.html) | [Methods](https://data-wise.github.io/medfit/articles/methods.html)
 
 <details>
-<summary><strong>What's new in 0.17.0</strong></summary>
+<summary><strong>What's new in 0.17.0.9000</strong></summary>
 
+* **Development version:** no user-visible changes yet since 0.17.0 (released 2026-11-12), whose highlights follow.
 * **Bounded FIML expansion:** one or two covariates, two parallel and two serial mediators (numerically verified, not statistically admitted). See the [model page](https://data-wise.github.io/medfit/articles/model-fiml.html).
 * **Two-level mediation (experimental):** `extract_mediation()` on a two-level `lavaan` fit returns `TwoLevelMediationData`; lavaan floor 0.7-3. See the [model page](https://data-wise.github.io/medfit/articles/model-twolevel.html).
 * **Before that:** 0.16.0 (both sign branches of a nonzero-product equality, corrected constrained standard errors) and 0.15.0 (native defaults flip: `fixed_x` and `meanstructure` on when unset).

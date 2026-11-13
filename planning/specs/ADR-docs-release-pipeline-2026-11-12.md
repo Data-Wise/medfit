@@ -55,7 +55,7 @@ defect in the same file that must make it report a problem (the rule used by `te
 section contains neither "unreleased" nor "development version". A development version (`0.17.0.9000`) may keep them.
 
 **RD-5. README and articles.** A sentence that says a page "documents" or "describes" medfit X.Y.Z must name the DESCRIPTION
-version. In a release, README and `vignettes/articles` contain neither "development version" nor "unreleased".
+version, a development version included (the check reads three or four parts, so `0.17.0.9000` is a version, not `0.17.0` with a suffix; amended 2026-11-13 after the first `.9000` bump). In a release, README and `vignettes/articles` contain neither "development version" nor "unreleased".
 
 **RD-6. Home.** README contains `What's new in <version>` (inside a `<details>`), and `inst/CITATION` takes its version from
 `meta$Version` (a hard-coded `R package version 0.x` fails).
