@@ -120,7 +120,11 @@ test_that("the quality-control article is in the articles index and menu and sou
   expect_true(grepl("articles/quality-control.html", pk, fixed = TRUE))
   # one item of the Project menu (the navbar folds qc, ecosystem and status into it)
   expect_true(grepl("left: +\\[[^]]*\\bproject\\b", pk))
-  item <- "    project:\n      text: Project\n      menu:\n      - text: \"Quality control of the optimizer\"\n        href: articles/quality-control.html"
+  item <- paste0(
+    "    project:\n      text: Project\n      menu:\n",
+    "      - text: \"Quality control of the optimizer\"\n",
+    "        href: articles/quality-control.html"
+  )
   expect_true(grepl(item, pk, fixed = TRUE))
   expect_true(grepl("qc_gate_table", txt, fixed = TRUE))
   expect_true(grepl("qc_decision_table", txt, fixed = TRUE))
