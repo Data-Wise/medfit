@@ -14,7 +14,7 @@
   gate runs; medfit flags it correctly (#320, open).
 * **Known issues, open.** #369 (reconcile the #249 and #357 task lists with the merged comparison-engine and sign-branch
   work; bookkeeping, no behavior change) and #394 (a native joint two-level fitter, S4, and latent mediators, S5, remain;
-  both no-go for now, and object-based cluster bootstrap dispatch stays deferred).
+  S4 and S5 are no-go for now, and object-based cluster bootstrap dispatch stays deferred).
 * **Packaging.** RMediation joins `Suggests`; `TwoLevelMediationData` has a names-only `@usage` block so R CMD check
   stays clean (#426).
 * GitHub-only release; CRAN stays on hold (#83).
