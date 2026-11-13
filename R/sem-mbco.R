@@ -32,9 +32,11 @@
 #'   is the indirect effect (`c("a", "d", "b")`). `NULL`, the default, uses `a`
 #'   and `b`.
 #' @param n_starts,control Passed to the optimizer for the two refits, as in
-#'   [fit_sem()]. `NULL`, the default, uses the settings `object` was made with,
+#'   [fit_sem()]: `control` is a [sem_control()] object or a plain `nloptr`
+#'   list. `NULL`, the default, uses the settings `object` was made with,
 #'   so a better optimum in the full fit than in a refit cannot inflate the
-#'   statistic; an explicit value overrides them.
+#'   statistic; an explicit value overrides them (an explicit `sem_control()`
+#'   replaces the stored `nloptr` options, as an explicit list does).
 #' @param fit `r lifecycle::badge("deprecated")` Renamed `object`; the old name
 #'   still works with a warning.
 #'
@@ -148,7 +150,9 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     checkmate::assert_character(paths, min.chars = 1L, min.len = 2L, any.missing = FALSE, .var.name = "paths")
   }
   checkmate::assert_count(n_starts, positive = TRUE, null.ok = TRUE, .var.name = "n_starts")
-  checkmate::assert_list(control, null.ok = TRUE, .var.name = "control")
+  # a plain list or a sem_control() object (S2); NULL keeps the fit's own settings below
+  resolved_control <- .sem_resolve_control(control, n_starts, !missing(n_starts) && !is.null(n_starts),
+                                           "listwise", null_ok = TRUE)
   tab <- fit@table
   known <- unique(tab$label[tab$free & tab$op == "~" & !is.na(tab$label) & nzchar(tab$label)])
   for (nm in paths) {
@@ -178,8 +182,8 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
                             se_type = fit@diagnostics$se_type), fit@model)
   # The refits use the optimizer settings of the fit, so a better optimum in the full fit than in a refit
   # cannot inflate the statistic; an explicit argument overrides them.
-  n_starts <- n_starts %||% fit@internals$n_starts %||% 5L
-  control <- control %||% fit@internals$control %||% list()
+  n_starts <- resolved_control$n_starts %||% fit@internals$n_starts %||% 5L
+  control <- resolved_control$control %||% fit@internals$control %||% list()
   constraints <- paste(paths, "== 0")
   # a fit with `fixed_x` is refit with the same fixed set, so the refits keep the fit's likelihood
   fixed_x <- if (length(fit@internals$fixed_x)) fit@internals$fixed_x else FALSE
