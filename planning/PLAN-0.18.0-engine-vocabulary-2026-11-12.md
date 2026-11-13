@@ -144,7 +144,9 @@ can run beside them in separate worktrees. S5a and S5b wait for the names to be 
 
 - **Spike first** (a throwaway branch and a local `pkgdown::build_site()`): does the installed pkgdown support
   `redirects:` for `articles/` paths, and does an old `#fragment` (for example `native-guide.html#bounded-fiml`) land on
-  the right section after the redirect? Record the result in the plan.
+  the right section after the redirect? Record the result in the plan. **Done 2026-11-13:** supported, but the default
+  meta-refresh page drops the fragment; a local `pkgdown/templates/layout-redirect.html` that appends `location.hash`
+  keeps it (open item 2). S5b ships that template with the renames.
 - Only if both hold: `git mv` the 12 files, update the `_pkgdown.yml` menu and `articles:`, add `redirects:` for every old
   URL, update links in README, NEWS (current entries only), `guide-changes`, the cookbook, the model pages and the tests
   that assert them (`test-native-defaults-article.R`, the model-page tests); verify the old URLs on the built site and in the
@@ -171,10 +173,28 @@ can run beside them in separate worktrees. S5a and S5b wait for the names to be 
 
 ## Open items before S1 starts
 
-1. Listwise attempts: do they record which optimizer ran? (ADR section 6, item 1)
-2. pkgdown `redirects:` support and anchors (item 4): a spike, gates S5b only.
-3. Saved-object compatibility and external users of `engine = "native"` (item 6): a `saveRDS()` round trip of a 0.17.0
-   fit; local checkouts were searched, external users were not.
+All three closed 2026-11-13 (ADR section 6 has the evidence).
+
+1. ~~Listwise attempts: do they record which optimizer ran?~~ **No.** Each listwise attempt is a gate list (`accepted`,
+   `status`, `decrement`, `f`, `theta`) with no solver field. The default is `NLOPT_LD_SLSQP` (`R/sem-optim.R:383`), but
+   `opts[names(control)] <- control` (line 384) lets `control = list(algorithm = ...)` switch the nloptr algorithm, and
+   only the raw list in `fit@internals$control` shows it. S2 consequence: `diagnostics$protocol` records the effective
+   algorithm (`opts$algorithm`), and `sem_control(optimizer = "slsqp", nloptr = list(algorithm = <other>))` errors as a
+   conflict. FIML attempts keep their `solver` column.
+2. ~~pkgdown `redirects:` support and anchors~~ **Supported; anchors survive only with a template override.** pkgdown
+   2.2.1 writes each redirect from `layout-redirect.html`, a `<meta http-equiv="refresh">` to a fixed URL. In Chromium
+   `native-guide.html#bounded-fiml` landed on the new page at the top, without the fragment (planted defect). A local
+   `pkgdown/templates/layout-redirect.html` that runs `location.replace("{{{url}}}" + location.hash)` before the meta
+   refresh landed on `#bounded-fiml` (target at the top of the viewport). pkgdown resolves the local template first
+   (`template_candidates()`). S5b may proceed with that override; its own build still checks one real redirect.
+3. ~~Saved-object compatibility and external users~~ **Compatible; no external users found.** Objects saved by an installed
+   v0.17.0 (R 4.6.2, S7 0.2.2, lavaan 0.7.3) were read under dev 0.17.0.9000: `TwoLevelMediationData` prints, `nie()`
+   (both levels), `coef()` of `SEMFit` and `nie()` of the extracted `MediationData` match the saved values, `tidy()` of a
+   `fit_mediation(engine = "native")` object runs. No saved object stores the string `"native"` in a character
+   property, so the alias needs no stored-data path. An S7 test confirmed the S4 premise: adding `source_version` to a
+   class makes `old@source_version` error ("Can't find property"), `S7::prop_exists()` is `FALSE`, and the reader
+   helper falls back to `lavaan_version`. Public GitHub code search found no `engine = "native"` callers outside
+   `Data-Wise` (private repositories such as `medfit-book` are not indexed).
 
 Resolved by the Codex review (ADR section 7): the `control` route (existing `engine_args`), what the freeze pins, and the
 dependents-contract rows.

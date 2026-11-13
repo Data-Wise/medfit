@@ -157,14 +157,23 @@ when it matters), linked from the landing page and the Models page. The solver A
 
 ## 6. Open items to verify before implementation
 
-1. Whether listwise attempts record which optimizer ran (FIML attempts do, via a `solver` column).
+1. ~~Whether listwise attempts record which optimizer ran~~ **Resolved 2026-11-13: no.** Listwise attempts are gate
+   lists without a solver field; the algorithm defaults to `NLOPT_LD_SLSQP` but `control$algorithm` overrides it
+   (`R/sem-optim.R:383-384`), visible only in `fit@internals$control`. V-5 therefore stores the effective algorithm in
+   `diagnostics$protocol` and treats `optimizer = "slsqp"` with a different `nloptr$algorithm` as a conflict.
 2. ~~How the sem route of `fit_mediation()` receives `control`~~ **Resolved by review:** `fit_args` in `R/fit-sem.R`
    already forwards `control` through `engine_args`; no top-level argument.
 3. ~~Whether `test-api-freeze.R` pins the argument lists~~ **Resolved:** `pin_fit_sem_args` and `pin_mbco_sem_args` pin
    `control`; `pin_compare_lr_args` pins `engine` as the third argument; new arguments only at the end.
-4. That the installed pkgdown supports `redirects:` for `articles/` paths and keeps `#fragments` (gates V-8 step 2).
+4. ~~That the installed pkgdown supports `redirects:` and keeps `#fragments`~~ **Resolved 2026-11-13:** pkgdown 2.2.1
+   supports `redirects:`; its default meta-refresh page loses the fragment (checked in Chromium), and a local
+   `pkgdown/templates/layout-redirect.html` that appends `location.hash` keeps it. V-8 step 2 may proceed with that
+   template.
 5. ~~The dependents-contract table~~ **Resolved:** it pins `source` and `lavaan_version`; V-7 is additive.
-6. Saved-object compatibility (a fit stored with `engine = "native"` metadata) and external users of the old spelling.
+6. ~~Saved-object compatibility and external users~~ **Resolved 2026-11-13:** objects saved by an installed v0.17.0
+   read, print and give the same `nie()`/`coef()` under dev; none stores `"native"` in a character property. An S7 test
+   confirmed that an added property errors on an old object and `S7::prop_exists()` guards it (V-7). Public GitHub code
+   search found no `engine = "native"` callers outside `Data-Wise`.
 
 ## 7. Codex adversarial review (2026-11-12) and dispositions
 

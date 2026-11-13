@@ -11,7 +11,7 @@
 | Slices | 7 (S1, S2, S3, S4, S5a, S5b, S6); S6 not scheduled |
 | High-risk slices | 1 (S2, high by path) |
 | Review findings accepted | 29 (9 + 2 Codex, 8 + 10 `/code-review`) |
-| Open items before S1 | 3 |
+| Open items before S1 | 0 (3 closed 2026-11-13) |
 
 **One line:** rename "native" to "the sem engine" additively, let `control` take a list or `sem_control()`, add an optional `source_version`, and change no numbers.
 
@@ -40,7 +40,7 @@
 | S3 | `compare_lr()` docs only (V-3 deferred) | none | low |
 | S4 | `TwoLevelMediationData` gains `source_version` | none | low |
 | S5a | Prose, titles, new `guide-engines.qmd` | S1, S2, S4 merged | low, wide |
-| S5b | pkgdown redirect spike, then 12 renames | S5a; spike must pass | low, wide |
+| S5b | pkgdown redirect spike, then 12 renames | S5a; spike passed 2026-11-13 (hash template) | low, wide |
 | S6 | `"nlminb"`, `"auglag"`, `options(medfit.optimizer)` | D-4 gate | not scheduled |
 
 **Order:** S1, then S2 (independent, but both edit `fit-sem.R`, so never at once). S3 and S4 run beside them in separate worktrees. S5a, S5b wait for final names.
@@ -66,7 +66,7 @@
 - **Concept:** keep old code working.
 - **Issue:** `engine = "native"` is in released calls and the private `medfit-book`.
 - **Solution:** `"native"` accepted silently in 0.18.0; soft deprecation one minor later; removal only with a `[BREAKING]` issue and two months' notice.
-- **Impact:** no dependent breaks (local checkouts checked; external users and saved objects not checked).
+- **Impact:** no dependent breaks: local checkouts, public GitHub code search and a `readRDS()` of 0.17.0 objects all checked (2026-11-13).
 
 **V-3. `compare_lr()` — deferred**
 - **Concept:** `engine` there means the external comparison program.
@@ -101,8 +101,8 @@
 **V-8. Renames — conditional**
 - **Concept:** article URLs say `native-*`.
 - **Issue:** redirects and `#fragments` unverified; README links to `native-guide.html#bounded-fiml`.
-- **Solution:** 0.18.0 changes titles and prose only; the 12 file renames happen only if a pkgdown spike passes.
-- **Impact:** if anchors do not survive, URLs stay and nothing is renamed.
+- **Solution:** 0.18.0 changes titles and prose; the 12 file renames ship with a local `layout-redirect.html` that appends `location.hash`.
+- **Impact:** spike passed 2026-11-13: pkgdown's default redirect drops the fragment, the override keeps it.
 
 **V-9. Where this lives**
 - **Concept:** decision record vs user guide.
@@ -161,13 +161,21 @@
 | 7 | Risk-gate call described inexactly | `risk_check()` inputs stated |
 | 8 | `n_starts` conflict ignores `mbco_sem()` and defaulted 5 | detect "supplied" explicitly |
 
+## Open items, closed 2026-11-13
+
+| # | Question | Answer | Consequence |
+|---|---|---|---|
+| a | Do listwise attempts record the optimizer? | No; SLSQP by default, but `control$algorithm` can switch it unseen | S2 records the effective algorithm in `diagnostics$protocol`; `optimizer = "slsqp"` + other `nloptr$algorithm` errors |
+| b | pkgdown `redirects:` + `#fragments`? | Supported; default meta refresh **drops** the fragment; a local `layout-redirect.html` with `location.hash` keeps it | S5b may proceed, shipping the template |
+| c | 0.17.0 saved objects, external `"native"` users? | `readRDS()` under dev: prints, same `nie()`/`coef()`; no stored `"native"` string; none outside Data-Wise on public GitHub | V-2 alias needs no stored-data path; V-7 `prop_exists()` guard confirmed by an S7 test |
+
 ## Out of scope
 
 - S6 (waits for the D-4 gate) · native two-level fitter (#394 S4/S5) · editing `medfit-book` · any numerical, solver-path or CRAN change.
 
 ## Next steps
 
-1. **Close the 3 open items before S1:** (a) do listwise attempts record which optimizer ran? (b) pkgdown `redirects:` + anchors spike (gates S5b only); (c) `readRDS()` of a 0.17.0 object (S4 gate 4 fixture), external users of `"native"`.
+1. ~~Close the 3 open items~~ **Done 2026-11-13** (see below).
 2. **S1** `engine = "sem"`, then **S2** `sem_control()`; S3 and S4 in parallel worktrees.
 3. **Each slice:** touched tests → full suite in its worktree → lint on an isolated install → `Rscript tests/sim/risk-tier.R`; PR body quotes transcript and counts.
 4. **S5a** prose and guide, then **S5b** if the spike passes.
