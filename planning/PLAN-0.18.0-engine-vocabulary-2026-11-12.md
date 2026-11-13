@@ -1,8 +1,8 @@
 # PLAN: 0.18.0 engine vocabulary, controls and provenance (2026-11-12)
 
-**Decision record:** `planning/specs/ADR-engine-vocabulary-and-controls-2026-11-12.md` (V-1 to V-9, all decided by the author
-on 2026-11-12). **Evidence:** `planning/AUDIT-engine-and-optimizer-2026-11-12.md`. **Status:** plan only; nothing is implemented.
-**Starts after:** v0.17.0 is tagged and published (it is still waiting on main CI) and `main` is back-merged into `dev`.
+**Decision record:** `planning/specs/ADR-engine-vocabulary-and-controls-2026-11-12.md` (V-1 to V-9, answered by the author
+on 2026-11-12: seven decided, V-3 deferred, V-8 conditional; V-7 revised 2026-11-13). **Evidence:** `planning/AUDIT-engine-and-optimizer-2026-11-12.md`. **Status:** plan only; nothing is implemented.
+**Precondition met:** v0.17.0 was tagged and published on 2026-11-12 and `main` was back-merged into `dev` (#433).
 
 ## Principles
 
@@ -25,7 +25,7 @@ on 2026-11-12). **Evidence:** `planning/AUDIT-engine-and-optimizer-2026-11-12.md
 | S5b | Pkgdown redirect spike, then URL renames (V-8, conditional) | S5a | the spike first; only if it passes: 12 article files, `_pkgdown.yml` (`articles:` and `redirects:`), the docs tests, links in NEWS and README | low, wide |
 | S6 | `"nlminb"` and `"auglag"` values, `options(medfit.optimizer)` | D-4 gate measured | not scheduled | n/a |
 
-S1 and S2 touch the same function, so they run in order. S3 and S4 are independent of each other and of S1 and S2, so they
+S2 does not depend on S1, but both edit `fit-sem.R`, so they never run at the same time; S1 goes first. S3 and S4 are independent of each other and of S1 and S2, so they
 can run beside them in separate worktrees. S5a and S5b wait for the names to be final so the prose is edited once.
 
 ### S1: `engine = "sem"`
@@ -91,33 +91,39 @@ can run beside them in separate worktrees. S5a and S5b wait for the names to be 
   (lavaan or OpenMx), not a fitter of the mediation model". Do not change what the function computes (#320 is open).
 - Revisit after #320 with the argument, positional and result-field contracts together (candidates `against`, `program`).
 
-### S4: provenance (additive)
+### S4: provenance (additive; revised after the 2026-11-13 `/code-review`)
 
-- Add `source_version` (constructor, `print()`, `summary()`, `provenance`); open the `source_package` and `source`
-  validators to any non-empty string. `source` and `lavaan_version` stay **stored properties and valid constructor
-  arguments**, not getter-only S7 properties: released calls `TwoLevelMediationData(source = , lavaan_version = , ...)` and
-  the contract table pin them as constructor inputs. The extractor sets all four.
-- **Legacy mapping (revised after the 2026-11-13 Codex review).** Every call that is valid in 0.17.0 stays valid with the
-  same stored values:
-  - `source` is the fitting route (`"lavaan"`, `"native"`, later others) and `source_package` the package; they are
-    **independent fields with no agreement check**. `source = "native"` with `source_package = "lavaan"` is valid today
-    (`test-twolevel-class.R:87`) and stays valid. No value of `source` is rewritten.
-  - `source_version` is **optional**. A custom constructor takes `source_version = NULL`; when it is `NULL` and
-    `source_package == "lavaan"`, it is filled from `lavaan_version` (so a 0.17.0 call that supplies only
-    `lavaan_version` gets the same version in both slots); otherwise it stays empty, as `lavaan_version` may be today
-    (the class has no length check on it). When `source_version` is supplied and `lavaan_version` is omitted with
-    `source_package == "lavaan"`, `lavaan_version` is filled from it.
-  - The only new error: `source_package == "lavaan"` and **both** versions supplied, non-empty and different. No 0.17.0
-    call can reach it, since none supplies `source_version`.
-  - A 0.17.0 object read back with `readRDS()` has no `source_version` attribute; `print()`, `summary()` and the
-    provenance output read it through one helper that falls back to `lavaan_version`.
-- Tests (release gates, written first): (1) `tl_td(source = "native")` with `source_package = "lavaan"` still constructs,
-  unchanged; (2) the 0.17.0 constructor signature without `source_version` constructs, and `source_version` equals
-  `lavaan_version`; (3) both versions supplied and different errors (planted defect: drop the check, the test fails);
-  (4) an object saved by 0.17.0 (a fixture `.rds` built from the `v0.17.0` tag) prints and summarizes. The existing
-  `test-twolevel-*.R` provenance assertions still pass unchanged; an unknown fitter string is valid; an empty string is
-  rejected; `test-dependents-contract.R` gains `source_version` and **removes nothing**. Check `twolevel_statistic()` and
-  the bootstrap callers.
+- Add one optional property, `source_version`: `character(0)` (the default) or one non-empty string. The validator's
+  scalar loop (`R/classes-twolevel.R:143-158`) requires length 1 and non-`NA` for every scalar, so `source_version` is
+  checked outside it (length 0 or 1, never `NA` or `""`). `lavaan_version` moves out of the loop under the same rule, so a
+  fit that lavaan did not make needs no placeholder version; a supplied `lavaan_version` is checked exactly as today.
+- **No custom constructor and no stored fill.** S7's default constructor keeps every 0.17.0 call valid with the same
+  stored values, and S7 runs the validator again on `@<-`, so each rule here also covers assignment. No new error can be
+  reached by a 0.17.0 call.
+- **`source` and `source_package` validators unchanged in 0.18.0.** `source` stays `"lavaan"` or `"native"`
+  (`test-twolevel-class.R:86-87` pass unchanged); `source_package` keeps its check. `source` is the fitting route and
+  `source_package` the package: independent fields, no agreement check. Opening them, and a `"sem"` value for `source`
+  normalized the way S1 normalizes `engine`, wait for the native two-level fitter (#394), their first caller. The stored
+  `"native"` value is data on an experimental class, not an argument, so S1's alias policy does not apply to it.
+- **One reader.** `print()`, `summary()` and the provenance output call `.twolevel_source_version(x)`: `x@source_version`
+  when the property exists and is non-empty, else `x@lavaan_version` when `source_package == "lavaan"`, else
+  `NA_character_`. It tests the property with `S7::prop_exists()` first: an object saved by 0.17.0 keeps its old class
+  definition after `readRDS()`, and `x@source_version` errors on it. The lavaan extractor sets `source_version` and
+  `lavaan_version` to the same value.
+- Tests (release gates, written first; each names the planted defect it must catch):
+  1. 0.17.0 calls: `tl_td()` and `tl_td(source = "native")` construct with unchanged stored values and
+     `source_version == character(0)`. Defect: make `source_version` required.
+  2. Fit not made by lavaan: `lavaan_version = character(0)`, `source_version = "0.18.0"` constructs and the helper
+     returns `"0.18.0"`. Defect: restore the length-1 check on `lavaan_version`.
+  3. Validation on construction and assignment: `c("a", "b")`, `NA_character_` and `""` error both in the constructor
+     and through `x@source_version <- ...`. Defect: drop the length check.
+  4. Old objects: `tests/testthat/fixtures/twolevel-0.17.0.rds`, written by `tests/testthat/fixtures/make-twolevel-0.17.0.R`
+     (installs the `v0.17.0` tag into a scratch library, saves a small extracted object, records R, S7 and lavaan
+     versions in a comment), prints, summarizes, and the helper returns its `lavaan_version`. Defect: read
+     `x@source_version` directly in the helper.
+  The existing `test-twolevel-*.R` provenance assertions pass unchanged; `test-dependents-contract.R` gains
+  `source_version` and removes nothing. Check that `twolevel_statistic()` and the bootstrap callers pass
+  `source_version` through when they rebuild objects.
 - NEWS: an additive note under the experimental label; the two-level model page's provenance wording.
 
 ### S5a: prose, titles and the guide (a docs PR, separate from every API PR)
@@ -153,8 +159,8 @@ can run beside them in separate worktrees. S5a and S5b wait for the names to be 
 3. Release as 0.18.0 (minor, additive; GitHub-only, CRAN on hold). NEWS lists the sem engine, `sem_control()` and the
    list-or-object `control`, the additive provenance change on the experimental class, and (only if S5b passes) the
    renamed pages with redirects.
-4. After release: soft deprecation of `engine = "native"` is scheduled for the next minor (V-2); the `source` and
-   `lavaan_version` aliases follow (V-7); `compare_lr()` naming waits for #320 (V-3).
+4. After release: soft deprecation of `engine = "native"` is scheduled for the next minor (V-2); whether
+   `lavaan_version` is deprecated is decided with the native two-level fitter (V-7; `source` stays); `compare_lr()` naming waits for #320 (V-3).
 
 ## Out of scope
 

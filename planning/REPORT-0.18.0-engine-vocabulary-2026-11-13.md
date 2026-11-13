@@ -10,10 +10,10 @@
 | Decisions | 9 (V-1 to V-9): 7 decided, 1 deferred (V-3), 1 conditional (V-8) |
 | Slices | 7 (S1, S2, S3, S4, S5a, S5b, S6); S6 not scheduled |
 | High-risk slices | 1 (S2, high by path) |
-| Review findings accepted | 19 (9 + 2 Codex, 8 `/code-review`) |
+| Review findings accepted | 29 (9 + 2 Codex, 8 + 10 `/code-review`) |
 | Open items before S1 | 3 |
 
-**One line:** rename "native" to "the sem engine" additively, let `control` take a list or `sem_control()`, add `source_version`, and change no numbers.
+**One line:** rename "native" to "the sem engine" additively, let `control` take a list or `sem_control()`, add an optional `source_version`, and change no numbers.
 
 ## Principles
 
@@ -43,7 +43,7 @@
 | S5b | pkgdown redirect spike, then 12 renames | S5a; spike must pass | low, wide |
 | S6 | `"nlminb"`, `"auglag"`, `options(medfit.optimizer)` | D-4 gate | not scheduled |
 
-**Order:** S1 → S2 (same function). S3 and S4 run beside them in separate worktrees. S5a, S5b wait for final names.
+**Order:** S1, then S2 (independent, but both edit `fit-sem.R`, so never at once). S3 and S4 run beside them in separate worktrees. S5a, S5b wait for final names.
 
 ### S2 at a glance (the slice that needs care)
 
@@ -94,9 +94,9 @@
 
 **V-7. `TwoLevelMediationData` provenance**
 - **Concept:** record which package and version fitted the model.
-- **Issue:** `source` duplicates `source_package`; `source` and `lavaan_version` are pinned in the dependents contract.
-- **Solution:** add `source_version`; open validators to any non-empty string; keep `source`/`lavaan_version` as stored, valid constructor arguments for one cycle; `source` and `source_package` independent (no agreement check); `source_version` optional, filled from `lavaan_version` for lavaan fits.
-- **Impact:** additive; contract table gains a row, removes nothing; reverses the grill's "drop `source`".
+- **Issue:** `source` (route) and `source_package` (package) are independent; both `source` and `lavaan_version` are pinned in the dependents contract, and 0.17.0 objects lack any new property.
+- **Solution:** optional `source_version` (empty or one string); `lavaan_version` may be empty too; no custom constructor, no stored fill, no new error; one reader helper falls back to `lavaan_version`, guarded by `S7::prop_exists()`; `source`/`source_package` validators unchanged until #394.
+- **Impact:** additive; every 0.17.0 call and saved object keeps working; contract table gains a row, removes nothing; `source` kept (reverses the grill's "drop `source`").
 
 **V-8. Renames — conditional**
 - **Concept:** article URLs say `native-*`.
@@ -111,6 +111,21 @@
 - **Impact:** linked from the landing and Models pages; solver ADR gets a one-line pointer.
 
 ## Review findings (all accepted)
+
+### `/code-review` of the S4 revision (10, 2026-11-13)
+
+| # | Finding | Fix |
+|---|---|---|
+| 1 | `lavaan_version` has a length-1 check | may be empty |
+| 2 | Opening validators breaks `test-twolevel-class.R:86` | validators unchanged in 0.18.0 |
+| 3 | `x@source_version` errors on 0.17.0 objects | `S7::prop_exists()`; named fixture script |
+| 4 | Mismatch check ignores `@<-` | no mismatch check; rules in the validator |
+| 5 | ADR still lists the consistency validator | third-review record in the ADR |
+| 6 | `source` called duplicate and independent | independent; kept |
+| 7 | Gates miss non-lavaan path, assignment | four gates, each with a planted defect |
+| 8 | Custom constructor duplicates the fallback | one reader helper |
+| 9 | S4 keeps `"native"` | stored data; renaming waits for #394 |
+| 10 | REPORT order and status contradict the PLAN | aligned |
 
 ### Second Codex review, S4 (2, 2026-11-13)
 
@@ -139,7 +154,7 @@
 |---|---|---|
 | 1 | MBCO refits re-consume stored `control` | normalize once at entry |
 | 2 | FIML guard rejects non-empty `control` | guard on resolved values |
-| 3 | Read-only S7 aliases break constructor calls | stored properties + consistency validator |
+| 3 | Read-only S7 aliases break constructor calls | stored properties (validator later dropped) |
 | 4 | `diagnostics$control` collides with `internals$control` | renamed `diagnostics$protocol` |
 | 5 | V-6 rule 5 contradicts shipped options | grandfather clause |
 | 6 | S2 dependency on S1 stale | plan table corrected |
@@ -152,10 +167,10 @@
 
 ## Next steps
 
-1. **Close the 3 open items before S1:** (a) do listwise attempts record which optimizer ran? (b) pkgdown `redirects:` + anchors spike (gates S5b only); (c) `saveRDS()` round trip of a 0.17.0 fit, external users of `"native"`.
+1. **Close the 3 open items before S1:** (a) do listwise attempts record which optimizer ran? (b) pkgdown `redirects:` + anchors spike (gates S5b only); (c) `readRDS()` of a 0.17.0 object (S4 gate 4 fixture), external users of `"native"`.
 2. **S1** `engine = "sem"`, then **S2** `sem_control()`; S3 and S4 in parallel worktrees.
 3. **Each slice:** touched tests → full suite in its worktree → lint on an isolated install → `Rscript tests/sim/risk-tier.R`; PR body quotes transcript and counts.
 4. **S5a** prose and guide, then **S5b** if the spike passes.
 5. **Before release PR:** strict `R CMD check` flavors, `urlchecker`, `spelling`, `probmed`/`RMediation`/`missingmed` suites, site build.
 6. **Release 0.18.0** (minor, additive, GitHub-only; CRAN on hold).
-7. **After release:** schedule `"native"` soft deprecation (next minor), then the `source`/`lavaan_version` aliases; `compare_lr()` naming after #320.
+7. **After release:** schedule `"native"` soft deprecation (next minor), decide `lavaan_version` with #394 (`source` stays); `compare_lr()` naming after #320.
