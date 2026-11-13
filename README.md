@@ -18,47 +18,9 @@ model, from one mediator to a latent variable.
 > **In one line:** `med()` runs a mediation analysis, `quick()` prints it, and
 > `nie()`, `nde()`, `te()`, `pm()` and `tidy()` read it.
 
-## Bounded FIML (0.16.0 and 0.17.0)
+**Next:** [run the 60-second example](#try-it-in-60-seconds). Not sure which model you need? Jump to [Pick your model](#pick-your-model).
 
-medfit 0.16.0 added explicit `fit_sem(missing = "fiml", fixed_x = FALSE)` for
-three-variable Gaussian random-X mediation, preserving listwise defaults. medfit 0.17.0
-also fits one or two covariates, two parallel mediators
-(with zero, one or two covariates) and two-mediator serial models (the saturated graph
-or the pure chain, with up to two covariates; implemented and verified against lavaan, not calibrated for coverage). It is
-unavailable in 0.15.0 and earlier. Observed/model SEs and
-unstandardized effects and normal intervals are supported. The model requires
-continuous X, M and Y, a free or exactly zero direct path, independent Gaussian
-disturbances, free intercepts and ignorable missingness under that joint model.
-Native `fit_mediation()` uses `engine_args` for the same opt-in. Extracted FIML
-objects refuse `quick()`, `pm()` and `glance()`; fit tests, profiles and MBCO
-remain unavailable. Source-fit retained-row and Gaussian parameter-draw intervals
-(`bootstrap_mediation(source_fit = ...)`) are implemented but withheld: the call is
-refused until statistical admission is decided. `glance()` on the source SEMFit retains likelihood/IC fields.
-See the [native guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
-for settings and limits.
-
-## What's new
-
-| Version | What you get |
-|---|---|
-| **0.17.0** | bounded FIML with one or two covariates, two parallel and two serial mediators (numerically verified, not statistically admitted); `extract_mediation()` on a two-level `lavaan` fit returns `TwoLevelMediationData` (experimental); lavaan floor 0.7-3 |
-| **0.16.0** | A supported single nonzero-product equality now searches both sign branches independently, with explicit coverage evidence rather than a global-optimum claim. Corrected observed-information and sandwich standard errors under active nonlinear constraints, including solver variance floors; expected information retains its Fisher definition. Active-boundary covariance is a local tangent approximation. Only explicit covariance diagnostics retain an accepted likelihood; other errors propagate. See [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html#constraints) and NEWS. |
-| **0.15.0** | The native defaults flip: `fit_sem()`/`fit_mediation(engine = "native")` now fix the exogenous observed variables (`fixed_x`) and estimate the mean structure (`meanstructure = TRUE`) when you leave them unset, as lavaan does. Explicit arguments are kept, so `fixed_x = FALSE` and `meanstructure = FALSE` restore the old fit; the once-per-session warning is gone and `options(medfit.native_defaults)` is ignored (removed in 0.16.0). See the [0.15.0 defaults article](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html) and NEWS. |
-| **0.14.1** | The outcome ledger for native fits: every zero-product branch and `mbco_sem()` null keeps its outcome (`fit@diagnostics$ledger`, `$ledger` on the errors); literal `a == 0` / nonzero contradictions are certified empty, not fitted; branch maps and an overflow-safe 64-branch cap; a covariance-stage failure is a typed error (`medfit_sem_covariance_error`) that `mbco_sem()` retains for a null. A literal contradiction now stops before the optimizer (see NEWS). |
-| **0.14.0** | Notice for the 0.15.0 native defaults (`fixed_x = TRUE`, `meanstructure = TRUE`, now in force): a native fit that leaves either unset warns once per session (no result changes); `options(medfit.native_defaults = "0.15")` opts in early; the [0.15.0 defaults article](https://data-wise.github.io/medfit/articles/native-defaults-0-15.html) explains both settings and how dependent packages keep today's results. |
-| **0.13.0** | A roundoff-limited restoration's objective rise is capped, so a worse point can no longer stand and inflate a likelihood-ratio statistic; a refit the optimizer cannot fit is an unresolved result (`mbco_sem()`, `compare_lr()`) instead of an error or a silent answer, and a zero-product branch that cannot be fitted stops `fit_sem()` with an error instead of returning a partial fit. |
-| **0.12.0** | `compare_lr()` runs the product-null LR (`a*b == 0`) in lavaan or OpenMx and compares it with `mbco_sem()`, warning only on observed evidence (a dropped constraint, a statistic above medfit's); a fix for the native acceptance gate rejecting a correct fit at a bound on the reference BLAS (#238) |
-| **0.11.1** | Nonparametric and cluster bootstrap resamples no longer depend on `ncores`; `anova()` on `SEMFit` records `p_valid` and refuses a pair with a nonzero fixed parameter in one fit only; `@diagnostics$optimum` records the best-of-starts verdict; an engine comparison table on the Models page; the minibook explains the hard concepts from scratch; a robustness suite for the native optimizer (metamorphic, nloptr fault injection, an edge-case grid and a randomized oracle sweep, registered as a gate) |
-| **0.11.0** | Categorical (factor, character, logical) covariates in native syntax; population-average four-way standard errors on request; a fix for nonlinear-constrained fits that wandered to negative variances (#213); a start fallback and a single-start warning for the native optimizer; the native engine is no longer marked experimental, and its exported signatures, `SEMFit` properties and model syntax change only through a deprecation |
-| **0.10.0** | The product term `x:m` in native syntax and the four-way decomposition from a native fit (`extract_mediation()` on a `fit_sem()` fit), inside a documented supported class; the model test is `NA` when a product factor is a regression target; a native route in cookbook recipe 7 |
-| **0.9.0** | Observed intercepts and means in the native engine (`y ~ 1`, `meanstructure =`), with centered coordinates for data far from zero; `fixed_x` to fix exogenous moments at the sample values (lavaan's `fixed.x = TRUE`); the tutorial's step 9 and cookbook recipe 18 |
-| **0.8.0** | Nonlinear constraints (`cp == a*b`, `a*b > k`), `mbco_sem(paths = )` for a product of k paths, `anova()`, `tidy()` and `glance()` for `SEMFit`, one lavaan-style naming convention; the lavaan comparison article and cookbook recipes 12 and 13 |
-| **0.7.0** | A native maximum-likelihood SEM engine: latent mediators, constraints, defined parameters, `fit_sem()`, `mbco_sem()` |
-| **0.6.0** | Cluster-randomized designs (2-1-1) with `engine = "lmer"`, Kenward-Roger intervals, cluster bootstrap; the Reference Card and Cookbook |
-| **0.5.0** | Joint mediation (`JointMediationData`), the bundled `mediation_demo` data; two results fixed: serial `te()`/`pm()` sum every path, `confint()` path rows are found by name |
-| **0.4.0** | The `regmedint` engine, the four-way decomposition from `fit_mediation()`, and `m_star` |
-
-Full list: [NEWS](https://data-wise.github.io/medfit/news/index.html).
+> **Missing data (FIML):** the bounded FIML models are numerically verified against lavaan, not statistically admitted: no interval coverage is established. [Details](https://data-wise.github.io/medfit/articles/model-fiml.html)
 
 ## Install
 
@@ -180,6 +142,41 @@ fit_y <- lm(Y ~ X + M, data = mydata)
 med_data <- extract_mediation(fit_m, model_y = fit_y, treatment = "X", mediator = "M")
 nie(med_data)
 ```
+
+**More:** [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) | [Reference card](https://data-wise.github.io/medfit/articles/refcard.html) | [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html) | [What changed since CRAN 0.3.2](https://data-wise.github.io/medfit/articles/guide-changes.html) | [Methods](https://data-wise.github.io/medfit/articles/methods.html)
+
+<details>
+<summary><strong>What's new in 0.17.0</strong></summary>
+
+* **Bounded FIML expansion:** one or two covariates, two parallel and two serial mediators (numerically verified, not statistically admitted). See the [model page](https://data-wise.github.io/medfit/articles/model-fiml.html).
+* **Two-level mediation (experimental):** `extract_mediation()` on a two-level `lavaan` fit returns `TwoLevelMediationData`; lavaan floor 0.7-3. See the [model page](https://data-wise.github.io/medfit/articles/model-twolevel.html).
+* **Before that:** 0.16.0 (both sign branches of a nonzero-product equality, corrected constrained standard errors) and 0.15.0 (native defaults flip: `fixed_x` and `meanstructure` on when unset).
+
+Every release is listed in [NEWS](https://data-wise.github.io/medfit/news/index.html); upgrading from CRAN 0.3.2? See [What changed since CRAN 0.3.2](https://data-wise.github.io/medfit/articles/guide-changes.html).
+
+</details>
+
+<details>
+<summary><strong>Bounded FIML (0.16.0 and 0.17.0): settings and limits</strong></summary>
+
+medfit 0.16.0 added explicit `fit_sem(missing = "fiml", fixed_x = FALSE)` for
+three-variable Gaussian random-X mediation, preserving listwise defaults. medfit 0.17.0
+also fits one or two covariates, two parallel mediators
+(with zero, one or two covariates) and two-mediator serial models (the saturated graph
+or the pure chain, with up to two covariates; implemented and verified against lavaan, not calibrated for coverage). It is
+unavailable in 0.15.0 and earlier. Observed/model SEs and
+unstandardized effects and normal intervals are supported. The model requires
+continuous X, M and Y, a free or exactly zero direct path, independent Gaussian
+disturbances, free intercepts and ignorable missingness under that joint model.
+Native `fit_mediation()` uses `engine_args` for the same opt-in. Extracted FIML
+objects refuse `quick()`, `pm()` and `glance()`; fit tests, profiles and MBCO
+remain unavailable. Source-fit retained-row and Gaussian parameter-draw intervals
+(`bootstrap_mediation(source_fit = ...)`) are implemented but withheld: the call is
+refused until statistical admission is decided. `glance()` on the source SEMFit retains likelihood/IC fields.
+See the [native guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
+for settings and limits.
+
+</details>
 
 ## More examples
 
