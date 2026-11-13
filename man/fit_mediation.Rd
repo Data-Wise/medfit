@@ -46,8 +46,9 @@ applied to those rows first, then incomplete rows are dropped.}
 \item \code{"regmedint"}: Closed-form regression-based (in)direct effects via
 the suggested \pkg{regmedint} package (VanderWeele's regression
 approach, with optional treatment-mediator interaction)
-\item \code{"native"}: medfit's own maximum-likelihood SEM engine, fitted from
-model syntax given as \code{model} (see \code{\link[=fit_sem]{fit_sem()}}); the fit is then
+\item \code{"sem"}: the sem engine, medfit's maximum-likelihood SEM engine, fitted from
+model syntax given as \code{model} (see \code{\link[=fit_sem]{fit_sem()}}). \code{"native"} is the legacy
+spelling of the same engine and is still accepted. The fit is then
 extracted with \code{\link[=extract_mediation]{extract_mediation()}}. Supports observed and latent
 mediators, equality and inequality constraints, and \verb{:=} parameters.
 Case \code{weights} and \code{se_type = "sandwich"} map to \code{\link[=fit_sem]{fit_sem()}}'s

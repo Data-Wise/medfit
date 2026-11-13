@@ -3,6 +3,9 @@
 # This file implements the fit_mediation() function for fitting mediation
 # models using generalized linear models (GLM).
 
+# Every value `engine` accepts; "sem" and "native" name the same engine. Pinned in test-api-freeze.R.
+.fit_mediation_engines <- c("glm", "regmedint", "lmer", "sem", "native")
+
 #' Fit Mediation Models
 #'
 #' @description
@@ -28,8 +31,9 @@
 #'     \item `"regmedint"`: Closed-form regression-based (in)direct effects via
 #'       the suggested \pkg{regmedint} package (VanderWeele's regression
 #'       approach, with optional treatment-mediator interaction)
-#'     \item `"native"`: medfit's own maximum-likelihood SEM engine, fitted from
-#'       model syntax given as `model` (see [fit_sem()]); the fit is then
+#'     \item `"sem"`: the sem engine, medfit's maximum-likelihood SEM engine, fitted from
+#'       model syntax given as `model` (see [fit_sem()]). `"native"` is the legacy
+#'       spelling of the same engine and is still accepted. The fit is then
 #'       extracted with [extract_mediation()]. Supports observed and latent
 #'       mediators, equality and inequality constraints, and `:=` parameters.
 #'       Case `weights` and `se_type = "sandwich"` map to [fit_sem()]'s
@@ -239,6 +243,11 @@ fit_mediation <- function(formula_y,
                           model = NULL,
                           ...) {
   se_type <- match.arg(se_type)
+  # "sem" is the engine's name and "native" its legacy spelling (ADR-engine-vocabulary-and-controls V-1, V-2):
+  # map it once here, so no later code compares against two strings and the native messages stay as they are.
+  if (identical(engine, "sem")) {
+    engine <- "native"
+  }
   if (identical(engine, "native")) {
     return(.fit_mediation_native(
       model = model, data = data, treatment = treatment, mediator = mediator,
@@ -260,8 +269,7 @@ fit_mediation <- function(formula_y,
   checkmate::assert_data_frame(data, min.rows = 1, .var.name = "data")
   checkmate::assert_string(treatment, .var.name = "treatment")
   checkmate::assert_string(mediator, .var.name = "mediator")
-  checkmate::assert_choice(engine, choices = c("glm", "regmedint", "lmer", "native"),
-                           .var.name = "engine")
+  checkmate::assert_choice(engine, choices = .fit_mediation_engines, .var.name = "engine")
   checkmate::assert_list(engine_args, names = "unique", .var.name = "engine_args")
   checkmate::assert_number(m_star, .var.name = "m_star")
   if (!is.null(weights)) {
