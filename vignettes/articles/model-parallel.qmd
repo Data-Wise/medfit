@@ -12,6 +12,8 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Several mediators &rsaquo; Parallel mediation</p>
+
 Two or more mediators that the treatment drives independently, with no path
 between them. Part of the [Models](models.html) collection.
 
@@ -24,6 +26,7 @@ between them. Part of the [Models](models.html) collection.
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 ```
@@ -59,6 +62,10 @@ nie(x)
   bootstrap captures it.
 - Each mediator must be driven by the treatment (and covariates) only. If one
   mediator affects another, use [serial mediation](model-serial.html).
+
+::: {.next-action}
+**Next:** Add products between mediators: [Joint mediation](model-joint.html)
+:::
 
 ## Related
 
