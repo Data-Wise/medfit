@@ -37,7 +37,7 @@ news_problems <- function(lines, v) {
 prose_problems <- function(texts, v) {
   bad <- character()
   for (n in names(texts)) {
-    pat <- "(documents|describes) medfit [0-9]+\\.[0-9]+\\.[0-9]+"
+    pat <- "(documents|describes) medfit [0-9]+(\\.[0-9]+){2,3}"
     claims <- regmatches(texts[[n]], gregexpr(pat, texts[[n]]))[[1L]]
     wrong <- claims[!grepl(paste0(" ", v, "$"), claims)]
     if (length(wrong)) bad <- c(bad, sprintf("%s says '%s', DESCRIPTION is %s", n, wrong[1L], v))
@@ -156,6 +156,9 @@ test_that("planted defects: the prose gate catches a stale version claim and sta
   expect_match(prose_problems(list(a = "This card describes medfit 1.1.0"), "1.2.0"), "DESCRIPTION is 1.2.0")
   expect_match(prose_problems(list(a = "in the development version"), "1.2.0"), "development version")
   expect_identical(prose_problems(list(a = "in the development version"), "1.2.0.9000"), character())
+  expect_identical(prose_problems(list(a = "This site documents medfit 1.2.0.9000."), "1.2.0.9000"), character())
+  expect_match(prose_problems(list(a = "This site documents medfit 1.2.0."), "1.2.0.9000"), "DESCRIPTION is 1.2.0.9000")
+  expect_match(prose_problems(list(a = "This site documents medfit 1.2.0.9000."), "1.2.0"), "DESCRIPTION is 1.2.0")
 })
 
 test_that("README has the What's new block and CITATION takes the DESCRIPTION version", {

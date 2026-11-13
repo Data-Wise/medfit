@@ -1,3 +1,7 @@
+# medfit 0.17.0.9000
+
+* Development version. No user-visible changes since 0.17.0.
+
 # medfit 0.17.0
 
 ## Release summary
