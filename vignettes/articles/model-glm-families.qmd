@@ -12,6 +12,8 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Single mediator &rsaquo; Binary and non-normal outcomes or mediators</p>
+
 The default engine fits each model with `glm()`, so the outcome and the
 mediator can each take a family. Part of the [Models](models.html) collection.
 
@@ -24,6 +26,7 @@ mediator can each take a family. Part of the [Models](models.html) collection.
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 d <- mediation_demo
@@ -134,6 +137,10 @@ also reports outcome-scale effects is planned.
   see [Bootstrap Inference](bootstrap.html).
 - Fitted `glm()` pairs can be extracted instead of fitted here:
   `extract_mediation(fit_m, model_y = fit_y, ...)`.
+
+::: {.next-action}
+**Next:** Choose an interval: [Which interval should I use?](guide-intervals.html)
+:::
 
 ## Related
 

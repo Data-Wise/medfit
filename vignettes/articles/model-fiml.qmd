@@ -12,6 +12,8 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Clusters and latent variables &rsaquo; Missing data: bounded FIML</p>
+
 Keep partly observed rows instead of deleting them. Part of the
 [Models](models.html) collection.
 
@@ -25,6 +27,7 @@ Keep partly observed rows instead of deleting them. Part of the
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 ```
@@ -108,6 +111,10 @@ on complete, missing-completely-at-random, missing-at-random and sparse patterns
 with an independent likelihood check and planted-defect tests (the `fiml` and
 `fiml-ext` simulation gates). Nothing here is a coverage claim for
 intervals under missing data.
+
+::: {.next-action}
+**Next:** Read the limits in full: [The native engine guide: bounded FIML](native-guide.html#bounded-fiml)
+:::
 
 ## Related
 

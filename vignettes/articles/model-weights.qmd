@@ -12,6 +12,8 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Single mediator &rsaquo; Weights and robust standard errors</p>
+
 Inverse-probability weights, or case weights for independent observations,
 change the fit and the standard errors. Part of the [Models](models.html)
 collection.
@@ -25,6 +27,7 @@ collection.
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 ```
@@ -80,6 +83,10 @@ tidy(fit, type = "effects", conf_int = TRUE)
 - The native engine takes weights too, in `fit_sem()`,
   with its own sandwich (HC0-type) covariance; see
   [Methods and Formulas](methods.html).
+
+::: {.next-action}
+**Next:** Choose an interval: [Which interval should I use?](guide-intervals.html)
+:::
 
 ## Related
 
