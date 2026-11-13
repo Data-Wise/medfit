@@ -1,3 +1,7 @@
+# Docs pipeline stage 4: ADR and release-docs gates — 2026-11-12 MST
+
+# planning/specs/ADR-docs-release-pipeline-2026-11-12.md (RD-1 to RD-10, proposed) and tests/testthat/test-docs-release.R (14 tests, 35 expectations, a planted defect per gate). First run found model-fiml.qmd without the "not statistically admitted" caveat; added. Stages 1 to 3 merged or open as #432, #434, #436 to #438 (see GitHub). native_pending in the test lists the five model-native pages until the sem prose slice.
+
 # Docs pipeline stage 3: stale 0.17.0 wording fixed — 2026-11-12 MST
 
 # README (FIML heading, "Website publication" sentence, TwoLevel row), NEWS 0.17.0 ("unreleased"/"development version" wording, known issues #369 and #394, #426 packaging), guide-changes/getting-started/refcard/model-native/native-tutorial/model-fiml/native-guide version words, CLAUDE.md and cran-comments status lines now say 0.17.0 released (tag 6b9a943c). Audit planning/AUDIT-docs-and-site-2026-11-12.md, proposal planning/PROPOSAL-docs-adhd-design-2026-11-12.md.

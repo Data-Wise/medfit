@@ -17,6 +17,9 @@ execute:
 Keep partly observed rows instead of deleting them. Part of the
 [Models](models.html) collection.
 
+**Status:** these models are numerically verified against lavaan, not statistically admitted: no interval coverage is
+established, and every `source_fit` interval route is refused (`medfit_error_fiml_inference_unavailable`).
+
 | | |
 |---|---|
 | **Structure** | X to M to Y, two parallel mediators, or two serial mediators (the saturated graph or the pure chain), each with no, one or two covariates |
