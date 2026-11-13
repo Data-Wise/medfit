@@ -94,15 +94,30 @@ can run beside them in separate worktrees. S5a and S5b wait for the names to be 
 ### S4: provenance (additive)
 
 - Add `source_version` (constructor, `print()`, `summary()`, `provenance`); open the `source_package` and `source`
-  validators to any non-empty string; keep `source` and `lavaan_version` as **stored properties that stay valid constructor
-  arguments** for one deprecation cycle, filled from `source_package` and `source_version` when omitted, with a validator
-  that errors when a supplied value disagrees with them. They are not getter-only (read-only) S7 properties: released calls
-  `TwoLevelMediationData(source = , lavaan_version = , ...)` and the contract table pin them as constructor inputs. The
-  extractor sets all four.
-- Tests: the existing `test-twolevel-*.R` provenance assertions still pass unchanged; new assertions cover
-  `source_version`; an object with an unknown fitter string is valid; an empty string is rejected;
-  `test-dependents-contract.R` gains `source_version` and **removes nothing**. Check `twolevel_statistic()` and the
-  bootstrap callers and any saved-object round trip (`saveRDS()` then `readRDS()` of a 0.17.0 object).
+  validators to any non-empty string. `source` and `lavaan_version` stay **stored properties and valid constructor
+  arguments**, not getter-only S7 properties: released calls `TwoLevelMediationData(source = , lavaan_version = , ...)` and
+  the contract table pin them as constructor inputs. The extractor sets all four.
+- **Legacy mapping (revised after the 2026-11-13 Codex review).** Every call that is valid in 0.17.0 stays valid with the
+  same stored values:
+  - `source` is the fitting route (`"lavaan"`, `"native"`, later others) and `source_package` the package; they are
+    **independent fields with no agreement check**. `source = "native"` with `source_package = "lavaan"` is valid today
+    (`test-twolevel-class.R:87`) and stays valid. No value of `source` is rewritten.
+  - `source_version` is **optional**. A custom constructor takes `source_version = NULL`; when it is `NULL` and
+    `source_package == "lavaan"`, it is filled from `lavaan_version` (so a 0.17.0 call that supplies only
+    `lavaan_version` gets the same version in both slots); otherwise it stays empty, as `lavaan_version` may be today
+    (the class has no length check on it). When `source_version` is supplied and `lavaan_version` is omitted with
+    `source_package == "lavaan"`, `lavaan_version` is filled from it.
+  - The only new error: `source_package == "lavaan"` and **both** versions supplied, non-empty and different. No 0.17.0
+    call can reach it, since none supplies `source_version`.
+  - A 0.17.0 object read back with `readRDS()` has no `source_version` attribute; `print()`, `summary()` and the
+    provenance output read it through one helper that falls back to `lavaan_version`.
+- Tests (release gates, written first): (1) `tl_td(source = "native")` with `source_package = "lavaan"` still constructs,
+  unchanged; (2) the 0.17.0 constructor signature without `source_version` constructs, and `source_version` equals
+  `lavaan_version`; (3) both versions supplied and different errors (planted defect: drop the check, the test fails);
+  (4) an object saved by 0.17.0 (a fixture `.rds` built from the `v0.17.0` tag) prints and summarizes. The existing
+  `test-twolevel-*.R` provenance assertions still pass unchanged; an unknown fitter string is valid; an empty string is
+  rejected; `test-dependents-contract.R` gains `source_version` and **removes nothing**. Check `twolevel_statistic()` and
+  the bootstrap callers.
 - NEWS: an additive note under the experimental label; the two-level model page's provenance wording.
 
 ### S5a: prose, titles and the guide (a docs PR, separate from every API PR)

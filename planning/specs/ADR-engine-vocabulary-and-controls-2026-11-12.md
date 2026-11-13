@@ -115,9 +115,14 @@ experimental, so a change is permitted, but the cheapest safe path is additive:
 - Add `source_version` (the version of whichever package fitted the model); open the `source_package` and `source`
   validators to any non-empty string, so a new fitter never needs a validator edit (in-package fits: `"medfit"`).
 - **Keep `source` and `lavaan_version`** for one deprecation cycle as **stored properties that remain valid constructor
-  arguments** (filled from `source_package` and `source_version` when omitted; a supplied value that disagrees is a
-  validation error). Not getter-only S7 properties: released calls and the contract table pin them as constructor inputs.
+  arguments**. Not getter-only S7 properties: released calls and the contract table pin them as constructor inputs.
   Then deprecate them softly. The contract table gains `source_version` and removes nothing.
+- **Legacy mapping (second Codex review, 2026-11-13).** `source` (route) and `source_package` (package) are independent,
+  with no agreement check: `source = "native"` with `source_package = "lavaan"` is valid in 0.17.0 and stays valid.
+  `source_version` is optional: when omitted and `source_package == "lavaan"` it is filled from `lavaan_version` (and the
+  reverse), so every 0.17.0 call keeps working with the same stored values. The only new error is both versions supplied
+  and different for a lavaan fit, which no 0.17.0 call can reach. Readers fall back to `lavaan_version` for objects saved
+  without `source_version`.
 - This reverses the grill answer "drop `source`" on the Codex finding; the duplicate slot is removed one cycle later.
 
 **V-8. Renames (conditional, revised after review).** Two steps, in order. (1) In 0.18.0, article **titles and prose** say
