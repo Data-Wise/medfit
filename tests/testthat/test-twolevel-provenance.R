@@ -99,3 +99,26 @@ test_that("the lavaan extractor sets source_version equal to lavaan_version", {
   expect_identical(td@source_version, td@lavaan_version)
   expect_identical(.twolevel_source_version(td), td@lavaan_version)
 })
+
+# --- QA: the reader's source_package rule, and summary()'s lavaan_version entry when it is empty ---
+# Planted defects: drop `identical(x@source_package, "lavaan")` from the reader; store
+# `lavaan_version = object@lavaan_version` unguarded in summary()$provenance (c() then drops the element).
+
+test_that("the reader ignores lavaan_version for a fit whose package is not lavaan", {
+  nat <- tl_td(source = "native", source_package = "medfit")
+  expect_identical(nat@lavaan_version, "0.7.3")
+  expect_identical(.twolevel_source_version(nat), NA_character_)
+  expect_identical(summary(nat)$provenance[["source_version"]], NA_character_)
+  expect_identical(summary(nat)$provenance[["lavaan_version"]], "0.7.3")
+})
+
+test_that("summary()$provenance keeps every entry when lavaan_version is empty", {
+  keys <- c("source", "source_version", "lavaan_version", "estimator", "fixed_x", "information",
+            "h1_information", "se", "missing")
+  none <- tl_td(source = "native", source_package = "medfit", lavaan_version = character(0))
+  prov <- summary(none)$provenance
+  expect_identical(names(prov), keys)
+  expect_identical(prov[["lavaan_version"]], NA_character_)
+  expect_identical(prov[["source_version"]], NA_character_)
+  expect_identical(names(summary(tl_td())$provenance), keys)
+})
