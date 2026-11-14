@@ -1,4 +1,21 @@
-# medfit 0.17.0.9000
+# medfit 0.18.0
+
+## Release summary
+
+* **The sem engine.** `fit_mediation(engine = "sem")` names medfit's own maximum-likelihood SEM fitter. `engine =
+  "native"` still works unchanged, with no warning, and gives identical results.
+* **Optimizer settings: `sem_control()`.** One documented object for the sem engine's optimizer settings, accepted by
+  `fit_sem(control = )`, `mbco_sem(control = )` and `fit_mediation(engine_args = list(control = ))`. A plain list keeps
+  its 0.17.0 meaning; results are unchanged.
+* **Provenance on the experimental two-level class.** `TwoLevelMediationData` gains an optional `source_version`;
+  `lavaan_version` stays.
+* **Renamed pages.** The nine sem engine articles have new addresses; every old address redirects and keeps its
+  `#section`.
+* Additions only: no existing call changes its result. FIML stays numerically verified, not statistically admitted;
+  the two-level API stays experimental.
+* GitHub-only release; CRAN stays on hold (#83).
+
+## The sem engine
 
 * `fit_mediation(engine = "sem")` is the new name for the native maximum-likelihood SEM engine, now called the sem engine. `engine = "native"`
   still works unchanged and gives no warning; the two spellings select the same engine and return identical results.
