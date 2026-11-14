@@ -74,7 +74,7 @@ test_that("source_version rejects several values, NA and the empty string, also 
 
 test_that("an object saved by medfit 0.17.0 prints, summarizes and reports its lavaan version", {
   path <- test_path("fixtures", "twolevel-0.17.0.rds")
-  skip_if_not(file.exists(path), "fixture twolevel-0.17.0.rds is missing")
+  expect_true(file.exists(path))
   old <- readRDS(path)
   expect_false(S7::prop_exists(old, "source_version"))
   expect_true(S7::S7_inherits(old))
