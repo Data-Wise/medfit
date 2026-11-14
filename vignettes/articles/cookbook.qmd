@@ -175,7 +175,7 @@ decompose(extract_mediation(sem_i, treatment = "treatment", mediator = "mediator
                             outcome = "outcome_int"))
 ```
 
-More: [Model Extraction](extraction.html), [the native product term](model-native.html#product-terms).
+More: [Model Extraction](extraction.html), [the native product term](model-sem.html#product-terms).
 
 ## 8. Many mediators with products
 
@@ -534,9 +534,9 @@ across several fits stop when the fixed sets differ, as above. Pass a character 
 example `fixed_x = "treatment"`) to fix a subset.
 
 Since 0.15.0 the default is to fix the exogenous observed variables; pass `fixed_x = FALSE` to
-keep the free exogenous block. See [the 0.15.0 defaults](native-defaults-0-15.html).
+keep the free exogenous block. See [the 0.15.0 defaults](sem-defaults-0-15.html).
 
-More: [Methods and Formulas](methods.html), [the sem engine guide](native-guide.html).
+More: [Methods and Formulas](methods.html), [the sem engine guide](sem-guide.html).
 
 ## 19. Observed intercepts and means
 
@@ -578,9 +578,9 @@ the mean structure off has no intercepts to restrict.
 
 Pass `meanstructure = NULL` to fit a mean structure only when the model writes `~1` or a product (the
 0.14.x rule), or `meanstructure = FALSE` for covariances only. See
-[the 0.15.0 defaults](native-defaults-0-15.html).
+[the 0.15.0 defaults](sem-defaults-0-15.html).
 
-More: [The sem engine, intercepts](model-native.html#intercepts).
+More: [The sem engine, intercepts](model-sem.html#intercepts).
 
 ## 20. Four-way decomposition from a native fit
 
@@ -641,7 +641,7 @@ boot20 <- bootstrap_mediation(int_ref_stat, method = "nonparametric",
 c(estimate = boot20@estimate, lower = boot20@ci_lower, upper = boot20@ci_upper)
 ```
 
-More: [The sem engine, product term](model-native.html).
+More: [The sem engine, product term](model-sem.html).
 
 ## 21. A categorical covariate in a native fit
 
@@ -693,7 +693,7 @@ with a message that says why; `group:mediator1` expands to one product per dummy
 raw data re-expands the factor in each resample, so a level missing from a character column's resample
 changes the reference level.
 
-More: [The sem engine, paths and defined parameters](model-native.html), `?"medfit-syntax"`
+More: [The sem engine, paths and defined parameters](model-sem.html), `?"medfit-syntax"`
 (section Factor covariates).
 
 ## 22. Missing data: bounded FIML

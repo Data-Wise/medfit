@@ -1,25 +1,25 @@
 structure,kind,gates,doc
-observed,sem_models,parity|se|reliability|oracle-sweep|semopy,model-native
-latent,sem_models,parity|se|reliability|semopy,model-native-latent
-parallel,sem_models,parity|se|semopy,model-native-multi
-serial,sem_models,parity|se|semopy,model-native-multi
-linear constraints,syntax,constrained|stationarity,model-native-constraints
-nonlinear constraints,syntax,nonlinear-parity|nonlinear-profile|restoration,model-native-constraints
-zero-product branches,syntax,compare-lr,model-native-constraints
-observed intercepts and means,syntax,mean-constrained|native-defaults,model-native
-fixed_x,syntax,fixed-x|native-defaults,model-native
-product term and four-way,syntax,product-null|product-null-colon|product-fixed-var|product-fixed-var-colon|product-corr|product-corr-colon|four-way-kat,model-native
-factor covariates,syntax,factor,model-native-factors
-bootstrap inference,inference,bootstrap-coverage,model-native
-S7 install lifecycle,infrastructure,s7-lifecycle,model-native
-native defaults (fixed_x x meanstructure),syntax,native-defaults,model-native
-nonzero product sign branches,syntax,nonlinear-profile|nonlinear-parity,model-native-constraints
-bounded random-X FIML,syntax,fiml,model-native
-bounded random-X FIML with covariates,syntax,fiml-ext,model-native
-bounded random-X FIML with parallel mediators,syntax,fiml-ext,model-native
-bounded random-X FIML with serial mediators,syntax,fiml-ext,model-native
-bounded random-X FIML with the pure chain of serial mediators,syntax,fiml-ext,model-native
-bounded random-X FIML with serial mediators and one covariate,syntax,fiml-ext,model-native
-bounded random-X FIML with the pure chain of serial mediators and one covariate,syntax,fiml-ext,model-native
-bounded random-X FIML with serial mediators and two covariates,syntax,fiml-ext,model-native
-bounded random-X FIML with the pure chain of serial mediators and two covariates,syntax,fiml-ext,model-native
+observed,sem_models,parity|se|reliability|oracle-sweep|semopy,model-sem
+latent,sem_models,parity|se|reliability|semopy,model-sem-latent
+parallel,sem_models,parity|se|semopy,model-sem-multi
+serial,sem_models,parity|se|semopy,model-sem-multi
+linear constraints,syntax,constrained|stationarity,model-sem-constraints
+nonlinear constraints,syntax,nonlinear-parity|nonlinear-profile|restoration,model-sem-constraints
+zero-product branches,syntax,compare-lr,model-sem-constraints
+observed intercepts and means,syntax,mean-constrained|native-defaults,model-sem
+fixed_x,syntax,fixed-x|native-defaults,model-sem
+product term and four-way,syntax,product-null|product-null-colon|product-fixed-var|product-fixed-var-colon|product-corr|product-corr-colon|four-way-kat,model-sem
+factor covariates,syntax,factor,model-sem-factors
+bootstrap inference,inference,bootstrap-coverage,model-sem
+S7 install lifecycle,infrastructure,s7-lifecycle,model-sem
+native defaults (fixed_x x meanstructure),syntax,native-defaults,model-sem
+nonzero product sign branches,syntax,nonlinear-profile|nonlinear-parity,model-sem-constraints
+bounded random-X FIML,syntax,fiml,model-sem
+bounded random-X FIML with covariates,syntax,fiml-ext,model-sem
+bounded random-X FIML with parallel mediators,syntax,fiml-ext,model-sem
+bounded random-X FIML with serial mediators,syntax,fiml-ext,model-sem
+bounded random-X FIML with the pure chain of serial mediators,syntax,fiml-ext,model-sem
+bounded random-X FIML with serial mediators and one covariate,syntax,fiml-ext,model-sem
+bounded random-X FIML with the pure chain of serial mediators and one covariate,syntax,fiml-ext,model-sem
+bounded random-X FIML with serial mediators and two covariates,syntax,fiml-ext,model-sem
+bounded random-X FIML with the pure chain of serial mediators and two covariates,syntax,fiml-ext,model-sem

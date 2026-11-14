@@ -129,9 +129,9 @@ Find the row that matches your data, then open its page. All of them are on the
 | Several mediators with products | [Joint mediation](https://data-wise.github.io/medfit/articles/model-joint.html) |
 | Treatment assigned to whole clusters | [Cluster-randomized trials](https://data-wise.github.io/medfit/articles/model-cluster.html) |
 | A lavaan fit | [lavaan fits](https://data-wise.github.io/medfit/articles/model-lavaan.html) |
-| A latent mediator | [The sem engine: a latent mediator](https://data-wise.github.io/medfit/articles/model-native-latent.html) |
-| Constraints, or a test of the indirect effect | [The sem engine: constraints and MBCO](https://data-wise.github.io/medfit/articles/model-native-constraints.html) |
-| Serial or parallel mediators written as syntax | [The sem engine: several mediators and weights](https://data-wise.github.io/medfit/articles/model-native-multi.html) |
+| A latent mediator | [The sem engine: a latent mediator](https://data-wise.github.io/medfit/articles/model-sem-latent.html) |
+| Constraints, or a test of the indirect effect | [The sem engine: constraints and MBCO](https://data-wise.github.io/medfit/articles/model-sem-constraints.html) |
+| Serial or parallel mediators written as syntax | [The sem engine: several mediators and weights](https://data-wise.github.io/medfit/articles/model-sem-multi.html) |
 
 Already have fitted `lm`, `glm`, `lmer` or lavaan models? `extract_mediation()`
 turns them into the same objects:
@@ -174,7 +174,7 @@ objects refuse `quick()`, `pm()` and `glance()`; fit tests, profiles and MBCO
 remain unavailable. Source-fit retained-row and Gaussian parameter-draw intervals
 (`bootstrap_mediation(source_fit = ...)`) are implemented but withheld: the call is
 refused until statistical admission is decided. `glance()` on the source SEMFit retains likelihood/IC fields.
-See the [native guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
+See the [native guide](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml)
 for settings and limits.
 
 </details>

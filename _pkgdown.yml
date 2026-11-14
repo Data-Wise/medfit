@@ -89,15 +89,15 @@ navbar:
       - text: "lavaan fits"
         href: articles/model-lavaan.html
       - text: "The sem engine: paths and defined parameters"
-        href: articles/model-native.html
+        href: articles/model-sem.html
       - text: "The sem engine: a latent mediator"
-        href: articles/model-native-latent.html
+        href: articles/model-sem-latent.html
       - text: "The sem engine: constraints and MBCO"
-        href: articles/model-native-constraints.html
+        href: articles/model-sem-constraints.html
       - text: "The sem engine: several mediators and weights"
-        href: articles/model-native-multi.html
+        href: articles/model-sem-multi.html
       - text: "The sem engine: categorical covariates"
-        href: articles/model-native-factors.html
+        href: articles/model-sem-factors.html
       - text: "Missing data: bounded FIML"
         href: articles/model-fiml.html
     guides:
@@ -118,13 +118,13 @@ navbar:
       - text: "How medfit is organized"
         href: articles/guide-architecture.html
       - text: "Native defaults in 0.15.0"
-        href: articles/native-defaults-0-15.html
+        href: articles/sem-defaults-0-15.html
       - text: "The sem engine in five minutes"
-        href: articles/native-quickstart.html
+        href: articles/sem-quickstart.html
       - text: "The sem engine, step by step"
-        href: articles/native-tutorial.html
+        href: articles/sem-tutorial.html
       - text: "The sem engine guide"
-        href: articles/native-guide.html
+        href: articles/sem-guide.html
       - text: "lavaan and the sem engine"
         href: articles/lavaan-comparison.html
       - text: "probmed and medfit"
@@ -213,7 +213,7 @@ navbar:
       - text: "What's new in 0.11"
         href: articles/whats-new-0-11.html
       - text: "What's new in 0.15: native defaults"
-        href: articles/native-defaults-0-15.html
+        href: articles/sem-defaults-0-15.html
       - text: "Quality control of the optimizer"
         href: articles/quality-control.html
     project:
@@ -323,11 +323,11 @@ articles:
       - '`articles/model-cluster`'
       - '`articles/model-twolevel`'
       - '`articles/model-lavaan`'
-      - '`articles/model-native`'
-      - '`articles/model-native-latent`'
-      - '`articles/model-native-constraints`'
-      - '`articles/model-native-multi`'
-      - '`articles/model-native-factors`'
+      - '`articles/model-sem`'
+      - '`articles/model-sem-latent`'
+      - '`articles/model-sem-constraints`'
+      - '`articles/model-sem-multi`'
+      - '`articles/model-sem-factors`'
       - '`articles/model-fiml`'
   - title: "Guides"
     desc: "Upgrading, errors, engines, intervals and terms"
@@ -346,10 +346,10 @@ articles:
   - title: "The sem engine"
     desc: "Fit models from syntax: quickstart, tutorial, guide and defaults"
     contents:
-      - '`articles/native-defaults-0-15`'
-      - '`articles/native-quickstart`'
-      - '`articles/native-tutorial`'
-      - '`articles/native-guide`'
+      - '`articles/sem-defaults-0-15`'
+      - '`articles/sem-quickstart`'
+      - '`articles/sem-tutorial`'
+      - '`articles/sem-guide`'
       - '`articles/example-gpa`'
   - title: "Detailed guides"
     contents:
@@ -360,6 +360,19 @@ articles:
       - '`articles/computation-algorithms`'
       - '`articles/whats-new-0-11`'
       - '`articles/quality-control`'
+
+# The sem engine articles were renamed in 0.18.0 (ADR-engine-vocabulary V-8). Each old address redirects and keeps
+# its #fragment through pkgdown/templates/layout-redirect.html.
+redirects:
+  - ["articles/model-native.html", "articles/model-sem.html"]
+  - ["articles/model-native-latent.html", "articles/model-sem-latent.html"]
+  - ["articles/model-native-constraints.html", "articles/model-sem-constraints.html"]
+  - ["articles/model-native-multi.html", "articles/model-sem-multi.html"]
+  - ["articles/model-native-factors.html", "articles/model-sem-factors.html"]
+  - ["articles/native-guide.html", "articles/sem-guide.html"]
+  - ["articles/native-quickstart.html", "articles/sem-quickstart.html"]
+  - ["articles/native-tutorial.html", "articles/sem-tutorial.html"]
+  - ["articles/native-defaults-0-15.html", "articles/sem-defaults-0-15.html"]
 
 development:
   mode: auto

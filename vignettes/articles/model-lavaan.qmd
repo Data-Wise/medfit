@@ -116,13 +116,13 @@ lm/glm route sets them to zero (see [Serial mediation](model-serial.html)).
   for robust standard errors still extracts
   ([issue #394](https://github.com/Data-Wise/medfit/issues/394)).
 - To write a model as syntax **without** lavaan, with latent mediators and
-  constraints, use the [sem engine](model-native.html).
+  constraints, use the [sem engine](model-sem.html).
 
 ::: {.next-action}
-**Next:** Fit the model in medfit syntax: [The sem engine: paths and defined parameters](model-native.html)
+**Next:** Fit the model in medfit syntax: [The sem engine: paths and defined parameters](model-sem.html)
 :::
 
 ## Related
 
 [Cookbook recipe 10](cookbook.html#i-use-lavaan) | [Model Extraction](extraction.html) |
-[The sem engine](model-native.html)
+[The sem engine](model-sem.html)

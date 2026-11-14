@@ -1,5 +1,5 @@
 native_fiml_chunk <- function(label) {
-  path <- testthat::test_path("..", "..", "vignettes", "articles", "native-guide.qmd")
+  path <- testthat::test_path("..", "..", "vignettes", "articles", "sem-guide.qmd")
   testthat::skip_if_not(file.exists(path), "article source is unavailable")
   lines <- readLines(path, warn = FALSE)
   at <- which(lines == paste0("#| label: ", label))
@@ -15,7 +15,7 @@ native_fiml_continuous <- function(data) {
     }, logical(1)))
 }
 
-test_that("native-guide FIML data are continuous and preserve the caller RNG", {
+test_that("sem-guide FIML data are continuous and preserve the caller RNG", {
   withr::local_preserve_seed()
   set.seed(42L)
   before <- .Random.seed
@@ -31,7 +31,7 @@ test_that("native-guide FIML data are continuous and preserve the caller RNG", {
   expect_false(native_fiml_continuous(binary))
 })
 
-test_that("both executed native-guide FIML entry points agree", {
+test_that("both executed sem-guide FIML entry points agree", {
   env <- new.env(parent = asNamespace("medfit"))
   for (label in c("bounded-fiml-data", "bounded-fiml-workflow", "bounded-fiml-wrapper")) {
     invisible(utils::capture.output(eval(native_fiml_chunk(label), env)))

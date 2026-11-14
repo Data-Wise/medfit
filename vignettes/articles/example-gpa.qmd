@@ -484,5 +484,5 @@ across platforms up to the last printed digits.
 
 - [Model Extraction](extraction.html): the same fit from your own `lm` objects.
 - [Bootstrap](bootstrap.html) and [Which interval should I use?](guide-intervals.html): choosing the interval.
-- [The sem engine, step by step](native-tutorial.html): model syntax, constraints and `mbco_sem()`.
+- [The sem engine, step by step](sem-tutorial.html): model syntax, constraints and `mbco_sem()`.
 - [Cookbook](cookbook.html): one-screen recipes for the variations (binary outcome, weights, serial and parallel mediators).

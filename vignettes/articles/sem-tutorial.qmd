@@ -13,8 +13,8 @@ execute:
 ---
 
 Ten steps from a model written as syntax to a tested, constrained and extracted
-mediation result. It sits between [the five-minute quickstart](native-quickstart.html)
-and [the sem engine guide](native-guide.html).
+mediation result. It sits between [the five-minute quickstart](sem-quickstart.html)
+and [the sem engine guide](sem-guide.html).
 
 | | |
 |---|---|
@@ -29,7 +29,7 @@ library(generics)
 ```
 
 These examples use the default listwise path. For the separate bounded FIML opt-in (0.16.0 and 0.17.0) and its narrower support, see the
-[native guide](native-guide.html#bounded-fiml).
+[native guide](sem-guide.html#bounded-fiml).
 
 ## Step 1. Write the model
 
@@ -180,12 +180,12 @@ Check: `group` is gone from the rows, replaced by `group_mid` and `group_high`, 
 against the reference level `low` (the first factor level). `a`, `b` and `ab` keep their
 usual meaning, and `mbco_sem(fit10, paths = c("a", "b"))` tests the indirect effect as in
 Step 5. A label goes on one dummy (`z * group_mid`), never on `group` itself. The
-[categorical covariates page](model-native-factors.html) covers constraints, missing
+[categorical covariates page](model-sem-factors.html) covers constraints, missing
 values, products and the four-way decomposition.
 
 ## Where next
 
-- [The sem engine guide](native-guide.html): syntax, inference, constraints,
+- [The sem engine guide](sem-guide.html): syntax, inference, constraints,
   diagnostics and limits in one place.
 - [Cookbook recipes 11 to 21](cookbook.html): a latent mediator, a nonlinear
   constraint, comparing models, defined parameters, bounds, checks, fixed covariates, intercepts, the four-way decomposition and a categorical covariate.

@@ -1,6 +1,6 @@
 # The product-term error tables quoted in the docs: the "Product terms" section of ?"medfit-syntax"
 # (R/sem-syntax-help.R, man/medfit-syntax.Rd) and the supported-class table in
-# vignettes/articles/model-native.qmd (model-interaction.qmd links to it). Every quoted fragment has a trigger here,
+# vignettes/articles/model-sem.qmd (model-interaction.qmd links to it). Every quoted fragment has a trigger here,
 # and where the doc sources are reachable the quoted fragments are parsed from them, so a table row added, removed or
 # reworded without its trigger fails this file instead of leaving the docs wrong under green tests.
 
@@ -100,7 +100,7 @@ test_that("every fragment quoted in the product error tables is produced by its 
 
 test_that("the tables in the docs and the triggers here quote the same fragments", {
   rd <- testthat::test_path("..", "..", "R", "sem-syntax-help.R")
-  qmd <- testthat::test_path("..", "..", "vignettes", "articles", "model-native.qmd")
+  qmd <- testthat::test_path("..", "..", "vignettes", "articles", "model-sem.qmd")
   skip_if_not(file.exists(rd) && file.exists(qmd), "doc sources are not part of the installed package")
   documented <- unique(c(
     pmsg_doc_fragments(rd, "@section Product terms:"),

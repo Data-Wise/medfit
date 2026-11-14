@@ -112,7 +112,7 @@ refits. Ordered factors, a categorical treatment or mediator, a label on the
 whole factor, and a product of two factors are refused. **Why:** The explicit
 dummies keep the covariance model and refits consistent. The native engine is
 now a supported public interface with a frozen syntax and API contract. See
-`R/sem-fit.R` and [the factor model guide](model-native-factors.html).
+`R/sem-fit.R` and [the factor model guide](model-sem-factors.html).
 
 ```{r}
 #| label: factor-covariate

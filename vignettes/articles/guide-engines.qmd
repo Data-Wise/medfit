@@ -28,7 +28,7 @@ package that fits it.
 | `"glm"` (default) | `stats::glm()` for the mediator and outcome models | formulas, any `glm` family, case weights | [Simple mediation](model-simple.html) |
 | `"regmedint"` | closed-form natural effects from the regmedint package | VanderWeele's regression closed forms | [The regmedint engine](model-regmedint.html) |
 | `"lmer"` | REML mixed models with a random cluster intercept | a treatment assigned to clusters (2-1-1) | [Cluster-level treatment](model-cluster.html) |
-| `"sem"` | the sem engine: medfit's own maximum-likelihood SEM fitter | model syntax, latent mediators, constraints, `mbco_sem()` | [The sem engine](model-native.html) |
+| `"sem"` | the sem engine: medfit's own maximum-likelihood SEM fitter | model syntax, latent mediators, constraints, `mbco_sem()` | [The sem engine](model-sem.html) |
 
 The sem engine is reached in two ways: `fit_sem(model, data)`, which returns a
 `SEMFit` for `extract_mediation()`, and `fit_mediation(engine = "sem", model = )`
@@ -123,5 +123,5 @@ It is not a fitter of the mediation model.
 
 ## Related
 
-[Models](models.html) | [The sem engine guide](native-guide.html) |
+[Models](models.html) | [The sem engine guide](sem-guide.html) |
 [Methods and Formulas](methods.html) | [Glossary](guide-glossary.html)
