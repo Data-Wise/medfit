@@ -1,3 +1,7 @@
+# 0.18.0 S2 sem_control() on feature/sem-control — 2026-11-13 MST
+
+# Implemented (sem_control(), control = in fit_sem()/mbco_sem(), medfit_error_sem_control_conflict, fit@diagnostics$protocol; numerics identical to dev); oracle QA and pre-docs gates PASS; NEWS, troubleshooting row and FIML native-guide row synced. Not pushed, no PR; plan checkbox not ticked (plan lives on another branch).
+
 # Dev version bump to 0.17.0.9000 — 2026-11-13 MST
 
 # DESCRIPTION 0.17.0 -> 0.17.0.9000 on dev, NEWS opens with a 0.17.0.9000 section, CLAUDE.md status line updated (RD-4, RD-7). pkgdown now builds dev as the development version. No release or CRAN submission.

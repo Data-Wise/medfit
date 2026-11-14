@@ -278,6 +278,7 @@ reference:
       - fit_mediation
       - fit_sem
       - mbco_sem
+      - sem_control
       - compare_lr
       - medfit-syntax
       - bootstrap_mediation

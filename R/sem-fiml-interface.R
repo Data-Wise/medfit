@@ -453,13 +453,16 @@
 }
 
 .sem_fiml_syntax <- function(model, data, information, n_starts, control, weights, se_type,
-                             meanstructure, fixed_x, fx_unset, call) {
+                             meanstructure, fixed_x, fx_unset, call, optimizer = "auto") {
   stage <- "input"
   candidate <- NULL
   tryCatch(
     {
       if (fx_unset || !identical(fixed_x, FALSE)) {
         .sem_fiml_diagnostic("FIML requires explicit fixed_x = FALSE")
+      }
+      if (!identical(optimizer, "auto")) {
+        .sem_fiml_diagnostic("FIML requires sem_control(optimizer = \"auto\"): its SLSQP-plus-nlminb protocol is fixed")
       }
       if (!isTRUE(meanstructure) || information != "observed" || se_type != "model" ||
             !is.null(weights) || length(control) || (!is.null(n_starts) && n_starts != 3L)) {
