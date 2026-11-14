@@ -5,8 +5,9 @@
 \alias{medfit_syntax}
 \title{medfit Model Syntax}
 \description{
-The model syntax read by \code{\link[=fit_sem]{fit_sem()}} and by \code{fit_mediation(engine = "sem")} (the sem engine; \code{"native"} is the legacy spelling). It is a lavaan-style core plus two extensions, each marked
-"medfit extension" below. One statement per line (or separated by \verb{;}).
+The model syntax read by \code{\link[=fit_sem]{fit_sem()}} and by \code{fit_mediation(engine = "sem")} (the sem engine; \code{"native"} is the legacy spelling). It is a
+lavaan-style core plus two extensions, each marked "medfit extension" below.
+One statement per line (or separated by \verb{;}).
 }
 \section{Missing-data scope}{
 

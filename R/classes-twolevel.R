@@ -5,8 +5,8 @@
 #' TwoLevelMediationData Class
 #'
 #' **Experimental.** This class, [twolevel_statistic()] and the `level` argument of the effect generics may
-#' change without the usual deprecation period (a two-level fitter in the sem engine, a later milestone, could change the
-#' object).
+#' change without the usual deprecation period (a two-level fitter in the sem engine, a later milestone, could change
+#' the object).
 #'
 #' S7 class for two-level mediation in which treatment, mediator and outcome are all measured on level-1
 #' units nested in clusters (1-1-1), with the paths estimated separately at the within and the between

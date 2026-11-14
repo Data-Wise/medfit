@@ -69,8 +69,8 @@ A \code{TwoLevelMediationData} S7 object.
 }
 \description{
 \strong{Experimental.} This class, \code{\link[=twolevel_statistic]{twolevel_statistic()}} and the \code{level} argument of the effect generics may
-change without the usual deprecation period (a two-level fitter in the sem engine, a later milestone, could change the
-object).
+change without the usual deprecation period (a two-level fitter in the sem engine, a later milestone, could change
+the object).
 }
 \details{
 S7 class for two-level mediation in which treatment, mediator and outcome are all measured on level-1

@@ -39,7 +39,7 @@ test_that("the Models page lists all four engines and each stated refusal", {
   p <- root_path("vignettes", "articles", "models.qmd")
   skip_if_not(file.exists(p), "vignettes are not available (installed or built package)")
   txt <- paste(readLines(p, warn = FALSE), collapse = "\n")
-  for (e in c("`glm`", "`regmedint`", "`lmer`", "`native`")) {
+  for (e in c("`glm`", "`regmedint`", "`lmer`", "`sem`")) {
     expect_true(grepl(e, txt, fixed = TRUE), info = e)
   }
   expect_true(grepl("The `fit_mediation()` engines compared", txt, fixed = TRUE))

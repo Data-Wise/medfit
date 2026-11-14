@@ -2,8 +2,9 @@
 #'
 #' @description
 #' The model syntax read by [fit_sem()] and by `fit_mediation(engine =
-#' "sem")` (the sem engine; `"native"` is the legacy spelling). It is a lavaan-style core plus two extensions, each marked
-#' "medfit extension" below. One statement per line (or separated by `;`).
+#' "sem")` (the sem engine; `"native"` is the legacy spelling). It is a
+#' lavaan-style core plus two extensions, each marked "medfit extension" below.
+#' One statement per line (or separated by `;`).
 #'
 #' @section Missing-data scope:
 #' The general syntax below describes the default listwise path. The separate
