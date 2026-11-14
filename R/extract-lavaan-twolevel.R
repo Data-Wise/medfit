@@ -393,6 +393,7 @@
   opts <- lavaan::lavInspect(object, "options")
   paths <- stats::setNames(key$est, key$path)
   between_val <- function(nm) if (identified) unname(paths[[nm]]) else NA_real_
+  version <- .twolevel_fit_version(object)
 
   TwoLevelMediationData(
     a_within = unname(paths[["a_within"]]), b_within = unname(paths[["b_within"]]),
@@ -416,10 +417,11 @@
     se_type = as.character(opts$se)[1L],
     estimator = as.character(opts$estimator)[1L],
     missing = as.character(opts$missing)[1L],
-    lavaan_version = .twolevel_fit_version(object),
+    lavaan_version = version,
     call = paste(deparse(object@call), collapse = " "),
     between_parameterization = "latent",
     data = NULL,
-    source_package = "lavaan"
+    source_package = "lavaan",
+    source_version = version
   )
 }

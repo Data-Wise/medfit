@@ -129,7 +129,8 @@ tidy(td, conf_int = TRUE)
 `tidy()` lists the six paths, the four effects at each level, and the contrast. Standard errors come from the
 delta method over the joint covariance; the intervals are Wald (normal) intervals with no small-sample
 correction. `summary(td)` adds the provenance of the fit and prints the assumptions in full, and `glance(td)`
-gives one row.
+gives one row. The provenance (`summary(td)$provenance`) records the fitting source, the version of the package that
+made the fit (`source_version`; the `print()` header shows it too) and the estimation settings.
 
 ```{r}
 #| label: summary

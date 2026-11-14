@@ -23,6 +23,23 @@
   top-level `n_starts = 7` keeps them. This matters only for a fit made with non-default `nloptr` options; to keep them,
   give `n_starts` at the top level or repeat them in `sem_control(nloptr = )`.
 
+## Added
+
+* Two-level mediation (experimental): `TwoLevelMediationData` gains an optional last property, `source_version`
+  (`character(0)` or one non-empty string), the version of the package that made the fit, and `lavaan_version` may
+  now be `character(0)` for a fit lavaan did not make. Both are checked on construction and on assignment. The lavaan
+  adapter fills both with the lavaan version. `summary()$provenance` gains `source_version` and keeps
+  `lavaan_version`. This prepares the object for a fit not made by lavaan (the planned native two-level fitter, #394);
+  existing calls construct the same objects, and objects saved by 0.17.0 still print and summarize. The two-level API
+  is experimental and may change without the usual deprecation period.
+
+## Changes
+
+* Two-level `print()` header names the source and its version (for example `lavaan 0.7.3 fit`). A hand-built object
+  whose `source_package` is not `"lavaan"` no longer shows `lavaan_version` as its own version, and an empty
+  `lavaan_version` no longer leaves a double space. When the version is unknown, the header and the `summary()` Fit
+  line print the source alone.
+
 # medfit 0.17.0
 
 ## Release summary
