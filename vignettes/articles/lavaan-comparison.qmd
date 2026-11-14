@@ -139,7 +139,10 @@ the smaller of the two linear nulls. The decomposition is exact (the product is 
 branch is a numerical refit from several starts, so the reference is the best accepted refit, not a proof of a global
 minimum. `compare_lr()` runs the nonlinear form in lavaan or OpenMx from two starts and compares it with medfit's
 result. lavaan starts from its own default and from its `"simple"` start (the paths at 0); OpenMx starts from medfit's
-default start and from the same start with the tested paths set to 0, the start at which it drops the constraint:
+default start and from the same start with the tested paths set to 0, the start at which it drops the constraint.
+Its `engine` argument names the external comparison program (lavaan or OpenMx), not a fitter of the mediation model:
+the model is the native `SEMFit` passed in, and the result's `reference` is medfit's own LR.
+
 
 ```{r}
 #| label: compare-lr
