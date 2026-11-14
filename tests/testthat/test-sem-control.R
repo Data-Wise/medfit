@@ -215,3 +215,27 @@ test_that("the resolved search protocol is recorded in diagnostics$protocol (R-9
   # no second slot named `control`: the raw nloptr list stays in internals only
   expect_null(fit@diagnostics$control)
 })
+
+test_that("a top-level n_starts equal in value to the object's is not a conflict, whatever its storage type (QA)", {
+  # assert_count() does not coerce, so `n_starts = 7` stays a double; the rule compares values, not types
+  f7 <- fit_sem(sc_model, mediation_demo, n_starts = 7, control = sem_control(n_starts = 7L))
+  expect_identical(f7@internals$n_starts, 7)
+  expect_identical(f7@diagnostics$protocol$n_starts, 7L)
+  fit <- fit_sem(sc_model, mediation_demo)
+  expect_no_error(mbco_sem(fit, "a", "b", n_starts = 7, control = sem_control(n_starts = 7L)))
+  expect_error(fit_sem(sc_model, mediation_demo, n_starts = 6, control = sem_control(n_starts = 7L)),
+               class = "medfit_error_sem_control_conflict")
+})
+
+test_that("an explicit sem_control() to mbco_sem() replaces the stored nloptr options in the null refits (QA)", {
+  fit <- fit_sem(sc_model, mediation_demo, control = list(maxeval = 20000L))
+  m <- mbco_sem(fit, "a", "b", control = sem_control(nloptr = list(maxeval = 12345L)))
+  settings <- lapply(m$ledger$children, function(k) k$context$settings$control)
+  # the first child is the full fit (its own settings); the two null refits carry the explicit options
+  expect_identical(settings[[1L]], list(maxeval = 20000L))
+  expect_identical(utils::tail(settings, 2L), list(list(maxeval = 12345L), list(maxeval = 12345L)))
+  # with no control, the refits inherit the fit's stored options
+  inherited <- mbco_sem(fit, "a", "b")
+  expect_identical(lapply(utils::tail(inherited$ledger$children, 2L), function(k) k$context$settings$control),
+                   list(list(maxeval = 20000L), list(maxeval = 20000L)))
+})
