@@ -4,7 +4,7 @@
 # the gate's script (or a script it names), `driver` for the defects run-gates.R plants in every gate's results, or
 # `driver:<kind>` for an extra kind that run-gates.R plants for this gate. structures.csv is the registry of native
 # structures: every one lists its gates and its model page, and every `sem_models()` entry and every
-# `model-native*.qmd` page must appear in it, so a new structure cannot merge without a gate.
+# `model-sem*.qmd` page must appear in it, so a new structure cannot merge without a gate.
 
 sim <- test_path("..", "sim")
 skip_if_not(file.exists(file.path(sim, "gates.csv")), "tests/sim is not shipped with the installed tests")
@@ -76,12 +76,12 @@ test_that("the registry names real gates and real model pages, and every gate is
 test_that("every sem_models() entry and every native model page is in the registry", {
   skip_if_not(dir.exists(file.path(root, "vignettes", "articles")), "vignettes are not shipped here")
   expect_setequal(setdiff(names(sem_models()), gc_struct$structure[gc_struct$kind == "sem_models"]), character())
-  pages <- sub("\\.qmd$", "", list.files(file.path(root, "vignettes", "articles"), pattern = "^model-native.*\\.qmd$"))
+  pages <- sub("\\.qmd$", "", list.files(file.path(root, "vignettes", "articles"), pattern = "^model-sem.*\\.qmd$"))
   expect_setequal(setdiff(pages, gc_struct$doc), character())
 })
 
 test_that("planted defect: a structure with no gate, and a gate with no structure, are each detected", {
-  none <- rbind(gc_struct, data.frame(structure = "new syntax", kind = "syntax", gates = "", doc = "model-native"))
+  none <- rbind(gc_struct, data.frame(structure = "new syntax", kind = "syntax", gates = "", doc = "model-sem"))
   expect_true(any(!nzchar(none$gates)))
   without <- gc_struct[gc_struct$structure != "factor covariates", ]
   expect_true("factor" %in% setdiff(gc_gates$gate, unlist(lapply(without$gates, gc_tokens))))

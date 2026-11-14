@@ -14,7 +14,7 @@ execute:
 
 Fix, bound or equate parameters, and test the indirect effect with one call.
 Part of the [Models](models.html) collection; the third of five
-[sem engine](model-native.html) pages.
+[sem engine](model-sem.html) pages.
 
 | | |
 |---|---|
@@ -150,7 +150,7 @@ anova(tied, free)
   without a constraint line.
 
 ::: {.next-action}
-**Next:** Fit several mediators or add weights: [The sem engine: several mediators and weights](model-native-multi.html)
+**Next:** Fit several mediators or add weights: [The sem engine: several mediators and weights](model-sem-multi.html)
 :::
 
 ## Related

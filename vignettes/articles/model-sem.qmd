@@ -24,10 +24,10 @@ Part of the [Models](models.html) collection.
 | **Syntax** | `?"medfit-syntax"` lists every statement |
 
 The five pages: this one (paths and defined parameters),
-[a latent mediator](model-native-latent.html),
-[constraints and the MBCO test](model-native-constraints.html), and
-[several mediators and weights](model-native-multi.html), and
-[categorical covariates](model-native-factors.html).
+[a latent mediator](model-sem-latent.html),
+[constraints and the MBCO test](model-sem-constraints.html), and
+[several mediators and weights](model-sem-multi.html), and
+[categorical covariates](model-sem-factors.html).
 
 ```{r}
 #| label: setup
@@ -37,7 +37,7 @@ library(generics)
 ```
 
 These examples use the default listwise path. For the separate bounded FIML opt-in (0.16.0 and 0.17.0) and its narrower support, see the
-[native guide](native-guide.html#bounded-fiml).
+[native guide](sem-guide.html#bounded-fiml).
 
 ## Fit it
 
@@ -256,7 +256,7 @@ Limits (a categorical mediator or outcome, for example): they will arrive as add
 Numerical fixes are not breaking changes.
 
 ::: {.next-action}
-**Next:** Constrain paths and test the indirect effect: [The sem engine: constraints and the MBCO test](model-native-constraints.html)
+**Next:** Constrain paths and test the indirect effect: [The sem engine: constraints and the MBCO test](model-sem-constraints.html)
 :::
 
 ## Related

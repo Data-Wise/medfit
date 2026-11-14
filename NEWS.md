@@ -43,10 +43,15 @@
 ## Documentation
 
 * The documentation calls medfit's own maximum-likelihood SEM fitter "the sem engine" and shows `engine = "sem"` in
-  examples; `"native"` appears where the docs explain the alias, in quoted messages and in history. Page addresses are
-  unchanged. A new guide, "Which engine should I use?", separates the engine (which fitter), the estimator (listwise
-  ML or bounded FIML) and the optimizer (`sem_control()`), and keeps the sem engine apart from extracting a
-  `lavaan::sem()` fit. The five sem engine model pages now follow the model-page template (hidden setup, a Next link).
+  examples; `"native"` appears where the docs explain the alias, in quoted messages and in history. A new guide,
+  "Which engine should I use?", separates the engine (which fitter), the estimator (listwise ML or bounded FIML) and
+  the optimizer (`sem_control()`), and keeps the sem engine apart from extracting a `lavaan::sem()` fit. The five sem engine model pages now follow the model-page template (hidden setup, a Next link).
+* The nine sem engine articles have new addresses: `model-native`, `model-native-latent`, `model-native-constraints`,
+  `model-native-multi` and `model-native-factors` are now `model-sem`, `model-sem-latent`, `model-sem-constraints`,
+  `model-sem-multi` and `model-sem-factors`; `native-guide`, `native-quickstart`, `native-tutorial` and
+  `native-defaults-0-15` are now `sem-guide`, `sem-quickstart`, `sem-tutorial` and `sem-defaults-0-15`. Each old
+  address redirects to the new page and keeps its `#section` (for example `native-guide.html#bounded-fiml`), so
+  existing links and bookmarks still work.
 
 # medfit 0.17.0
 

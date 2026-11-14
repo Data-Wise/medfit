@@ -286,5 +286,5 @@ test_that("the 0.11.0 AIC/BIC refusal the guide lists is real, and the guide quo
   txt <- paste(readLines(guide_path(), warn = FALSE), collapse = "\n")
   expect_true(grepl("different observed variables", txt, fixed = TRUE))
   expect_true(grepl("covariate_mean_variance", txt, fixed = TRUE))
-  expect_true(grepl("model-native-factors.html", txt, fixed = TRUE))
+  expect_true(grepl("model-sem-factors.html", txt, fixed = TRUE))
 })

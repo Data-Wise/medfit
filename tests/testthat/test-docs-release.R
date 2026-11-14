@@ -213,7 +213,7 @@ test_that("planted defects: layout gates catch a missing Next block, shown setup
   expect_identical(page_problems(list(`model-x` = good)), character())
   expect_match(page_problems(list(`model-x` = good[1:3])), "no Next block")
   expect_match(page_problems(list(`model-x` = good[c(1, 3, 4)])), "setup chunk")
-  expect_match(page_problems(list(`model-native` = "no template yet")), "no Next block")  # no pending list
+  expect_match(page_problems(list(`model-sem` = "no template yet")), "no Next block")  # no pending list
   expect_match(navbar_problems("left:  [a, b, c, d, e, f, g, h, i]"), "9 items")
   expect_identical(navbar_problems("left:  [a, b, c, d, e, f, g, h]"), character())
   expect_match(contrast_problems("a { color: #909294; }"), "below 4.5:1")
@@ -233,4 +233,60 @@ test_that("every export has an Rd alias", {
 test_that("planted defect: the export gate catches an undocumented export", {
   expect_identical(export_problems("export(a)", "a"), character())
   expect_match(export_problems(c("export(a)", "export(b)"), "a"), "without an Rd alias: b")
+})
+
+# ADR-engine-vocabulary V-8 step 2: the sem engine articles were renamed in 0.18.0. Every old article address needs a
+# `redirects:` entry to an article that exists, and the local redirect template must carry the #fragment
+# (pkgdown's default meta refresh drops it).
+renamed_articles <- c(
+  "model-native", "model-native-latent", "model-native-constraints", "model-native-multi", "model-native-factors",
+  "native-guide", "native-quickstart", "native-tutorial", "native-defaults-0-15"
+)
+redirect_problems <- function(redirects, articles, template) {
+  from <- vapply(redirects, function(r) as.character(r[[1L]]), "")
+  to <- vapply(redirects, function(r) as.character(r[[2L]]), "")
+  out <- character()
+  for (old in renamed_articles) {
+    i <- match(sprintf("articles/%s.html", old), from)
+    if (is.na(i)) {
+      out <- c(out, sprintf("no redirect for articles/%s.html", old))
+      next
+    }
+    target <- sub("^articles/(.*)\\.html$", "\\1", to[i])
+    if (!target %in% articles || target %in% renamed_articles) {
+      out <- c(out, sprintf("articles/%s.html redirects to a missing article: %s", old, to[i]))
+    }
+    if (old %in% articles) out <- c(out, sprintf("old article %s.qmd still exists", old))
+  }
+  txt <- paste(template, collapse = "\n")
+  if (!grepl("location.hash", txt, fixed = TRUE) || !grepl("{{{url}}}", txt, fixed = TRUE)) {
+    out <- c(out, "layout-redirect.html does not append location.hash to {{{url}}}")
+  }
+  out
+}
+
+test_that("every renamed sem engine article redirects, with its #fragment, to an existing article", {
+  skip_if_not(have_tree() && file.exists(root_path("_pkgdown.yml")), "source tree not available")
+  skip_if_not_installed("yaml")
+  tpl <- root_path("pkgdown", "templates", "layout-redirect.html")
+  expect_true(file.exists(tpl))
+  redirects <- yaml::read_yaml(root_path("_pkgdown.yml"))$redirects
+  articles <- sub("\\.qmd$", "", list.files(root_path("vignettes", "articles"), "\\.qmd$"))
+  expect_identical(redirect_problems(redirects, articles, readLines(tpl, warn = FALSE)), character())
+})
+
+test_that("planted defects: the redirect gate catches a missing redirect, a bad target and a hash-dropping template", {
+  articles <- c("model-sem", "model-sem-latent", "model-sem-constraints", "model-sem-multi", "model-sem-factors",
+                "sem-guide", "sem-quickstart", "sem-tutorial", "sem-defaults-0-15")
+  good <- Map(function(o, n) c(sprintf("articles/%s.html", o), sprintf("articles/%s.html", n)),
+              renamed_articles, articles)
+  tpl <- 'window.location.replace("{{{url}}}" + window.location.hash);'
+  expect_identical(redirect_problems(unname(good), articles, tpl), character())
+  expect_match(redirect_problems(unname(good[-6L]), articles, tpl), "no redirect for articles/native-guide.html")
+  bad <- good
+  bad[[1L]][2L] <- "articles/model-nowhere.html"
+  expect_match(redirect_problems(unname(bad), articles, tpl), "missing article")
+  expect_match(redirect_problems(unname(good), c(articles, "native-guide"), tpl), "still exists")
+  expect_match(redirect_problems(unname(good), articles, '<meta http-equiv="refresh" content="0;URL={{{url}}}" />'),
+               "location.hash")
 })

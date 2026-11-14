@@ -97,7 +97,7 @@ test_that("the home page and Getting Started link to real articles and cookbook 
 })
 
 test_that("the categorical-covariates page runs its chunks and says what it claims", {
-  p <- root_path("vignettes", "articles", "model-native-factors.qmd")
+  p <- root_path("vignettes", "articles", "model-sem-factors.qmd")
   testthat::skip_if_not(file.exists(p), "vignettes are not available (installed or built package)")
   lines <- readLines(p, warn = FALSE)
   open <- grep("^```\\{r", lines)
