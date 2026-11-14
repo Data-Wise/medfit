@@ -40,7 +40,7 @@ cases <- list(
     )
   ),
   case(
-    "Must be element of set {'glm','regmedint','lmer','native'}",
+    "Must be element of set {'glm','regmedint','lmer','sem','native'}",
     fit_glm(engine = "foo")
   ),
   case("is only used with engine = \"native\"", fit_glm(model = "y ~ x")),

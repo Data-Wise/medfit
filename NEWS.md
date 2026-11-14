@@ -1,5 +1,9 @@
 # medfit 0.17.0.9000
 
+* `fit_mediation(engine = "sem")` is the new name for the native maximum-likelihood SEM engine. `engine = "native"`
+  still works unchanged and gives no warning; the two spellings select the same engine and return identical results.
+  Existing code needs no change (ADR-engine-vocabulary-and-controls V-1, V-2).
+
 ## Added
 
 * Two-level mediation (experimental): `TwoLevelMediationData` gains an optional last property, `source_version`
