@@ -13,6 +13,7 @@ pin_fit_sem_args <- c("model", "data", "information", "n_starts", "control", "we
                       "fixed_x", "sampling_weights")
 pin_mbco_sem_args <- c("object", "a", "b", "n_starts", "control", "fit", "paths")
 pin_compare_lr_args <- c("object", "paths", "engine", "tolerance")
+pin_fit_mediation_engines <- c("glm", "regmedint", "lmer", "sem", "native")
 
 test_that("the SEMFit property names are pinned (additions allowed, removals and renames are not)", {
   expect_equal(freeze_missing(pin_semfit_properties, names(SEMFit@properties)), character(0),
@@ -33,6 +34,15 @@ test_that("fit_sem() pins the 0.15.0 defaults of meanstructure and fixed_x (F-4)
   # planted defect: the 0.14.x formals must fail the pin
   expect_false(identical(alist(meanstructure = NULL)$meanstructure, formals(fit_sem)$meanstructure))
   expect_false(identical(FALSE, formals(fit_sem)$fixed_x))
+})
+
+test_that("fit_mediation() keeps every engine value (additions allowed, removals are not)", {
+  # "sem" was added in 0.18.0; "native" stays as its legacy spelling (ADR-engine-vocabulary-and-controls V-2).
+  expect_equal(freeze_missing(pin_fit_mediation_engines, .fit_mediation_engines), character(0),
+               info = "an engine value was removed or renamed: the freeze needs a deprecation and a NEWS entry")
+  # planted defect: dropping either spelling must fail the pin
+  expect_identical(freeze_missing(pin_fit_mediation_engines, setdiff(.fit_mediation_engines, "native")), "native")
+  expect_identical(freeze_missing(pin_fit_mediation_engines, setdiff(.fit_mediation_engines, "sem")), "sem")
 })
 
 test_that("compare_lr() keeps its argument names and order, and its warning classes are pinned", {

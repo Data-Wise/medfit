@@ -30,7 +30,7 @@ Examples on this site use medfit 0.13.0. If `mediation_demo` or
 | `Treatment variable 'treatment' must be in formula_m` | the treatment is missing from the mediator formula | add it: `mediator1 ~ treatment + ...` |
 | `Mediator variable 'mediator1' must be in formula_y` | the mediator is missing from the outcome formula | add it: `outcome ~ treatment + mediator1 + ...` |
 | `must be in data` | `med()` was given a variable name that is not a column | check the spelling; the message lists the valid names |
-| `Must be element of set {'glm','regmedint','lmer','native'}` | `engine` is misspelled | use one of the four engines |
+| `Must be element of set {'glm','regmedint','lmer','sem','native'}` | `engine` is misspelled | use one of the four engines: `"glm"`, `"regmedint"`, `"lmer"` or `"sem"` (the native SEM engine; `"native"` is its legacy spelling) |
 | `is only used with engine = "native"` | `model =` was given to another engine | use `engine = "native"`, or pass formulas instead of `model` |
 | `engine = "lmer" needs` | the `lmer` engine has no `cluster` | add `cluster = "school"` (the cluster variable's name) |
 | `is only used with engine = "lmer"` | `cluster =` was given to another engine | add `engine = "lmer"`, or drop `cluster` |
