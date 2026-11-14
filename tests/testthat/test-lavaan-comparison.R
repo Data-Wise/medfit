@@ -284,3 +284,22 @@ test_that("missing-data evidence catches removed FIML and a relaxed information 
   expect_true(broadened[["refuses_extra_predictor"]])
   expect_identical(lc_missing_status(broadened), "Unsupported")
 })
+
+# S3 (V-3): compare_lr(engine = ) is the external comparison program, not a fitter of the mediation model. The Rd and
+# the article both say so; a planted edit that drops the definition is caught.
+lc_defines_engine <- function(txt) {
+  txt <- gsub("\\s+", " ", txt)
+  grepl("external comparison program", txt, fixed = TRUE) &&
+    grepl("not a fitter of the mediation model", txt, fixed = TRUE)
+}
+
+test_that("compare_lr() docs define engine as the external comparison program", {
+  rd <- testthat::test_path("..", "..", "man", "compare_lr.Rd")
+  testthat::skip_if(!file.exists(rd), "man/ is not available (installed or built package)")
+  rd_txt <- paste(readLines(rd, warn = FALSE), collapse = "\n")
+  art <- lc_text()
+  expect_true(lc_defines_engine(rd_txt))
+  expect_true(lc_defines_engine(art))
+  # Planted defect: the definition removed from the article.
+  expect_false(lc_defines_engine(sub("not a fitter of the mediation model", "a fitter", art, fixed = TRUE)))
+})
