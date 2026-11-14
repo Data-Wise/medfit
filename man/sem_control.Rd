@@ -38,6 +38,10 @@ keeps its earlier meaning: every entry is an \code{nloptr} option, exactly as
 The resolved search protocol of a fit (estimator, the algorithm that ran,
 the number of starts and the start rule) is recorded in
 \code{fit@diagnostics$protocol}.
+
+A top-level \code{n_starts} that differs in value from \code{sem_control(n_starts = )},
+or \code{optimizer = "slsqp"} with a different \code{nloptr} \code{algorithm}, stops with
+an error of class \code{medfit_error_sem_control_conflict}.
 }
 \examples{
 ctl <- sem_control(nloptr = list(maxeval = 20000L))

@@ -36,6 +36,10 @@
 #' the number of starts and the start rule) is recorded in
 #' `fit@diagnostics$protocol`.
 #'
+#' A top-level `n_starts` that differs in value from `sem_control(n_starts = )`,
+#' or `optimizer = "slsqp"` with a different `nloptr` `algorithm`, stops with
+#' an error of class `medfit_error_sem_control_conflict`.
+#'
 #' @examples
 #' ctl <- sem_control(nloptr = list(maxeval = 20000L))
 #' ctl

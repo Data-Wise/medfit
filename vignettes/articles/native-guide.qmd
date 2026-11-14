@@ -292,7 +292,7 @@ back to listwise deletion or another engine, even on complete data.
 | `meanstructure` | `TRUE`; `NULL` and `FALSE` refuse |
 | `information`, `se_type` | `"observed"`, `"model"` |
 | Weights | No non-NULL vector, including unit weights or the deprecated alias |
-| `n_starts`, `control` | `NULL` or 3; empty control; no syntax-supplied starts |
+| `n_starts`, `control` | `NULL` or 3; empty control (the empty list, or `sem_control()` with `optimizer = "auto"` and no `nloptr` options); no syntax-supplied starts |
 | Topology | X, M, Y, with at most two covariates, or X, M1, M2, Y (two parallel mediators, with at most two covariates, or the saturated serial graph or the pure chain, with up to two covariates); free or exactly zero direct path; no `:=`, constraints, ties, bounds, other extra predictors, latent variables, factors or products |
 
 The start/control restrictions preserve the initial validated protocol, rather

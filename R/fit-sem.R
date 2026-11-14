@@ -46,8 +46,9 @@
 #' @param control A [sem_control()] object, or a plain list of options passed to
 #'   the optimizer (`nloptr`), the same as `sem_control(nloptr = <list>)`. An
 #'   `n_starts` given both here (in `sem_control()`) and as the argument must
-#'   agree. FIML requires the default `sem_control()` (or the empty list) under
-#'   its initial validated numerical protocol. The resolved protocol is recorded
+#'   agree. FIML requires `optimizer = "auto"`, an empty `nloptr` list (or the
+#'   empty plain list) and `n_starts` `NULL` or 3, under its initial validated
+#'   numerical protocol. The resolved protocol is recorded
 #'   in `fit@diagnostics$protocol`.
 #' @param weights Optional numeric vector of non-negative case weights,
 #'   one per row of `data` (`NULL`, the default, fits unweighted). The fit is
