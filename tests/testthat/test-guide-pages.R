@@ -161,7 +161,7 @@ engine_guide_unlinked <- function(texts) {
 
 engine_guide_sources <- function() {
   d <- root_path("vignettes", "articles")
-  skip_if_not(dir.exists(d) && file.exists(root_path("README.md")), "sources are not available")
+  testthat::skip_if_not(dir.exists(d) && file.exists(root_path("README.md")), "sources are not available")
   list(README = read_text(root_path("README.md")), models = read_text(file.path(d, "models.qmd")),
        refcard = read_text(file.path(d, "refcard.qmd")))
 }
