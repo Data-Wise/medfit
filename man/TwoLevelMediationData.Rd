@@ -10,7 +10,7 @@ TwoLevelMediationData(
   n_clusters, cluster_sizes, icc, between_identified, admissible, converged,
   cross_level_equal, fixed_paths, source, fixed_x, information, h1_information,
   se_type, estimator, missing, lavaan_version, call, between_parameterization,
-  data, source_package
+  data, source_package, source_version
 )
 }
 \arguments{
@@ -58,6 +58,11 @@ are not copied); kept for the contract shared with the other mediation classes, 
 
 \item{source_package}{Character scalar: \code{"lavaan"}; kept for the dependents contract shared with the other
 mediation classes (\code{tests/testthat/test-dependents-contract.R} pins it across classes).}
+
+\item{source_version}{Character: \code{character(0)} (the default) or one non-empty string, the version of the
+package that made the fit. The lavaan adapter stores the lavaan version here and in \code{lavaan_version};
+\code{lavaan_version} may be \code{character(0)} for a fit lavaan did not make. Both are checked on construction
+and on assignment.}
 }
 \value{
 A \code{TwoLevelMediationData} S7 object.
