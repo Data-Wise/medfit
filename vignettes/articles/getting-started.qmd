@@ -169,7 +169,7 @@ The engine is `"glm"` by default. Others:
 | `"glm"` | the default; continuous, binary or count variables | [Simple](model-simple.html), [glm families](model-glm-families.html) |
 | `"regmedint"` | you want the closed-form regression estimator | [regmedint](model-regmedint.html) |
 | `"lmer"` | the treatment is assigned to whole clusters | [Cluster-randomized trials](model-cluster.html) |
-| `"native"` | a latent mediator, constraints, or a model written as syntax | [Native engine](model-native.html) |
+| `"sem"` (alias `"native"`) | a latent mediator, constraints, or a model written as syntax | [The sem engine](model-native.html) |
 
 ## Where next
 
@@ -185,7 +185,7 @@ Pick the row that matches your data.
 | Several mediators with products | [Joint mediation](model-joint.html) |
 | A treatment given to whole clusters | [Cluster-randomized trials](model-cluster.html) |
 | A `lavaan` fit | [lavaan models](model-lavaan.html) |
-| Model syntax, a latent mediator, constraints, intercepts or a product term | [Native engine](model-native.html) |
+| Model syntax, a latent mediator, constraints, intercepts or a product term | [The sem engine](model-native.html) |
 | Something else, or not sure | [Models](models.html), the full list |
 | An error or warning | [Troubleshooting](guide-troubleshooting.html) |
 | Which interval to report | [Which interval should I use?](guide-intervals.html) |

@@ -1,5 +1,5 @@
 ---
-title: "Native engine, step by step"
+title: "The sem engine, step by step"
 format:
   html:
     code-tools: false
@@ -14,7 +14,7 @@ execute:
 
 Ten steps from a model written as syntax to a tested, constrained and extracted
 mediation result. It sits between [the five-minute quickstart](native-quickstart.html)
-and [the native engine guide](native-guide.html).
+and [the sem engine guide](native-guide.html).
 
 | | |
 |---|---|
@@ -185,9 +185,9 @@ values, products and the four-way decomposition.
 
 ## Where next
 
-- [The native engine guide](native-guide.html): syntax, inference, constraints,
+- [The sem engine guide](native-guide.html): syntax, inference, constraints,
   diagnostics and limits in one place.
 - [Cookbook recipes 11 to 21](cookbook.html): a latent mediator, a nonlinear
   constraint, comparing models, defined parameters, bounds, checks, fixed covariates, intercepts, the four-way decomposition and a categorical covariate.
-- [lavaan and the native engine](lavaan-comparison.html): what the native engine
+- [lavaan and the sem engine](lavaan-comparison.html): what the sem engine
   does and does not do compared with lavaan.

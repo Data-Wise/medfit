@@ -782,7 +782,7 @@ returning an object whose numbers would disagree with `nie()`. `weights` and
 
 ## Extracting from a Native SEM Fit
 
-`fit_sem()` fits model syntax with the native engine and returns a
+`fit_sem()` fits model syntax with the sem engine and returns a
 `SEMFit`. `extract_mediation()` accepts it with the same arguments as the lavaan
 method and returns the same classes:
 

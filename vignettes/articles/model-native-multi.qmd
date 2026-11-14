@@ -1,5 +1,5 @@
 ---
-title: "Native engine: several mediators and weights"
+title: "The sem engine: several mediators and weights"
 format:
   html:
     code-tools: false
@@ -12,9 +12,9 @@ execute:
   echo: true
 ---
 
-Serial and parallel mediators, and sampling weights, with the native engine. Part
+Serial and parallel mediators, and sampling weights, with the sem engine. Part
 of the [Models](models.html) collection; the fourth of five
-[native engine](model-native.html) pages.
+[sem engine](model-native.html) pages.
 
 | | |
 |---|---|
@@ -24,15 +24,20 @@ of the [Models](models.html) collection; the fourth of five
 | **Weights** | `fit_sem(weights = , se_type = "sandwich")` |
 
 ::: {.callout-warning}
-## Not `fit_mediation(engine = "native")`
-`fit_mediation(engine = "native")` takes **one** mediator and stops with "Must have
+## Not `fit_mediation(engine = "sem")`
+`fit_mediation(engine = "sem")` takes **one** mediator and stops with "Must have
 length 1" for more. For several, fit with `fit_sem()` and extract.
 :::
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
+```
+
+```{r}
+#| label: covariates
 covs <- "covariate1 + covariate2"
 ```
 
@@ -99,7 +104,7 @@ errors are not valid under inverse-probability weighting.
 
 ## Limits
 
-- **`fit_mediation(engine = "native")` takes one mediator** (see the warning above).
+- **`fit_mediation(engine = "sem")` takes one mediator** (see the warning above).
 - **Four-way decomposition** needs one mediator and a treatment-by-mediator product (`x:m`) in the
   outcome equation, and a model with a product cannot have a residual covariance between the
   mediators (parallel mediators with `m1 ~~ m2` and a product are not supported; see
@@ -109,6 +114,10 @@ errors are not valid under inverse-probability weighting.
   need not match.
 - **The sandwich treats observations as independent**, so it does not handle
   survey clusters, strata or replicate weights.
+
+::: {.next-action}
+**Next:** Add a categorical covariate: [The sem engine: categorical covariates](model-native-factors.html)
+:::
 
 ## Related
 

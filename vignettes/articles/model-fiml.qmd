@@ -24,7 +24,7 @@ established, and every `source_fit` interval route is refused (`medfit_error_fim
 |---|---|
 | **Structure** | X to M to Y, two parallel mediators, or two serial mediators (the saturated graph or the pure chain), each with no, one or two covariates |
 | **Class returned** | `FIMLMediationData` (simple), `FIMLParallelMediationData` (parallel) and `FIMLSerialMediationData` (serial) |
-| **Route** | `fit_sem(model, data, missing = "fiml", fixed_x = FALSE)` then `extract_mediation()`, or `fit_mediation(engine = "native", engine_args = list(missing = "fiml", ...))` |
+| **Route** | `fit_sem(model, data, missing = "fiml", fixed_x = FALSE)` then `extract_mediation()`, or `fit_mediation(engine = "sem", engine_args = list(missing = "fiml", ...))` |
 | **Standard errors** | observed information, model-based; delta-method effect intervals |
 | **Availability** | simple model from 0.16.0; covariates, parallel and serial forms from 0.17.0 |
 
@@ -116,11 +116,11 @@ with an independent likelihood check and planted-defect tests (the `fiml` and
 intervals under missing data.
 
 ::: {.next-action}
-**Next:** Read the limits in full: [The native engine guide: bounded FIML](native-guide.html#bounded-fiml)
+**Next:** Read the limits in full: [The sem engine guide: bounded FIML](native-guide.html#bounded-fiml)
 :::
 
 ## Related
 
-[Native: paths and defined parameters](model-native.html) |
+[The sem engine: paths and defined parameters](model-native.html) |
 [Parallel mediation](model-parallel.html) | [Serial mediation](model-serial.html) |
 [Choosing an interval](guide-intervals.html) | [Methods and Formulas](methods.html#fiml-source-intervals)

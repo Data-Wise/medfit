@@ -5,11 +5,11 @@
 # the nloptr algorithm the listwise solver runs when the options do not name one (`.sem_optimize()`)
 .sem_nloptr_algorithm <- "NLOPT_LD_SLSQP"
 
-#' Optimizer settings for the native SEM engine
+#' Optimizer settings for the sem engine
 #'
 #' @description
 #' Builds the `control` argument of [fit_sem()] and [mbco_sem()] (and of
-#' [fit_mediation()] with `engine = "native"`, through
+#' [fit_mediation()] with `engine = "sem"`, through
 #' `engine_args = list(control = )`). A plain list is still accepted there and
 #' keeps its earlier meaning: every entry is an `nloptr` option, exactly as
 #' `sem_control(nloptr = <list>)`.

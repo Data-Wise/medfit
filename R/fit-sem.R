@@ -7,8 +7,8 @@
 #' Fit a Structural Equation Model by Maximum Likelihood
 #'
 #' @description
-#' Fits a model written in lavaan-style syntax to raw data with medfit's native
-#' maximum-likelihood engine, and returns a [SEMFit] object. The engine handles
+#' Fits a model written in lavaan-style syntax to raw data with the sem engine,
+#' medfit's own maximum-likelihood SEM fitter, and returns a [SEMFit] object. The engine handles
 #' observed and latent variables, user labels, fixed values, starts and bounds,
 #' equality and inequality constraints (`==`, `<`, `>`, linear or nonlinear), and defined
 #' parameters (`:=`) with delta-method standard errors.
@@ -201,7 +201,7 @@
 #' no weights, empty `control`, and `n_starts = NULL` or `3`. These numerical-control
 #' restrictions reproduce the initial validated protocol. Missing values never
 #' select FIML automatically, and a failed fit never falls back to listwise deletion.
-#' Native [fit_mediation()] forwards these settings through `engine_args`; its
+#' [fit_mediation()] with `engine = "sem"` forwards these settings through `engine_args`; its
 #' `se_type = "model"` remains a top-level argument.
 #'
 #' `nobs()` counts rows with any observed model variable; `n_dropped` counts only
@@ -238,7 +238,7 @@
 #' can occur earlier. A dedicated `fiml-1` ledger binds likelihood, rows, settings
 #' and attempts; the version-1 ledger below continues to describe listwise fits.
 #' See the Methods and Formulas article, Bounded FIML, for the likelihood and
-#' the native engine guide for the supported workflow. Bounded FIML was introduced
+#' the sem engine guide for the supported workflow. Bounded FIML was introduced
 #' in 0.16.0; released 0.15.0 does not provide this option.
 #'
 #' @section Nonzero-product search coverage:

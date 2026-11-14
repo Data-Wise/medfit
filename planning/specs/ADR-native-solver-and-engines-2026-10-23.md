@@ -19,6 +19,9 @@ decisions:
 
 # ADR: the solver behind the built-in SEM engine, and which engine to use when
 
+> Vocabulary: the built-in engine is now called the sem engine (`engine = "sem"`, alias `"native"`); see
+> `ADR-engine-vocabulary-and-controls-2026-11-12.md`.
+
 **Date:** 2026-10-23. **Status by part:**
 
 | Part | Status |

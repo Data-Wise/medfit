@@ -5,13 +5,13 @@
 #' TwoLevelMediationData Class
 #'
 #' **Experimental.** This class, [twolevel_statistic()] and the `level` argument of the effect generics may
-#' change without the usual deprecation period (a native two-level fitter, a later milestone, could change the
-#' object).
+#' change without the usual deprecation period (a two-level fitter in the sem engine, a later milestone, could change
+#' the object).
 #'
 #' S7 class for two-level mediation in which treatment, mediator and outcome are all measured on level-1
 #' units nested in clusters (1-1-1), with the paths estimated separately at the within and the between
 #' level (latent cluster means, fixed slopes). Built by [extract_mediation()] from a `lavaan` two-level
-#' fit; the same class is the target of a native fitter later (`source` says which).
+#' fit; the same class is the target of a sem engine fitter later (`source` says which).
 #'
 #' Per level the indirect effect is \eqn{NIE_l = a_l b_l}{NIE_l = a_l * b_l}, the direct effect is
 #' \eqn{c'_l}{c'_l}, and the contrast \eqn{NIE_w - NIE_b}{NIE_w - NIE_b} is descriptive, not a test. When the

@@ -9,7 +9,7 @@
 #' Generic function to extract mediation structure (a, b, c' paths and
 #' variance-covariance matrices) from fitted models. This function provides
 #' a unified interface for extracting mediation information from various
-#' model types (lm, glm, lavaan, lmer, and a native [SEMFit]).
+#' model types (lm, glm, lavaan, lmer, and a [SEMFit] from the sem engine).
 #'
 #' @param object Fitted model object (lm, glm, lavaan, lmerMod, or a [SEMFit])
 #' @param ... Additional arguments passed to methods. Common arguments include:
@@ -38,8 +38,8 @@
 #'   individuals is an error (best effort: it compares the data row names the
 #'   fits kept, so it cannot see a mismatch between frames whose row names were
 #'   both reset)
-#' - **SEMFit**: Extract from a model fitted by [fit_sem()] (the native
-#'   maximum-likelihood engine), with the same arguments and structures as
+#' - **SEMFit**: Extract from a model fitted by [fit_sem()] (the sem engine,
+#'   medfit's own maximum-likelihood SEM fitter), with the same arguments and structures as
 #'   the lavaan method. A treatment-by-mediator product written `x:m` (or `m:x`)
 #'   in the outcome equation gives the four-way decomposition, stored under the
 #'   canonical name `m:x`; without it `decomposition = "four_way"` is refused

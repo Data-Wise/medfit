@@ -52,8 +52,8 @@ fit it returns and \code{glance()} does not report it}
 A SEMFit S7 object
 }
 \description{
-S7 class holding a structural equation model fitted by the native
-maximum-likelihood engine (see \code{\link[=fit_sem]{fit_sem()}}): estimates, their covariance,
+S7 class holding a structural equation model fitted by the sem engine,
+medfit's own maximum-likelihood SEM fitter (see \code{\link[=fit_sem]{fit_sem()}}): estimates, their covariance,
 the parameter table, defined parameters (\verb{:=}) with delta-method standard
 errors, and the diagnostics of the optimizer.
 }
