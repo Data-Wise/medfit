@@ -122,3 +122,22 @@ test_that("summary()$provenance keeps every entry when lavaan_version is empty",
   expect_identical(prov[["source_version"]], NA_character_)
   expect_identical(names(summary(tl_td())$provenance), keys)
 })
+
+# --- The summary Fit line never prints a literal NA (QA loop 1) ---
+# When the reader returns NA the source is printed alone, as print() does. Planted defect: the unguarded paste.
+
+test_that("the summary Fit line prints the source alone when the version is unknown", {
+  fit_line <- function(td) {
+    out <- utils::capture.output(print(summary(td)))
+    out[startsWith(out, "Fit:")]
+  }
+  nat <- tl_td(source = "native", source_package = "medfit")
+  expect_identical(summary(nat)$provenance[["source_version"]], NA_character_)
+  expect_match(fit_line(nat), "^Fit: +native \\(estimator ML")
+  empty <- tl_td(lavaan_version = "")
+  expect_match(fit_line(empty), "^Fit: +lavaan \\(estimator ML")
+  for (td in list(nat, empty)) {
+    expect_false(grepl("NA", paste(utils::capture.output(print(summary(td))), collapse = "\n"), fixed = TRUE))
+  }
+  expect_match(fit_line(tl_td()), "^Fit: +lavaan 0\\.7\\.3 \\(estimator ML")
+})

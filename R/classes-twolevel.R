@@ -432,9 +432,12 @@ print_summary_twolevel_mediation_data <- function(x, ...) {
   cat(sprintf("\nSample Size: %d in %d clusters (sizes %d to %d)\n", x$n_obs, x$n_clusters,
               x$cluster_sizes[1], x$cluster_sizes[2]))
   cat("ICC:        ", paste(sprintf("%s %.3f", names(x$icc), x$icc), collapse = ", "), "\n")
+  # An unknown version (NA) prints the source alone, as print() does; the list keeps the NA
+  version <- x$provenance[["source_version"]]
+  fit_label <- if (is.na(version)) x$provenance[["source"]] else paste(x$provenance[["source"]], version)
   cat(sprintf(
-    "Fit:         %s %s (estimator %s, fixed_x %s, information %s, h1_information %s, se %s, missing %s)\n",
-    x$provenance[["source"]], x$provenance[["source_version"]], x$provenance[["estimator"]],
+    "Fit:         %s (estimator %s, fixed_x %s, information %s, h1_information %s, se %s, missing %s)\n",
+    fit_label, x$provenance[["estimator"]],
     x$provenance[["fixed_x"]], x$provenance[["information"]], x$provenance[["h1_information"]],
     x$provenance[["se"]], x$provenance[["missing"]]
   ))
