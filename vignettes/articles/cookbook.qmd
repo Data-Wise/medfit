@@ -317,6 +317,9 @@ indirect effect as the minimum of two likelihood-ratio tests, refitting with
 mbco_sem(fit_sem(syntax, ldat), "a", "b")
 ```
 
+Optimizer settings for either call go in `control = sem_control()` (for example
+`sem_control(nloptr = list(maxeval = 20000L))`); a plain list of `nloptr` options still works.
+
 ## 12. A nonlinear constraint or a longer chain, native engine
 
 *When:* you want to fix the direct effect at the indirect effect (`cp == a*b`), or

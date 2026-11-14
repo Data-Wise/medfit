@@ -53,8 +53,13 @@ branches independently, with \code{n_starts} starts per nonempty branch; aggrega
 diagnostics report the actual attempts, not the number of branches. For FIML,
 only \code{NULL} or \code{3} is supported: three starts per solver, with refinements counted separately.}
 
-\item{control}{List: options passed to the optimizer (\code{nloptr}). FIML requires
-the empty list under its initial validated numerical protocol.}
+\item{control}{A \code{\link[=sem_control]{sem_control()}} object, or a plain list of options passed to
+the optimizer (\code{nloptr}), the same as \verb{sem_control(nloptr = <list>)}. An
+\code{n_starts} given both here (in \code{sem_control()}) and as the argument must
+agree. FIML requires \code{optimizer = "auto"}, an empty \code{nloptr} list (or the
+empty plain list) and \code{n_starts} \code{NULL} or 3, under its initial validated
+numerical protocol. The resolved protocol is recorded
+in \code{fit@diagnostics$protocol}.}
 
 \item{weights}{Optional numeric vector of non-negative case weights,
 one per row of \code{data} (\code{NULL}, the default, fits unweighted). The fit is

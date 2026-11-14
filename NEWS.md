@@ -4,6 +4,25 @@
   still works unchanged and gives no warning; the two spellings select the same engine and return identical results.
   Existing code needs no change (ADR-engine-vocabulary-and-controls V-1, V-2).
 
+## Native optimizer settings: `sem_control()`
+
+* New `sem_control(optimizer = "auto", n_starts = NULL, nloptr = list())` collects the native engine's optimizer
+  settings in one documented object. `fit_sem(control = )` and `mbco_sem(control = )` accept it, and `fit_mediation()`
+  passes it through `engine_args = list(control = )` (no new argument). A plain list still works and keeps its 0.17.0
+  meaning: every entry is an `nloptr` option, the same as `sem_control(nloptr = <list>)`. Results are unchanged; a fit
+  made with the plain list and one made with the equivalent object are identical.
+* Conflicting settings stop with class `medfit_error_sem_control_conflict`: a top-level `n_starts` that differs in
+  value from `sem_control(n_starts = )`, or `optimizer = "slsqp"` with a different `nloptr` `algorithm`. Equal values
+  in both places are accepted.
+* FIML (`fit_sem(missing = "fiml")`) accepts `sem_control()` with `optimizer = "auto"`, an empty `nloptr` list and
+  `n_starts` `NULL` or 3; anything else stops with `medfit_sem_fiml_error`, as a nonempty plain list already did.
+* `fit@diagnostics$protocol` records the resolved search protocol of a native fit: the estimator, the algorithm that
+  ran, the number of starts and the start rule.
+* Behavior note for `mbco_sem()`: any `sem_control()` object passed as `control`, including `sem_control(n_starts = 7)`,
+  replaces the `nloptr` options the fit was made with in the two null refits, as an explicit list already did. A
+  top-level `n_starts = 7` keeps them. This matters only for a fit made with non-default `nloptr` options; to keep them,
+  give `n_starts` at the top level or repeat them in `sem_control(nloptr = )`.
+
 # medfit 0.17.0
 
 ## Release summary

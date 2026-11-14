@@ -325,6 +325,13 @@ nt_cases <- function() {
          function() fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1\na == 1\na == 2", d)),
     list("literal zero/nonzero contradiction", "error",
          function() fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1\na == 0\na == 1", d)),
+    list("disagree; give n_starts in one place", "error",
+         function() {
+           fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1", d, n_starts = 3L,
+                   control = sem_control(n_starts = 5L))
+         }),
+    list("conflicts with nloptr algorithm", "error",
+         function() sem_control(optimizer = "slsqp", nloptr = list(algorithm = "NLOPT_LD_MMA"))),
     list("the starts disagree", "warning",
          function() fit_sem("M ~ a*X\nY ~ b*M + cp*X\na*b > 0.4", nt_nonlinear_data())),
     list("is not nested in", "error", function() {
