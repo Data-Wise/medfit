@@ -82,13 +82,11 @@ caveat_problems <- function(readme, fiml) {
   ))
 }
 
-# RD-9: layout rules. Next block and hidden setup on each model page; the native pages are listed until the
-# sem-vocabulary prose slice lands (then delete the list); navbar at most 8 items; contrast of the navbar CSS
-native_pending <- c("model-native", "model-native-constraints", "model-native-factors", "model-native-latent",
-                    "model-native-multi")
+# RD-9: layout rules. Next block and hidden setup on each model page (the five sem engine pages included since
+# 0.18.0); navbar at most 8 items; contrast of the navbar CSS
 page_problems <- function(pages) {
   bad <- character()
-  for (n in setdiff(names(pages), native_pending)) {
+  for (n in names(pages)) {
     p <- pages[[n]]
     if (!any(grepl("{.next-action}", p, fixed = TRUE))) bad <- c(bad, paste(n, "has no Next block"))
     i <- grep("#| label: setup", p, fixed = TRUE)
@@ -215,7 +213,7 @@ test_that("planted defects: layout gates catch a missing Next block, shown setup
   expect_identical(page_problems(list(`model-x` = good)), character())
   expect_match(page_problems(list(`model-x` = good[1:3])), "no Next block")
   expect_match(page_problems(list(`model-x` = good[c(1, 3, 4)])), "setup chunk")
-  expect_identical(page_problems(list(`model-native` = "no template yet")), character())  # pending list
+  expect_match(page_problems(list(`model-native` = "no template yet")), "no Next block")  # no pending list
   expect_match(navbar_problems("left:  [a, b, c, d, e, f, g, h, i]"), "9 items")
   expect_identical(navbar_problems("left:  [a, b, c, d, e, f, g, h]"), character())
   expect_match(contrast_problems("a { color: #909294; }"), "below 4.5:1")

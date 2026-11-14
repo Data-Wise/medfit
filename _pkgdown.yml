@@ -88,15 +88,15 @@ navbar:
         href: articles/model-twolevel.html
       - text: "lavaan fits"
         href: articles/model-lavaan.html
-      - text: "Native: paths and defined parameters"
+      - text: "The sem engine: paths and defined parameters"
         href: articles/model-native.html
-      - text: "Native: a latent mediator"
+      - text: "The sem engine: a latent mediator"
         href: articles/model-native-latent.html
-      - text: "Native: constraints and MBCO"
+      - text: "The sem engine: constraints and MBCO"
         href: articles/model-native-constraints.html
-      - text: "Native: several mediators and weights"
+      - text: "The sem engine: several mediators and weights"
         href: articles/model-native-multi.html
-      - text: "Native: categorical covariates"
+      - text: "The sem engine: categorical covariates"
         href: articles/model-native-factors.html
       - text: "Missing data: bounded FIML"
         href: articles/model-fiml.html
@@ -107,6 +107,8 @@ navbar:
         href: articles/guide-changes.html
       - text: "Troubleshooting"
         href: articles/guide-troubleshooting.html
+      - text: "Which engine should I use?"
+        href: articles/guide-engines.html
       - text: "Which interval should I use?"
         href: articles/guide-intervals.html
       - text: "Glossary and symbols"
@@ -117,13 +119,13 @@ navbar:
         href: articles/guide-architecture.html
       - text: "Native defaults in 0.15.0"
         href: articles/native-defaults-0-15.html
-      - text: "Native engine in five minutes"
+      - text: "The sem engine in five minutes"
         href: articles/native-quickstart.html
-      - text: "Native engine, step by step"
+      - text: "The sem engine, step by step"
         href: articles/native-tutorial.html
-      - text: "The native engine guide"
+      - text: "The sem engine guide"
         href: articles/native-guide.html
-      - text: "lavaan and the native engine"
+      - text: "lavaan and the sem engine"
         href: articles/lavaan-comparison.html
       - text: "probmed and medfit"
         href: articles/probmed-comparison.html
@@ -316,7 +318,7 @@ articles:
       - '`articles/model-parallel`'
       - '`articles/model-joint`'
   - title: "Models: clusters and structural equation models"
-    desc: "Treatment assigned to clusters, lavaan fits, and the native engine"
+    desc: "Treatment assigned to clusters, lavaan fits, and the sem engine"
     contents:
       - '`articles/model-cluster`'
       - '`articles/model-twolevel`'
@@ -328,10 +330,11 @@ articles:
       - '`articles/model-native-factors`'
       - '`articles/model-fiml`'
   - title: "Guides"
-    desc: "Upgrading, errors, intervals and terms"
+    desc: "Upgrading, errors, engines, intervals and terms"
     contents:
       - '`articles/guide-changes`'
       - '`articles/guide-troubleshooting`'
+      - '`articles/guide-engines`'
       - '`articles/guide-intervals`'
       - '`articles/guide-glossary`'
       - '`articles/guide-twolevel-tutorial`'
@@ -340,7 +343,7 @@ articles:
       - '`articles/lavaan-comparison`'
       - '`articles/probmed-comparison`'
       - '`articles/rmediation-comparison`'
-  - title: "Native engine"
+  - title: "The sem engine"
     desc: "Fit models from syntax: quickstart, tutorial, guide and defaults"
     contents:
       - '`articles/native-defaults-0-15`'

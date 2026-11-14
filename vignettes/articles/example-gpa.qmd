@@ -21,7 +21,7 @@ Nothing here is a finding about real students.
 | | |
 |---|---|
 | **You need** | medfit 0.11.0 or later; lavaan is used for one cross-check and the page skips that row when it is absent |
-| **You get** | a fitted `MediationData`, delta-method and bootstrap intervals, a native-engine fit, and a table of pass/fail checks |
+| **You get** | a fitted `MediationData`, delta-method and bootstrap intervals, a sem engine fit, and a table of pass/fail checks |
 | **Time** | about 10 minutes to read, under a minute to run |
 
 ```{r}
@@ -208,12 +208,12 @@ chk("NIE se equals Sobel from lm", se[["nie"]], sobel, 1e-8 * sobel)
 
 The ratio is 1 to printed precision: for a Gaussian `glm` fit medfit takes the least-squares
 standard errors from the two regressions, so the delta-method value is the Sobel value, not an
-approximation of it. (The native engine below divides by $n$ rather than $n-p$ and differs by a
+approximation of it. (The sem engine below divides by $n$ rather than $n-p$ and differs by a
 fraction of a percent.)
 
-## 6. Check 3: the native engine and lavaan
+## 6. Check 3: the sem engine and lavaan {#check-3-the-native-engine-and-lavaan}
 
-The native maximum-likelihood engine fits the same model from syntax. Defined parameters (`:=`)
+The sem engine fits the same model from syntax. Defined parameters (`:=`)
 carry the indirect and total effects with their own delta-method standard errors.
 
 ```{r}
@@ -484,5 +484,5 @@ across platforms up to the last printed digits.
 
 - [Model Extraction](extraction.html): the same fit from your own `lm` objects.
 - [Bootstrap](bootstrap.html) and [Which interval should I use?](guide-intervals.html): choosing the interval.
-- [Native engine, step by step](native-tutorial.html): model syntax, constraints and `mbco_sem()`.
+- [The sem engine, step by step](native-tutorial.html): model syntax, constraints and `mbco_sem()`.
 - [Cookbook](cookbook.html): one-screen recipes for the variations (binary outcome, weights, serial and parallel mediators).

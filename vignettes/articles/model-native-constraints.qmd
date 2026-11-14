@@ -1,5 +1,5 @@
 ---
-title: "Native engine: constraints and the MBCO test"
+title: "The sem engine: constraints and the MBCO test"
 format:
   html:
     code-tools: false
@@ -14,7 +14,7 @@ execute:
 
 Fix, bound or equate parameters, and test the indirect effect with one call.
 Part of the [Models](models.html) collection; the third of five
-[native engine](model-native.html) pages.
+[sem engine](model-native.html) pages.
 
 | | |
 |---|---|
@@ -25,8 +25,13 @@ Part of the [Models](models.html) collection; the third of five
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
+```
+
+```{r}
+#| label: base-model
 base <- "
   mediator1 ~ a * treatment + covariate1 + covariate2
   outcome ~ b * mediator1 + cp * treatment + covariate1 + covariate2
@@ -143,6 +148,10 @@ anova(tied, free)
   model.
 - **Equal labels are one parameter.** Giving two paths the same label equates them
   without a constraint line.
+
+::: {.next-action}
+**Next:** Fit several mediators or add weights: [The sem engine: several mediators and weights](model-native-multi.html)
+:::
 
 ## Related
 

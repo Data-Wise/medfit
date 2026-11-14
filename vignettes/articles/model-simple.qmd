@@ -78,7 +78,7 @@ paths(x)
 ```
 
 The same object comes from a lavaan fit (`extract_mediation(lavaan_fit, ...)`)
-or from the native engine (`extract_mediation(fit_sem(...), ...)`); see
+or from the sem engine (`extract_mediation(fit_sem(...), ...)`); see
 [Cookbook recipe 10](cookbook.html#i-use-lavaan) and
 [recipe 11](cookbook.html#a-latent-mediator-native-engine).
 

@@ -160,7 +160,7 @@ xi <- extract_mediation(fit_m, model_y = fit_yi, treatment = "treatment",
 decompose(xi)
 ```
 
-The native engine gives the same parts from model syntax (0.10.0 or later): write the
+The sem engine gives the same parts from model syntax (0.10.0 or later): write the
 product as `treatment:mediator1`. The fit warns once that the global model test is
 not available for a product of a regression target.
 
@@ -304,7 +304,7 @@ syntax <- "
   Y ~ b * eta + cp * X
 "
 xs <- fit_mediation(model = syntax, data = ldat, treatment = "X",
-                    mediator = "eta", engine = "native")
+                    mediator = "eta", engine = "sem")
 tidy(xs, type = "effects", conf_int = TRUE)
 ```
 
@@ -536,7 +536,7 @@ example `fixed_x = "treatment"`) to fix a subset.
 Since 0.15.0 the default is to fix the exogenous observed variables; pass `fixed_x = FALSE` to
 keep the free exogenous block. See [the 0.15.0 defaults](native-defaults-0-15.html).
 
-More: [Methods and Formulas](methods.html), [the native engine guide](native-guide.html).
+More: [Methods and Formulas](methods.html), [the sem engine guide](native-guide.html).
 
 ## 19. Observed intercepts and means
 
@@ -580,7 +580,7 @@ Pass `meanstructure = NULL` to fit a mean structure only when the model writes `
 0.14.x rule), or `meanstructure = FALSE` for covariances only. See
 [the 0.15.0 defaults](native-defaults-0-15.html).
 
-More: [Native engine, intercepts](model-native.html#intercepts).
+More: [The sem engine, intercepts](model-native.html#intercepts).
 
 ## 20. Four-way decomposition from a native fit
 
@@ -641,7 +641,7 @@ boot20 <- bootstrap_mediation(int_ref_stat, method = "nonparametric",
 c(estimate = boot20@estimate, lower = boot20@ci_lower, upper = boot20@ci_upper)
 ```
 
-More: [Native engine, product term](model-native.html).
+More: [The sem engine, product term](model-native.html).
 
 ## 21. A categorical covariate in a native fit
 
@@ -693,7 +693,7 @@ with a message that says why; `group:mediator1` expands to one product per dummy
 raw data re-expands the factor in each resample, so a level missing from a character column's resample
 changes the reference level.
 
-More: [Native engine, paths and defined parameters](model-native.html), `?"medfit-syntax"`
+More: [The sem engine, paths and defined parameters](model-native.html), `?"medfit-syntax"`
 (section Factor covariates).
 
 ## 22. Missing data: bounded FIML

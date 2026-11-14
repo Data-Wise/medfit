@@ -30,8 +30,8 @@ Examples on this site use medfit 0.13.0. If `mediation_demo` or
 | `Treatment variable 'treatment' must be in formula_m` | the treatment is missing from the mediator formula | add it: `mediator1 ~ treatment + ...` |
 | `Mediator variable 'mediator1' must be in formula_y` | the mediator is missing from the outcome formula | add it: `outcome ~ treatment + mediator1 + ...` |
 | `must be in data` | `med()` was given a variable name that is not a column | check the spelling; the message lists the valid names |
-| `Must be element of set {'glm','regmedint','lmer','sem','native'}` | `engine` is misspelled | use one of the four engines: `"glm"`, `"regmedint"`, `"lmer"` or `"sem"` (the native SEM engine; `"native"` is its legacy spelling) |
-| `is only used with engine = "native"` | `model =` was given to another engine | use `engine = "native"`, or pass formulas instead of `model` |
+| `Must be element of set {'glm','regmedint','lmer','sem','native'}` | `engine` is misspelled | use one of the four engines: `"glm"`, `"regmedint"`, `"lmer"` or `"sem"` (the sem engine; `"native"` is its legacy spelling) |
+| `is only used with engine = "native"` | `model =` was given to another engine | use `engine = "sem"`, or pass formulas instead of `model` |
 | `engine = "lmer" needs` | the `lmer` engine has no `cluster` | add `cluster = "school"` (the cluster variable's name) |
 | `is only used with engine = "lmer"` | `cluster =` was given to another engine | add `engine = "lmer"`, or drop `cluster` |
 | `contains the random-effect term` | a random-effect term (written with a vertical bar) is in a formula for the `lmer` engine | write fixed effects only; the engine adds the random intercept. For a slope use `engine_args = list(random_y = ~ M)` |
@@ -104,7 +104,7 @@ one kind.
 | `The lavaan fit has more than two levels` | `medfit_error_lavaan_multilevel` | a three-level fit | fit a one- or two-level model |
 | `The lavaan fit has more than one group` | `medfit_error_lavaan_multigroup` | a multigroup fit | fit each group as its own model |
 
-## Native engine
+## The sem engine {#native-engine}
 
 | You see | Cause | Fix |
 |---|---|---|
@@ -114,7 +114,7 @@ one kind.
 | `` `fixed_x` fixes the moments of the selected variables, but the model has a statement on them `` | the model writes `x ~~ x` or `x ~ 1` for a selected variable (lavaan would keep it free) | remove the statement, or leave that variable out of `fixed_x`. An unset `fixed_x` does this for you and sends a message instead of an error |
 | `have different `fixed_x` sets` | `AIC()`, `BIC()`, `anova()` or `mbco_sem()` got fits whose fixed sets differ, so their likelihoods condition on different variables | refit with the same `fixed_x`, or compare only fits that share it |
 | `variables in the model are not columns of` | the syntax names a variable that is not in `data` | check the names against `names(data)` |
-| `Must have length 1` | `fit_mediation(engine = "native")` was given several mediators | fit with `fit_sem()` and call `extract_mediation()`; see [several mediators](model-native-multi.html) |
+| `Must have length 1` | `fit_mediation(engine = "sem")` was given several mediators | fit with `fit_sem()` and call `extract_mediation()`; see [several mediators](model-native-multi.html) |
 | `latent means are planned for a later release` | a latent variable has a free or nonzero mean (`eta ~ 1`, `eta ~ 2*1`) | leave the latent mean at its default of 0 (`eta ~ 0*1` is accepted) |
 | `no start converged` | no start satisfied the gates; the tail of the message says why, such as `is violated by` when two constraints contradict each other | read the tail; remove or correct the contradicting constraint, or check the scale of the data |
 | `literal zero/nonzero contradiction` | the model holds an explicit `a == 0` and an explicit nonzero literal equality on the same label (`a == 1`, even `a == 1e-9`); the check is exact, with no tolerance, and the error also carries `$ledger` | remove or correct one of the two equalities |

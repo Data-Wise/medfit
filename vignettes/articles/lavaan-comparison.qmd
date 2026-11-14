@@ -1,5 +1,5 @@
 ---
-title: "lavaan and the native engine"
+title: "lavaan and the sem engine"
 format:
   html:
     code-tools: false
@@ -12,7 +12,7 @@ execute:
   echo: true
 ---
 
-medfit's native engine fits covariance-structure models, with observed intercepts and means, from
+medfit's sem engine fits covariance-structure models, with observed intercepts and means, from
 lavaan-style syntax.
 It is not a replacement for lavaan: it covers the path models behind mediation
 analysis and stops there. This page runs both on the same data, then lists what

@@ -11,7 +11,7 @@ execute:
   echo: false
 ---
 
-This page records how the native engine's optimizer is tested and where its
+This page records how the sem engine's optimizer is tested and where its
 technical decisions are written down. The two tables below are generated from
 the repository files at site build (`tests/sim/gates.csv`,
 `tests/sim/structures.csv` and the front matter of `planning/specs/ADR-*.md`),
@@ -189,7 +189,7 @@ be checked before reusing either kind of evidence.
 
 ## The 0.15.0 defaults flip
 
-0.15.0 changes two defaults of the native engine: an unset `fixed_x` fixes the exogenous observed variables and an unset
+0.15.0 changes two defaults of the sem engine: an unset `fixed_x` fixes the exogenous observed variables and an unset
 `meanstructure` is `TRUE`. The release is gated on evidence that the change moves only what it should. It moves the
 conditional log likelihood, the parameter count behind AIC and BIC, the names in `coef()`, and the retry seed; structural
 estimates and their standard errors stay where they were.

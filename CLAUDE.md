@@ -40,8 +40,8 @@ covr::package_coverage()          # Target: >90%
 
 **medfit** is the foundation package for the mediationverse ecosystem, providing:
 - **S7 classes**: `MediationData`, `InteractionMediationData`, `SerialMediationData`, `ParallelMediationData`, `JointMediationData`, `ClusterMediationData`, `TwoLevelMediationData`, `BootstrapResult`, `SEMFit` (native SEM fit)
-- **Extraction**: Generic `extract_mediation()` with methods for lm/glm/lavaan/lmer and `SEMFit` (native)
-- **Fitting**: Formula-based `fit_mediation()` with the `glm`, `regmedint` and `lmer` (cluster-level treatment, `cluster =`) engines, case `weights`, and `se_type = "sandwich"` (HC3); `fit_sem()` and `fit_mediation(engine = "native", model = )` fit medfit model syntax with the native ML engine (`SEMFit`; `fixed_x = TRUE` or names fixes exogenous moments at the sample values, as lavaan's `fixed.x = TRUE`: same structural results, conditional logLik)
+- **Extraction**: Generic `extract_mediation()` with methods for lm/glm/lavaan/lmer and `SEMFit` (sem engine)
+- **Fitting**: Formula-based `fit_mediation()` with the `glm`, `regmedint` and `lmer` (cluster-level treatment, `cluster =`) engines, case `weights`, and `se_type = "sandwich"` (HC3); `fit_sem()` and `fit_mediation(engine = "sem", model = )` fit medfit model syntax with the sem engine, medfit's own ML SEM fitter (`"native"` is the silent alias; `SEMFit`; `fixed_x = TRUE` or names fixes exogenous moments at the sample values, as lavaan's `fixed.x = TRUE`: same structural results, conditional logLik)
 - **Inference**: delta-method effect SEs in `tidy()`/`confint()`; bootstrap (parametric, nonparametric, plugin)
 - **Data**: bundled simulated `mediation_demo` for every workflow
 - **Math**: every formula lives in `vignettes/articles/methods.qmd` (Methods and Formulas)
@@ -109,7 +109,7 @@ R/
 **Arguments:**
 - `formula_y`, `formula_m` - Model specifications
 - `treatment`, `mediator`, `outcome` - Variable names
-- `engine` - "glm", "lmer", "regmedint", "native" ("brms" is planned)
+- `engine` - "glm", "lmer", "regmedint", "sem" (alias "native"; "brms" is planned)
 - `method` - "parametric", "nonparametric", "plugin"
 - `n_boot`, `ci_level` - Bootstrap parameters
 
@@ -574,7 +574,7 @@ breaking existing code, type safety via S7 validators.
 | `"glm"` | (internal) | fit, then `extract_mediation()` | ✓ |
 | `"regmedint"` | regmedint (Suggests) | VanderWeele closed-form | ✓ (no weights/sandwich) |
 | `"lmer"` | lme4, pbkrtest (Suggests) | mixed models for cluster-level treatment; `cluster =`, `se_type = "kr"` | ✓ (no weights/sandwich/families) |
-| `"native"` | (internal) | maximum-likelihood SEM from model syntax (`model = `, one mediator through `fit_mediation()`; serial and parallel through `fit_sem()` then `extract_mediation()`); latent mediators, linear and nonlinear constraints, `weights`/`se_type = "sandwich"`; `anova()`, `tidy()`/`glance()`; `mbco_sem()` (k paths) | ✓ (observed intercepts and means, `meanstructure =`, the `:` product term with four-way through `extract_mediation()` in a supported class; no latent means, no latent products) |
+| `"sem"` (alias `"native"`) | (internal) | the sem engine: maximum-likelihood SEM from model syntax (`model = `, one mediator through `fit_mediation()`; serial and parallel through `fit_sem()` then `extract_mediation()`); latent mediators, linear and nonlinear constraints, `weights`/`se_type = "sandwich"`; `anova()`, `tidy()`/`glance()`; `mbco_sem()` (k paths) | ✓ (observed intercepts and means, `meanstructure =`, the `:` product term with four-way through `extract_mediation()` in a supported class; no latent means, no latent products) |
 | `"gformula"`, `"ipw"` | CMAverse | G-computation, IPW | Planned |
 | `"tmle"` | tmle3 | Targeted learning | Future |
 

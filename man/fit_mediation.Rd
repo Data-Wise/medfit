@@ -24,10 +24,10 @@ fit_mediation(
 }
 \arguments{
 \item{formula_y}{Formula for outcome model (e.g., \code{Y ~ X + M + C}). Not used
-with \code{engine = "native"}, which takes \code{model} instead.}
+with \code{engine = "sem"}, which takes \code{model} instead.}
 
 \item{formula_m}{Formula for mediator model (e.g., \code{M ~ X + C}). Not used
-with \code{engine = "native"}.}
+with \code{engine = "sem"}.}
 
 \item{data}{Data frame containing all variables. With the \code{"glm"} engine, rows
 with a missing value on any variable in either formula are dropped before
@@ -46,7 +46,7 @@ applied to those rows first, then incomplete rows are dropped.}
 \item \code{"regmedint"}: Closed-form regression-based (in)direct effects via
 the suggested \pkg{regmedint} package (VanderWeele's regression
 approach, with optional treatment-mediator interaction)
-\item \code{"sem"}: the sem engine, medfit's maximum-likelihood SEM engine, fitted from
+\item \code{"sem"}: the sem engine, medfit's own maximum-likelihood SEM fitter, fitted from
 model syntax given as \code{model} (see \code{\link[=fit_sem]{fit_sem()}}). \code{"native"} is the legacy
 spelling of the same engine and is still accepted. The fit is then
 extracted with \code{\link[=extract_mediation]{extract_mediation()}}. Supports observed and latent
@@ -81,13 +81,13 @@ model-based \code{stats::vcov}) or \code{"sandwich"} (heteroskedasticity-consist
 \code{engine = "lmer"} only, \code{"kr"} uses the Kenward-Roger adjusted covariance
 and stores a degrees of freedom for each path, so the path intervals are
 t intervals; it needs REML fits and the suggested \pkg{pbkrtest} package.
-With \code{engine = "native"}, \code{"sandwich"} is the HC0-type robust covariance
+With \code{engine = "sem"}, \code{"sandwich"} is the HC0-type robust covariance
 (see \code{\link[=fit_sem]{fit_sem()}}), which is smaller than the glm engine's HC3 by a factor
 that shrinks like 1/n.}
 
 \item{engine_args}{Named list of engine-specific overrides (default:
 \code{list()}, no overrides). Ignored by \code{engine = "glm"}. For
-\code{engine = "native"}, recognized names are \code{information}, \code{n_starts}, \code{meanstructure}, \code{fixed_x}, \code{missing} and
+\code{engine = "sem"}, recognized names are \code{information}, \code{n_starts}, \code{meanstructure}, \code{fixed_x}, \code{missing} and
 \code{control} (passed to \code{\link[=fit_sem]{fit_sem()}}, whose defaults for \code{fixed_x} and \code{meanstructure} changed in 0.15.0) and
 \code{outcome}, \code{structure},
 \code{decomposition}, \code{interaction}, \code{a_label}, \code{b_label} and \code{cp_label}
@@ -116,7 +116,7 @@ on two-way fits; forward it only when its own caller supplied one.}
 \item{cluster}{Character string: name of the cluster variable in \code{data}.
 Required with \code{engine = "lmer"}, an error with the other engines.}
 
-\item{model}{Character string: model syntax for \code{engine = "native"} (required
+\item{model}{Character string: model syntax for \code{engine = "sem"} (required
 there, an error with any other engine). \code{treatment} and \code{mediator} name
 variables in the syntax; a latent mediator need not be a column of \code{data}.
 Because \code{model} is a named argument, an argument passed to \code{\link[stats:glm]{stats::glm()}}

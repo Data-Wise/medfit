@@ -14,7 +14,7 @@ read_text <- function(p) paste(readLines(p, warn = FALSE), collapse = "\n")
 
 test_that("every guide is in the articles index and the Guides menu", {
   guides <- guide_names()
-  expect_length(guides, 6L)
+  expect_length(guides, 7L)
   pk <- read_text(root_path("_pkgdown.yml"))
   for (g in guides) {
     expect_true(grepl(paste0("articles/", g, "`"), pk, fixed = TRUE), info = paste(g, "index"))
@@ -150,4 +150,46 @@ test_that("a planted dead site anchor would be caught, and a live one passes", {
   expect_identical(broken_site_links(planted), "https://data-wise.github.io/medfit/#installation")
   gone <- "[y](https://data-wise.github.io/medfit/articles/no-such-page.html#top)"
   expect_identical(broken_site_links(gone), "https://data-wise.github.io/medfit/articles/no-such-page.html#top")
+})
+
+# The engine guide (0.18.0) is reached from the landing page, the Models page and the reference card.
+engine_guide_unlinked <- function(texts) {
+  wants <- c(README = "https://data-wise.github.io/medfit/articles/guide-engines.html",
+             models = "](guide-engines.html)", refcard = "](guide-engines.html)")
+  names(texts)[!vapply(names(texts), function(n) grepl(wants[[n]], texts[[n]], fixed = TRUE), logical(1))]
+}
+
+engine_guide_sources <- function() {
+  d <- root_path("vignettes", "articles")
+  skip_if_not(dir.exists(d) && file.exists(root_path("README.md")), "sources are not available")
+  list(README = read_text(root_path("README.md")), models = read_text(file.path(d, "models.qmd")),
+       refcard = read_text(file.path(d, "refcard.qmd")))
+}
+
+test_that("the engine guide is linked from the landing page, Models and the reference card", {
+  texts <- engine_guide_sources()
+  expect_identical(engine_guide_unlinked(texts), character())
+  # Planted defect: with the link removed from Models the check names the page.
+  texts$models <- gsub("](guide-engines.html)", "](guide-intervals.html)", texts$models, fixed = TRUE)
+  expect_identical(engine_guide_unlinked(texts), "models")
+})
+
+test_that("the engine guide's statements hold: the two spellings give one fit, the protocol is recorded", {
+  syntax <- "
+    mediator1 ~ a * treatment + covariate1 + covariate2
+    outcome ~ b * mediator1 + cp * treatment + covariate1 + covariate2
+  "
+  fit_with <- function(engine) {
+    fit_mediation(model = syntax, data = mediation_demo, treatment = "treatment", mediator = "mediator1",
+                  engine = engine)
+  }
+  by_sem <- fit_with("sem")
+  by_native <- fit_with("native")
+  expect_identical(coef(by_sem), coef(by_native))
+  fit <- fit_sem(syntax, mediation_demo, control = sem_control(n_starts = 3, nloptr = list(maxeval = 20000L)))
+  pr <- fit@diagnostics$protocol
+  expect_identical(pr$estimator, "listwise")
+  expect_identical(pr$optimizer, "NLOPT_LD_SLSQP")
+  expect_identical(pr$n_starts, 3L)
+  expect_error(sem_control(optimizer = "nlminb"))
 })

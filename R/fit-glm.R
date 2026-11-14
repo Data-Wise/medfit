@@ -14,9 +14,9 @@
 #' mediator and outcome models simultaneously.
 #'
 #' @param formula_y Formula for outcome model (e.g., `Y ~ X + M + C`). Not used
-#'   with `engine = "native"`, which takes `model` instead.
+#'   with `engine = "sem"`, which takes `model` instead.
 #' @param formula_m Formula for mediator model (e.g., `M ~ X + C`). Not used
-#'   with `engine = "native"`.
+#'   with `engine = "sem"`.
 #' @param data Data frame containing all variables. With the `"glm"` engine, rows
 #'   with a missing value on any variable in either formula are dropped before
 #'   fitting, so both models share one sample; `nobs()` and `@n_obs` count the
@@ -31,7 +31,7 @@
 #'     \item `"regmedint"`: Closed-form regression-based (in)direct effects via
 #'       the suggested \pkg{regmedint} package (VanderWeele's regression
 #'       approach, with optional treatment-mediator interaction)
-#'     \item `"sem"`: the sem engine, medfit's maximum-likelihood SEM engine, fitted from
+#'     \item `"sem"`: the sem engine, medfit's own maximum-likelihood SEM fitter, fitted from
 #'       model syntax given as `model` (see [fit_sem()]). `"native"` is the legacy
 #'       spelling of the same engine and is still accepted. The fit is then
 #'       extracted with [extract_mediation()]. Supports observed and latent
@@ -52,7 +52,7 @@
 #'   }
 #' @param cluster Character string: name of the cluster variable in `data`.
 #'   Required with `engine = "lmer"`, an error with the other engines.
-#' @param model Character string: model syntax for `engine = "native"` (required
+#' @param model Character string: model syntax for `engine = "sem"` (required
 #'   there, an error with any other engine). `treatment` and `mediator` name
 #'   variables in the syntax; a latent mediator need not be a column of `data`.
 #'   Because `model` is a named argument, an argument passed to [stats::glm()]
@@ -71,12 +71,12 @@
 #'   `engine = "lmer"` only, `"kr"` uses the Kenward-Roger adjusted covariance
 #'   and stores a degrees of freedom for each path, so the path intervals are
 #'   t intervals; it needs REML fits and the suggested \pkg{pbkrtest} package.
-#'   With `engine = "native"`, `"sandwich"` is the HC0-type robust covariance
+#'   With `engine = "sem"`, `"sandwich"` is the HC0-type robust covariance
 #'   (see [fit_sem()]), which is smaller than the glm engine's HC3 by a factor
 #'   that shrinks like 1/n.
 #' @param engine_args Named list of engine-specific overrides (default:
 #'   `list()`, no overrides). Ignored by `engine = "glm"`. For
-#'   `engine = "native"`, recognized names are `information`, `n_starts`, `meanstructure`, `fixed_x`, `missing` and
+#'   `engine = "sem"`, recognized names are `information`, `n_starts`, `meanstructure`, `fixed_x`, `missing` and
 #'   `control` (passed to [fit_sem()], whose defaults for `fixed_x` and `meanstructure` changed in 0.15.0) and
 #'   `outcome`, `structure`,
 #'   `decomposition`, `interaction`, `a_label`, `b_label` and `cp_label`

@@ -2,7 +2,7 @@
 % Please edit documentation in R/sem-control.R
 \name{sem_control}
 \alias{sem_control}
-\title{Optimizer settings for the native SEM engine}
+\title{Optimizer settings for the sem engine}
 \usage{
 sem_control(optimizer = "auto", n_starts = NULL, nloptr = list())
 }
@@ -29,7 +29,7 @@ An object of class \code{medfit_sem_control}: a list with elements
 }
 \description{
 Builds the \code{control} argument of \code{\link[=fit_sem]{fit_sem()}} and \code{\link[=mbco_sem]{mbco_sem()}} (and of
-\code{\link[=fit_mediation]{fit_mediation()}} with \code{engine = "native"}, through
+\code{\link[=fit_mediation]{fit_mediation()}} with \code{engine = "sem"}, through
 \code{engine_args = list(control = )}). A plain list is still accepted there and
 keeps its earlier meaning: every entry is an \code{nloptr} option, exactly as
 \verb{sem_control(nloptr = <list>)}.

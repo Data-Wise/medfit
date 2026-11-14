@@ -1,5 +1,5 @@
 ---
-title: "The native engine guide"
+title: "The sem engine guide"
 format:
   html:
     code-tools: false
@@ -12,7 +12,7 @@ execute:
   echo: true
 ---
 
-The native engine fits models from lavaan-style syntax by maximum likelihood,
+The sem engine fits models from lavaan-style syntax by maximum likelihood,
 with a covariance structure and, when you write intercepts, observed means. This
 guide covers the whole workflow in one place: syntax, fitting, inference,
 constraints, model comparison, diagnostics and the route to the mediation
@@ -21,7 +21,7 @@ objects. For a first look, read
 
 | | |
 |---|---|
-| **Entry points** | `fit_sem(syntax, data)`; `fit_mediation(model = syntax, engine = "native")` for one mediator |
+| **Entry points** | `fit_sem(syntax, data)`; `fit_mediation(model = syntax, engine = "sem")` for one mediator |
 | **Class returned** | `SEMFit`, then `MediationData`, `SerialMediationData` or `ParallelMediationData` from `extract_mediation()` |
 | **Syntax reference** | `?"medfit-syntax"` |
 | **Not covered** | latent means, latent products, groups, categorical outcomes, other estimators; see [the limits](#limits) |
@@ -188,7 +188,7 @@ x <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1",
 class(x)[1]
 ```
 
-`fit_mediation(model = syntax, engine = "native", treatment =, mediator =)` does
+`fit_mediation(model = syntax, engine = "sem", treatment =, mediator =)` does
 both steps for **one** mediator. For several mediators, fit with `fit_sem()` and call
 `extract_mediation(fit, mediator = c("m1", "m2"), outcome = )`: a chain gives a
 `SerialMediationData`, mediators side by side a `ParallelMediationData`. A latent
@@ -211,11 +211,11 @@ mediator works through the same call.
   [the native model page](model-native.html#limits).
 - For latent means, groups, categorical outcomes or fit indices use lavaan; the extraction
   route accepts a `lavaan` fit as well. See
-  [lavaan and the native engine](lavaan-comparison.html).
+  [lavaan and the sem engine](lavaan-comparison.html).
 
 ## Related
 
-[Quickstart](native-quickstart.html) | [Models: native engine](model-native.html) |
+[Quickstart](native-quickstart.html) | [Models: sem engine](model-native.html) |
 [Constraints and the MBCO test](model-native-constraints.html) |
 [Cookbook](cookbook.html) | [Methods and Formulas](methods.html) | `?"medfit-syntax"`
 
@@ -273,7 +273,7 @@ The wrapper route returns the extracted mediation object directly:
 #| label: bounded-fiml-wrapper
 fiml_wrapped <- medfit::fit_mediation(
   model = fiml_syntax, data = fiml_data,
-  treatment = "treatment", mediator = "mediator1", engine = "native",
+  treatment = "treatment", mediator = "mediator1", engine = "sem",
   se_type = "model", engine_args = list(
     missing = "fiml", fixed_x = FALSE, meanstructure = TRUE, information = "observed"
   )

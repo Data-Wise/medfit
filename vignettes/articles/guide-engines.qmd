@@ -1,0 +1,127 @@
+---
+title: "Which engine should I use?"
+format:
+  html:
+    code-tools: false
+    code-copy: false
+    highlight-style: none
+execute:
+  collapse: true
+  comment: "#>"
+  eval: true
+  echo: true
+---
+
+Three choices sit behind every fit: the engine, the estimator and the optimizer.
+This page takes them in that order. The engine decides which models and effects
+exist. The estimator decides what is minimized. The optimizer only searches for
+the minimum. The formulas are in [Methods and Formulas](methods.html).
+
+## Engine
+
+An engine is the fitter: it decides which models can be written and which
+effects come out. medfit names an engine for the model family it fits or the
+package that fits it.
+
+| Engine | Fits | Use it for | Page |
+|---|---|---|---|
+| `"glm"` (default) | `stats::glm()` for the mediator and outcome models | formulas, any `glm` family, case weights | [Simple mediation](model-simple.html) |
+| `"regmedint"` | closed-form natural effects from the regmedint package | VanderWeele's regression closed forms | [The regmedint engine](model-regmedint.html) |
+| `"lmer"` | REML mixed models with a random cluster intercept | a treatment assigned to clusters (2-1-1) | [Cluster-level treatment](model-cluster.html) |
+| `"sem"` | the sem engine: medfit's own maximum-likelihood SEM fitter | model syntax, latent mediators, constraints, `mbco_sem()` | [The sem engine](model-native.html) |
+
+The sem engine is reached in two ways: `fit_sem(model, data)`, which returns a
+`SEMFit` for `extract_mediation()`, and `fit_mediation(engine = "sem", model = )`
+for one mediator. `engine = "native"` is the earlier spelling of the same engine
+and gives the same fit.
+
+::: {.callout-note}
+## The sem engine is not `lavaan::sem()`
+"sem" names medfit's own fitter. A model fitted by `lavaan::sem()` reaches
+medfit through `extract_mediation()` on the lavaan fit. That is an extraction
+route, not an engine: lavaan does the fitting and medfit reads the paths. See
+[lavaan fits](model-lavaan.html) and
+[lavaan and the sem engine](lavaan-comparison.html).
+:::
+
+The engines do not return interchangeable numbers. The
+[engines compared](models.html) table lists what each one estimates, which
+families it takes and which standard errors it offers.
+
+```{r}
+#| label: setup
+#| include: false
+library(medfit)
+```
+
+The two spellings give the same fit:
+
+```{r}
+#| label: sem-alias
+syntax <- "
+  mediator1 ~ a * treatment + covariate1 + covariate2
+  outcome ~ b * mediator1 + cp * treatment + covariate1 + covariate2
+"
+by_sem <- fit_mediation(model = syntax, data = mediation_demo,
+                        treatment = "treatment", mediator = "mediator1",
+                        engine = "sem")
+by_native <- fit_mediation(model = syntax, data = mediation_demo,
+                           treatment = "treatment", mediator = "mediator1",
+                           engine = "native")
+all.equal(coef(by_sem), coef(by_native))
+```
+
+## Estimator
+
+The estimator is what the engine minimizes. Within the sem engine, the
+`missing` argument switches between two estimators:
+
+- `missing = "listwise"` (default): maximum likelihood on the complete rows.
+- `missing = "fiml"`: bounded full-information maximum likelihood, which keeps
+  rows with some values missing. It covers a small set of models, is
+  numerically verified and is not statistically admitted. See
+  [Missing data: bounded FIML](model-fiml.html) for its limits.
+
+Both are the same engine; only the objective changes, and so do the estimates.
+
+## Optimizer
+
+The optimizer is the algorithm that finds the minimum of the estimator's
+objective. `sem_control()` sets it for a listwise fit:
+
+```{r}
+#| label: sem-control
+ctl <- sem_control(n_starts = 3, nloptr = list(maxeval = 20000L))
+fit <- fit_sem(syntax, mediation_demo, control = ctl)
+str(fit@diagnostics$protocol)
+```
+
+`optimizer = "auto"` (default) runs SLSQP for a listwise fit. A plain list
+passed as `control` still means `nloptr` options. Bounded FIML runs a fixed
+protocol, SLSQP and `nlminb` from three starts each, and the two must agree;
+only `optimizer = "auto"` is accepted there. Every fit records the protocol
+that ran in `fit@diagnostics$protocol`.
+
+A different optimizer does not change what is estimated. When the search fails,
+the fit stops with an error or reports an unresolved result; it does not return
+a different answer.
+
+## The four layers
+
+| Layer | Question | Examples | Does swapping it change the meaning of the result? |
+|---|---|---|---|
+| Engine | which fitter, hence which models and effects exist | `glm`, `regmedint`, `lmer`, `sem` | yes |
+| Estimator | what is minimized | OLS, REML, listwise ML, bounded FIML | yes |
+| Optimizer | which algorithm finds the minimum | SLSQP, `nlminb` | no: same objective; a failure is an error or an unresolved result |
+| Inference | how uncertainty is computed | delta method, sandwich, bootstrap, MBCO | the interval, not the estimate |
+
+Inference is covered in [Which interval should I use?](guide-intervals.html).
+
+`compare_lr(engine = )` uses the word in another sense: there it names the
+outside program, lavaan or OpenMx, that refits the model for the comparison.
+It is not a fitter of the mediation model.
+
+## Related
+
+[Models](models.html) | [The sem engine guide](native-guide.html) |
+[Methods and Formulas](methods.html) | [Glossary](guide-glossary.html)

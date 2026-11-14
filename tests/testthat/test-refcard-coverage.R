@@ -73,3 +73,13 @@ test_that("the refcard's cluster formulas agree with the methods article", {
   expect_true(grepl("a [b_W + (b_B - b_W) / n_j]", rcx, fixed = TRUE))
   expect_true(grepl("b_W + \\frac{b_B - b_W}{n_j}", mx, fixed = TRUE))
 })
+
+test_that("the refcard links the engine guide, and a removed row is caught", {
+  p <- refcard_path()
+  skip_if(is.na(p), "vignettes are not available (installed or built package)")
+  rows <- readLines(p, warn = FALSE)
+  links_guide <- function(r) any(grepl("](guide-engines.html)", r, fixed = TRUE))
+  expect_true(links_guide(rows))
+  # Planted defect: without the "Choose an engine" row the link is gone.
+  expect_false(links_guide(rows[!grepl("Choose an engine", rows, fixed = TRUE)]))
+})

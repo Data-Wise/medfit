@@ -129,9 +129,9 @@ Find the row that matches your data, then open its page. All of them are on the
 | Several mediators with products | [Joint mediation](https://data-wise.github.io/medfit/articles/model-joint.html) |
 | Treatment assigned to whole clusters | [Cluster-randomized trials](https://data-wise.github.io/medfit/articles/model-cluster.html) |
 | A lavaan fit | [lavaan fits](https://data-wise.github.io/medfit/articles/model-lavaan.html) |
-| A latent mediator | [Native: a latent mediator](https://data-wise.github.io/medfit/articles/model-native-latent.html) |
-| Constraints, or a test of the indirect effect | [Native: constraints and MBCO](https://data-wise.github.io/medfit/articles/model-native-constraints.html) |
-| Serial or parallel mediators written as syntax | [Native: several mediators and weights](https://data-wise.github.io/medfit/articles/model-native-multi.html) |
+| A latent mediator | [The sem engine: a latent mediator](https://data-wise.github.io/medfit/articles/model-native-latent.html) |
+| Constraints, or a test of the indirect effect | [The sem engine: constraints and MBCO](https://data-wise.github.io/medfit/articles/model-native-constraints.html) |
+| Serial or parallel mediators written as syntax | [The sem engine: several mediators and weights](https://data-wise.github.io/medfit/articles/model-native-multi.html) |
 
 Already have fitted `lm`, `glm`, `lmer` or lavaan models? `extract_mediation()`
 turns them into the same objects:
@@ -220,10 +220,10 @@ for the estimand and the assumptions each effect needs.
 </details>
 
 <details>
-<summary><b>Latent mediator</b> (native engine)</summary>
+<summary><b>Latent mediator</b> (sem engine)</summary>
 
 When the mediator is a construct measured by several indicators, write the model
-as syntax. The native maximum-likelihood engine needs no
+as syntax. The sem engine needs no
 other package:
 
 ```r
@@ -246,7 +246,7 @@ syntax <- "
   Y ~ b * eta + cp * X
 "
 fit <- fit_mediation(model = syntax, data = ldat, treatment = "X",
-                     mediator = "eta", engine = "native")
+                     mediator = "eta", engine = "sem")
 nie(fit)
 
 mbco_sem(fit_sem(syntax, ldat), "a", "b")  # minimum of two likelihood-ratio tests
@@ -275,7 +275,7 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")  # minimum of two likelihood-ratio tes
 | `ClusterMediationData` | Treatment assigned to clusters (2-1-1): own-mediator and spillover parts |
 | `TwoLevelMediationData` | A two-level `lavaan` fit with X, M and Y on level-1 units (1-1-1): the indirect effect at the within and the between level (0.17.0, experimental) |
 | `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | Bounded FIML fits (`fit_sem(missing = "fiml")`): X to M to Y, two parallel mediators, two serial mediators (see above) |
-| `SEMFit` | A native-engine fit; `extract_mediation()` turns it into the classes above |
+| `SEMFit` | A sem engine fit; `extract_mediation()` turns it into the classes above |
 | `BootstrapResult` | Point estimates, intervals and the bootstrap distribution |
 
 | You want to | Call |
@@ -283,7 +283,7 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")  # minimum of two likelihood-ratio tes
 | Run a mediation in one step | `med()`, `quick()` |
 | Read effects and paths | `nie()`, `nde()`, `te()`, `pm()`, `paths()`, `decompose()` |
 | Get a table | `tidy()`, `glance()`, `confint()`, `coef()`, `vcov()`, `nobs()` |
-| Fit with control | `fit_mediation()` (engines `glm`, `regmedint`, `lmer`, `native`) |
+| Fit with control | `fit_mediation()` (engines `glm`, `regmedint`, `lmer`, `sem`) |
 | Use fitted models | `extract_mediation()` (lm, glm, lmer, lavaan, `SEMFit`) |
 | Write a model as syntax | `fit_sem()`, `mbco_sem()` |
 | Bootstrap | `bootstrap_mediation()` (parametric, nonparametric, plugin) |
@@ -319,6 +319,7 @@ See [Ecosystem Coordination](https://github.com/Data-Wise/mediation-planning/blo
 | Check the math | [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html) |
 | Upgrade from CRAN 0.3.2 | [What changed since CRAN 0.3.2](https://data-wise.github.io/medfit/articles/guide-changes.html) |
 | Fix an error or warning | [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html) |
+| Choose an engine | [Which engine should I use?](https://data-wise.github.io/medfit/articles/guide-engines.html) |
 | Choose an interval | [Which interval should I use?](https://data-wise.github.io/medfit/articles/guide-intervals.html) |
 | Look up a term or symbol | [Glossary and symbols](https://data-wise.github.io/medfit/articles/guide-glossary.html) |
 

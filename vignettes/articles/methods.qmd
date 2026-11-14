@@ -591,13 +591,13 @@ the components are on that model's link scale, as regmedint reports them.
 `engine = "lmer"` fits the two linear mixed models of the cluster design above
 (REML, random cluster intercepts, the mediator and level-1 covariates split into
 within-cluster deviation and cluster mean) and passes them to
-`extract_mediation()`; it returns a `ClusterMediationData`. `engine = "native"`
+`extract_mediation()`; it returns a `ClusterMediationData`. `engine = "sem"`
 fits model syntax with the engine described in the next section, then extracts
 the mediation structure through the same workers as the lavaan route.
 
-## Native SEM engine
+## The sem engine {#native-sem-engine}
 
-`fit_sem()` and `fit_mediation(engine = "native")` fit a model written in
+`fit_sem()` and `fit_mediation(engine = "sem")` fit a model written in
 medfit model syntax (`?"medfit-syntax"`) by maximum likelihood to raw data.
 By default, rows with missing values in the model variables are dropped once
 (listwise deletion) and counted. The separate bounded FIML opt-in
