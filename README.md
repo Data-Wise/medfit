@@ -146,11 +146,12 @@ nie(med_data)
 **More:** [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) | [Reference card](https://data-wise.github.io/medfit/articles/refcard.html) | [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html) | [What changed since CRAN 0.3.2](https://data-wise.github.io/medfit/articles/guide-changes.html) | [Methods](https://data-wise.github.io/medfit/articles/methods.html)
 
 <details>
-<summary><strong>What's new in 0.17.0.9000</strong></summary>
+<summary><strong>What's new in 0.18.0</strong></summary>
 
-* **Development version:** no user-visible changes yet since 0.17.0 (released 2026-11-12), whose highlights follow.
-* **Bounded FIML expansion:** one or two covariates, two parallel and two serial mediators (numerically verified, not statistically admitted). See the [model page](https://data-wise.github.io/medfit/articles/model-fiml.html).
-* **Two-level mediation (experimental):** `extract_mediation()` on a two-level `lavaan` fit returns `TwoLevelMediationData`; lavaan floor 0.7-3. See the [model page](https://data-wise.github.io/medfit/articles/model-twolevel.html).
+* **The sem engine:** `fit_mediation(engine = "sem")` names medfit's own SEM fitter; `engine = "native"` still works, with identical results. `sem_control()` collects its optimizer settings. See [Which engine should I use?](https://data-wise.github.io/medfit/articles/guide-engines.html).
+* **Renamed pages:** the sem engine articles moved (`native-guide` is now `sem-guide`, and so on); old links redirect.
+* **Bounded FIML expansion (0.17.0):** one or two covariates, two parallel and two serial mediators (numerically verified, not statistically admitted). See the [model page](https://data-wise.github.io/medfit/articles/model-fiml.html).
+* **Two-level mediation (0.17.0, experimental):** `extract_mediation()` on a two-level `lavaan` fit returns `TwoLevelMediationData`; lavaan floor 0.7-3. See the [model page](https://data-wise.github.io/medfit/articles/model-twolevel.html).
 * **Before that:** 0.16.0 (both sign branches of a nonzero-product equality, corrected constrained standard errors) and 0.15.0 (native defaults flip: `fixed_x` and `meanstructure` on when unset).
 
 Every release is listed in [NEWS](https://data-wise.github.io/medfit/news/index.html); upgrading from CRAN 0.3.2? See [What changed since CRAN 0.3.2](https://data-wise.github.io/medfit/articles/guide-changes.html).
@@ -359,7 +360,7 @@ If you use medfit in your research, please cite:
 
 ```
 Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.17.0. https://data-wise.github.io/medfit/
+R package version 0.18.0. https://data-wise.github.io/medfit/
 ```
 
 For the entry matching your installed version, run `citation("medfit")`.

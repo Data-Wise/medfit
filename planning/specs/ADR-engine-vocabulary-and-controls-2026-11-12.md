@@ -6,7 +6,7 @@ decisions:
   - {id: V-4, title: "Listwise ML and bounded FIML are one engine; missing = stays the switch", status: decided, date: 2026-11-12}
   - {id: V-5, title: "Tuning: the existing control accepts a plain list (legacy nloptr options) or sem_control(); optimizer = 'auto' for the listwise search, resolved protocol recorded", status: decided, date: 2026-11-12}
   - {id: V-6, title: "Argument design rules: meaning-changing options are arguments, search options are control, strings not logicals, options() only for tuning", status: decided, date: 2026-11-12}
-  - {id: V-7, title: "TwoLevelMediationData: open provenance validator and source_version added; source and lavaan_version kept one deprecation cycle", status: decided, date: 2026-11-12}
+  - {id: V-7, title: "TwoLevelMediationData: optional source_version and a fallback reader; source and source_package validators unchanged; source and lavaan_version kept", status: decided, date: 2026-11-13}
   - {id: V-8, title: "Prose and titles change first; the 'native' article URLs are renamed to sem-* only after a pkgdown redirect spike confirms anchors survive", status: conditional, date: 2026-11-12}
   - {id: V-9, title: "One decision record and one user guide: this ADR and the Guides article 'Which engine should I use?'", status: decided, date: 2026-11-12}
 ---
@@ -14,7 +14,7 @@ decisions:
 # ADR: engine vocabulary, tuning controls and provenance
 
 **Date:** 2026-11-12. **Status:** nine decisions answered by the author in the 2026-11-12 grill; **revised the same day after
-the Codex adversarial review** (section 7: V-3, V-5, V-7 and V-8 changed, V-6 rule 3 corrected); **none implemented**.
+the Codex adversarial review** (section 7: V-3, V-5, V-7 and V-8 changed, V-6 rule 3 corrected); **V-7 revised again on 2026-11-13** after a second Codex review and a `/code-review` (section 7); **none implemented**.
 The implementation is `planning/PLAN-0.18.0-engine-vocabulary-2026-11-12.md`. Evidence and the full grill ledger:
 `planning/AUDIT-engine-and-optimizer-2026-11-12.md` (read-only audit of `origin/main` at `6b9a943c`).
 The solver evidence and the SLSQP and `nlminb` decisions stay in `ADR-native-solver-and-engines-2026-10-23.md`; this ADR
@@ -106,19 +106,23 @@ through `engine_args` (`fit_args` in `R/fit-sem.R`). So no new slot is added and
 6. Experimental values are accepted, documented with a stage, and announce themselves once per session through
    `lifecycle`. The repo has no badge mechanism; "experimental" is prose plus that message.
 
-**V-7. Provenance of `TwoLevelMediationData` (revised after review).** `source` duplicates `source_package` (the
-cross-class provenance slot: `"stats"`, `"lavaan"`, `"medfit"`) and is read only by `print()` and the provenance output,
-never for dispatch. But both `source` and `lavaan_version` are **pinned** in `test-dependents-contract.R` (the table of
-property names dependents rely on), documented in the class, and present in `summary(x)$provenance`, so deleting them
-would break released objects and readers; changing the contract table would only hide the break. NEWS does call the class
-experimental, so a change is permitted, but the cheapest safe path is additive:
-- Add `source_version` (the version of whichever package fitted the model); open the `source_package` and `source`
-  validators to any non-empty string, so a new fitter never needs a validator edit (in-package fits: `"medfit"`).
-- **Keep `source` and `lavaan_version`** for one deprecation cycle as **stored properties that remain valid constructor
-  arguments** (filled from `source_package` and `source_version` when omitted; a supplied value that disagrees is a
-  validation error). Not getter-only S7 properties: released calls and the contract table pin them as constructor inputs.
-  Then deprecate them softly. The contract table gains `source_version` and removes nothing.
-- This reverses the grill answer "drop `source`" on the Codex finding; the duplicate slot is removed one cycle later.
+**V-7. Provenance of `TwoLevelMediationData` (revised 2026-11-13).** `source` is the fitting route (`"lavaan"`,
+`"native"`) and `source_package` the package (the cross-class provenance slot: `"stats"`, `"lavaan"`, `"medfit"`). They are
+independent fields, not duplicates: `source = "native"` with `source_package = "lavaan"` is valid in 0.17.0
+(`test-twolevel-class.R:87`). Both `source` and `lavaan_version` are **pinned** in `test-dependents-contract.R`, documented
+in the class and present in `summary(x)$provenance`, so deleting either would break released objects and readers. NEWS
+calls the class experimental, so a change is permitted, but the cheapest safe path is additive:
+- Add one optional property, `source_version` (`character(0)` or one non-empty string), the version of whichever package
+  fitted the model. `lavaan_version` may also be empty, so a fit lavaan did not make needs no placeholder. Both are
+  checked outside the validator's length-1 scalar loop; S7 reruns the validator on `@<-`, so the rules cover assignment.
+- **No custom constructor, no stored fill, no new error a 0.17.0 call can reach.** Readers use one helper that returns
+  `source_version` when the property exists and is non-empty, else `lavaan_version` for a lavaan fit; it checks
+  `S7::prop_exists()` first because an object saved by 0.17.0 keeps its old class after `readRDS()`.
+- **Validators of `source` and `source_package` unchanged in 0.18.0.** Opening them, and a `"sem"` route value, wait for the
+  native two-level fitter (#394), their first caller. The stored `"native"` is data on an experimental class, not an
+  argument, so V-2's alias policy does not apply to it.
+- **Keep `source` and `lavaan_version`.** The contract table gains `source_version` and removes nothing. This reverses the
+  grill answer "drop `source`": it is not a duplicate. Whether `lavaan_version` is deprecated is decided with #394.
 
 **V-8. Renames (conditional, revised after review).** Two steps, in order. (1) In 0.18.0, article **titles and prose** say
 "sem engine"; the URLs stay. (2) The 12 files named `native-*` and `model-native*` become `sem-*` and `model-sem*` with a
@@ -153,14 +157,23 @@ when it matters), linked from the landing page and the Models page. The solver A
 
 ## 6. Open items to verify before implementation
 
-1. Whether listwise attempts record which optimizer ran (FIML attempts do, via a `solver` column).
+1. ~~Whether listwise attempts record which optimizer ran~~ **Resolved 2026-11-13: no.** Listwise attempts are gate
+   lists without a solver field; the algorithm defaults to `NLOPT_LD_SLSQP` but `control$algorithm` overrides it
+   (`R/sem-optim.R:383-384`), visible only in `fit@internals$control`. V-5 therefore stores the effective algorithm in
+   `diagnostics$protocol` and treats `optimizer = "slsqp"` with a different `nloptr$algorithm` as a conflict.
 2. ~~How the sem route of `fit_mediation()` receives `control`~~ **Resolved by review:** `fit_args` in `R/fit-sem.R`
    already forwards `control` through `engine_args`; no top-level argument.
 3. ~~Whether `test-api-freeze.R` pins the argument lists~~ **Resolved:** `pin_fit_sem_args` and `pin_mbco_sem_args` pin
    `control`; `pin_compare_lr_args` pins `engine` as the third argument; new arguments only at the end.
-4. That the installed pkgdown supports `redirects:` for `articles/` paths and keeps `#fragments` (gates V-8 step 2).
+4. ~~That the installed pkgdown supports `redirects:` and keeps `#fragments`~~ **Resolved 2026-11-13:** pkgdown 2.2.1
+   supports `redirects:`; its default meta-refresh page loses the fragment (checked in Chromium), and a local
+   `pkgdown/templates/layout-redirect.html` that appends `location.hash` keeps it. V-8 step 2 may proceed with that
+   template.
 5. ~~The dependents-contract table~~ **Resolved:** it pins `source` and `lavaan_version`; V-7 is additive.
-6. Saved-object compatibility (a fit stored with `engine = "native"` metadata) and external users of the old spelling.
+6. ~~Saved-object compatibility and external users~~ **Resolved 2026-11-13:** objects saved by an installed v0.17.0
+   read, print and give the same `nie()`/`coef()` under dev; none stores `"native"` in a character property. An S7 test
+   confirmed that an added property errors on an old object and `S7::prop_exists()` guards it (V-7). Public GitHub code
+   search found no `engine = "native"` callers outside `Data-Wise`.
 
 ## 7. Codex adversarial review (2026-11-12) and dispositions
 
@@ -186,10 +199,29 @@ to 9 are the reviewer's, taken as required checks.
 |---|---|---|
 | 1 | `mbco_sem()` and `fit@internals$control` re-consume the stored `control`; a `sem_control()` object would break every MBCO refit | V-5: normalize once at entry; plan S2 adds `R/sem-mbco.R` and a test |
 | 2 | The FIML guard (`R/sem-fiml-interface.R:465`) rejects any non-empty `control` and `n_starts` other than `NULL`/3 | V-5: guard applied to resolved values; default `sem_control()` passes; plan S2 adds the file |
-| 3 | Read-only S7 aliases would break released constructor calls and the contract table | V-7: stored properties and valid constructor arguments, consistency validator |
+| 3 | Read-only S7 aliases would break released constructor calls and the contract table | V-7: stored properties and valid constructor arguments (the consistency validator was later removed; see the third review) |
 | 4 | `diagnostics$control` collides with `internals$control` | renamed `diagnostics$protocol` |
 | 5 | V-6 rule 5 contradicts shipped options | grandfather clause added |
 | 6 | S2 dependency on S1 stale | plan table corrected |
 | 7 | Risk-gate call described inexactly | plan S2 states `risk_check()` inputs and the `dev` exemption |
 | 8 | `n_starts` conflict rule ignores `mbco_sem()` and the defaulted 5 | plan S2: detect "supplied" explicitly; same rule for `mbco_sem()` |
+
+### Third review: second Codex review of S4, then `/code-review` (2026-11-13)
+
+The second Codex review found that an agreement check rejected the valid `source = "native"` with
+`source_package = "lavaan"`, and that calls without `source_version` had no legacy path; both were fixed by a stored fill.
+The `/code-review` that followed (high effort, 10 findings) found that fix itself unsafe, and V-7 was rewritten:
+
+| # | Finding | Disposition |
+|---|---|---|
+| 1 | `lavaan_version` has a length-1 check; a fit lavaan did not make cannot omit it | it may be empty (length 0 or 1) |
+| 2 | Opening the validators breaks `test-twolevel-class.R:86` and adds an empty-string error | validators unchanged in 0.18.0 |
+| 3 | `x@source_version` errors on 0.17.0 objects; fixture script unnamed | `S7::prop_exists()` in the reader; named fixture script |
+| 4 | Mismatch check ignores `@<-`; constructor or validator unclear | no mismatch check; all rules in the validator |
+| 5 | Disposition 3 still says "consistency validator"; no record of the Codex review | this table; disposition 3 annotated |
+| 6 | `source` called both a duplicate and independent | independent; "duplicate" removed; `source` kept |
+| 7 | Gates miss the non-lavaan path and assignment; one planted defect | four gates, each with a planted defect |
+| 8 | Custom constructor duplicates the reader fallback | constructor dropped; one reader helper |
+| 9 | `source = "native"` kept while V-1 retires the word | stored data, not an argument; renaming waits for #394 |
+| 10 | REPORT order and status contradict the PLAN | REPORT aligned |
 
