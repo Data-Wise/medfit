@@ -24,7 +24,7 @@ Task 7 of `PLAN-twolevel-contrast-and-release-readiness-2026-11-10.md`. Version 
 | # | Precondition | Evidence to record |
 |---|---|---|
 | P1 | The user authorizes a release in words | the message, quoted |
-| P2 | Book chapter 9 follows the contrast and equality rules, reviewed by the book owner (plan Task 5); blocked until the owner's branch is pushed | the book PR, merged, with its render-check run |
+| P2 | **DONE 2026-11-14** (after the 0.17.0 and 0.18.0 tags): book chapter 9 follows the contrast and equality rules (plan Task 5); the owner's branch was pushed with the fix and merged at the maintainer's request | `Data-Wise/medfit-book` PR #3 merged into `draft` (`a8226ff`, head `6046381`); full-book render against medfit 0.18.0: `OK: 14 chapter pages + index + 2 appendix pages, PDF 410 pages`, no error lines, only chapter 9 differs from the earlier 0.18.0 render |
 | P3 | Triage of #369, #320, #394, #381 recorded (plan Task 6) | a disposition per item with a merged-PR or test link; nothing closed without one |
 | P4 | `dev` has no open feature PR the release should include | `gh pr list` output |
 | P5 | **DONE 2026-11-11**: three stale plan statuses reconciled and ADR D-4 set to deferred (author) | the docs PR |
