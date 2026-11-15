@@ -15,7 +15,7 @@ or a compact report line."><meta property="og:image" content="https://data-wise.
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.17.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,26 +45,27 @@ or a compact report line."><meta property="og:image" content="https://data-wise.
     <li><a class="dropdown-item" href="../articles/model-cluster.html">Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/model-twolevel.html">Two-level mediation (1-1-1)</a></li>
     <li><a class="dropdown-item" href="../articles/model-lavaan.html">lavaan fits</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native.html">Native: paths and defined parameters</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-latent.html">Native: a latent mediator</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-multi.html">Native: several mediators and weights</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-factors.html">Native: categorical covariates</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem.html">The sem engine: paths and defined parameters</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-latent.html">The sem engine: a latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-constraints.html">The sem engine: constraints and MBCO</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-multi.html">The sem engine: several mediators and weights</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-factors.html">The sem engine: categorical covariates</a></li>
     <li><a class="dropdown-item" href="../articles/model-fiml.html">Missing data: bounded FIML</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-guides" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Guides</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-guides"><li><a class="dropdown-item" href="../articles/guide-changes.html">What changed since CRAN 0.3.2</a></li>
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-engines.html">Which engine should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
     <li><a class="dropdown-item" href="../articles/guide-twolevel-tutorial.html">Two-level workflow, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/guide-architecture.html">How medfit is organized</a></li>
-    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">Native defaults in 0.15.0</a></li>
-    <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
-    <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
-    <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
-    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-defaults-0-15.html">Native defaults in 0.15.0</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-quickstart.html">The sem engine in five minutes</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-tutorial.html">The sem engine, step by step</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-guide.html">The sem engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the sem engine</a></li>
     <li><a class="dropdown-item" href="../articles/probmed-comparison.html">probmed and medfit</a></li>
     <li><a class="dropdown-item" href="../articles/rmediation-comparison.html">RMediation and medfit</a></li>
     <li><a class="dropdown-item" href="../articles/syntax-crosswalk.html">One model in medfit, lavaan, OpenMx and semopy</a></li>
@@ -113,14 +114,14 @@ or a compact report line."><meta property="og:image" content="https://data-wise.
     <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
     <li><a class="dropdown-item" href="../articles/computation-algorithms.html">Computation algorithms</a></li>
     <li><a class="dropdown-item" href="../articles/whats-new-0-11.html">What's new in 0.11</a></li>
-    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
     <li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
   </ul></li>
-<li class="nav-item"><a class="nav-link" href="../articles/quality-control.html">Quality control</a></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-status" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-chart-line"></span> Status</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-status"><li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-project" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Project</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-project"><li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
+    <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
+    <li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/roadmap.html">Development Roadmap</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/contributing.html">Contributing Guide</a></li>
   </ul></li>
@@ -136,7 +137,7 @@ or a compact report line."><meta property="og:image" content="https://data-wise.
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Quick Summary of Mediation Results</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.17.0/R/med.R" class="external-link"><code>R/med.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/med.R" class="external-link"><code>R/med.R</code></a></small>
       <div class="d-none name"><code>quick.Rd</code></div>
     </div>
 

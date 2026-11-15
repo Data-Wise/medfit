@@ -1,16 +1,16 @@
-# The native engine guide
+# The sem engine guide
 
-The native engine fits models from lavaan-style syntax by maximum
+The sem engine fits models from lavaan-style syntax by maximum
 likelihood, with a covariance structure and, when you write intercepts,
 observed means. This guide covers the whole workflow in one place:
 syntax, fitting, inference, constraints, model comparison, diagnostics
 and the route to the mediation objects. For a first look, read [the
 five-minute
-quickstart](https://data-wise.github.io/medfit/articles/native-quickstart.md).
+quickstart](https://data-wise.github.io/medfit/articles/sem-quickstart.md).
 
 |  |  |
 |----|----|
-| **Entry points** | `fit_sem(syntax, data)`; `fit_mediation(model = syntax, engine = "native")` for one mediator |
+| **Entry points** | `fit_sem(syntax, data)`; `fit_mediation(model = syntax, engine = "sem")` for one mediator |
 | **Class returned** | `SEMFit`, then `MediationData`, `SerialMediationData` or `ParallelMediationData` from [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) |
 | **Syntax reference** | [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md) |
 | **Not covered** | latent means, latent products, groups, categorical outcomes, other estimators; see [the limits](#limits) |
@@ -272,7 +272,7 @@ b@diagnostics$active_bounds
 
 For the nonzero-product supported shapes, local-search limits and
 coverage record, see [the constraints
-page](https://data-wise.github.io/medfit/articles/model-native-constraints.html#nonzero-product-equality).
+page](https://data-wise.github.io/medfit/articles/model-sem-constraints.html#nonzero-product-equality).
 
 When a model with a nonlinear constraint warns that the starts reached
 different optima, the constraint has more than one solution (`a*b > 0.1`
@@ -310,7 +310,7 @@ class(x)[1]
 
     [1] "medfit::MediationData"
 
-`fit_mediation(model = syntax, engine = "native", treatment =, mediator =)`
+`fit_mediation(model = syntax, engine = "sem", treatment =, mediator =)`
 does both steps for **one** mediator. For several mediators, fit with
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 and call `extract_mediation(fit, mediator = c("m1", "m2"), outcome = )`:
@@ -331,25 +331,25 @@ a chain gives a `SerialMediationData`, mediators side by side a
 - **Products** (`x:m`, which give the four-way decomposition) work for
   two observed variables inside a supported class; the table of limits
   and messages is on [the native model
-  page](https://data-wise.github.io/medfit/articles/model-native.html#product-terms).
+  page](https://data-wise.github.io/medfit/articles/model-sem.html#product-terms).
   The model test is `NA` when a product factor is a regression target.
 - **AIC and BIC of a fit with a product are not comparable** with those
   of a fit without one (the product column enters the likelihood), so
   `AIC(fit_a, fit_b)` and [`BIC()`](https://rdrr.io/r/stats/AIC.html)
   refuse such a pair; see [the native model
-  page](https://data-wise.github.io/medfit/articles/model-native.html#limits).
+  page](https://data-wise.github.io/medfit/articles/model-sem.html#limits).
 - For latent means, groups, categorical outcomes or fit indices use
   lavaan; the extraction route accepts a `lavaan` fit as well. See
-  [lavaan and the native
+  [lavaan and the sem
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md).
 
 ## Related
 
-[Quickstart](https://data-wise.github.io/medfit/articles/native-quickstart.md)
-\| [Models: native
-engine](https://data-wise.github.io/medfit/articles/model-native.md) \|
+[Quickstart](https://data-wise.github.io/medfit/articles/sem-quickstart.md)
+\| [Models: sem
+engine](https://data-wise.github.io/medfit/articles/model-sem.md) \|
 [Constraints and the MBCO
-test](https://data-wise.github.io/medfit/articles/model-native-constraints.md)
+test](https://data-wise.github.io/medfit/articles/model-sem-constraints.md)
 \| [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md)
 \| [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md) \|
@@ -361,14 +361,14 @@ Bounded FIML was introduced in 0.16.0 and is unavailable in released
 0.15.0. Ordinary calls still delete incomplete model rows listwise. The
 explicit opt-in below fits numeric continuous observed variables: X to M
 to Y (three variables) with a free or exactly zero direct path,
-independent Gaussian disturbances and free intercepts. After 0.16.0 the
-development version also fits the same model with one covariate or two
-covariates (see [covariates](#bounded-fiml-covariates)), two parallel
-mediators (see [parallel mediators](#bounded-fiml-parallel)) and the
-two-mediator serial forms, saturated or pure chain, with up to two
-covariates (see [serial mediators](#bounded-fiml-serial)). It assumes
-ignorable missingness under that joint model; FIML does not impute the
-missing values.
+independent Gaussian disturbances and free intercepts. From 0.17.0 the
+opt-in also fits the same model with one covariate or two covariates
+(see [covariates](#bounded-fiml-covariates)), two parallel mediators
+(see [parallel mediators](#bounded-fiml-parallel)) and the two-mediator
+serial forms, saturated or pure chain, with up to two covariates (see
+[serial mediators](#bounded-fiml-serial)). It assumes ignorable
+missingness under that joint model; FIML does not impute the missing
+values.
 
 Generate continuous Gaussian X, M and Y with independent disturbances
 for this example; the bundled demo’s binary treatment does not match
@@ -435,7 +435,7 @@ The wrapper route returns the extracted mediation object directly:
 ``` r
 fiml_wrapped <- medfit::fit_mediation(
   model = fiml_syntax, data = fiml_data,
-  treatment = "treatment", mediator = "mediator1", engine = "native",
+  treatment = "treatment", mediator = "mediator1", engine = "sem",
   se_type = "model", engine_args = list(
     missing = "fiml", fixed_x = FALSE, meanstructure = TRUE, information = "observed"
   )
@@ -463,7 +463,7 @@ engine, even on complete data.
 | `meanstructure` | `TRUE`; `NULL` and `FALSE` refuse |
 | `information`, `se_type` | `"observed"`, `"model"` |
 | Weights | No non-NULL vector, including unit weights or the deprecated alias |
-| `n_starts`, `control` | `NULL` or 3; empty control; no syntax-supplied starts |
+| `n_starts`, `control` | `NULL` or 3; empty control (the empty list, or [`sem_control()`](https://data-wise.github.io/medfit/reference/sem_control.md) with `optimizer = "auto"` and no `nloptr` options); no syntax-supplied starts |
 | Topology | X, M, Y, with at most two covariates, or X, M1, M2, Y (two parallel mediators, with at most two covariates, or the saturated serial graph or the pure chain, with up to two covariates); free or exactly zero direct path; no `:=`, constraints, ties, bounds, other extra predictors, latent variables, factors or products |
 
 The start/control restrictions preserve the initial validated protocol,
@@ -501,12 +501,11 @@ for the likelihood.
 
 ### Covariates
 
-Development version only; not in 0.16.0. The opt-in also fits one
-covariate `Z`, or two covariates `Z1` and `Z2`, written as `M ~ X + Z`
-and `Y ~ M + X + Z` (two covariates: `M ~ X + Z1 + Z2`,
-`Y ~ M + X + Z1 + Z2`). The exogenous variables have a free joint
-covariance with independent disturbances, and any variable may be
-incomplete. The rules:
+New in 0.17.0; not in 0.16.0. The opt-in also fits one covariate `Z`, or
+two covariates `Z1` and `Z2`, written as `M ~ X + Z` and `Y ~ M + X + Z`
+(two covariates: `M ~ X + Z1 + Z2`, `Y ~ M + X + Z1 + Z2`). The
+exogenous variables have a free joint covariance with independent
+disturbances, and any variable may be incomplete. The rules:
 
 - Write every exogenous covariance pair (either order) or none. A
   partial set would fix the unwritten pairs at zero, so it is refused
@@ -532,10 +531,10 @@ a covariate fit is additionally refused by its own error
 
 ### Parallel mediators
 
-Development version only; not in 0.16.0. The opt-in also fits two
-parallel mediators, written `M1 ~ X`, `M2 ~ X` and `Y ~ M1 + M2` (the
-direct path `Y ~ X` is free, fixed at exactly zero, or omitted). Any
-variable may be incomplete. The rules:
+New in 0.17.0; not in 0.16.0. The opt-in also fits two parallel
+mediators, written `M1 ~ X`, `M2 ~ X` and `Y ~ M1 + M2` (the direct path
+`Y ~ X` is free, fixed at exactly zero, or omitted). Any variable may be
+incomplete. The rules:
 
 - Independent residuals need the statement `M1 ~~ 0*M2` (either order).
   Omitting the statement is refused: lavaan’s default would free that
@@ -579,11 +578,11 @@ fit has no source-fit route either
 
 ### Serial mediators
 
-Development version only; not in 0.16.0. The opt-in also fits two serial
-mediators in two forms, each with no, one or two covariates: the
-saturated forward graph `M1 ~ X`, `M2 ~ M1 + X` and `Y ~ M1 + M2 + X`,
-and the pure chain `M1 ~ X`, `M2 ~ M1` and `Y ~ M2` (in both the direct
-path `Y ~ X` is free, fixed at exactly zero, or omitted). The rules:
+New in 0.17.0; not in 0.16.0. The opt-in also fits two serial mediators
+in two forms, each with no, one or two covariates: the saturated forward
+graph `M1 ~ X`, `M2 ~ M1 + X` and `Y ~ M1 + M2 + X`, and the pure chain
+`M1 ~ X`, `M2 ~ M1` and `Y ~ M2` (in both the direct path `Y ~ X` is
+free, fixed at exactly zero, or omitted). The rules:
 
 - The independence of all three disturbance pairs must be written:
   `M1 ~~ 0*M2`, `M1 ~~ 0*Y` and `M2 ~~ 0*Y` (either order within a

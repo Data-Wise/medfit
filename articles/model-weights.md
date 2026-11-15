@@ -1,5 +1,8 @@
 # Weights and robust standard errors
 
+[Models](https://data-wise.github.io/medfit/articles/models.md) › Single
+mediator › Weights and robust standard errors
+
 Inverse-probability weights, or case weights for independent
 observations, change the fit and the standard errors. Part of the
 [Models](https://data-wise.github.io/medfit/articles/models.md)
@@ -11,29 +14,6 @@ collection.
 | **Class returned** | `MediationData` |
 | **Set with** | `weights =` and `se_type = "sandwich"` in [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md) |
 | **Needs** | the suggested `sandwich` package for `se_type = "sandwich"` |
-
-``` r
-library(medfit)
-```
-
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
 
 > **Pair weights with `se_type = "sandwich"`**
 >
@@ -92,10 +72,13 @@ tidy(fit, type = "effects", conf_int = TRUE)
   survey clusters, strata or replicate weights.
 - The `regmedint` engine accepts neither `weights` nor
   `se_type = "sandwich"`.
-- The native engine takes weights too, in
+- The sem engine takes weights too, in
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md),
   with its own sandwich (HC0-type) covariance; see [Methods and
   Formulas](https://data-wise.github.io/medfit/articles/methods.md).
+
+**Next:** Choose an interval: [Which interval should I
+use?](https://data-wise.github.io/medfit/articles/guide-intervals.md)
 
 ## Related
 

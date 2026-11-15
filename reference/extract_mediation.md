@@ -3,8 +3,9 @@
 Generic function to extract mediation structure (a, b, c' paths and
 variance-covariance matrices) from fitted models. This function provides
 a unified interface for extracting mediation information from various
-model types (lm, glm, lavaan, lmer, and a native
-[SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md)).
+model types (lm, glm, lavaan, lmer, and a
+[SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md) from
+the sem engine).
 
 ## Usage
 
@@ -65,15 +66,15 @@ types:
 
 - **SEMFit**: Extract from a model fitted by
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
-  (the native maximum-likelihood engine), with the same arguments and
-  structures as the lavaan method. A treatment-by-mediator product
-  written `x:m` (or `m:x`) in the outcome equation gives the four-way
-  decomposition, stored under the canonical name `m:x`; without it
-  `decomposition = "four_way"` is refused by name. `interaction =` takes
-  that product written with `:`. A fit from `fit_sem(missing = "fiml")`
-  extracts to a `FIMLMediationData` object for the three-variable model
-  and for the bounded one- and two-covariate models (see the Bounded
-  FIML section of
+  (the sem engine, medfit's own maximum-likelihood SEM fitter), with the
+  same arguments and structures as the lavaan method. A
+  treatment-by-mediator product written `x:m` (or `m:x`) in the outcome
+  equation gives the four-way decomposition, stored under the canonical
+  name `m:x`; without it `decomposition = "four_way"` is refused by
+  name. `interaction =` takes that product written with `:`. A fit from
+  `fit_sem(missing = "fiml")` extracts to a `FIMLMediationData` object
+  for the three-variable model and for the bounded one- and
+  two-covariate models (see the Bounded FIML section of
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)).
   With covariates, `treatment` may name any exogenous variable when no
   outcome path is fixed at zero; with exactly one outcome path fixed at

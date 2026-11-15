@@ -39,7 +39,7 @@
 
     <a class="navbar-brand me-2" href="index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.17.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,11 +71,11 @@
     <li><a class="dropdown-item" href="articles/model-cluster.html">Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="articles/model-twolevel.html">Two-level mediation (1-1-1)</a></li>
     <li><a class="dropdown-item" href="articles/model-lavaan.html">lavaan fits</a></li>
-    <li><a class="dropdown-item" href="articles/model-native.html">Native: paths and defined parameters</a></li>
-    <li><a class="dropdown-item" href="articles/model-native-latent.html">Native: a latent mediator</a></li>
-    <li><a class="dropdown-item" href="articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
-    <li><a class="dropdown-item" href="articles/model-native-multi.html">Native: several mediators and weights</a></li>
-    <li><a class="dropdown-item" href="articles/model-native-factors.html">Native: categorical covariates</a></li>
+    <li><a class="dropdown-item" href="articles/model-sem.html">The sem engine: paths and defined parameters</a></li>
+    <li><a class="dropdown-item" href="articles/model-sem-latent.html">The sem engine: a latent mediator</a></li>
+    <li><a class="dropdown-item" href="articles/model-sem-constraints.html">The sem engine: constraints and MBCO</a></li>
+    <li><a class="dropdown-item" href="articles/model-sem-multi.html">The sem engine: several mediators and weights</a></li>
+    <li><a class="dropdown-item" href="articles/model-sem-factors.html">The sem engine: categorical covariates</a></li>
     <li><a class="dropdown-item" href="articles/model-fiml.html">Missing data: bounded FIML</a></li>
   </ul>
 </li>
@@ -84,15 +84,16 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-guides">
 <li><a class="dropdown-item" href="articles/guide-changes.html">What changed since CRAN 0.3.2</a></li>
     <li><a class="dropdown-item" href="articles/guide-troubleshooting.html">Troubleshooting</a></li>
+    <li><a class="dropdown-item" href="articles/guide-engines.html">Which engine should I use?</a></li>
     <li><a class="dropdown-item" href="articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="articles/guide-glossary.html">Glossary and symbols</a></li>
     <li><a class="dropdown-item" href="articles/guide-twolevel-tutorial.html">Two-level workflow, step by step</a></li>
     <li><a class="dropdown-item" href="articles/guide-architecture.html">How medfit is organized</a></li>
-    <li><a class="dropdown-item" href="articles/native-defaults-0-15.html">Native defaults in 0.15.0</a></li>
-    <li><a class="dropdown-item" href="articles/native-quickstart.html">Native engine in five minutes</a></li>
-    <li><a class="dropdown-item" href="articles/native-tutorial.html">Native engine, step by step</a></li>
-    <li><a class="dropdown-item" href="articles/native-guide.html">The native engine guide</a></li>
-    <li><a class="dropdown-item" href="articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="articles/sem-defaults-0-15.html">Native defaults in 0.15.0</a></li>
+    <li><a class="dropdown-item" href="articles/sem-quickstart.html">The sem engine in five minutes</a></li>
+    <li><a class="dropdown-item" href="articles/sem-tutorial.html">The sem engine, step by step</a></li>
+    <li><a class="dropdown-item" href="articles/sem-guide.html">The sem engine guide</a></li>
+    <li><a class="dropdown-item" href="articles/lavaan-comparison.html">lavaan and the sem engine</a></li>
     <li><a class="dropdown-item" href="articles/probmed-comparison.html">probmed and medfit</a></li>
     <li><a class="dropdown-item" href="articles/rmediation-comparison.html">RMediation and medfit</a></li>
     <li><a class="dropdown-item" href="articles/syntax-crosswalk.html">One model in medfit, lavaan, OpenMx and semopy</a></li>
@@ -145,16 +146,16 @@
     <li><a class="dropdown-item" href="articles/methods.html">Methods and Formulas</a></li>
     <li><a class="dropdown-item" href="articles/computation-algorithms.html">Computation algorithms</a></li>
     <li><a class="dropdown-item" href="articles/whats-new-0-11.html">What's new in 0.11</a></li>
-    <li><a class="dropdown-item" href="articles/native-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
+    <li><a class="dropdown-item" href="articles/sem-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
     <li><a class="dropdown-item" href="articles/quality-control.html">Quality control of the optimizer</a></li>
   </ul>
 </li>
-<li class="nav-item"><a class="nav-link" href="articles/quality-control.html">Quality control</a></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-status" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-chart-line"></span> Status</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-status">
-<li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-project" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Project</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-project">
+<li><a class="dropdown-item" href="articles/quality-control.html">Quality control of the optimizer</a></li>
+    <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
+    <li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/roadmap.html">Development Roadmap</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/contributing.html">Contributing Guide</a></li>
   </ul>
@@ -185,95 +186,10 @@
 <blockquote>
 <p><strong>In one line:</strong> <code><a href="reference/med.html">med()</a></code> runs a mediation analysis, <code><a href="reference/quick.html">quick()</a></code> prints it, and <code><a href="reference/nie.html">nie()</a></code>, <code><a href="reference/nde.html">nde()</a></code>, <code><a href="reference/te.html">te()</a></code>, <code><a href="reference/pm.html">pm()</a></code> and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> read it.</p>
 </blockquote>
-<div class="section level2">
-<h2 id="bounded-fiml-in-0160">Bounded FIML in 0.16.0<a class="anchor" aria-label="anchor" href="#bounded-fiml-in-0160"></a>
-</h2>
-<p>medfit 0.16.0 added explicit <code>fit_sem(missing = "fiml", fixed_x = FALSE)</code> for three-variable Gaussian random-X mediation, preserving listwise defaults. medfit 0.17.0 also fits one or two covariates, two parallel mediators (with zero, one or two covariates) and two-mediator serial models (the saturated graph or the pure chain, with up to two covariates; implemented and verified against lavaan, not calibrated for coverage). It is unavailable in 0.15.0 and earlier. Observed/model SEs and unstandardized effects and normal intervals are supported. The model requires continuous X, M and Y, a free or exactly zero direct path, independent Gaussian disturbances, free intercepts and ignorable missingness under that joint model. Native <code><a href="reference/fit_mediation.html">fit_mediation()</a></code> uses <code>engine_args</code> for the same opt-in. Extracted FIML objects refuse <code><a href="reference/quick.html">quick()</a></code>, <code><a href="reference/pm.html">pm()</a></code> and <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>; fit tests, profiles and MBCO remain unavailable. Source-fit retained-row and Gaussian parameter-draw intervals (<code>bootstrap_mediation(source_fit = ...)</code>) are implemented but withheld: the call is refused until statistical admission is decided. <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> on the source SEMFit retains likelihood/IC fields. See the <a href="https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml">native guide</a> for settings and limits. Website publication remains a separate step.</p>
-</div>
-<div class="section level2">
-<h2 id="whats-new">What’s new<a class="anchor" aria-label="anchor" href="#whats-new"></a>
-</h2>
-<table class="table">
-<colgroup>
-<col width="50%">
-<col width="50%">
-</colgroup>
-<thead><tr>
-<th>Version</th>
-<th>What you get</th>
-</tr></thead>
-<tbody>
-<tr>
-<td><strong>0.17.0</strong></td>
-<td>bounded FIML with one or two covariates, two parallel and two serial mediators (numerically verified, not statistically admitted); <code><a href="reference/extract_mediation.html">extract_mediation()</a></code> on a two-level <code>lavaan</code> fit returns <code>TwoLevelMediationData</code> (experimental); lavaan floor 0.7-3</td>
-</tr>
-<tr>
-<td><strong>0.16.0</strong></td>
-<td>A supported single nonzero-product equality now searches both sign branches independently, with explicit coverage evidence rather than a global-optimum claim. Corrected observed-information and sandwich standard errors under active nonlinear constraints, including solver variance floors; expected information retains its Fisher definition. Active-boundary covariance is a local tangent approximation. Only explicit covariance diagnostics retain an accepted likelihood; other errors propagate. See <a href="https://data-wise.github.io/medfit/articles/methods.html#constraints">Methods and Formulas</a> and NEWS.</td>
-</tr>
-<tr>
-<td><strong>0.15.0</strong></td>
-<td>The native defaults flip: <code><a href="reference/fit_sem.html">fit_sem()</a></code>/<code>fit_mediation(engine = "native")</code> now fix the exogenous observed variables (<code>fixed_x</code>) and estimate the mean structure (<code>meanstructure = TRUE</code>) when you leave them unset, as lavaan does. Explicit arguments are kept, so <code>fixed_x = FALSE</code> and <code>meanstructure = FALSE</code> restore the old fit; the once-per-session warning is gone and <code>options(medfit.native_defaults)</code> is ignored (removed in 0.16.0). See the <a href="https://data-wise.github.io/medfit/articles/native-defaults-0-15.html">0.15.0 defaults article</a> and NEWS.</td>
-</tr>
-<tr>
-<td><strong>0.14.1</strong></td>
-<td>The outcome ledger for native fits: every zero-product branch and <code><a href="reference/mbco_sem.html">mbco_sem()</a></code> null keeps its outcome (<code>fit@diagnostics$ledger</code>, <code>$ledger</code> on the errors); literal <code>a == 0</code> / nonzero contradictions are certified empty, not fitted; branch maps and an overflow-safe 64-branch cap; a covariance-stage failure is a typed error (<code>medfit_sem_covariance_error</code>) that <code><a href="reference/mbco_sem.html">mbco_sem()</a></code> retains for a null. A literal contradiction now stops before the optimizer (see NEWS).</td>
-</tr>
-<tr>
-<td><strong>0.14.0</strong></td>
-<td>Notice for the 0.15.0 native defaults (<code>fixed_x = TRUE</code>, <code>meanstructure = TRUE</code>, now in force): a native fit that leaves either unset warns once per session (no result changes); <code>options(medfit.native_defaults = "0.15")</code> opts in early; the <a href="https://data-wise.github.io/medfit/articles/native-defaults-0-15.html">0.15.0 defaults article</a> explains both settings and how dependent packages keep today’s results.</td>
-</tr>
-<tr>
-<td><strong>0.13.0</strong></td>
-<td>A roundoff-limited restoration’s objective rise is capped, so a worse point can no longer stand and inflate a likelihood-ratio statistic; a refit the optimizer cannot fit is an unresolved result (<code><a href="reference/mbco_sem.html">mbco_sem()</a></code>, <code><a href="reference/compare_lr.html">compare_lr()</a></code>) instead of an error or a silent answer, and a zero-product branch that cannot be fitted stops <code><a href="reference/fit_sem.html">fit_sem()</a></code> with an error instead of returning a partial fit.</td>
-</tr>
-<tr>
-<td><strong>0.12.0</strong></td>
-<td>
-<code><a href="reference/compare_lr.html">compare_lr()</a></code> runs the product-null LR (<code>a*b == 0</code>) in lavaan or OpenMx and compares it with <code><a href="reference/mbco_sem.html">mbco_sem()</a></code>, warning only on observed evidence (a dropped constraint, a statistic above medfit’s); a fix for the native acceptance gate rejecting a correct fit at a bound on the reference BLAS (#238)</td>
-</tr>
-<tr>
-<td><strong>0.11.1</strong></td>
-<td>Nonparametric and cluster bootstrap resamples no longer depend on <code>ncores</code>; <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> on <code>SEMFit</code> records <code>p_valid</code> and refuses a pair with a nonzero fixed parameter in one fit only; <code>@diagnostics$optimum</code> records the best-of-starts verdict; an engine comparison table on the Models page; the minibook explains the hard concepts from scratch; a robustness suite for the native optimizer (metamorphic, nloptr fault injection, an edge-case grid and a randomized oracle sweep, registered as a gate)</td>
-</tr>
-<tr>
-<td><strong>0.11.0</strong></td>
-<td>Categorical (factor, character, logical) covariates in native syntax; population-average four-way standard errors on request; a fix for nonlinear-constrained fits that wandered to negative variances (#213); a start fallback and a single-start warning for the native optimizer; the native engine is no longer marked experimental, and its exported signatures, <code>SEMFit</code> properties and model syntax change only through a deprecation</td>
-</tr>
-<tr>
-<td><strong>0.10.0</strong></td>
-<td>The product term <code>x:m</code> in native syntax and the four-way decomposition from a native fit (<code><a href="reference/extract_mediation.html">extract_mediation()</a></code> on a <code><a href="reference/fit_sem.html">fit_sem()</a></code> fit), inside a documented supported class; the model test is <code>NA</code> when a product factor is a regression target; a native route in cookbook recipe 7</td>
-</tr>
-<tr>
-<td><strong>0.9.0</strong></td>
-<td>Observed intercepts and means in the native engine (<code>y ~ 1</code>, <code>meanstructure =</code>), with centered coordinates for data far from zero; <code>fixed_x</code> to fix exogenous moments at the sample values (lavaan’s <code>fixed.x = TRUE</code>); the tutorial’s step 9 and cookbook recipe 18</td>
-</tr>
-<tr>
-<td><strong>0.8.0</strong></td>
-<td>Nonlinear constraints (<code>cp == a*b</code>, <code>a*b &gt; k</code>), <code>mbco_sem(paths = )</code> for a product of k paths, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> and <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> for <code>SEMFit</code>, one lavaan-style naming convention; the lavaan comparison article and cookbook recipes 12 and 13</td>
-</tr>
-<tr>
-<td><strong>0.7.0</strong></td>
-<td>A native maximum-likelihood SEM engine: latent mediators, constraints, defined parameters, <code><a href="reference/fit_sem.html">fit_sem()</a></code>, <code><a href="reference/mbco_sem.html">mbco_sem()</a></code>
-</td>
-</tr>
-<tr>
-<td><strong>0.6.0</strong></td>
-<td>Cluster-randomized designs (2-1-1) with <code>engine = "lmer"</code>, Kenward-Roger intervals, cluster bootstrap; the Reference Card and Cookbook</td>
-</tr>
-<tr>
-<td><strong>0.5.0</strong></td>
-<td>Joint mediation (<code>JointMediationData</code>), the bundled <code>mediation_demo</code> data; two results fixed: serial <code><a href="reference/te.html">te()</a></code>/<code><a href="reference/pm.html">pm()</a></code> sum every path, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> path rows are found by name</td>
-</tr>
-<tr>
-<td><strong>0.4.0</strong></td>
-<td>The <code>regmedint</code> engine, the four-way decomposition from <code><a href="reference/fit_mediation.html">fit_mediation()</a></code>, and <code>m_star</code>
-</td>
-</tr>
-</tbody>
-</table>
-<p>Full list: <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p>
-</div>
+<p><strong>Next:</strong> <a href="#try-it-in-60-seconds">run the 60-second example</a>. Not sure which model you need? Jump to <a href="#pick-your-model">Pick your model</a>.</p>
+<blockquote>
+<p><strong>Missing data (FIML):</strong> the bounded FIML models are numerically verified against lavaan, not statistically admitted: no interval coverage is established. <a href="https://data-wise.github.io/medfit/articles/model-fiml.html">Details</a></p>
+</blockquote>
 <div class="section level2">
 <h2 id="install">Install<a class="anchor" aria-label="anchor" href="#install"></a>
 </h2>
@@ -406,15 +322,15 @@
 </tr>
 <tr>
 <td>A latent mediator</td>
-<td><a href="https://data-wise.github.io/medfit/articles/model-native-latent.html">Native: a latent mediator</a></td>
+<td><a href="https://data-wise.github.io/medfit/articles/model-sem-latent.html">The sem engine: a latent mediator</a></td>
 </tr>
 <tr>
 <td>Constraints, or a test of the indirect effect</td>
-<td><a href="https://data-wise.github.io/medfit/articles/model-native-constraints.html">Native: constraints and MBCO</a></td>
+<td><a href="https://data-wise.github.io/medfit/articles/model-sem-constraints.html">The sem engine: constraints and MBCO</a></td>
 </tr>
 <tr>
 <td>Serial or parallel mediators written as syntax</td>
-<td><a href="https://data-wise.github.io/medfit/articles/model-native-multi.html">Native: several mediators and weights</a></td>
+<td><a href="https://data-wise.github.io/medfit/articles/model-sem-multi.html">The sem engine: several mediators and weights</a></td>
 </tr>
 </tbody>
 </table>
@@ -424,6 +340,24 @@
 <span><span class="va">fit_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>, data <span class="op">=</span> <span class="va">mydata</span><span class="op">)</span></span>
 <span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">fit_m</span>, model_y <span class="op">=</span> <span class="va">fit_y</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/nie.html">nie</a></span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span></span></code></pre></div>
+<p><strong>More:</strong> <a href="https://data-wise.github.io/medfit/articles/cookbook.html">Cookbook</a> | <a href="https://data-wise.github.io/medfit/articles/refcard.html">Reference card</a> | <a href="https://data-wise.github.io/medfit/articles/guide-troubleshooting.html">Troubleshooting</a> | <a href="https://data-wise.github.io/medfit/articles/guide-changes.html">What changed since CRAN 0.3.2</a> | <a href="https://data-wise.github.io/medfit/articles/methods.html">Methods</a></p>
+<details><summary><strong>What’s new in 0.18.0</strong>
+</summary><ul>
+<li>
+<strong>The sem engine:</strong> <code>fit_mediation(engine = "sem")</code> names medfit’s own SEM fitter; <code>engine = "native"</code> still works, with identical results. <code><a href="reference/sem_control.html">sem_control()</a></code> collects its optimizer settings. See <a href="https://data-wise.github.io/medfit/articles/guide-engines.html">Which engine should I use?</a>.</li>
+<li>
+<strong>Renamed pages:</strong> the sem engine articles moved (<code>native-guide</code> is now <code>sem-guide</code>, and so on); old links redirect.</li>
+<li>
+<strong>Bounded FIML expansion (0.17.0):</strong> one or two covariates, two parallel and two serial mediators (numerically verified, not statistically admitted). See the <a href="https://data-wise.github.io/medfit/articles/model-fiml.html">model page</a>.</li>
+<li>
+<strong>Two-level mediation (0.17.0, experimental):</strong> <code><a href="reference/extract_mediation.html">extract_mediation()</a></code> on a two-level <code>lavaan</code> fit returns <code>TwoLevelMediationData</code>; lavaan floor 0.7-3. See the <a href="https://data-wise.github.io/medfit/articles/model-twolevel.html">model page</a>.</li>
+<li>
+<strong>Before that:</strong> 0.16.0 (both sign branches of a nonzero-product equality, corrected constrained standard errors) and 0.15.0 (native defaults flip: <code>fixed_x</code> and <code>meanstructure</code> on when unset).</li>
+</ul>
+<p>Every release is listed in <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>; upgrading from CRAN 0.3.2? See <a href="https://data-wise.github.io/medfit/articles/guide-changes.html">What changed since CRAN 0.3.2</a>.</p>
+</details><details><summary><strong>Bounded FIML (0.16.0 and 0.17.0): settings and limits</strong>
+</summary><p>medfit 0.16.0 added explicit <code>fit_sem(missing = "fiml", fixed_x = FALSE)</code> for three-variable Gaussian random-X mediation, preserving listwise defaults. medfit 0.17.0 also fits one or two covariates, two parallel mediators (with zero, one or two covariates) and two-mediator serial models (the saturated graph or the pure chain, with up to two covariates; implemented and verified against lavaan, not calibrated for coverage). It is unavailable in 0.15.0 and earlier. Observed/model SEs and unstandardized effects and normal intervals are supported. The model requires continuous X, M and Y, a free or exactly zero direct path, independent Gaussian disturbances, free intercepts and ignorable missingness under that joint model. Native <code><a href="reference/fit_mediation.html">fit_mediation()</a></code> uses <code>engine_args</code> for the same opt-in. Extracted FIML objects refuse <code><a href="reference/quick.html">quick()</a></code>, <code><a href="reference/pm.html">pm()</a></code> and <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>; fit tests, profiles and MBCO remain unavailable. Source-fit retained-row and Gaussian parameter-draw intervals (<code>bootstrap_mediation(source_fit = ...)</code>) are implemented but withheld: the call is refused until statistical admission is decided. <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> on the source SEMFit retains likelihood/IC fields. See the <a href="https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml">native guide</a> for settings and limits.</p>
+</details>
 </div>
 <div class="section level2">
 <h2 id="more-examples">More examples<a class="anchor" aria-label="anchor" href="#more-examples"></a>
@@ -452,8 +386,8 @@
 <span><span class="co">#&gt;        own  spillover        nie</span></span>
 <span><span class="co">#&gt; 0.25763321 0.07036432 0.32799753</span></span></code></pre>
 <p>See <a href="https://data-wise.github.io/medfit/articles/methods.html">Methods and Formulas</a> for the estimand and the assumptions each effect needs.</p>
-</details><details><summary><b>Latent mediator</b> (native engine)
-</summary><p>When the mediator is a construct measured by several indicators, write the model as syntax. The native maximum-likelihood engine needs no other package:</p>
+</details><details><summary><b>Latent mediator</b> (sem engine)
+</summary><p>When the mediator is a construct measured by several indicators, write the model as syntax. The sem engine needs no other package:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># a latent mediator `eta` with three indicators, simulated</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">11</span><span class="op">)</span></span>
@@ -474,7 +408,7 @@
 <span><span class="st">  Y ~ b * eta + cp * X</span></span>
 <span><span class="st">"</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span>model <span class="op">=</span> <span class="va">syntax</span>, data <span class="op">=</span> <span class="va">ldat</span>, treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
-<span>                     mediator <span class="op">=</span> <span class="st">"eta"</span>, engine <span class="op">=</span> <span class="st">"native"</span><span class="op">)</span></span>
+<span>                     mediator <span class="op">=</span> <span class="st">"eta"</span>, engine <span class="op">=</span> <span class="st">"sem"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/nie.html">nie</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/mbco_sem.html">mbco_sem</a></span><span class="op">(</span><span class="fu"><a href="reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">syntax</span>, <span class="va">ldat</span><span class="op">)</span>, <span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span>  <span class="co"># minimum of two likelihood-ratio tests</span></span></code></pre></div>
@@ -525,7 +459,7 @@
 </tr>
 <tr>
 <td><code>TwoLevelMediationData</code></td>
-<td>A two-level <code>lavaan</code> fit with X, M and Y on level-1 units (1-1-1): the indirect effect at the within and the between level (development version)</td>
+<td>A two-level <code>lavaan</code> fit with X, M and Y on level-1 units (1-1-1): the indirect effect at the within and the between level (0.17.0, experimental)</td>
 </tr>
 <tr>
 <td>
@@ -535,7 +469,7 @@
 </tr>
 <tr>
 <td><code>SEMFit</code></td>
-<td>A native-engine fit; <code><a href="reference/extract_mediation.html">extract_mediation()</a></code> turns it into the classes above</td>
+<td>A sem engine fit; <code><a href="reference/extract_mediation.html">extract_mediation()</a></code> turns it into the classes above</td>
 </tr>
 <tr>
 <td><code>BootstrapResult</code></td>
@@ -574,7 +508,7 @@
 <tr>
 <td>Fit with control</td>
 <td>
-<code><a href="reference/fit_mediation.html">fit_mediation()</a></code> (engines <code>glm</code>, <code>regmedint</code>, <code>lmer</code>, <code>native</code>)</td>
+<code><a href="reference/fit_mediation.html">fit_mediation()</a></code> (engines <code>glm</code>, <code>regmedint</code>, <code>lmer</code>, <code>sem</code>)</td>
 </tr>
 <tr>
 <td>Use fitted models</td>
@@ -702,6 +636,10 @@
 <td><a href="https://data-wise.github.io/medfit/articles/guide-troubleshooting.html">Troubleshooting</a></td>
 </tr>
 <tr>
+<td>Choose an engine</td>
+<td><a href="https://data-wise.github.io/medfit/articles/guide-engines.html">Which engine should I use?</a></td>
+</tr>
+<tr>
 <td>Choose an interval</td>
 <td><a href="https://data-wise.github.io/medfit/articles/guide-intervals.html">Which interval should I use?</a></td>
 </tr>
@@ -758,7 +696,7 @@
 </h2>
 <p>If you use medfit in your research, please cite:</p>
 <pre><code>Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.17.0. https://data-wise.github.io/medfit/</code></pre>
+R package version 0.18.0. https://data-wise.github.io/medfit/</code></pre>
 <p>For the entry matching your installed version, run <code>citation("medfit")</code>.</p>
 </div>
 <div class="section level2">

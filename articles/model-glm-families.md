@@ -1,5 +1,8 @@
 # Binary and non-normal outcomes or mediators
 
+[Models](https://data-wise.github.io/medfit/articles/models.md) › Single
+mediator › Binary and non-normal outcomes or mediators
+
 The default engine fits each model with
 [`glm()`](https://rdrr.io/r/stats/glm.html), so the outcome and the
 mediator can each take a family. Part of the
@@ -12,35 +15,6 @@ collection.
 | **Class returned** | `MediationData` |
 | **Set with** | `family_y =` and `family_m =` in [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md), or fit the [`glm()`](https://rdrr.io/r/stats/glm.html) yourself and extract |
 | **Scale** | `b` and `c'` are on the outcome’s link scale; `a` is on the mediator’s |
-
-``` r
-library(medfit)
-```
-
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
-
-``` r
-d <- mediation_demo
-d$outcome_bin <- as.integer(d$outcome > median(d$outcome))
-d$mediator_bin <- as.integer(d$mediator1 > median(d$mediator1))
-```
 
 > **Read this first**
 >
@@ -115,7 +89,7 @@ equation, so the test reduces to the joint significance test: test
 the larger p-value. The null is “a = 0 or b = 0”, so the test is
 conservative, like
 [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
-on the native engine.
+on the sem engine.
 
 ``` r
 joint_test <- function(fit_a, term_a, fit_b, term_b) {
@@ -160,6 +134,9 @@ scale. A function that also reports outcome-scale effects is planned.
 - Fitted [`glm()`](https://rdrr.io/r/stats/glm.html) pairs can be
   extracted instead of fitted here:
   `extract_mediation(fit_m, model_y = fit_y, ...)`.
+
+**Next:** Choose an interval: [Which interval should I
+use?](https://data-wise.github.io/medfit/articles/guide-intervals.md)
 
 ## Related
 

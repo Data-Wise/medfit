@@ -1,7 +1,7 @@
 # One model in medfit, lavaan, OpenMx and semopy
 
-medfit’s quality control checks the native engine against independent
-SEM software ([Quality control of the
+medfit’s quality control checks the sem engine against independent SEM
+software ([Quality control of the
 optimizer](https://data-wise.github.io/medfit/articles/quality-control.md)).
 This page writes the same simple mediation model in each package’s own
 syntax, so the comparisons can be read and rerun. The lavaan and OpenMx

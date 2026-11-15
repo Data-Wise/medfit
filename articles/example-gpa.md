@@ -10,7 +10,7 @@ Carlo study). Nothing here is a finding about real students.
 |  |  |
 |----|----|
 | **You need** | medfit 0.11.0 or later; lavaan is used for one cross-check and the page skips that row when it is absent |
-| **You get** | a fitted `MediationData`, delta-method and bootstrap intervals, a native-engine fit, and a table of pass/fail checks |
+| **You get** | a fitted `MediationData`, delta-method and bootstrap intervals, a sem engine fit, and a table of pass/fail checks |
 | **Time** | about 10 minutes to read, under a minute to run |
 
 ``` r
@@ -276,14 +276,14 @@ chk("NIE se equals Sobel from lm", se[["nie"]], sobel, 1e-8 * sobel)
 The ratio is 1 to printed precision: for a Gaussian `glm` fit medfit
 takes the least-squares standard errors from the two regressions, so the
 delta-method value is the Sobel value, not an approximation of it. (The
-native engine below divides by \\n\\ rather than \\n-p\\ and differs by
-a fraction of a percent.)
+sem engine below divides by \\n\\ rather than \\n-p\\ and differs by a
+fraction of a percent.)
 
-## 6. Check 3: the native engine and lavaan
+## 6. Check 3: the sem engine and lavaan
 
-The native maximum-likelihood engine fits the same model from syntax.
-Defined parameters (`:=`) carry the indirect and total effects with
-their own delta-method standard errors.
+The sem engine fits the same model from syntax. Defined parameters
+(`:=`) carry the indirect and total effects with their own delta-method
+standard errors.
 
 ``` r
 syntax <- "
@@ -659,7 +659,7 @@ c(medfit = as.character(utils::packageVersion("medfit")),
 ```
 
       medfit        R   lavaan
-    "0.17.0"  "4.6.2"  "0.7.3" 
+    "0.18.0"  "4.6.2"  "0.7.3" 
 
 Seeds: data `20261017`; bootstrap `123`; Monte Carlo `1` (n = 500) and
 `2` (n = 100). The simulation functions use
@@ -676,8 +676,8 @@ numbers are stable across platforms up to the last printed digits.
   and [Which interval should I
   use?](https://data-wise.github.io/medfit/articles/guide-intervals.md):
   choosing the interval.
-- [Native engine, step by
-  step](https://data-wise.github.io/medfit/articles/native-tutorial.md):
+- [The sem engine, step by
+  step](https://data-wise.github.io/medfit/articles/sem-tutorial.md):
   model syntax, constraints and
   [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md).
 - [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md):

@@ -1,5 +1,8 @@
 # Treatment-by-mediator interaction
 
+[Models](https://data-wise.github.io/medfit/articles/models.md) › Single
+mediator › Treatment-by-mediator interaction
+
 When the effect of the mediator depends on the treatment, the outcome
 model carries a `treatment * mediator` term and the effect splits into
 four parts. Part of the
@@ -12,29 +15,6 @@ collection.
 | **Class returned** | `InteractionMediationData` |
 | **Routes** | [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md) (glm or `regmedint` engine), [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on `lm`/`glm`, lavaan or a native [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) fit |
 | **Needs** | Gaussian identity-link models and a reference mediator level `m_star` |
-
-``` r
-library(medfit)
-```
-
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
 
 ## Fit it
 
@@ -184,7 +164,7 @@ defined, but those of a fit with the product are not comparable with
 those of a fit without it, so `AIC(fit_a, fit_b)` and
 [`BIC()`](https://rdrr.io/r/stats/AIC.html) refuse such a pair. The
 [supported class and each
-limit](https://data-wise.github.io/medfit/articles/model-native.html#product-terms)
+limit](https://data-wise.github.io/medfit/articles/model-sem.html#product-terms)
 lists what else a product model cannot contain, with the message for
 each.
 
@@ -214,11 +194,14 @@ tryCatch(anova(sem, sem), error = function(e) conditionMessage(e))
 - The native route reads a product written in the model syntax
   (`treatment:mediator1`), not a precomputed data column, and only
   inside the [supported
-  class](https://data-wise.github.io/medfit/articles/model-native.html#product-terms):
+  class](https://data-wise.github.io/medfit/articles/model-sem.html#product-terms):
   recursive, no residual covariance between outcomes, free coefficients
   and intercepts, none shared. Without the product,
   `decomposition = "four_way"` is refused with a message that says to
   add it.
+
+**Next:** Choose an interval: [Which interval should I
+use?](https://data-wise.github.io/medfit/articles/guide-intervals.md)
 
 ## Related
 

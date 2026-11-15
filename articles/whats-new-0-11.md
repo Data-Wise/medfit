@@ -112,7 +112,7 @@ factors are refused. **Why:** The explicit dummies keep the covariance
 model and refits consistent. The native engine is now a supported public
 interface with a frozen syntax and API contract. See `R/sem-fit.R` and
 [the factor model
-guide](https://data-wise.github.io/medfit/articles/model-native-factors.md).
+guide](https://data-wise.github.io/medfit/articles/model-sem-factors.md).
 
 ``` r
 

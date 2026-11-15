@@ -1,9 +1,9 @@
-# Native engine in five minutes
+# The sem engine in five minutes
 
 Fit a path model from syntax, read it, test it, and turn it into a
 mediation object, with no package besides medfit. For the full picture
-see [the native engine
-guide](https://data-wise.github.io/medfit/articles/native-guide.md).
+see [the sem engine
+guide](https://data-wise.github.io/medfit/articles/sem-guide.md).
 
 |              |                                                          |
 |--------------|----------------------------------------------------------|
@@ -164,16 +164,16 @@ work as on any other fit.
 
 ## Where next
 
-- [Native engine, step by
-  step](https://data-wise.github.io/medfit/articles/native-tutorial.md):
+- [The sem engine, step by
+  step](https://data-wise.github.io/medfit/articles/sem-tutorial.md):
   the same path in ten checked steps, with a chain of three paths.
-- [The native engine
-  guide](https://data-wise.github.io/medfit/articles/native-guide.md):
+- [The sem engine
+  guide](https://data-wise.github.io/medfit/articles/sem-guide.md):
   syntax, inference, constraints, diagnostics and limits in one place.
 - [Cookbook recipes 11 to
   20](https://data-wise.github.io/medfit/articles/cookbook.md): a latent
   mediator, a nonlinear constraint, comparing models, defined
   parameters, bounds, checks, fixed covariates and intercepts.
-- [lavaan and the native
+- [lavaan and the sem
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md):
-  what the native engine does and does not do compared with lavaan.
+  what the sem engine does and does not do compared with lavaan.

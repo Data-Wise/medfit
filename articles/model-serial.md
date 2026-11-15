@@ -1,5 +1,8 @@
 # Serial mediation (a chain)
 
+[Models](https://data-wise.github.io/medfit/articles/models.md) ›
+Several mediators › Serial mediation (a chain)
+
 Treatment, then mediator 1, then mediator 2, then the outcome. Part of
 the [Models](https://data-wise.github.io/medfit/articles/models.md)
 collection.
@@ -10,29 +13,6 @@ collection.
 | **Class returned** | `SerialMediationData` |
 | **Indirect effect** | the chain \\a \\ d_1 \\ b\\; `nie(type = "total")` adds the paths that skip a mediator |
 | **Routes** | `extract_mediation(..., mediator = c(...), mediator_models = list(...))` on `lm`/`glm`, or a lavaan fit |
-
-``` r
-library(medfit)
-```
-
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
 
 ## Fit it
 
@@ -80,6 +60,9 @@ c(chain = unname(nie(x)), every_path = unname(nie(x, type = "total")),
 - `tidy(x, type = "effects", conf_int = TRUE)` gives delta-method
   intervals for the effects; for a bootstrap interval see [Bootstrap
   Inference](https://data-wise.github.io/medfit/articles/bootstrap.md).
+
+**Next:** Compare with mediators side by side: [Parallel
+mediation](https://data-wise.github.io/medfit/articles/model-parallel.md)
 
 ## Related
 

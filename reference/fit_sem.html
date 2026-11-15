@@ -5,12 +5,12 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Fit a Structural Equation Model by Maximum Likelihood — fit_sem"><meta name="description" content="Fits a model written in lavaan-style syntax to raw data with medfit's native
-maximum-likelihood engine, and returns a SEMFit object. The engine handles
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Fit a Structural Equation Model by Maximum Likelihood — fit_sem"><meta name="description" content="Fits a model written in lavaan-style syntax to raw data with the sem engine,
+medfit's own maximum-likelihood SEM fitter, and returns a SEMFit object. The engine handles
 observed and latent variables, user labels, fixed values, starts and bounds,
 equality and inequality constraints (==, &amp;lt;, &amp;gt;, linear or nonlinear), and defined
-parameters (:=) with delta-method standard errors."><meta property="og:description" content="Fits a model written in lavaan-style syntax to raw data with medfit's native
-maximum-likelihood engine, and returns a SEMFit object. The engine handles
+parameters (:=) with delta-method standard errors."><meta property="og:description" content="Fits a model written in lavaan-style syntax to raw data with the sem engine,
+medfit's own maximum-likelihood SEM fitter, and returns a SEMFit object. The engine handles
 observed and latent variables, user labels, fixed values, starts and bounds,
 equality and inequality constraints (==, &amp;lt;, &amp;gt;, linear or nonlinear), and defined
 parameters (:=) with delta-method standard errors."><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body>
@@ -21,7 +21,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.17.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,26 +51,27 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
     <li><a class="dropdown-item" href="../articles/model-cluster.html">Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/model-twolevel.html">Two-level mediation (1-1-1)</a></li>
     <li><a class="dropdown-item" href="../articles/model-lavaan.html">lavaan fits</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native.html">Native: paths and defined parameters</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-latent.html">Native: a latent mediator</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-multi.html">Native: several mediators and weights</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-factors.html">Native: categorical covariates</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem.html">The sem engine: paths and defined parameters</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-latent.html">The sem engine: a latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-constraints.html">The sem engine: constraints and MBCO</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-multi.html">The sem engine: several mediators and weights</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-factors.html">The sem engine: categorical covariates</a></li>
     <li><a class="dropdown-item" href="../articles/model-fiml.html">Missing data: bounded FIML</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-guides" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Guides</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-guides"><li><a class="dropdown-item" href="../articles/guide-changes.html">What changed since CRAN 0.3.2</a></li>
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-engines.html">Which engine should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
     <li><a class="dropdown-item" href="../articles/guide-twolevel-tutorial.html">Two-level workflow, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/guide-architecture.html">How medfit is organized</a></li>
-    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">Native defaults in 0.15.0</a></li>
-    <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
-    <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
-    <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
-    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-defaults-0-15.html">Native defaults in 0.15.0</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-quickstart.html">The sem engine in five minutes</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-tutorial.html">The sem engine, step by step</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-guide.html">The sem engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the sem engine</a></li>
     <li><a class="dropdown-item" href="../articles/probmed-comparison.html">probmed and medfit</a></li>
     <li><a class="dropdown-item" href="../articles/rmediation-comparison.html">RMediation and medfit</a></li>
     <li><a class="dropdown-item" href="../articles/syntax-crosswalk.html">One model in medfit, lavaan, OpenMx and semopy</a></li>
@@ -119,14 +120,14 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
     <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
     <li><a class="dropdown-item" href="../articles/computation-algorithms.html">Computation algorithms</a></li>
     <li><a class="dropdown-item" href="../articles/whats-new-0-11.html">What's new in 0.11</a></li>
-    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
     <li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
   </ul></li>
-<li class="nav-item"><a class="nav-link" href="../articles/quality-control.html">Quality control</a></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-status" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-chart-line"></span> Status</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-status"><li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-project" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Project</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-project"><li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
+    <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
+    <li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/roadmap.html">Development Roadmap</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/contributing.html">Contributing Guide</a></li>
   </ul></li>
@@ -142,13 +143,13 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit a Structural Equation Model by Maximum Likelihood</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.17.0/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
       <div class="d-none name"><code>fit_sem.Rd</code></div>
     </div>
 
     <div class="ref-description section level2">
-    <p>Fits a model written in lavaan-style syntax to raw data with medfit's native
-maximum-likelihood engine, and returns a <a href="SEMFit.html">SEMFit</a> object. The engine handles
+    <p>Fits a model written in lavaan-style syntax to raw data with the sem engine,
+medfit's own maximum-likelihood SEM fitter, and returns a <a href="SEMFit.html">SEMFit</a> object. The engine handles
 observed and latent variables, user labels, fixed values, starts and bounds,
 equality and inequality constraints (<code>==</code>, <code>&lt;</code>, <code>&gt;</code>, linear or nonlinear), and defined
 parameters (<code>:=</code>) with delta-method standard errors.</p>
@@ -218,8 +219,13 @@ only <code>NULL</code> or <code>3</code> is supported: three starts per solver, 
 
 
 <dt id="arg-control">control<a class="anchor" aria-label="anchor" href="#arg-control"></a></dt>
-<dd><p>List: options passed to the optimizer (<code>nloptr</code>). FIML requires
-the empty list under its initial validated numerical protocol.</p></dd>
+<dd><p>A <code><a href="sem_control.html">sem_control()</a></code> object, or a plain list of options passed to
+the optimizer (<code>nloptr</code>), the same as <code>sem_control(nloptr = &lt;list&gt;)</code>. An
+<code>n_starts</code> given both here (in <code><a href="sem_control.html">sem_control()</a></code>) and as the argument must
+agree. FIML requires <code>optimizer = "auto"</code>, an empty <code>nloptr</code> list (or the
+empty plain list) and <code>n_starts</code> <code>NULL</code> or 3, under its initial validated
+numerical protocol. The resolved protocol is recorded
+in <code>fit@diagnostics$protocol</code>.</p></dd>
 
 
 <dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
@@ -398,7 +404,7 @@ Require <code>meanstructure = TRUE</code>, <code>information = "observed"</code>
 no weights, empty <code>control</code>, and <code>n_starts = NULL</code> or <code>3</code>. These numerical-control
 restrictions reproduce the initial validated protocol. Missing values never
 select FIML automatically, and a failed fit never falls back to listwise deletion.
-Native <code><a href="fit_mediation.html">fit_mediation()</a></code> forwards these settings through <code>engine_args</code>; its
+<code><a href="fit_mediation.html">fit_mediation()</a></code> with <code>engine = "sem"</code> forwards these settings through <code>engine_args</code>; its
 <code>se_type = "model"</code> remains a top-level argument.</p>
 <p><code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> counts rows with any observed model variable; <code>n_dropped</code> counts only
 all-empty rows. Singleton patterns and data with no complete rows are supported
@@ -432,7 +438,7 @@ stage, reason, original parent and completed attempts; basic argument-type error
 can occur earlier. A dedicated <code>fiml-1</code> ledger binds likelihood, rows, settings
 and attempts; the version-1 ledger below continues to describe listwise fits.
 See the Methods and Formulas article, Bounded FIML, for the likelihood and
-the native engine guide for the supported workflow. Bounded FIML was introduced
+the sem engine guide for the supported workflow. Bounded FIML was introduced
 in 0.16.0; released 0.15.0 does not provide this option.</p>
     </div>
     <div class="section level2">

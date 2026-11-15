@@ -49,10 +49,15 @@ mbco_sem(
 - n_starts, control:
 
   Passed to the optimizer for the two refits, as in
-  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md).
-  `NULL`, the default, uses the settings `object` was made with, so a
-  better optimum in the full fit than in a refit cannot inflate the
-  statistic; an explicit value overrides them.
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md):
+  `control` is a
+  [`sem_control()`](https://data-wise.github.io/medfit/reference/sem_control.md)
+  object or a plain `nloptr` list. `NULL`, the default, uses the
+  settings `object` was made with, so a better optimum in the full fit
+  than in a refit cannot inflate the statistic; an explicit value
+  overrides them (an explicit
+  [`sem_control()`](https://data-wise.github.io/medfit/reference/sem_control.md)
+  replaces the stored `nloptr` options, as an explicit list does).
 
 - fit:
 

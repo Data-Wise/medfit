@@ -64,7 +64,11 @@ compare_lr(object, paths, engine = c("lavaan", "openmx"), tolerance = 1e-04)
 
 - engine:
 
-  `"lavaan"` or `"openmx"`. The package must be installed.
+  `"lavaan"` or `"openmx"`: the external comparison program that runs
+  the product-null LR for comparison, not a fitter of the mediation
+  model. The mediation model is always medfit's native fit `object`, and
+  the result's `reference` is medfit's LR. The package must be
+  installed.
 
 - tolerance:
 

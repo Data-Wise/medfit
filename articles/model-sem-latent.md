@@ -1,12 +1,11 @@
-# Native engine: a latent mediator
+# The sem engine: a latent mediator
 
 The mediator is a construct measured by several indicators, and you want
 its indirect effect without first averaging the indicators into a score.
 Part of the
 [Models](https://data-wise.github.io/medfit/articles/models.md)
-collection; the second of five [native
-engine](https://data-wise.github.io/medfit/articles/model-native.md)
-pages.
+collection; the second of five [sem
+engine](https://data-wise.github.io/medfit/articles/model-sem.md) pages.
 
 |  |  |
 |----|----|
@@ -14,29 +13,6 @@ pages.
 | **Class returned** | `SEMFit`, then `MediationData` |
 | **Syntax** | `eta =~ m1 + m2 + m3` defines the latent variable |
 | **Indirect effect** | \\a \\ b\\ through the latent \\\eta\\ |
-
-``` r
-library(medfit)
-```
-
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
 
 ## Simulated data
 
@@ -148,18 +124,22 @@ difference.
 - **The variables in the syntax must be columns of the data**, except
   the latent ones. A variable that is missing stops the fit with
   “variables in the model are not columns of `data`”.
-- **One latent mediator per `fit_mediation(engine = "native")` call**,
-  as with any single mediator; for several, use
+- **One latent mediator per `fit_mediation(engine = "sem")` call**, as
+  with any single mediator; for several, use
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
   and
-  [extract](https://data-wise.github.io/medfit/articles/model-native-multi.md)
+  [extract](https://data-wise.github.io/medfit/articles/model-sem-multi.md)
   the structure.
+
+**Next:** Constrain paths and test the indirect effect: [The sem engine:
+constraints and the MBCO
+test](https://data-wise.github.io/medfit/articles/model-sem-constraints.md)
 
 ## Related
 
 [Cookbook recipe
 11](https://data-wise.github.io/medfit/articles/cookbook.html#a-latent-mediator-native-engine)
 \| [Constraints and the MBCO
-test](https://data-wise.github.io/medfit/articles/model-native-constraints.md)
+test](https://data-wise.github.io/medfit/articles/model-sem-constraints.md)
 \| [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md)

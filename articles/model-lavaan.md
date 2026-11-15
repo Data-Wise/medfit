@@ -1,5 +1,8 @@
 # lavaan fits
 
+[Models](https://data-wise.github.io/medfit/articles/models.md) ›
+Clusters and latent variables › lavaan fits
+
 You fitted the model as a structural equation model with lavaan and want
 the same effects and tables. Part of the
 [Models](https://data-wise.github.io/medfit/articles/models.md)
@@ -11,34 +14,6 @@ collection.
 | **Class returned** | `MediationData`, `SerialMediationData` or `ParallelMediationData` |
 | **Route** | `extract_mediation(<lavaan fit>, treatment = , mediator = , outcome = )` |
 | **Needs** | `lavaan` |
-
-``` r
-library(medfit)
-```
-
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
-
-``` r
-has_lavaan <- requireNamespace("lavaan", quietly = TRUE)
-covs <- "covariate1 + covariate2"
-```
 
 ## Simple mediation
 
@@ -161,8 +136,12 @@ mediation](https://data-wise.github.io/medfit/articles/model-serial.md)).
   extracts ([issue
   \#394](https://github.com/Data-Wise/medfit/issues/394)).
 - To write a model as syntax **without** lavaan, with latent mediators
-  and constraints, use the [native
-  engine](https://data-wise.github.io/medfit/articles/model-native.md).
+  and constraints, use the [sem
+  engine](https://data-wise.github.io/medfit/articles/model-sem.md).
+
+**Next:** Fit the model in medfit syntax: [The sem engine: paths and
+defined
+parameters](https://data-wise.github.io/medfit/articles/model-sem.md)
 
 ## Related
 
@@ -170,5 +149,5 @@ mediation](https://data-wise.github.io/medfit/articles/model-serial.md)).
 10](https://data-wise.github.io/medfit/articles/cookbook.html#i-use-lavaan)
 \| [Model
 Extraction](https://data-wise.github.io/medfit/articles/extraction.md)
-\| [Native
-engine](https://data-wise.github.io/medfit/articles/model-native.md)
+\| [The sem
+engine](https://data-wise.github.io/medfit/articles/model-sem.md)

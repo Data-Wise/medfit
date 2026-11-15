@@ -6,7 +6,7 @@ makes no coverage claim beyond what the package’s tests show.
 
 The table below describes objects with the indicated inference methods.
 The [bounded FIML
-workflow](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
+workflow](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml)
 currently supports normal path/effect intervals. Source-fit intervals
 (retained-row FIML and joint Gaussian parameter-draw percentiles through
 explicit
@@ -32,7 +32,7 @@ for assumptions and scope.
 | Weights | `se_type = "sandwich"` | robust (heteroskedasticity-consistent) standard errors; see [Weights and robust SEs](https://data-wise.github.io/medfit/articles/model-weights.md) |
 | Treatment assigned to clusters, 25 or more | model-based intervals for the paths | the engine warns below 25 clusters |
 | Treatment assigned to clusters, fewer than 25 | `se_type = "kr"` for the paths; `bootstrap_mediation(cluster = )` for the products | see [Cluster-randomized trials](https://data-wise.github.io/medfit/articles/model-cluster.md) |
-| A test that the indirect effect is zero | [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) (native engine) | minimum of two likelihood-ratio tests; see [constraints and MBCO](https://data-wise.github.io/medfit/articles/model-native-constraints.md) |
+| A test that the indirect effect is zero | [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) (sem engine) | minimum of two likelihood-ratio tests; see [constraints and MBCO](https://data-wise.github.io/medfit/articles/model-sem-constraints.md) |
 | Only a point estimate | the plugin method | it has no interval; the bounds are `NA` |
 
 ## The same fit, four ways

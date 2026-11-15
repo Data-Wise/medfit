@@ -22,28 +22,28 @@ task recipes see the
 | Treatment assigned to whole clusters | [Cluster-randomized trials](https://data-wise.github.io/medfit/articles/model-cluster.md) |
 | Treatment, mediator and outcome on units nested in clusters, within and between effects | [Two-level mediation (1-1-1)](https://data-wise.github.io/medfit/articles/model-twolevel.md) |
 | A lavaan fit | [lavaan fits](https://data-wise.github.io/medfit/articles/model-lavaan.md) |
-| A model written as syntax, with defined parameters | [Native: paths and defined parameters](https://data-wise.github.io/medfit/articles/model-native.md) |
-| A latent mediator | [Native: a latent mediator](https://data-wise.github.io/medfit/articles/model-native-latent.md) |
-| Constraints, or a test of the indirect effect | [Native: constraints and MBCO](https://data-wise.github.io/medfit/articles/model-native-constraints.md) |
-| Serial or parallel mediators, or weights, in syntax | [Native: several mediators and weights](https://data-wise.github.io/medfit/articles/model-native-multi.md) |
-| A factor, character or logical covariate in syntax | [Native: categorical covariates](https://data-wise.github.io/medfit/articles/model-native-factors.md) |
+| A model written as syntax, with defined parameters | [The sem engine: paths and defined parameters](https://data-wise.github.io/medfit/articles/model-sem.md) |
+| A latent mediator | [The sem engine: a latent mediator](https://data-wise.github.io/medfit/articles/model-sem-latent.md) |
+| Constraints, or a test of the indirect effect | [The sem engine: constraints and MBCO](https://data-wise.github.io/medfit/articles/model-sem-constraints.md) |
+| Serial or parallel mediators, or weights, in syntax | [The sem engine: several mediators and weights](https://data-wise.github.io/medfit/articles/model-sem-multi.md) |
+| A factor, character or logical covariate in syntax | [The sem engine: categorical covariates](https://data-wise.github.io/medfit/articles/model-sem-factors.md) |
 | Rows with missing values you want to keep (FIML) | [Missing data: bounded FIML](https://data-wise.github.io/medfit/articles/model-fiml.md) |
 
 ## Capabilities at a glance
 
 | Model | Class | Engines and routes | Standard errors | Page |
 |----|----|----|----|----|
-| Simple | `MediationData` | `glm`, `regmedint`, [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) (`lm`/`glm`, lavaan), native | model, sandwich | [simple](https://data-wise.github.io/medfit/articles/model-simple.md) |
+| Simple | `MediationData` | `glm`, `regmedint`, [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) (`lm`/`glm`, lavaan), the sem engine | model, sandwich | [simple](https://data-wise.github.io/medfit/articles/model-simple.md) |
 | Binary or count variables | `MediationData` | `glm` families | model, sandwich | [glm families](https://data-wise.github.io/medfit/articles/model-glm-families.md) |
-| Treatment-by-mediator | `InteractionMediationData` | `glm`, `regmedint`, lavaan, native ([`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) with `x:m`) | model; closed form (`regmedint`) | [interaction](https://data-wise.github.io/medfit/articles/model-interaction.md) |
+| Treatment-by-mediator | `InteractionMediationData` | `glm`, `regmedint`, lavaan, the sem engine ([`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) with `x:m`) | model; closed form (`regmedint`) | [interaction](https://data-wise.github.io/medfit/articles/model-interaction.md) |
 | Weighted | `MediationData` | `glm`; native `weights` | sandwich (HC3; native HC0-type) | [weights](https://data-wise.github.io/medfit/articles/model-weights.md) |
-| Serial | `SerialMediationData` | `lm`/`glm` with `mediator_models`, lavaan, native via [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) | model | [serial](https://data-wise.github.io/medfit/articles/model-serial.md) |
-| Parallel | `ParallelMediationData` | `lm`/`glm`, lavaan, native via [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) | model | [parallel](https://data-wise.github.io/medfit/articles/model-parallel.md) |
+| Serial | `SerialMediationData` | `lm`/`glm` with `mediator_models`, lavaan, the sem engine via [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) | model | [serial](https://data-wise.github.io/medfit/articles/model-serial.md) |
+| Parallel | `ParallelMediationData` | `lm`/`glm`, lavaan, the sem engine via [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) | model | [parallel](https://data-wise.github.io/medfit/articles/model-parallel.md) |
 | Joint, with products | `JointMediationData` | `lm` fits | delta method, bootstrap | [joint](https://data-wise.github.io/medfit/articles/model-joint.md) |
 | Cluster-level treatment (2-1-1) | `ClusterMediationData` | `lmer` fits or `engine = "lmer"` | model, Kenward-Roger (`"kr"`) | [cluster](https://data-wise.github.io/medfit/articles/model-cluster.md) |
 | Two-level, within and between (1-1-1) | `TwoLevelMediationData` | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a two-level `lavaan` fit | delta method over the joint covariance (Wald) | [two-level](https://data-wise.github.io/medfit/articles/model-twolevel.md) |
-| Latent mediator, constraints | `SEMFit`, then extracted | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md), `engine = "native"` | model, sandwich | [native](https://data-wise.github.io/medfit/articles/model-native.md), [latent](https://data-wise.github.io/medfit/articles/model-native-latent.md) |
-| Categorical covariates (0.11.0) | `SEMFit`, then extracted | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) with a factor, character or logical column | model, sandwich | [categorical covariates](https://data-wise.github.io/medfit/articles/model-native-factors.md) |
+| Latent mediator, constraints | `SEMFit`, then extracted | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md), `engine = "sem"` | model, sandwich | [sem](https://data-wise.github.io/medfit/articles/model-sem.md), [latent](https://data-wise.github.io/medfit/articles/model-sem-latent.md) |
+| Categorical covariates (0.11.0) | `SEMFit`, then extracted | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) with a factor, character or logical column | model, sandwich | [categorical covariates](https://data-wise.github.io/medfit/articles/model-sem-factors.md) |
 
 Inference works on every row: delta-method intervals from
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html) and
@@ -51,14 +51,14 @@ Inference works on every row: delta-method intervals from
 nonparametric and plugin bootstrap (see [Bootstrap
 Inference](https://data-wise.github.io/medfit/articles/bootstrap.md)).
 
-> **The native engine takes one mediator in
+> **The sem engine takes one mediator in
 > [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)**
 >
-> `fit_mediation(engine = "native", model = )` accepts a single
-> mediator. For several mediators, fit the syntax with
+> `fit_mediation(engine = "sem", model = )` accepts a single mediator.
+> For several mediators, fit the syntax with
 > [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
-> (see [Native: several mediators and
-> weights](https://data-wise.github.io/medfit/articles/model-native-multi.md))
+> (see [The sem engine: several mediators and
+> weights](https://data-wise.github.io/medfit/articles/model-sem-multi.md))
 > and then call `extract_mediation(fit, mediator = c(...), outcome = )`,
 > with `structure = "parallel"` for side-by-side mediators.
 
@@ -66,9 +66,11 @@ Inference](https://data-wise.github.io/medfit/articles/bootstrap.md)).
 
 The four engines answer different questions and do not return
 interchangeable numbers. Read the row for your engine before you swap
-one for another.
+one for another. [Which engine should I
+use?](https://data-wise.github.io/medfit/articles/guide-engines.md)
+explains engines, estimators and optimizers.
 
-|  | `glm` (default) | `regmedint` | `lmer` | `native` |
+|  | `glm` (default) | `regmedint` | `lmer` | `sem` |
 |----|----|----|----|----|
 | Estimation | [`stats::glm()`](https://rdrr.io/r/stats/glm.html) for the mediator and outcome models | closed-form natural effects from the regmedint package | REML mixed models, a random cluster intercept in both | maximum-likelihood SEM from syntax (`model =`) |
 | Outcome and mediator families | any `glm` family | a linear mediator model; the outcome may be logistic | Gaussian only | Gaussian only |
@@ -78,9 +80,9 @@ one for another.
 | Rows with missing values | dropped once, both models share the sample | dropped by the engine | dropped once | listwise by default; the separate bounded FIML opt-in drops only all-empty model rows |
 | Returns | `MediationData` or `InteractionMediationData` | the same two classes | `ClusterMediationData` | `SEMFit`, then [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) |
 
-The native column describes the default listwise path. The separate
+The `sem` column describes the default listwise path. The separate
 [bounded FIML
-workflow](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
+workflow](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml)
 is limited to X, M and Y with at most two covariates, or two parallel
 mediators with up to two covariates, or the saturated or pure-chain
 two-mediator serial graph with up to two covariates (numeric,
@@ -106,8 +108,8 @@ through `glm` gives a path product on the log-odds scale, while
   and non-Gaussian outcomes or mediators in either cluster design.
   Random slopes, three-level and multigroup fits are not run.
 - Four-way or joint decompositions with non-Gaussian models.
-- Latent means (a free latent mean or intercept) on the native engine,
-  and products with a latent variable. Observed intercepts and means
+- Latent means (a free latent mean or intercept) on the sem engine, and
+  products with a latent variable. Observed intercepts and means
   (`y ~ 1`, `meanstructure =`) and the observed product `x:m` with its
   four-way decomposition are supported.
 - Bayesian fits through `brms` (planned).

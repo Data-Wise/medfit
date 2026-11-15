@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.17.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,11 +69,11 @@
     <li><a class="dropdown-item" href="../articles/model-cluster.html">Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/model-twolevel.html">Two-level mediation (1-1-1)</a></li>
     <li><a class="dropdown-item" href="../articles/model-lavaan.html">lavaan fits</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native.html">Native: paths and defined parameters</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-latent.html">Native: a latent mediator</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-multi.html">Native: several mediators and weights</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-factors.html">Native: categorical covariates</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem.html">The sem engine: paths and defined parameters</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-latent.html">The sem engine: a latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-constraints.html">The sem engine: constraints and MBCO</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-multi.html">The sem engine: several mediators and weights</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-factors.html">The sem engine: categorical covariates</a></li>
     <li><a class="dropdown-item" href="../articles/model-fiml.html">Missing data: bounded FIML</a></li>
   </ul>
 </li>
@@ -82,15 +82,16 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-guides">
 <li><a class="dropdown-item" href="../articles/guide-changes.html">What changed since CRAN 0.3.2</a></li>
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-engines.html">Which engine should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
     <li><a class="dropdown-item" href="../articles/guide-twolevel-tutorial.html">Two-level workflow, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/guide-architecture.html">How medfit is organized</a></li>
-    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">Native defaults in 0.15.0</a></li>
-    <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
-    <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
-    <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
-    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-defaults-0-15.html">Native defaults in 0.15.0</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-quickstart.html">The sem engine in five minutes</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-tutorial.html">The sem engine, step by step</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-guide.html">The sem engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the sem engine</a></li>
     <li><a class="dropdown-item" href="../articles/probmed-comparison.html">probmed and medfit</a></li>
     <li><a class="dropdown-item" href="../articles/rmediation-comparison.html">RMediation and medfit</a></li>
     <li><a class="dropdown-item" href="../articles/syntax-crosswalk.html">One model in medfit, lavaan, OpenMx and semopy</a></li>
@@ -143,16 +144,16 @@
     <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
     <li><a class="dropdown-item" href="../articles/computation-algorithms.html">Computation algorithms</a></li>
     <li><a class="dropdown-item" href="../articles/whats-new-0-11.html">What's new in 0.11</a></li>
-    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
     <li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
   </ul>
 </li>
-<li class="nav-item"><a class="nav-link" href="../articles/quality-control.html">Quality control</a></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-status" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-chart-line"></span> Status</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-status">
-<li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-project" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Project</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-project">
+<li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
+    <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
+    <li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/roadmap.html">Development Roadmap</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/contributing.html">Contributing Guide</a></li>
   </ul>
@@ -177,7 +178,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.17.0/vignettes/articles/quality-control.qmd" class="external-link"><code>vignettes/articles/quality-control.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/quality-control.qmd" class="external-link"><code>vignettes/articles/quality-control.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -186,7 +187,7 @@
 
 
 
-    <p>This page records how the native engine’s optimizer is tested and where its technical decisions are written down. The two tables below are generated from the repository files at site build (<code>tests/sim/gates.csv</code>, <code>tests/sim/structures.csv</code> and the front matter of <code>planning/specs/ADR-*.md</code>), so they cannot drift from them. Plan and ledger: <code>planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md</code>. The model syntax for the external oracles (lavaan, OpenMx, and semopy) is on <a href="syntax-crosswalk.html">One model in medfit, lavaan, OpenMx and semopy</a>.</p>
+    <p>This page records how the sem engine’s optimizer is tested and where its technical decisions are written down. The two tables below are generated from the repository files at site build (<code>tests/sim/gates.csv</code>, <code>tests/sim/structures.csv</code> and the front matter of <code>planning/specs/ADR-*.md</code>), so they cannot drift from them. Plan and ledger: <code>planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md</code>. The model syntax for the external oracles (lavaan, OpenMx, and semopy) is on <a href="syntax-crosswalk.html">One model in medfit, lavaan, OpenMx and semopy</a>.</p>
 <section class="level2"><h2 id="principles">Principles<a class="anchor" aria-label="anchor" href="#principles"></a>
 </h2>
 <ul>
@@ -379,11 +380,11 @@
 <div class="cell-output-display">
 <table class="table caption-top">
 <colgroup>
-<col style="width: 3%">
-<col style="width: 58%">
-<col style="width: 7%">
-<col style="width: 6%">
-<col style="width: 24%">
+<col style="width: 2%">
+<col style="width: 68%">
+<col style="width: 5%">
+<col style="width: 4%">
+<col style="width: 19%">
 </colgroup>
 <thead><tr class="header">
 <th style="text-align: left;">Id</th>
@@ -394,209 +395,342 @@
 </tr></thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">RD-1</td>
+<td style="text-align: left;">Every documentation surface has one owner and one moment it changes</td>
+<td style="text-align: left;">accepted</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-docs-release-pipeline-2026-11-12</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RD-2</td>
+<td style="text-align: left;">Version words come from DESCRIPTION; prose names a version only where a gate checks it</td>
+<td style="text-align: left;">accepted</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-docs-release-pipeline-2026-11-12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">RD-3</td>
+<td style="text-align: left;">Release docs gates live in the test suite (docs tier), not in a new workflow</td>
+<td style="text-align: left;">accepted</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-docs-release-pipeline-2026-11-12</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RD-4</td>
+<td style="text-align: left;">NEWS opens with the release heading and carries no stale wording in a release</td>
+<td style="text-align: left;">accepted</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-docs-release-pipeline-2026-11-12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">RD-5</td>
+<td style="text-align: left;">README and articles name the DESCRIPTION version and say nothing of a development version in a release</td>
+<td style="text-align: left;">accepted</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-docs-release-pipeline-2026-11-12</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RD-6</td>
+<td style="text-align: left;">README has a What’s new block for the version; CITATION reads the version</td>
+<td style="text-align: left;">accepted</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-docs-release-pipeline-2026-11-12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">RD-7</td>
+<td style="text-align: left;">CLAUDE.md and .STATUS status lines name the released version</td>
+<td style="text-align: left;">accepted</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-docs-release-pipeline-2026-11-12</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RD-8</td>
+<td style="text-align: left;">The FIML caveat is a marker on the home page and the FIML page, not a counted phrase</td>
+<td style="text-align: left;">accepted</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-docs-release-pipeline-2026-11-12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">RD-9</td>
+<td style="text-align: left;">Layout rules that can fail are tests: Next block, hidden setup, short navbar, readable colors, documented exports</td>
+<td style="text-align: left;">accepted</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-docs-release-pipeline-2026-11-12</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RD-10</td>
+<td style="text-align: left;">What stays manual: release notes review, rendered-site inspection, Lighthouse, external URLs</td>
+<td style="text-align: left;">accepted</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-docs-release-pipeline-2026-11-12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">V-1</td>
+<td style="text-align: left;">The in-package ML fitter is the sem engine: engine = ‘sem’, prose ‘the sem engine’</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-engine-vocabulary-and-controls-2026-11-12</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">V-2</td>
+<td style="text-align: left;">engine = ‘native’ stays as a silent alias; soft deprecation one minor later; no removal without a [BREAKING] issue</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-engine-vocabulary-and-controls-2026-11-12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">V-3</td>
+<td style="text-align: left;">compare_lr(engine = ) keeps its name in 0.18.0 (reference = deferred until #320 and the result-field collision are resolved)</td>
+<td style="text-align: left;">deferred</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-engine-vocabulary-and-controls-2026-11-12</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">V-4</td>
+<td style="text-align: left;">Listwise ML and bounded FIML are one engine; missing = stays the switch</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-engine-vocabulary-and-controls-2026-11-12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">V-5</td>
+<td style="text-align: left;">Tuning: the existing control accepts a plain list (legacy nloptr options) or sem_control(); optimizer = ‘auto’ for the listwise search, resolved protocol recorded</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-engine-vocabulary-and-controls-2026-11-12</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">V-6</td>
+<td style="text-align: left;">Argument design rules: meaning-changing options are arguments, search options are control, strings not logicals, options() only for tuning</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-engine-vocabulary-and-controls-2026-11-12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">V-7</td>
+<td style="text-align: left;">TwoLevelMediationData: optional source_version and a fallback reader; source and source_package validators unchanged; source and lavaan_version kept</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-11-13</td>
+<td style="text-align: left;">ADR-engine-vocabulary-and-controls-2026-11-12</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">V-8</td>
+<td style="text-align: left;">Prose and titles change first; the ‘native’ article URLs are renamed to sem-* only after a pkgdown redirect spike confirms anchors survive</td>
+<td style="text-align: left;">conditional</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-engine-vocabulary-and-controls-2026-11-12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">V-9</td>
+<td style="text-align: left;">One decision record and one user guide: this ADR and the Guides article ‘Which engine should I use?’</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-11-12</td>
+<td style="text-align: left;">ADR-engine-vocabulary-and-controls-2026-11-12</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">E-1</td>
 <td style="text-align: left;">fixed_x defaults to TRUE: warn in 0.14.0, flip in 0.15.0</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">E-2</td>
 <td style="text-align: left;">meanstructure defaults to TRUE on the same schedule as fixed_x</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">E-3</td>
 <td style="text-align: left;">One default for fit_sem() and fit_mediation(engine = ‘native’)</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">E-4</td>
 <td style="text-align: left;">compare_lr() supports fixed_x and a saturated mean structure</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">E-5</td>
 <td style="text-align: left;">Only the default is lenient about statements on exogenous variables</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">E-6</td>
 <td style="text-align: left;">Dependents get a [BREAKING] notice and pass the settings explicitly</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">E-7</td>
 <td style="text-align: left;">Tests and gates that encode the old defaults pin them</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">E-8</td>
 <td style="text-align: left;">Fix the pinned-parameter SE under a mean structure before the flip</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">E-9</td>
 <td style="text-align: left;">Opt-in to the new defaults through options(medfit.native_defaults)</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">E-10</td>
 <td style="text-align: left;">Unset is detected with missing(); fit_mediation() forwards only supplied settings</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">E-11</td>
 <td style="text-align: left;">The fixed_x default fixes product columns too</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">E-12</td>
 <td style="text-align: left;">Reliability under the new defaults is a 0.15.0 blocker</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">E-13</td>
 <td style="text-align: left;">The fixed_x default resolves to an explicit subset (provenance)</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">E-14</td>
 <td style="text-align: left;">Versioned resolution: 0.15.0 ignores the opt-in option</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">E-15</td>
 <td style="text-align: left;">An oracle matrix gates the flip</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-defaults-2026-10-24</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">A</td>
 <td style="text-align: left;">SLSQP as the default solver (D19)</td>
 <td style="text-align: left;">accepted</td>
 <td style="text-align: left;">2026-10-09</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">B</td>
 <td style="text-align: left;">Tiered path for constrained fits (D16; Tier 0 shipped, Tier 1 and the fallback not implemented)</td>
 <td style="text-align: left;">approved</td>
 <td style="text-align: left;">2026-10-19</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">D-1</td>
 <td style="text-align: left;">Motivation for nlminb is reliability, not speed</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">D-2</td>
 <td style="text-align: left;">nlminb starts at the zero-product branch fits</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">D-3</td>
 <td style="text-align: left;">A branch reaches nlminb by pinning coordinates</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">D-4</td>
 <td style="text-align: left;">Unconstrained default and an option (measurement gate first)</td>
 <td style="text-align: left;">deferred</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">D-5</td>
 <td style="text-align: left;">nlminb as a cross-check on branch fits</td>
 <td style="text-align: left;">conditional</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">D-6</td>
 <td style="text-align: left;">Constrained default and the order of the tiered path</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">D-7</td>
 <td style="text-align: left;">Plain linear constraints stay on SLSQP until AUGLAG is measured</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">D-8</td>
 <td style="text-align: left;">D-4 reliability gate is a paired non-inferiority test</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">D-9</td>
 <td style="text-align: left;">The gate design is fixed before the first run</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">D-10</td>
 <td style="text-align: left;">Latent structures in the D-4 gate</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">D-11</td>
 <td style="text-align: left;">A partial branch result is an error (PR #303)</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-23</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">D-12</td>
 <td style="text-align: left;">The D1 outcome ledger rides on the D-11 error as $ledger</td>
 <td style="text-align: left;">decided</td>
 <td style="text-align: left;">2026-10-24</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">D-13</td>
 <td style="text-align: left;">semopy as a monthly third oracle for estimates and SEs</td>
 <td style="text-align: left;">decided</td>
@@ -760,7 +894,7 @@
 <li>A complete enumeration of zero-product branches is not a global-optimum certificate, and a ledger records what a fit did, not that its optimum is the global one.</li>
 </ul></section><section class="level2"><h2 id="the-0-15-0-defaults-flip">The 0.15.0 defaults flip<a class="anchor" aria-label="anchor" href="#the-0-15-0-defaults-flip"></a>
 </h2>
-<p>0.15.0 changes two defaults of the native engine: an unset <code>fixed_x</code> fixes the exogenous observed variables and an unset <code>meanstructure</code> is <code>TRUE</code>. The release is gated on evidence that the change moves only what it should. It moves the conditional log likelihood, the parameter count behind AIC and BIC, the names in <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, and the retry seed; structural estimates and their standard errors stay where they were.</p>
+<p>0.15.0 changes two defaults of the sem engine: an unset <code>fixed_x</code> fixes the exogenous observed variables and an unset <code>meanstructure</code> is <code>TRUE</code>. The release is gated on evidence that the change moves only what it should. It moves the conditional log likelihood, the parameter count behind AIC and BIC, the names in <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, and the retry seed; structural estimates and their standard errors stay where they were.</p>
 <table class="table caption-top">
 <colgroup>
 <col style="width: 50%">

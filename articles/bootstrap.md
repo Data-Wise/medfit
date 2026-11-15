@@ -21,7 +21,7 @@ parameter-draw percentile intervals; the callback and extracted-data
 routes remain unavailable. This is narrower than the examples below. Any
 required failed or interrupted replicate withholds the whole interval,
 and statistical admission remains deferred. See the [native
-guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
+guide](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml)
 and [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.html#fiml-source-intervals).
 

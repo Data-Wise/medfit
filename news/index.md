@@ -1,5 +1,124 @@
 # Changelog
 
+## medfit 0.18.0
+
+### Release summary
+
+- **The sem engine.** `fit_mediation(engine = "sem")` names medfit’s own
+  maximum-likelihood SEM fitter. `engine = "native"` still works
+  unchanged, with no warning, and gives identical results.
+- **Optimizer settings:
+  [`sem_control()`](https://data-wise.github.io/medfit/reference/sem_control.md).**
+  One documented object for the sem engine’s optimizer settings,
+  accepted by `fit_sem(control = )`, `mbco_sem(control = )` and
+  `fit_mediation(engine_args = list(control = ))`. A plain list keeps
+  its 0.17.0 meaning; results are unchanged.
+- **Provenance on the experimental two-level class.**
+  `TwoLevelMediationData` gains an optional `source_version`;
+  `lavaan_version` stays.
+- **Renamed pages.** The nine sem engine articles have new addresses;
+  every old address redirects and keeps its `#section`.
+- Additions only: no existing call changes its result. FIML stays
+  numerically verified, not statistically admitted; the two-level API
+  stays experimental.
+- GitHub-only release; CRAN stays on hold
+  ([\#83](https://github.com/data-wise/medfit/issues/83)).
+
+### The sem engine
+
+- `fit_mediation(engine = "sem")` is the new name for the native
+  maximum-likelihood SEM engine, now called the sem engine.
+  `engine = "native"` still works unchanged and gives no warning; the
+  two spellings select the same engine and return identical results.
+  Existing code needs no change (ADR-engine-vocabulary-and-controls V-1,
+  V-2).
+
+### Optimizer settings for the sem engine: `sem_control()`
+
+- New
+  `sem_control(optimizer = "auto", n_starts = NULL, nloptr = list())`
+  collects the sem engine’s optimizer settings in one documented object.
+  `fit_sem(control = )` and `mbco_sem(control = )` accept it, and
+  [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
+  passes it through `engine_args = list(control = )` (no new argument).
+  A plain list still works and keeps its 0.17.0 meaning: every entry is
+  an `nloptr` option, the same as `sem_control(nloptr = <list>)`.
+  Results are unchanged; a fit made with the plain list and one made
+  with the equivalent object are identical.
+- Conflicting settings stop with class
+  `medfit_error_sem_control_conflict`: a top-level `n_starts` that
+  differs in value from `sem_control(n_starts = )`, or
+  `optimizer = "slsqp"` with a different `nloptr` `algorithm`. Equal
+  values in both places are accepted.
+- FIML (`fit_sem(missing = "fiml")`) accepts
+  [`sem_control()`](https://data-wise.github.io/medfit/reference/sem_control.md)
+  with `optimizer = "auto"`, an empty `nloptr` list and `n_starts`
+  `NULL` or 3; anything else stops with `medfit_sem_fiml_error`, as a
+  nonempty plain list already did.
+- `fit@diagnostics$protocol` records the resolved search protocol of a
+  sem engine fit: the estimator, the algorithm that ran, the number of
+  starts and the start rule.
+- Behavior note for
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md):
+  any
+  [`sem_control()`](https://data-wise.github.io/medfit/reference/sem_control.md)
+  object passed as `control`, including `sem_control(n_starts = 7)`,
+  replaces the `nloptr` options the fit was made with in the two null
+  refits, as an explicit list already did. A top-level `n_starts = 7`
+  keeps them. This matters only for a fit made with non-default `nloptr`
+  options; to keep them, give `n_starts` at the top level or repeat them
+  in `sem_control(nloptr = )`.
+
+### Added
+
+- Two-level mediation (experimental): `TwoLevelMediationData` gains an
+  optional last property, `source_version` (`character(0)` or one
+  non-empty string), the version of the package that made the fit, and
+  `lavaan_version` may now be `character(0)` for a fit lavaan did not
+  make. Both are checked on construction and on assignment. The lavaan
+  adapter fills both with the lavaan version. `summary()$provenance`
+  gains `source_version` and keeps `lavaan_version`. This prepares the
+  object for a fit not made by lavaan (the planned native two-level
+  fitter, [\#394](https://github.com/data-wise/medfit/issues/394));
+  existing calls construct the same objects, and objects saved by 0.17.0
+  still print and summarize. The two-level API is experimental and may
+  change without the usual deprecation period.
+
+### Changes
+
+- Two-level [`print()`](https://rdrr.io/r/base/print.html) header names
+  the source and its version (for example `lavaan 0.7.3 fit`). A
+  hand-built object whose `source_package` is not `"lavaan"` no longer
+  shows `lavaan_version` as its own version, and an empty
+  `lavaan_version` no longer leaves a double space. When the version is
+  unknown, the header and the
+  [`summary()`](https://rdrr.io/r/base/summary.html) Fit line print the
+  source alone.
+
+### Documentation
+
+- The documentation calls medfit’s own maximum-likelihood SEM fitter
+  “the sem engine” and shows `engine = "sem"` in examples; `"native"`
+  appears where the docs explain the alias, in quoted messages and in
+  history. A new guide, “Which engine should I use?”, separates the
+  engine (which fitter), the estimator (listwise ML or bounded FIML) and
+  the optimizer
+  ([`sem_control()`](https://data-wise.github.io/medfit/reference/sem_control.md)),
+  and keeps the sem engine apart from extracting a
+  [`lavaan::sem()`](https://rdrr.io/pkg/lavaan/man/sem.html) fit. The
+  five sem engine model pages now follow the model-page template (hidden
+  setup, a Next link).
+- The nine sem engine articles have new addresses: `model-native`,
+  `model-native-latent`, `model-native-constraints`,
+  `model-native-multi` and `model-native-factors` are now `model-sem`,
+  `model-sem-latent`, `model-sem-constraints`, `model-sem-multi` and
+  `model-sem-factors`; `native-guide`, `native-quickstart`,
+  `native-tutorial` and `native-defaults-0-15` are now `sem-guide`,
+  `sem-quickstart`, `sem-tutorial` and `sem-defaults-0-15`. Each old
+  address redirects to the new page and keeps its `#section` (for
+  example `native-guide.html#bounded-fiml`), so existing links and
+  bookmarks still work.
+
 ## medfit 0.17.0
 
 ### Release summary
@@ -26,6 +145,19 @@
   lavaan’s product-null fit returns an LR above medfit’s reference on
   about 30% of gate runs; medfit flags it correctly
   ([\#320](https://github.com/data-wise/medfit/issues/320), open).
+- **Known issues, open.**
+  [\#369](https://github.com/data-wise/medfit/issues/369) (reconcile the
+  [\#249](https://github.com/data-wise/medfit/issues/249) and
+  [\#357](https://github.com/data-wise/medfit/issues/357) task lists
+  with the merged comparison-engine and sign-branch work; bookkeeping,
+  no behavior change) and
+  [\#394](https://github.com/data-wise/medfit/issues/394) (a native
+  joint two-level fitter, S4, and latent mediators, S5, remain; S4 and
+  S5 are no-go for now, and object-based cluster bootstrap dispatch
+  stays deferred).
+- **Packaging.** RMediation joins `Suggests`; `TwoLevelMediationData`
+  has a names-only `@usage` block so R CMD check stays clean
+  ([\#426](https://github.com/data-wise/medfit/issues/426)).
 - GitHub-only release; CRAN stays on hold
   ([\#83](https://github.com/data-wise/medfit/issues/83)).
 
@@ -95,8 +227,8 @@
   descriptive, not a test). With both equated it is `NA` (zero by
   constraint) with `medfit_warning_twolevel_constrained`, and
   `twolevel_statistic("nie_contrast")` raises
-  `medfit_error_twolevel_constrained`. Behavior change for the
-  development version only (the adapter is unreleased).
+  `medfit_error_twolevel_constrained`. Behavior change relative to the
+  pre-release adapter on `dev`; no released version had the old rule.
 
 - `cross_level_equal` also finds an equality lavaan keeps as two
   parameters (for example `a^2 - a2^2 == 0`): a path is recorded as
@@ -174,8 +306,8 @@
   Object-based cluster bootstrap dispatch is still deferred
   ([\#394](https://github.com/data-wise/medfit/issues/394)).
 
-- Hardening of the two-level adapter (all within the development
-  version, no change to a valid fit’s numbers):
+- Hardening of the two-level adapter (all before the first release of
+  the adapter, no change to a valid fit’s numbers):
 
   - Behavior change: the `TwoLevelMediationData` validator now rejects
     non-finite `estimates`, a `vcov` that is not symmetric or has a

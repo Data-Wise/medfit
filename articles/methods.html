@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.17.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,11 +69,11 @@
     <li><a class="dropdown-item" href="../articles/model-cluster.html">Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/model-twolevel.html">Two-level mediation (1-1-1)</a></li>
     <li><a class="dropdown-item" href="../articles/model-lavaan.html">lavaan fits</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native.html">Native: paths and defined parameters</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-latent.html">Native: a latent mediator</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-multi.html">Native: several mediators and weights</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-factors.html">Native: categorical covariates</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem.html">The sem engine: paths and defined parameters</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-latent.html">The sem engine: a latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-constraints.html">The sem engine: constraints and MBCO</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-multi.html">The sem engine: several mediators and weights</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-factors.html">The sem engine: categorical covariates</a></li>
     <li><a class="dropdown-item" href="../articles/model-fiml.html">Missing data: bounded FIML</a></li>
   </ul>
 </li>
@@ -82,15 +82,16 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-guides">
 <li><a class="dropdown-item" href="../articles/guide-changes.html">What changed since CRAN 0.3.2</a></li>
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-engines.html">Which engine should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
     <li><a class="dropdown-item" href="../articles/guide-twolevel-tutorial.html">Two-level workflow, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/guide-architecture.html">How medfit is organized</a></li>
-    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">Native defaults in 0.15.0</a></li>
-    <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
-    <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
-    <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
-    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-defaults-0-15.html">Native defaults in 0.15.0</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-quickstart.html">The sem engine in five minutes</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-tutorial.html">The sem engine, step by step</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-guide.html">The sem engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the sem engine</a></li>
     <li><a class="dropdown-item" href="../articles/probmed-comparison.html">probmed and medfit</a></li>
     <li><a class="dropdown-item" href="../articles/rmediation-comparison.html">RMediation and medfit</a></li>
     <li><a class="dropdown-item" href="../articles/syntax-crosswalk.html">One model in medfit, lavaan, OpenMx and semopy</a></li>
@@ -143,16 +144,16 @@
     <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
     <li><a class="dropdown-item" href="../articles/computation-algorithms.html">Computation algorithms</a></li>
     <li><a class="dropdown-item" href="../articles/whats-new-0-11.html">What's new in 0.11</a></li>
-    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
     <li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
   </ul>
 </li>
-<li class="nav-item"><a class="nav-link" href="../articles/quality-control.html">Quality control</a></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-status" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-chart-line"></span> Status</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-status">
-<li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-project" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Project</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-project">
+<li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
+    <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
+    <li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/roadmap.html">Development Roadmap</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/contributing.html">Contributing Guide</a></li>
   </ul>
@@ -177,7 +178,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.17.0/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -770,13 +771,13 @@ d_{ij} \lambda_i\)</span> and <span class="math inline">\(\kappa_j = \theta_{3j}
 </section><section class="level2"><h2 id="fitting-engines">Fitting engines<a class="anchor" aria-label="anchor" href="#fitting-engines"></a>
 </h2>
 <p><code>fit_mediation(engine = "glm")</code> fits the mediator and outcome models with <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> and passes them to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>, so every formula above applies. <code>engine = "regmedint"</code> delegates to <code><a href="https://kaz-yos.github.io/regmedint/reference/regmedint.html" class="external-link">regmedint::regmedint()</a></code>, a closed-form regression-based implementation, and maps its point estimates and its own delta-method covariance of the effects onto <code>MediationData</code> or <code>InteractionMediationData</code>. The adapter requires a linear mediator model and a unit treatment contrast; see <code><a href="../reference/fit_mediation.html">?fit_mediation</a></code>. For a non-Gaussian outcome model the components are on that model’s link scale, as regmedint reports them.</p>
-<p><code>engine = "lmer"</code> fits the two linear mixed models of the cluster design above (REML, random cluster intercepts, the mediator and level-1 covariates split into within-cluster deviation and cluster mean) and passes them to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>; it returns a <code>ClusterMediationData</code>. <code>engine = "native"</code> fits model syntax with the engine described in the next section, then extracts the mediation structure through the same workers as the lavaan route.</p>
-</section><section class="level2"><h2 id="native-sem-engine">Native SEM engine<a class="anchor" aria-label="anchor" href="#native-sem-engine"></a>
+<p><code>engine = "lmer"</code> fits the two linear mixed models of the cluster design above (REML, random cluster intercepts, the mediator and level-1 covariates split into within-cluster deviation and cluster mean) and passes them to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>; it returns a <code>ClusterMediationData</code>. <code>engine = "sem"</code> fits model syntax with the engine described in the next section, then extracts the mediation structure through the same workers as the lavaan route.</p>
+</section><section class="level2"><h2 id="native-sem-engine">The sem engine<a class="anchor" aria-label="anchor" href="#native-sem-engine"></a>
 </h2>
-<p><code><a href="../reference/fit_sem.html">fit_sem()</a></code> and <code>fit_mediation(engine = "native")</code> fit a model written in medfit model syntax (<code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code>) by maximum likelihood to raw data. By default, rows with missing values in the model variables are dropped once (listwise deletion) and counted. The separate bounded FIML opt-in uses the observed components instead; the complete-data formulas below describe the listwise path unless stated otherwise.</p>
+<p><code><a href="../reference/fit_sem.html">fit_sem()</a></code> and <code>fit_mediation(engine = "sem")</code> fit a model written in medfit model syntax (<code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code>) by maximum likelihood to raw data. By default, rows with missing values in the model variables are dropped once (listwise deletion) and counted. The separate bounded FIML opt-in uses the observed components instead; the complete-data formulas below describe the listwise path unless stated otherwise.</p>
 <section class="level3"><h3 id="bounded-fiml">Bounded FIML<a class="anchor" aria-label="anchor" href="#bounded-fiml"></a>
 </h3>
-<p>The separate <code>missing = "fiml"</code> route supports only Gaussian random-X simple mediation with three continuous numeric observed variables (or the development-version variants with one or two covariates and a free joint exogenous covariance, or with two parallel mediators, alone or with one or two such covariates, or with two serial mediators in the saturated graph or the pure chain, with up to two covariates), independent disturbances (the parallel form also allows a free mediator residual covariance), free intercepts and a free or exactly zero direct path. It assumes ignorable missingness under that model; choosing FIML does not validate MAR or protect against nonignorable missingness. See the <a href="native-guide.html#bounded-fiml">native guide</a> for settings and API limits.</p>
+<p>The separate <code>missing = "fiml"</code> route supports only Gaussian random-X simple mediation with three continuous numeric observed variables (or the development-version variants with one or two covariates and a free joint exogenous covariance, or with two parallel mediators, alone or with one or two such covariates, or with two serial mediators in the saturated graph or the pure chain, with up to two covariates), independent disturbances (the parallel form also allows a free mediator residual covariance), free intercepts and a free or exactly zero direct path. It assumes ignorable missingness under that model; choosing FIML does not validate MAR or protect against nonignorable missingness. See the <a href="sem-guide.html#bounded-fiml">native guide</a> for settings and API limits.</p>
 <p>For retained row <span class="math inline">\(i\)</span>, let <span class="math inline">\(O_i\)</span> select its observed components, with implied mean <span class="math inline">\(\mu_{O_i}(\theta)\)</span> and covariance <span class="math inline">\(\Sigma_{O_i O_i}(\theta)\)</span>. The minimized total negative log likelihood includes the full Gaussian constants:</p>
 <p><span class="math display">\[
 -\ell(\theta) = \frac{1}{2}\sum_{i:|O_i|&gt;0}

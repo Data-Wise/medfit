@@ -2,9 +2,9 @@
 
 > **Note**
 >
-> This site documents medfit 0.17.0 and the development version. CRAN
-> has 0.3.2, which lacks `mediation_demo` and the native, joint and
-> cluster functions; install from GitHub or r-universe (see the [home
+> This site documents medfit 0.18.0. CRAN has 0.3.2, which lacks
+> `mediation_demo` and the native, joint and cluster functions; install
+> from GitHub or r-universe (see the [home
 > page](https://data-wise.github.io/medfit/#install)).
 
 **Four steps.** By the end you will have fitted a mediation model, read
@@ -254,7 +254,7 @@ The engine is `"glm"` by default. Others:
 | `"glm"` | the default; continuous, binary or count variables | [Simple](https://data-wise.github.io/medfit/articles/model-simple.md), [glm families](https://data-wise.github.io/medfit/articles/model-glm-families.md) |
 | `"regmedint"` | you want the closed-form regression estimator | [regmedint](https://data-wise.github.io/medfit/articles/model-regmedint.md) |
 | `"lmer"` | the treatment is assigned to whole clusters | [Cluster-randomized trials](https://data-wise.github.io/medfit/articles/model-cluster.md) |
-| `"native"` | a latent mediator, constraints, or a model written as syntax | [Native engine](https://data-wise.github.io/medfit/articles/model-native.md) |
+| `"sem"` (alias `"native"`) | a latent mediator, constraints, or a model written as syntax | [The sem engine](https://data-wise.github.io/medfit/articles/model-sem.md) |
 
 ## Where next
 
@@ -270,7 +270,7 @@ Pick the row that matches your data.
 | Several mediators with products | [Joint mediation](https://data-wise.github.io/medfit/articles/model-joint.md) |
 | A treatment given to whole clusters | [Cluster-randomized trials](https://data-wise.github.io/medfit/articles/model-cluster.md) |
 | A `lavaan` fit | [lavaan models](https://data-wise.github.io/medfit/articles/model-lavaan.md) |
-| Model syntax, a latent mediator, constraints, intercepts or a product term | [Native engine](https://data-wise.github.io/medfit/articles/model-native.md) |
+| Model syntax, a latent mediator, constraints, intercepts or a product term | [The sem engine](https://data-wise.github.io/medfit/articles/model-sem.md) |
 | Something else, or not sure | [Models](https://data-wise.github.io/medfit/articles/models.md), the full list |
 | An error or warning | [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.md) |
 | Which interval to report | [Which interval should I use?](https://data-wise.github.io/medfit/articles/guide-intervals.md) |

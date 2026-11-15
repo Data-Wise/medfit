@@ -1,10 +1,10 @@
-# Native engine, step by step
+# The sem engine, step by step
 
 Ten steps from a model written as syntax to a tested, constrained and
 extracted mediation result. It sits between [the five-minute
-quickstart](https://data-wise.github.io/medfit/articles/native-quickstart.md)
-and [the native engine
-guide](https://data-wise.github.io/medfit/articles/native-guide.md).
+quickstart](https://data-wise.github.io/medfit/articles/sem-quickstart.md)
+and [the sem engine
+guide](https://data-wise.github.io/medfit/articles/sem-guide.md).
 
 |  |  |
 |----|----|
@@ -35,9 +35,10 @@ library(generics)
         as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
         setequal, union
 
-These examples use the default listwise path. For the separate
-unreleased bounded FIML opt-in and its narrower support, see the [native
-guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml).
+These examples use the default listwise path. For the separate bounded
+FIML opt-in (0.16.0 and 0.17.0) and its narrower support, see the
+[native
+guide](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml).
 
 ## Step 1. Write the model
 
@@ -286,20 +287,20 @@ factor level). `a`, `b` and `ab` keep their usual meaning, and
 `mbco_sem(fit10, paths = c("a", "b"))` tests the indirect effect as in
 Step 5. A label goes on one dummy (`z * group_mid`), never on `group`
 itself. The [categorical covariates
-page](https://data-wise.github.io/medfit/articles/model-native-factors.md)
+page](https://data-wise.github.io/medfit/articles/model-sem-factors.md)
 covers constraints, missing values, products and the four-way
 decomposition.
 
 ## Where next
 
-- [The native engine
-  guide](https://data-wise.github.io/medfit/articles/native-guide.md):
+- [The sem engine
+  guide](https://data-wise.github.io/medfit/articles/sem-guide.md):
   syntax, inference, constraints, diagnostics and limits in one place.
 - [Cookbook recipes 11 to
   21](https://data-wise.github.io/medfit/articles/cookbook.md): a latent
   mediator, a nonlinear constraint, comparing models, defined
   parameters, bounds, checks, fixed covariates, intercepts, the four-way
   decomposition and a categorical covariate.
-- [lavaan and the native
+- [lavaan and the sem
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md):
-  what the native engine does and does not do compared with lavaan.
+  what the sem engine does and does not do compared with lavaan.

@@ -24,17 +24,17 @@ The shared interface includes
 [`confint()`](https://rdrr.io/r/stats/confint.html) and
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html), with
 operation-specific support limits. Data extracted from the [bounded FIML
-workflow](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
+workflow](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml)
 support unstandardized effects and normal intervals, but refuse
 callback/extracted-data
 [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md),
 [`pm()`](https://data-wise.github.io/medfit/reference/pm.md),
 [`quick()`](https://data-wise.github.io/medfit/reference/quick.md) and
 extracted-object
-[`glance()`](https://generics.r-lib.org/reference/glance.html). The
-development version also extracts the bounded one- and two-covariate
-FIML models (`treatment` names an exogenous variable; see the
-[covariates](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml-covariates)
+[`glance()`](https://generics.r-lib.org/reference/glance.html). Since
+0.17.0 it also extracts the bounded one- and two-covariate FIML models
+(`treatment` names an exogenous variable; see the
+[covariates](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml-covariates)
 rules); these are verified against lavaan but not calibrated for
 coverage, and have no source-fit route. Source-fit intervals (withheld
 until statistical admission) would require the original accepted SEMFit
@@ -1252,7 +1252,7 @@ silently ignored. `regmedint` is a suggested package — install it with
 ## Extracting from a Native SEM Fit
 
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
-fits model syntax with the native engine and returns a `SEMFit`.
+fits model syntax with the sem engine and returns a `SEMFit`.
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
 accepts it with the same arguments as the lavaan method and returns the
 same classes:
@@ -1299,7 +1299,7 @@ are refused by name, and the message says to add the product. A
 precomputed product column is fitted as an ordinary variable, so write
 the product in the syntax. A model with a product must stay inside a
 supported class (see [the native model
-page](https://data-wise.github.io/medfit/articles/model-native.html#product-terms)),
+page](https://data-wise.github.io/medfit/articles/model-sem.html#product-terms)),
 and the global chi-square is `NA` when a product factor is a regression
 target. See
 [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)

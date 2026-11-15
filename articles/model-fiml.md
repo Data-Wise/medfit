@@ -1,39 +1,24 @@
 # Missing data: bounded FIML
 
+[Models](https://data-wise.github.io/medfit/articles/models.md) ›
+Clusters and latent variables › Missing data: bounded FIML
+
 Keep partly observed rows instead of deleting them. Part of the
 [Models](https://data-wise.github.io/medfit/articles/models.md)
 collection.
+
+**Status:** these models are numerically verified against lavaan, not
+statistically admitted: no interval coverage is established, and every
+`source_fit` interval route is refused
+(`medfit_error_fiml_inference_unavailable`).
 
 |  |  |
 |----|----|
 | **Structure** | X to M to Y, two parallel mediators, or two serial mediators (the saturated graph or the pure chain), each with no, one or two covariates |
 | **Class returned** | `FIMLMediationData` (simple), `FIMLParallelMediationData` (parallel) and `FIMLSerialMediationData` (serial) |
-| **Route** | `fit_sem(model, data, missing = "fiml", fixed_x = FALSE)` then [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md), or `fit_mediation(engine = "native", engine_args = list(missing = "fiml", ...))` |
+| **Route** | `fit_sem(model, data, missing = "fiml", fixed_x = FALSE)` then [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md), or `fit_mediation(engine = "sem", engine_args = list(missing = "fiml", ...))` |
 | **Standard errors** | observed information, model-based; delta-method effect intervals |
-| **Availability** | simple model from 0.16.0; covariates, parallel and serial forms in the development version |
-
-``` r
-library(medfit)
-```
-
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
+| **Availability** | simple model from 0.16.0; covariates, parallel and serial forms from 0.17.0 |
 
 ## What it is, and what it assumes
 
@@ -100,7 +85,7 @@ In the serial forms all three disturbance covariances (`M1 ~~ 0*M2`,
 covariate predicts every equation and the exogenous covariances are all
 written or none. The syntax rules, parameter counts and the extraction
 details are in the [native
-guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml).
+guide](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml).
 
 In a serial fit,
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
@@ -139,11 +124,14 @@ and sparse patterns, with an independent likelihood check and
 planted-defect tests (the `fiml` and `fiml-ext` simulation gates).
 Nothing here is a coverage claim for intervals under missing data.
 
+**Next:** Read the limits in full: [The sem engine guide: bounded
+FIML](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml)
+
 ## Related
 
-[Native: paths and defined
-parameters](https://data-wise.github.io/medfit/articles/model-native.md)
-\| [Parallel
+[The sem engine: paths and defined
+parameters](https://data-wise.github.io/medfit/articles/model-sem.md) \|
+[Parallel
 mediation](https://data-wise.github.io/medfit/articles/model-parallel.md)
 \| [Serial
 mediation](https://data-wise.github.io/medfit/articles/model-serial.md)

@@ -2,9 +2,10 @@
 
 The model syntax read by
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
-and by `fit_mediation(engine = "native")`. It is a lavaan-style core
-plus two extensions, each marked "medfit extension" below. One statement
-per line (or separated by `;`).
+and by `fit_mediation(engine = "sem")` (the sem engine; `"native"` is
+the legacy spelling). It is a lavaan-style core plus two extensions,
+each marked "medfit extension" below. One statement per line (or
+separated by `;`).
 
 ## Missing-data scope
 

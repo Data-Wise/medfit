@@ -1,5 +1,8 @@
 # Joint mediation with products
 
+[Models](https://data-wise.github.io/medfit/articles/models.md) ›
+Several mediators › Joint mediation with products
+
 Several mediators when the outcome model has treatment-by-mediator
 products. The result is the joint effect through the whole mediator
 block. Part of the
@@ -12,29 +15,6 @@ collection.
 | **Class returned** | `JointMediationData` |
 | **Effects** | joint natural direct and indirect effects (VanderWeele and Vansteelandt, 2014) |
 | **Routes** | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on `lm` fits; [`joint_effects()`](https://data-wise.github.io/medfit/reference/joint_effects.md) for bootstrapping |
-
-``` r
-library(medfit)
-```
-
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
 
 ## Fit it
 
@@ -92,6 +72,9 @@ The fit must meet these; each violation errors with its cause.
 - Every mediator appears in the outcome model, and the treatment is
   coded 0/1.
 - Only outcome-model products written with `:` or `*` are supported.
+
+**Next:** Choose an interval: [Which interval should I
+use?](https://data-wise.github.io/medfit/articles/guide-intervals.md)
 
 ## Related
 

@@ -686,15 +686,15 @@ above (REML, random cluster intercepts, the mediator and level-1
 covariates split into within-cluster deviation and cluster mean) and
 passes them to
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md);
-it returns a `ClusterMediationData`. `engine = "native"` fits model
-syntax with the engine described in the next section, then extracts the
+it returns a `ClusterMediationData`. `engine = "sem"` fits model syntax
+with the engine described in the next section, then extracts the
 mediation structure through the same workers as the lavaan route.
 
-## Native SEM engine
+## The sem engine
 
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
-and `fit_mediation(engine = "native")` fit a model written in medfit
-model syntax
+and `fit_mediation(engine = "sem")` fit a model written in medfit model
+syntax
 ([`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md))
 by maximum likelihood to raw data. By default, rows with missing values
 in the model variables are dropped once (listwise deletion) and counted.
@@ -715,7 +715,7 @@ residual covariance), free intercepts and a free or exactly zero direct
 path. It assumes ignorable missingness under that model; choosing FIML
 does not validate MAR or protect against nonignorable missingness. See
 the [native
-guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml)
+guide](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml)
 for settings and API limits.
 
 For retained row \\i\\, let \\O_i\\ select its observed components, with

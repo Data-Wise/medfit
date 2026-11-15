@@ -3,8 +3,8 @@
 **Experimental.** This class,
 [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md)
 and the `level` argument of the effect generics may change without the
-usual deprecation period (a native two-level fitter, a later milestone,
-could change the object).
+usual deprecation period (a two-level fitter in the sem engine, a later
+milestone, could change the object).
 
 ## Usage
 
@@ -15,7 +15,7 @@ TwoLevelMediationData(
   n_clusters, cluster_sizes, icc, between_identified, admissible, converged,
   cross_level_equal, fixed_paths, source, fixed_x, information, h1_information,
   se_type, estimator, missing, lavaan_version, call, between_parameterization,
-  data, source_package
+  data, source_package, source_version
 )
 ```
 
@@ -110,6 +110,14 @@ TwoLevelMediationData(
   with the other mediation classes
   (`tests/testthat/test-dependents-contract.R` pins it across classes).
 
+- source_version:
+
+  Character: `character(0)` (the default) or one non-empty string, the
+  version of the package that made the fit. The lavaan adapter stores
+  the lavaan version here and in `lavaan_version`; `lavaan_version` may
+  be `character(0)` for a fit lavaan did not make. Both are checked on
+  construction and on assignment.
+
 ## Value
 
 A `TwoLevelMediationData` S7 object.
@@ -121,8 +129,8 @@ outcome are all measured on level-1 units nested in clusters (1-1-1),
 with the paths estimated separately at the within and the between level
 (latent cluster means, fixed slopes). Built by
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
-from a `lavaan` two-level fit; the same class is the target of a native
-fitter later (`source` says which).
+from a `lavaan` two-level fit; the same class is the target of a sem
+engine fitter later (`source` says which).
 
 Per level the indirect effect is \\NIE_l = a_l b_l\\, the direct effect
 is \\c'\_l\\, and the contrast \\NIE_w - NIE_b\\ is descriptive, not a

@@ -1,10 +1,12 @@
 # Simple mediation
 
-One treatment, one mediator, one outcome: the model behind most
-mediation analyses. This page runs it three ways and reads the result.
-Part of the
+[Models](https://data-wise.github.io/medfit/articles/models.md) › Single
+mediator › Simple mediation
+
+**For:** one treatment, one mediator, one outcome. **You get:** the
+paths a, b and c’, the indirect effect and its interval. Part of the
 [Models](https://data-wise.github.io/medfit/articles/models.md)
-collection; for a one-page lookup see the [Reference
+collection; a one-page lookup is the [Reference
 Card](https://data-wise.github.io/medfit/articles/refcard.md).
 
 |  |  |
@@ -14,43 +16,12 @@ Card](https://data-wise.github.io/medfit/articles/refcard.md).
 | **Indirect effect** | \\a \\ b\\ |
 | **Routes** | [`med()`](https://data-wise.github.io/medfit/reference/med.md), [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md), [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on `lm`/`glm`, lavaan, or [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) |
 
-``` r
-library(medfit)
-```
+## Use it when
 
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
-
-``` r
-covs <- c("covariate1", "covariate2")
-```
-
-## When to use it
-
-Use it when one mediator carries the effect of the treatment and you
-have no reason to expect a treatment-by-mediator interaction. If the
-mediator and the outcome interact with the treatment, see
-[interaction](https://data-wise.github.io/medfit/articles/model-interaction.md);
-for two or more mediators see
-[serial](https://data-wise.github.io/medfit/articles/model-serial.md)
-and
-[parallel](https://data-wise.github.io/medfit/articles/model-parallel.md).
+| Use this page when | Use another page when |
+|----|----|
+| one mediator carries the effect and the outcome is continuous | the mediator interacts with treatment: [interaction](https://data-wise.github.io/medfit/articles/model-interaction.md) |
+| you have no reason to expect a treatment-by-mediator interaction | two or more mediators: [serial](https://data-wise.github.io/medfit/articles/model-serial.md) or [parallel](https://data-wise.github.io/medfit/articles/model-parallel.md) |
 
 ## Route 1: one line
 
@@ -101,7 +72,7 @@ paths(x)
     0.5826425 0.5711384 0.2057983 
 
 The same object comes from a lavaan fit
-(`extract_mediation(lavaan_fit, ...)`) or from the native engine
+(`extract_mediation(lavaan_fit, ...)`) or from the sem engine
 (`extract_mediation(fit_sem(...), ...)`); see [Cookbook recipe
 10](https://data-wise.github.io/medfit/articles/cookbook.html#i-use-lavaan)
 and [recipe
@@ -143,6 +114,9 @@ Inference](https://data-wise.github.io/medfit/articles/bootstrap.md).
 - The default `glm` engine is maximum likelihood on independent
   observations; for clustered data see [Cookbook recipe
   9](https://data-wise.github.io/medfit/articles/cookbook.html#cluster-randomized-trial).
+
+**Next:** Add an interval: [Bootstrap
+Inference](https://data-wise.github.io/medfit/articles/bootstrap.md)
 
 ## Related
 

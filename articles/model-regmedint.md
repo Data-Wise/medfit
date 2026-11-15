@@ -1,5 +1,8 @@
 # The regmedint engine
 
+[Models](https://data-wise.github.io/medfit/articles/models.md) › Single
+mediator › The regmedint engine
+
 `engine = "regmedint"` computes the effects from the closed-form
 regression formulas of VanderWeele, with analytical standard errors. It
 needs the suggested `regmedint` package. Part of the
@@ -12,29 +15,6 @@ collection.
 | **Class returned** | `MediationData`, or `InteractionMediationData` with a product |
 | **Set with** | `engine = "regmedint"` in [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md) |
 | **Needs** | a numeric 0/1 treatment and the same covariates in both formulas |
-
-``` r
-library(medfit)
-```
-
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
 
 ## Fit it
 
@@ -78,6 +58,9 @@ c(regmedint = unname(nie(fit_rm)), glm = unname(nie(fit_glm)))
   same covariates.
 - Engine-specific settings go through `engine_args`; the reference level
   of the mediator for the controlled direct effect is `m_star`.
+
+**Next:** Choose an interval: [Which interval should I
+use?](https://data-wise.github.io/medfit/articles/guide-intervals.md)
 
 ## Related
 

@@ -306,7 +306,7 @@ deletion), and `fixed_x` moments are the sample moments of those rows;
 that release has no `missing =` argument. The separate bounded FIML
 milestone preserves this default but permits explicit random-X simple
 mediation. See the [native
-guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml);
+guide](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml);
 bounded FIML is available from 0.16.0.
 
 ## Evidence: the oracle matrix
@@ -364,6 +364,6 @@ in 18 of 60 runs and OpenMx in 13 of 60, the same counts as under
 - [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.md)
   for the warning and message texts.
 - [The native engine
-  guide](https://data-wise.github.io/medfit/articles/native-guide.md)
-  and [medfit and
+  guide](https://data-wise.github.io/medfit/articles/sem-guide.md) and
+  [medfit and
   lavaan](https://data-wise.github.io/medfit/articles/lavaan-comparison.md).

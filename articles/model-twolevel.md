@@ -1,5 +1,8 @@
 # Two-level mediation (1-1-1)
 
+[Models](https://data-wise.github.io/medfit/articles/models.md) ›
+Clusters and latent variables › Two-level mediation (1-1-1)
+
 Treatment, mediator and outcome are all measured on the same level-1
 units (students, patients, days) nested in clusters (schools, clinics,
 people), and you want the indirect effect at the within level and at the
@@ -28,33 +31,6 @@ page](https://data-wise.github.io/medfit/articles/model-cluster.md)
 instead. If you have a single-level fit that only sets `cluster =` for
 robust standard errors, nothing changes: it still extracts as a
 `MediationData`.
-
-``` r
-library(medfit)
-```
-
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
-
-``` r
-has_lavaan <- requireNamespace("lavaan", quietly = TRUE)
-```
 
 ## What is estimated
 
@@ -130,7 +106,7 @@ td
 ```
 
     <TwoLevelMediationData>
-      X -> M -> Y  (clusters: id; lavaan fit; between level: latent cluster means)
+      X -> M -> Y  (clusters: id; lavaan 0.7.3 fit; between level: latent cluster means)
       n = 500 in 100 clusters (sizes 5 to 5)   |   ICC: X 0.503, M 0.323, Y 0.400
       a_within = +0.4432   b_within = +0.5518   c_prime_within = +0.2685
       a_between = +0.5594   b_between = +0.9553   c_prime_between = +0.2289
@@ -204,7 +180,10 @@ paths, the four effects at each level, and the contrast. Standard errors
 come from the delta method over the joint covariance; the intervals are
 Wald (normal) intervals with no small-sample correction. `summary(td)`
 adds the provenance of the fit and prints the assumptions in full, and
-`glance(td)` gives one row.
+`glance(td)` gives one row. The provenance (`summary(td)$provenance`)
+records the fitting source, the version of the package that made the fit
+(`source_version`; the [`print()`](https://rdrr.io/r/base/print.html)
+header shows it too) and the estimation settings.
 
 ``` r
 summary(td)
@@ -665,6 +644,9 @@ class (see
 
 The messages they carry are quoted in
 [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html#two-level-mediation).
+
+**Next:** Work a full example: [Two-level workflow, step by
+step](https://data-wise.github.io/medfit/articles/guide-twolevel-tutorial.md)
 
 ## Related
 

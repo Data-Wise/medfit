@@ -1,10 +1,10 @@
 # Quality control of the optimizer
 
-This page records how the native engine’s optimizer is tested and where
-its technical decisions are written down. The two tables below are
-generated from the repository files at site build
-(`tests/sim/gates.csv`, `tests/sim/structures.csv` and the front matter
-of `planning/specs/ADR-*.md`), so they cannot drift from them. Plan and
+This page records how the sem engine’s optimizer is tested and where its
+technical decisions are written down. The two tables below are generated
+from the repository files at site build (`tests/sim/gates.csv`,
+`tests/sim/structures.csv` and the front matter of
+`planning/specs/ADR-*.md`), so they cannot drift from them. Plan and
 ledger:
 `planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md`. The
 model syntax for the external oracles (lavaan, OpenMx, and semopy) is on
@@ -64,6 +64,25 @@ its script does not contain, or when a structure has no gate.
 
 | Id | Decision | Status | Date | ADR |
 |:---|:---|:---|:---|:---|
+| RD-1 | Every documentation surface has one owner and one moment it changes | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-2 | Version words come from DESCRIPTION; prose names a version only where a gate checks it | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-3 | Release docs gates live in the test suite (docs tier), not in a new workflow | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-4 | NEWS opens with the release heading and carries no stale wording in a release | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-5 | README and articles name the DESCRIPTION version and say nothing of a development version in a release | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-6 | README has a What’s new block for the version; CITATION reads the version | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-7 | CLAUDE.md and .STATUS status lines name the released version | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-8 | The FIML caveat is a marker on the home page and the FIML page, not a counted phrase | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-9 | Layout rules that can fail are tests: Next block, hidden setup, short navbar, readable colors, documented exports | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-10 | What stays manual: release notes review, rendered-site inspection, Lighthouse, external URLs | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| V-1 | The in-package ML fitter is the sem engine: engine = ‘sem’, prose ‘the sem engine’ | decided | 2026-11-12 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| V-2 | engine = ‘native’ stays as a silent alias; soft deprecation one minor later; no removal without a \[BREAKING\] issue | decided | 2026-11-12 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| V-3 | compare_lr(engine = ) keeps its name in 0.18.0 (reference = deferred until \#320 and the result-field collision are resolved) | deferred | 2026-11-12 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| V-4 | Listwise ML and bounded FIML are one engine; missing = stays the switch | decided | 2026-11-12 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| V-5 | Tuning: the existing control accepts a plain list (legacy nloptr options) or sem_control(); optimizer = ‘auto’ for the listwise search, resolved protocol recorded | decided | 2026-11-12 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| V-6 | Argument design rules: meaning-changing options are arguments, search options are control, strings not logicals, options() only for tuning | decided | 2026-11-12 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| V-7 | TwoLevelMediationData: optional source_version and a fallback reader; source and source_package validators unchanged; source and lavaan_version kept | decided | 2026-11-13 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| V-8 | Prose and titles change first; the ‘native’ article URLs are renamed to sem-\* only after a pkgdown redirect spike confirms anchors survive | conditional | 2026-11-12 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| V-9 | One decision record and one user guide: this ADR and the Guides article ‘Which engine should I use?’ | decided | 2026-11-12 | ADR-engine-vocabulary-and-controls-2026-11-12 |
 | E-1 | fixed_x defaults to TRUE: warn in 0.14.0, flip in 0.15.0 | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
 | E-2 | meanstructure defaults to TRUE on the same schedule as fixed_x | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
 | E-3 | One default for fit_sem() and fit_mediation(engine = ‘native’) | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
@@ -243,10 +262,10 @@ run must be checked before reusing either kind of evidence.
 
 ## The 0.15.0 defaults flip
 
-0.15.0 changes two defaults of the native engine: an unset `fixed_x`
-fixes the exogenous observed variables and an unset `meanstructure` is
-`TRUE`. The release is gated on evidence that the change moves only what
-it should. It moves the conditional log likelihood, the parameter count
+0.15.0 changes two defaults of the sem engine: an unset `fixed_x` fixes
+the exogenous observed variables and an unset `meanstructure` is `TRUE`.
+The release is gated on evidence that the change moves only what it
+should. It moves the conditional log likelihood, the parameter count
 behind AIC and BIC, the names in
 [`coef()`](https://rdrr.io/r/stats/coef.html), and the retry seed;
 structural estimates and their standard errors stay where they were.

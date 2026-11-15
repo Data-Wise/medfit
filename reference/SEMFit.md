@@ -1,7 +1,7 @@
 # SEMFit S7 Class
 
-S7 class holding a structural equation model fitted by the native
-maximum-likelihood engine (see
+S7 class holding a structural equation model fitted by the sem engine,
+medfit's own maximum-likelihood SEM fitter (see
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)):
 estimates, their covariance, the parameter table, defined parameters
 (`:=`) with delta-method standard errors, and the diagnostics of the

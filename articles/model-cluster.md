@@ -1,5 +1,8 @@
 # Cluster-randomized trials (2-1-1)
 
+[Models](https://data-wise.github.io/medfit/articles/models.md) ›
+Clusters and latent variables › Cluster-randomized trials (2-1-1)
+
 The treatment is assigned to whole clusters (schools, clinics); the
 mediator and outcome are measured on individuals. Part of the
 [Models](https://data-wise.github.io/medfit/articles/models.md)
@@ -12,34 +15,6 @@ collection.
 | **Indirect effect** | \\a \\ b\_{\text{between}}\\, split into an own-mediator and a spillover part |
 | **Routes** | `fit_mediation(engine = "lmer", cluster = )`, or [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a pair of `lmer` fits |
 | **Needs** | `lme4`; `pbkrtest` for `se_type = "kr"` |
-
-``` r
-library(medfit)
-```
-
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
-
-``` r
-has_lme4 <- requireNamespace("lme4", quietly = TRUE)
-has_pbkr <- requireNamespace("pbkrtest", quietly = TRUE)
-```
 
 ## Fit it
 
@@ -202,6 +177,9 @@ c(from_lmer_pair = unname(nie(x2)), from_engine = unname(nie(x)))
 - The own and spillover split is a large-cluster approximation, and the
   interval evidence for the cluster bootstrap is thin; see [Methods and
   Formulas](https://data-wise.github.io/medfit/articles/methods.md).
+
+**Next:** Resample whole clusters: [Bootstrap
+Inference](https://data-wise.github.io/medfit/articles/bootstrap.md)
 
 ## Related
 

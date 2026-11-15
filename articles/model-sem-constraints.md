@@ -1,11 +1,10 @@
-# Native engine: constraints and the MBCO test
+# The sem engine: constraints and the MBCO test
 
 Fix, bound or equate parameters, and test the indirect effect with one
 call. Part of the
 [Models](https://data-wise.github.io/medfit/articles/models.md)
-collection; the third of five [native
-engine](https://data-wise.github.io/medfit/articles/model-native.md)
-pages.
+collection; the third of five [sem
+engine](https://data-wise.github.io/medfit/articles/model-sem.md) pages.
 
 |  |  |
 |----|----|
@@ -13,29 +12,6 @@ pages.
 | **Class returned** | `SEMFit` |
 | **Syntax** | `a == b`, `a + b == 1`, `a < 0.3`, `y ~ 0.5 * x`, `CONSTRAINT(a == b)` |
 | **Limit** | a sum of products such as `a1 * b1 + a2 * b2 == 0` is best-effort (see Limits) |
-
-``` r
-library(medfit)
-```
-
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
 
 ``` r
 base <- "
@@ -193,6 +169,10 @@ anova(tied, free)
   in the model.
 - **Equal labels are one parameter.** Giving two paths the same label
   equates them without a constraint line.
+
+**Next:** Fit several mediators or add weights: [The sem engine: several
+mediators and
+weights](https://data-wise.github.io/medfit/articles/model-sem-multi.md)
 
 ## Related
 

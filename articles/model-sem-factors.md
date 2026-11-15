@@ -1,10 +1,10 @@
-# Native engine: categorical covariates
+# The sem engine: categorical covariates
 
 Use a factor, character or logical column as a covariate in syntax. Part
 of the [Models](https://data-wise.github.io/medfit/articles/models.md)
-collection, with the other [native
-engine](https://data-wise.github.io/medfit/articles/model-native.md)
-pages. This page needs medfit 0.11.0 or later (GitHub; CRAN has 0.3.2).
+collection, with the other [sem
+engine](https://data-wise.github.io/medfit/articles/model-sem.md) pages.
+This page needs medfit 0.11.0 or later (GitHub; CRAN has 0.3.2).
 
 |  |  |
 |----|----|
@@ -14,29 +14,6 @@ pages. This page needs medfit 0.11.0 or later (GitHub; CRAN has 0.3.2).
 | **Limit** | a categorical outcome, mediator or treatment is not supported (see Limits) |
 
 The page cuts `covariate1` into three groups to have a factor to use:
-
-``` r
-library(medfit)
-```
-
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
 
 ``` r
 dat <- transform(mediation_demo,
@@ -146,8 +123,8 @@ mbco_sem(fit, paths = c("a", "b"))
 
 `group:mediator1` expands to one product per dummy, each a product term
 under the rules in [the native model
-page](https://data-wise.github.io/medfit/articles/model-native.md). The
-fit warns that the global test is not valid with a product, so the chunk
+page](https://data-wise.github.io/medfit/articles/model-sem.md). The fit
+warns that the global test is not valid with a product, so the chunk
 silences it and asks for the sandwich:
 
 ``` r
@@ -187,7 +164,7 @@ tidy(extract_mediation(fw, treatment = "treatment", mediator = "mediator1",
 ## Limits
 
 - **A categorical outcome, mediator or treatment** is not supported in
-  the native engine: only a covariate on a regression’s right side is
+  the sem engine: only a covariate on a regression’s right side is
   expanded. The supported routes today:
   - *A two-level treatment or mediator:* recode it as a 0/1 numeric
     column.
@@ -216,13 +193,15 @@ tidy(extract_mediation(fw, treatment = "treatment", mediator = "mediator1",
   on each resample) rebuilds the factor each time, so a level missing
   from a character column’s resample changes the reference level.
 
+**Next:** Choose between the engines: [Which engine should I
+use?](https://data-wise.github.io/medfit/articles/guide-engines.md)
+
 ## Related
 
 [Cookbook recipe
 21](https://data-wise.github.io/medfit/articles/cookbook.html#a-categorical-covariate-in-a-native-fit)
-\| [Native engine: paths and defined
-parameters](https://data-wise.github.io/medfit/articles/model-native.md)
-\|
+\| [The sem engine: paths and defined
+parameters](https://data-wise.github.io/medfit/articles/model-sem.md) \|
 [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.md)
 \|
 [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)

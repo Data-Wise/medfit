@@ -1,5 +1,8 @@
 # Parallel mediation
 
+[Models](https://data-wise.github.io/medfit/articles/models.md) ›
+Several mediators › Parallel mediation
+
 Two or more mediators that the treatment drives independently, with no
 path between them. Part of the
 [Models](https://data-wise.github.io/medfit/articles/models.md)
@@ -11,29 +14,6 @@ collection.
 | **Class returned** | `ParallelMediationData` |
 | **Indirect effect** | the sum \\\sum_j a_j b_j\\ |
 | **Routes** | `extract_mediation(..., structure = "parallel")` on `lm`/`glm`, or a lavaan fit |
-
-``` r
-library(medfit)
-```
-
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
 
 ## Fit it
 
@@ -74,6 +54,9 @@ nie(x)
 - Each mediator must be driven by the treatment (and covariates) only.
   If one mediator affects another, use [serial
   mediation](https://data-wise.github.io/medfit/articles/model-serial.md).
+
+**Next:** Add products between mediators: [Joint
+mediation](https://data-wise.github.io/medfit/articles/model-joint.md)
 
 ## Related
 

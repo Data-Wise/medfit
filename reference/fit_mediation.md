@@ -31,12 +31,12 @@ fit_mediation(
 - formula_y:
 
   Formula for outcome model (e.g., `Y ~ X + M + C`). Not used with
-  `engine = "native"`, which takes `model` instead.
+  `engine = "sem"`, which takes `model` instead.
 
 - formula_m:
 
   Formula for mediator model (e.g., `M ~ X + C`). Not used with
-  `engine = "native"`.
+  `engine = "sem"`.
 
 - data:
 
@@ -67,10 +67,11 @@ fit_mediation(
     the suggested regmedint package (VanderWeele's regression approach,
     with optional treatment-mediator interaction)
 
-  - `"native"`: medfit's own maximum-likelihood SEM engine, fitted from
-    model syntax given as `model` (see
-    [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md));
-    the fit is then extracted with
+  - `"sem"`: the sem engine, medfit's own maximum-likelihood SEM fitter,
+    fitted from model syntax given as `model` (see
+    [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)).
+    `"native"` is the legacy spelling of the same engine and is still
+    accepted. The fit is then extracted with
     [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md).
     Supports observed and latent mediators, equality and inequality
     constraints, and `:=` parameters. Case `weights` and
@@ -119,8 +120,7 @@ fit_mediation(
   `"kr"` uses the Kenward-Roger adjusted covariance and stores a degrees
   of freedom for each path, so the path intervals are t intervals; it
   needs REML fits and the suggested pbkrtest package. With
-  `engine = "native"`, `"sandwich"` is the HC0-type robust covariance
-  (see
+  `engine = "sem"`, `"sandwich"` is the HC0-type robust covariance (see
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)),
   which is smaller than the glm engine's HC3 by a factor that shrinks
   like 1/n.
@@ -129,7 +129,7 @@ fit_mediation(
 
   Named list of engine-specific overrides (default:
   [`list()`](https://rdrr.io/r/base/list.html), no overrides). Ignored
-  by `engine = "glm"`. For `engine = "native"`, recognized names are
+  by `engine = "glm"`. For `engine = "sem"`, recognized names are
   `information`, `n_starts`, `meanstructure`, `fixed_x`, `missing` and
   `control` (passed to
   [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md),
@@ -172,10 +172,10 @@ fit_mediation(
 
 - model:
 
-  Character string: model syntax for `engine = "native"` (required
-  there, an error with any other engine). `treatment` and `mediator`
-  name variables in the syntax; a latent mediator need not be a column
-  of `data`. Because `model` is a named argument, an argument passed to
+  Character string: model syntax for `engine = "sem"` (required there,
+  an error with any other engine). `treatment` and `mediator` name
+  variables in the syntax; a latent mediator need not be a column of
+  `data`. Because `model` is a named argument, an argument passed to
   [`stats::glm()`](https://rdrr.io/r/stats/glm.html) through `...` that
   partially matches it (`mod = FALSE`) now binds here and is an error
   with the glm engine; drop it, since

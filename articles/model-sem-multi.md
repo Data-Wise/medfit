@@ -1,11 +1,10 @@
-# Native engine: several mediators and weights
+# The sem engine: several mediators and weights
 
-Serial and parallel mediators, and sampling weights, with the native
+Serial and parallel mediators, and sampling weights, with the sem
 engine. Part of the
 [Models](https://data-wise.github.io/medfit/articles/models.md)
-collection; the fourth of five [native
-engine](https://data-wise.github.io/medfit/articles/model-native.md)
-pages.
+collection; the fourth of five [sem
+engine](https://data-wise.github.io/medfit/articles/model-sem.md) pages.
 
 |  |  |
 |----|----|
@@ -14,35 +13,12 @@ pages.
 | **Classes returned** | `SerialMediationData` or `ParallelMediationData` |
 | **Weights** | `fit_sem(weights = , se_type = "sandwich")` |
 
-> **Not `fit_mediation(engine = "native")`**
+> **Not `fit_mediation(engine = "sem")`**
 >
-> `fit_mediation(engine = "native")` takes **one** mediator and stops
-> with “Must have length 1” for more. For several, fit with
+> `fit_mediation(engine = "sem")` takes **one** mediator and stops with
+> “Must have length 1” for more. For several, fit with
 > [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 > and extract.
-
-``` r
-library(medfit)
-```
-
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
 
 ``` r
 covs <- "covariate1 + covariate2"
@@ -133,21 +109,24 @@ weighting.
 
 ## Limits
 
-- **`fit_mediation(engine = "native")` takes one mediator** (see the
+- **`fit_mediation(engine = "sem")` takes one mediator** (see the
   warning above).
 - **Four-way decomposition** needs one mediator and a
   treatment-by-mediator product (`x:m`) in the outcome equation, and a
   model with a product cannot have a residual covariance between the
   mediators (parallel mediators with `m1 ~~ m2` and a product are not
   supported; see [product
-  terms](https://data-wise.github.io/medfit/articles/model-native.html#product-terms)).
+  terms](https://data-wise.github.io/medfit/articles/model-sem.html#product-terms)).
   Intercepts are estimated; see [the native model
-  page](https://data-wise.github.io/medfit/articles/model-native.html#intercepts).
+  page](https://data-wise.github.io/medfit/articles/model-sem.html#intercepts).
 - **The native sandwich is the HC0 type**, with casewise scores; the
   `glm` engine’s sandwich is HC3. They are different estimators, so the
   standard errors need not match.
 - **The sandwich treats observations as independent**, so it does not
   handle survey clusters, strata or replicate weights.
+
+**Next:** Add a categorical covariate: [The sem engine: categorical
+covariates](https://data-wise.github.io/medfit/articles/model-sem-factors.md)
 
 ## Related
 

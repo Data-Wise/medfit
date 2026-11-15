@@ -8,10 +8,10 @@ Card](https://data-wise.github.io/medfit/articles/refcard.md).
 
 These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0,
 recipe 20 and the native route in recipe 7 need 0.10.0, recipe 21 needs
-0.11.0, recipe 22 needs 0.16.0, and recipe 23 needs the development
-version). CRAN has 0.3.2, which lacks `mediation_demo` and the native,
-joint and cluster functions; install from GitHub or r-universe (see the
-[home page](https://data-wise.github.io/medfit/#install)).
+0.11.0, recipe 22 needs 0.16.0, and recipe 23 needs 0.17.0). CRAN has
+0.3.2, which lacks `mediation_demo` and the native, joint and cluster
+functions; install from GitHub or r-universe (see the [home
+page](https://data-wise.github.io/medfit/#install)).
 
 ``` r
 library(medfit)
@@ -213,10 +213,9 @@ decompose(xi)
            cde    int_ref    int_med        pie        nde        nie      total
     0.21521278 0.04353909 0.27709549 0.34001758 0.25875187 0.61711307 0.87586495 
 
-The native engine gives the same parts from model syntax (0.10.0 or
-later): write the product as `treatment:mediator1`. The fit warns once
-that the global model test is not available for a product of a
-regression target.
+The sem engine gives the same parts from model syntax (0.10.0 or later):
+write the product as `treatment:mediator1`. The fit warns once that the
+global model test is not available for a product of a regression target.
 
 ``` r
 sem_i <- suppressWarnings(fit_sem(
@@ -234,7 +233,7 @@ decompose(extract_mediation(sem_i, treatment = "treatment", mediator = "mediator
 More: [Model
 Extraction](https://data-wise.github.io/medfit/articles/extraction.md),
 [the native product
-term](https://data-wise.github.io/medfit/articles/model-native.html#product-terms).
+term](https://data-wise.github.io/medfit/articles/model-sem.html#product-terms).
 
 ## 8. Many mediators with products
 
@@ -403,7 +402,7 @@ syntax <- "
   Y ~ b * eta + cp * X
 "
 xs <- fit_mediation(model = syntax, data = ldat, treatment = "X",
-                    mediator = "eta", engine = "native")
+                    mediator = "eta", engine = "sem")
 tidy(xs, type = "effects", conf_int = TRUE)
 ```
 
@@ -429,6 +428,10 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")
 
     data:  a * b = 0
     MBCO = 46.753, df = 1, p-value = 8.054e-12
+
+Optimizer settings for either call go in `control = sem_control()` (for
+example `sem_control(nloptr = list(maxeval = 20000L))`); a plain list of
+`nloptr` options still works.
 
 ## 12. A nonlinear constraint or a longer chain, native engine
 
@@ -768,12 +771,12 @@ character vector (for example `fixed_x = "treatment"`) to fix a subset.
 
 Since 0.15.0 the default is to fix the exogenous observed variables;
 pass `fixed_x = FALSE` to keep the free exogenous block. See [the 0.15.0
-defaults](https://data-wise.github.io/medfit/articles/native-defaults-0-15.md).
+defaults](https://data-wise.github.io/medfit/articles/sem-defaults-0-15.md).
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md), [the
-native engine
-guide](https://data-wise.github.io/medfit/articles/native-guide.md).
+sem engine
+guide](https://data-wise.github.io/medfit/articles/sem-guide.md).
 
 ## 19. Observed intercepts and means
 
@@ -849,10 +852,10 @@ fit with the mean structure off has no intercepts to restrict.
 Pass `meanstructure = NULL` to fit a mean structure only when the model
 writes `~1` or a product (the 0.14.x rule), or `meanstructure = FALSE`
 for covariances only. See [the 0.15.0
-defaults](https://data-wise.github.io/medfit/articles/native-defaults-0-15.md).
+defaults](https://data-wise.github.io/medfit/articles/sem-defaults-0-15.md).
 
-More: [Native engine,
-intercepts](https://data-wise.github.io/medfit/articles/model-native.html#intercepts).
+More: [The sem engine,
+intercepts](https://data-wise.github.io/medfit/articles/model-sem.html#intercepts).
 
 ## 20. Four-way decomposition from a native fit
 
@@ -942,8 +945,8 @@ c(estimate = boot20@estimate, lower = boot20@ci_lower, upper = boot20@ci_upper)
         estimate        lower        upper
      0.076915831 -0.003651384  0.160267019 
 
-More: [Native engine, product
-term](https://data-wise.github.io/medfit/articles/model-native.md).
+More: [The sem engine, product
+term](https://data-wise.github.io/medfit/articles/model-sem.md).
 
 ## 21. A categorical covariate in a native fit
 
@@ -1025,8 +1028,8 @@ product of two factors are refused with a message that says why;
 refits from raw data re-expands the factor in each resample, so a level
 missing from a character column’s resample changes the reference level.
 
-More: [Native engine, paths and defined
-parameters](https://data-wise.github.io/medfit/articles/model-native.md),
+More: [The sem engine, paths and defined
+parameters](https://data-wise.github.io/medfit/articles/model-sem.md),
 [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
 (section Factor covariates).
 

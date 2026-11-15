@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.17.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,11 +69,11 @@
     <li><a class="dropdown-item" href="../articles/model-cluster.html">Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/model-twolevel.html">Two-level mediation (1-1-1)</a></li>
     <li><a class="dropdown-item" href="../articles/model-lavaan.html">lavaan fits</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native.html">Native: paths and defined parameters</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-latent.html">Native: a latent mediator</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-multi.html">Native: several mediators and weights</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-factors.html">Native: categorical covariates</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem.html">The sem engine: paths and defined parameters</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-latent.html">The sem engine: a latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-constraints.html">The sem engine: constraints and MBCO</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-multi.html">The sem engine: several mediators and weights</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-factors.html">The sem engine: categorical covariates</a></li>
     <li><a class="dropdown-item" href="../articles/model-fiml.html">Missing data: bounded FIML</a></li>
   </ul>
 </li>
@@ -82,15 +82,16 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-guides">
 <li><a class="dropdown-item" href="../articles/guide-changes.html">What changed since CRAN 0.3.2</a></li>
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-engines.html">Which engine should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
     <li><a class="dropdown-item" href="../articles/guide-twolevel-tutorial.html">Two-level workflow, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/guide-architecture.html">How medfit is organized</a></li>
-    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">Native defaults in 0.15.0</a></li>
-    <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
-    <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
-    <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
-    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-defaults-0-15.html">Native defaults in 0.15.0</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-quickstart.html">The sem engine in five minutes</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-tutorial.html">The sem engine, step by step</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-guide.html">The sem engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the sem engine</a></li>
     <li><a class="dropdown-item" href="../articles/probmed-comparison.html">probmed and medfit</a></li>
     <li><a class="dropdown-item" href="../articles/rmediation-comparison.html">RMediation and medfit</a></li>
     <li><a class="dropdown-item" href="../articles/syntax-crosswalk.html">One model in medfit, lavaan, OpenMx and semopy</a></li>
@@ -143,16 +144,16 @@
     <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
     <li><a class="dropdown-item" href="../articles/computation-algorithms.html">Computation algorithms</a></li>
     <li><a class="dropdown-item" href="../articles/whats-new-0-11.html">What's new in 0.11</a></li>
-    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
     <li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
   </ul>
 </li>
-<li class="nav-item"><a class="nav-link" href="../articles/quality-control.html">Quality control</a></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-status" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-chart-line"></span> Status</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-status">
-<li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-project" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Project</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-project">
+<li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
+    <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
+    <li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/roadmap.html">Development Roadmap</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/contributing.html">Contributing Guide</a></li>
   </ul>
@@ -177,7 +178,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.17.0/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -187,7 +188,7 @@
 
 
     <p>Twenty-three task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster, two-level and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
-<p>These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, recipe 21 needs 0.11.0, recipe 22 needs 0.16.0, and recipe 23 needs the development version). CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#install">home page</a>).</p>
+<p>These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, recipe 21 needs 0.11.0, recipe 22 needs 0.16.0, and recipe 23 needs 0.17.0). CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#install">home page</a>).</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stderr">
@@ -349,7 +350,7 @@ Attaching package: 'generics'</code></pre>
 0.21521278 0.04353909 0.27709549 0.34001758 0.25875187 0.61711307 0.87586495 </code></pre>
 </div>
 </div>
-<p>The native engine gives the same parts from model syntax (0.10.0 or later): write the product as <code>treatment:mediator1</code>. The fit warns once that the global model test is not available for a product of a regression target.</p>
+<p>The sem engine gives the same parts from model syntax (0.10.0 or later): write the product as <code>treatment:mediator1</code>. The fit warns once that the global model test is not available for a product of a regression target.</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="va">sem_i</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span></span>
 <span>  <span class="st">"mediator1 ~ treatment + covariate1 + covariate2</span></span>
@@ -363,7 +364,7 @@ Attaching package: 'generics'</code></pre>
 0.21521278 0.04353909 0.27709549 0.34001758 0.25875187 0.61711307 0.87586495 </code></pre>
 </div>
 </div>
-<p>More: <a href="extraction.html">Model Extraction</a>, <a href="model-native.html#product-terms">the native product term</a>.</p>
+<p>More: <a href="extraction.html">Model Extraction</a>, <a href="model-sem.html#product-terms">the native product term</a>.</p>
 </section><section class="level2"><h2 id="many-mediators-with-products">8. Many mediators with products<a class="anchor" aria-label="anchor" href="#many-mediators-with-products"></a>
 </h2>
 <p><em>When:</em> several mediators and a treatment-by-mediator term. The result is the joint effect over the mediator block; bootstrap it with <code><a href="../reference/joint_effects.html">joint_effects()</a></code>.</p>
@@ -500,7 +501,7 @@ N bootstrap samples: 197
 <span><span class="st">  Y ~ b * eta + cp * X</span></span>
 <span><span class="st">"</span></span>
 <span><span class="va">xs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mediation.html">fit_mediation</a></span><span class="op">(</span>model <span class="op">=</span> <span class="va">syntax</span>, data <span class="op">=</span> <span class="va">ldat</span>, treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
-<span>                    mediator <span class="op">=</span> <span class="st">"eta"</span>, engine <span class="op">=</span> <span class="st">"native"</span><span class="op">)</span></span>
+<span>                    mediator <span class="op">=</span> <span class="st">"eta"</span>, engine <span class="op">=</span> <span class="st">"sem"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">xs</span>, type <span class="op">=</span> <span class="st">"effects"</span>, conf_int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3 × 5
@@ -522,6 +523,7 @@ data:  a * b = 0
 MBCO = 46.753, df = 1, p-value = 8.054e-12</code></pre>
 </div>
 </div>
+<p>Optimizer settings for either call go in <code>control = sem_control()</code> (for example <code>sem_control(nloptr = list(maxeval = 20000L))</code>); a plain list of <code>nloptr</code> options still works.</p>
 </section><section class="level2"><h2 id="a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain, native engine<a class="anchor" aria-label="anchor" href="#a-nonlinear-constraint-or-a-longer-chain-native-engine"></a>
 </h2>
 <p><em>When:</em> you want to fix the direct effect at the indirect effect (<code>cp == a*b</code>), or test the indirect effect of a three-mediator-step chain, which is a product of three paths. Constraints may be nonlinear in the labels.</p>
@@ -762,8 +764,8 @@ fixed_x 0.3493645 0.06609875</code></pre>
 </div>
 </div>
 <p>Compare fits only when they fix the same variables. <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>, <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> and <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code>/<code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> across several fits stop when the fixed sets differ, as above. Pass a character vector (for example <code>fixed_x = "treatment"</code>) to fix a subset.</p>
-<p>Since 0.15.0 the default is to fix the exogenous observed variables; pass <code>fixed_x = FALSE</code> to keep the free exogenous block. See <a href="native-defaults-0-15.html">the 0.15.0 defaults</a>.</p>
-<p>More: <a href="methods.html">Methods and Formulas</a>, <a href="native-guide.html">the native engine guide</a>.</p>
+<p>Since 0.15.0 the default is to fix the exogenous observed variables; pass <code>fixed_x = FALSE</code> to keep the free exogenous block. See <a href="sem-defaults-0-15.html">the 0.15.0 defaults</a>.</p>
+<p>More: <a href="methods.html">Methods and Formulas</a>, <a href="sem-guide.html">the sem engine guide</a>.</p>
 </section><section class="level2"><h2 id="observed-intercepts-and-means">19. Observed intercepts and means<a class="anchor" aria-label="anchor" href="#observed-intercepts-and-means"></a>
 </h2>
 <p><em>When:</em> you want the intercepts of a native model, or a test of whether an intercept is zero. Since 0.15.0 every native fit has a mean structure by default (<code>meanstructure</code> left unset is <code>TRUE</code>): an intercept is free for every observed variable you did not mention, as lavaan does with <code>meanstructure = TRUE</code>. Writing an intercept (<code>outcome ~ 1</code>) is only needed to restrict it. The paths and their standard errors do not change.</p>
@@ -813,8 +815,8 @@ zero  6 2416.313</code></pre>
 </div>
 </div>
 <p>The test rejects zero, and the restricted model has the larger AIC. A fit with the mean structure off has no intercepts to restrict.</p>
-<p>Pass <code>meanstructure = NULL</code> to fit a mean structure only when the model writes <code>~1</code> or a product (the 0.14.x rule), or <code>meanstructure = FALSE</code> for covariances only. See <a href="native-defaults-0-15.html">the 0.15.0 defaults</a>.</p>
-<p>More: <a href="model-native.html#intercepts">Native engine, intercepts</a>.</p>
+<p>Pass <code>meanstructure = NULL</code> to fit a mean structure only when the model writes <code>~1</code> or a product (the 0.14.x rule), or <code>meanstructure = FALSE</code> for covariances only. See <a href="sem-defaults-0-15.html">the 0.15.0 defaults</a>.</p>
+<p>More: <a href="model-sem.html#intercepts">The sem engine, intercepts</a>.</p>
 </section><section class="level2"><h2 id="four-way-decomposition-from-a-native-fit">20. Four-way decomposition from a native fit<a class="anchor" aria-label="anchor" href="#four-way-decomposition-from-a-native-fit"></a>
 </h2>
 <p><em>When:</em> the outcome depends on the treatment, the mediator and their product, and you want the controlled direct effect, the two interaction terms and the pure indirect effect. Write the product as <code>treatment:mediator1</code> in the outcome equation, fit with <code><a href="../reference/fit_sem.html">fit_sem()</a></code>, and extract. A product needs the mean structure (on by default; <code>meanstructure = FALSE</code> is an error), so the covariate in the mediator equation enters the reference interaction through its sample mean. The fit warns that the global test is not valid with a product and recommends the sandwich covariance; the chunk silences the warning and asks for the sandwich. A factor covariate (for example a <code>group</code> column in the mediator equation) is expanded to dummies and enters the same way; a factor treatment or mediator is not supported, so recode a two-level factor as 0/1 first.</p>
@@ -869,7 +871,7 @@ zero  6 2416.313</code></pre>
  0.076915831 -0.003651384  0.160267019 </code></pre>
 </div>
 </div>
-<p>More: <a href="model-native.html">Native engine, product term</a>.</p>
+<p>More: <a href="model-sem.html">The sem engine, product term</a>.</p>
 </section><section class="level2"><h2 id="a-categorical-covariate-in-a-native-fit">21. A categorical covariate in a native fit<a class="anchor" aria-label="anchor" href="#a-categorical-covariate-in-a-native-fit"></a>
 </h2>
 <p><em>When:</em> a covariate is a factor, character or logical column (a group, a site, a yes/no flag). Write the column name where a numeric covariate would go. The engine replaces it with one 0/1 dummy per non-reference level, named <code>&lt;column&gt;_&lt;level&gt;</code>; the reference is the first factor level (a character column sorts in the C locale). The rows of the fit are named <code>mediator1~group_mid</code>, so read them like any other path. The chunk cuts <code>covariate1</code> into three groups to have a factor to use.</p>
@@ -931,7 +933,7 @@ zero  6 2416.313</code></pre>
 </div>
 </div>
 <p>Limits: a factor as an outcome or a mediator, an ordered factor, and a product of two factors are refused with a message that says why; <code>group:mediator1</code> expands to one product per dummy. A bootstrap that refits from raw data re-expands the factor in each resample, so a level missing from a character column’s resample changes the reference level.</p>
-<p>More: <a href="model-native.html">Native engine, paths and defined parameters</a>, <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code> (section Factor covariates).</p>
+<p>More: <a href="model-sem.html">The sem engine, paths and defined parameters</a>, <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code> (section Factor covariates).</p>
 </section><section class="level2"><h2 id="missing-data-bounded-fiml">22. Missing data: bounded FIML<a class="anchor" aria-label="anchor" href="#missing-data-bounded-fiml"></a>
 </h2>
 <p><em>When:</em> some rows are missing a value on the mediator or the outcome and you want to keep them rather than delete them listwise. The opt-in is narrow (continuous Gaussian variables, <code>fixed_x = FALSE</code>, a mean structure, observed information, model-based standard errors, no weights) and never falls back to listwise deletion. The chunk simulates X, M and Y and blanks every seventh mediator value. Statistically it is not admitted: it assumes the missingness is ignorable and its intervals are not calibrated for coverage.</p>

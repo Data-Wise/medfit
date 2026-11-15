@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.17.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,11 +69,11 @@
     <li><a class="dropdown-item" href="../articles/model-cluster.html">Cluster-randomized trial</a></li>
     <li><a class="dropdown-item" href="../articles/model-twolevel.html">Two-level mediation (1-1-1)</a></li>
     <li><a class="dropdown-item" href="../articles/model-lavaan.html">lavaan fits</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native.html">Native: paths and defined parameters</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-latent.html">Native: a latent mediator</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-constraints.html">Native: constraints and MBCO</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-multi.html">Native: several mediators and weights</a></li>
-    <li><a class="dropdown-item" href="../articles/model-native-factors.html">Native: categorical covariates</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem.html">The sem engine: paths and defined parameters</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-latent.html">The sem engine: a latent mediator</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-constraints.html">The sem engine: constraints and MBCO</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-multi.html">The sem engine: several mediators and weights</a></li>
+    <li><a class="dropdown-item" href="../articles/model-sem-factors.html">The sem engine: categorical covariates</a></li>
     <li><a class="dropdown-item" href="../articles/model-fiml.html">Missing data: bounded FIML</a></li>
   </ul>
 </li>
@@ -82,15 +82,16 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-guides">
 <li><a class="dropdown-item" href="../articles/guide-changes.html">What changed since CRAN 0.3.2</a></li>
     <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-engines.html">Which engine should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
     <li><a class="dropdown-item" href="../articles/guide-twolevel-tutorial.html">Two-level workflow, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/guide-architecture.html">How medfit is organized</a></li>
-    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">Native defaults in 0.15.0</a></li>
-    <li><a class="dropdown-item" href="../articles/native-quickstart.html">Native engine in five minutes</a></li>
-    <li><a class="dropdown-item" href="../articles/native-tutorial.html">Native engine, step by step</a></li>
-    <li><a class="dropdown-item" href="../articles/native-guide.html">The native engine guide</a></li>
-    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the native engine</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-defaults-0-15.html">Native defaults in 0.15.0</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-quickstart.html">The sem engine in five minutes</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-tutorial.html">The sem engine, step by step</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-guide.html">The sem engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the sem engine</a></li>
     <li><a class="dropdown-item" href="../articles/probmed-comparison.html">probmed and medfit</a></li>
     <li><a class="dropdown-item" href="../articles/rmediation-comparison.html">RMediation and medfit</a></li>
     <li><a class="dropdown-item" href="../articles/syntax-crosswalk.html">One model in medfit, lavaan, OpenMx and semopy</a></li>
@@ -143,16 +144,16 @@
     <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
     <li><a class="dropdown-item" href="../articles/computation-algorithms.html">Computation algorithms</a></li>
     <li><a class="dropdown-item" href="../articles/whats-new-0-11.html">What's new in 0.11</a></li>
-    <li><a class="dropdown-item" href="../articles/native-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
+    <li><a class="dropdown-item" href="../articles/sem-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
     <li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
   </ul>
 </li>
-<li class="nav-item"><a class="nav-link" href="../articles/quality-control.html">Quality control</a></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-status" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-chart-line"></span> Status</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-status">
-<li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-project" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Project</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-project">
+<li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
+    <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
+    <li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/roadmap.html">Development Roadmap</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/contributing.html">Contributing Guide</a></li>
   </ul>
@@ -177,7 +178,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.17.0/vignettes/articles/model-fiml.qmd" class="external-link"><code>vignettes/articles/model-fiml.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/model-fiml.qmd" class="external-link"><code>vignettes/articles/model-fiml.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -186,7 +187,11 @@
 
 
 
-    <p>Keep partly observed rows instead of deleting them. Part of the <a href="models.html">Models</a> collection.</p>
+    <p class="breadcrumb-line">
+<a href="models.html">Models</a> › Clusters and latent variables › Missing data: bounded FIML
+</p>
+<p>Keep partly observed rows instead of deleting them. Part of the <a href="models.html">Models</a> collection.</p>
+<p><strong>Status:</strong> these models are numerically verified against lavaan, not statistically admitted: no interval coverage is established, and every <code>source_fit</code> interval route is refused (<code>medfit_error_fiml_inference_unavailable</code>).</p>
 <table class="table caption-top">
 <colgroup>
 <col style="width: 50%">
@@ -205,7 +210,7 @@
 <tr class="odd">
 <td><strong>Route</strong></td>
 <td>
-<code>fit_sem(model, data, missing = "fiml", fixed_x = FALSE)</code> then <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>, or <code>fit_mediation(engine = "native", engine_args = list(missing = "fiml", ...))</code>
+<code>fit_sem(model, data, missing = "fiml", fixed_x = FALSE)</code> then <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>, or <code>fit_mediation(engine = "sem", engine_args = list(missing = "fiml", ...))</code>
 </td>
 </tr>
 <tr class="even">
@@ -214,33 +219,10 @@
 </tr>
 <tr class="odd">
 <td><strong>Availability</strong></td>
-<td>simple model from 0.16.0; covariates, parallel and serial forms in the development version</td>
+<td>simple model from 0.16.0; covariates, parallel and serial forms from 0.17.0</td>
 </tr>
 </tbody>
 </table>
-<div class="cell">
-<pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span></code></pre>
-<div class="cell-output cell-output-stderr">
-<pre><code>
-Attaching package: 'medfit'</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>The following object is masked from 'package:stats':
-
-    decompose</code></pre>
-</div>
-<pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://generics.r-lib.org" class="external-link">generics</a></span><span class="op">)</span></span></code></pre>
-<div class="cell-output cell-output-stderr">
-<pre><code>
-Attaching package: 'generics'</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>The following objects are masked from 'package:base':
-
-    as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-    setequal, union</code></pre>
-</div>
-</div>
 <section class="level2"><h2 id="what-it-is-and-what-it-assumes">What it is, and what it assumes<a class="anchor" aria-label="anchor" href="#what-it-is-and-what-it-assumes"></a>
 </h2>
 <p>Ordinary fits delete every row with a missing value on a model variable. Full-information maximum likelihood (FIML) keeps a row that has at least one observed model variable and uses what it has. It assumes the variables are jointly normal and that the missingness is ignorable under that model (missing at random). It does not impute values, and a fixed pattern of missing values in a real study is not evidence that missingness is ignorable.</p>
@@ -313,7 +295,7 @@ Attaching package: 'generics'</code></pre>
 </tr>
 </tbody>
 </table>
-<p>In the serial forms all three disturbance covariances (<code>M1 ~~ 0*M2</code>, <code>M1 ~~ 0*Y</code>, <code>M2 ~~ 0*Y</code>) must be written. With covariates, every covariate predicts every equation and the exogenous covariances are all written or none. The syntax rules, parameter counts and the extraction details are in the <a href="native-guide.html#bounded-fiml">native guide</a>.</p>
+<p>In the serial forms all three disturbance covariances (<code>M1 ~~ 0*M2</code>, <code>M1 ~~ 0*Y</code>, <code>M2 ~~ 0*Y</code>) must be written. With covariates, every covariate predicts every equation and the exogenous covariances are all written or none. The syntax rules, parameter counts and the extraction details are in the <a href="sem-guide.html#bounded-fiml">native guide</a>.</p>
 <p>In a serial fit, <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> names both mediators in the fitted order. In the pure chain the treatment is the variable with no path to the second mediator, so a covariate cannot be named as the treatment there. In the saturated graph any exogenous variable may be the treatment when no direct path is fixed, and a direct path fixed at zero marks the treatment. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> of a serial FIML object name the variant and the covariates.</p>
 </section><section class="level2"><h2 id="what-is-not-available">What is not available<a class="anchor" aria-label="anchor" href="#what-is-not-available"></a>
 </h2>
@@ -326,9 +308,12 @@ Attaching package: 'generics'</code></pre>
 </ul></section><section class="level2"><h2 id="evidence">Evidence<a class="anchor" aria-label="anchor" href="#evidence"></a>
 </h2>
 <p>The fits are compared with lavaan raw-data FIML (and OpenMx on one cell per form) on complete, missing-completely-at-random, missing-at-random and sparse patterns, with an independent likelihood check and planted-defect tests (the <code>fiml</code> and <code>fiml-ext</code> simulation gates). Nothing here is a coverage claim for intervals under missing data.</p>
+<div class="next-action">
+<p><strong>Next:</strong> Read the limits in full: <a href="sem-guide.html#bounded-fiml">The sem engine guide: bounded FIML</a></p>
+</div>
 </section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
 </h2>
-<p><a href="model-native.html">Native: paths and defined parameters</a> | <a href="model-parallel.html">Parallel mediation</a> | <a href="model-serial.html">Serial mediation</a> | <a href="guide-intervals.html">Choosing an interval</a> | <a href="methods.html#fiml-source-intervals">Methods and Formulas</a></p>
+<p><a href="model-sem.html">The sem engine: paths and defined parameters</a> | <a href="model-parallel.html">Parallel mediation</a> | <a href="model-serial.html">Serial mediation</a> | <a href="guide-intervals.html">Choosing an interval</a> | <a href="methods.html#fiml-source-intervals">Methods and Formulas</a></p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

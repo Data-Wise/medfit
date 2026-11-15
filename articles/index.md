@@ -43,7 +43,7 @@ A chain, side by side, or with products
 
 ### Models: clusters and structural equation models
 
-Treatment assigned to clusters, lavaan fits, and the native engine
+Treatment assigned to clusters, lavaan fits, and the sem engine
 
 - [Cluster-randomized trials
   (2-1-1)](https://data-wise.github.io/medfit/articles/model-cluster.md):
@@ -51,27 +51,29 @@ Treatment assigned to clusters, lavaan fits, and the native engine
   (1-1-1)](https://data-wise.github.io/medfit/articles/model-twolevel.md):
 - [lavaan
   fits](https://data-wise.github.io/medfit/articles/model-lavaan.md):
-- [Native engine: paths and defined
-  parameters](https://data-wise.github.io/medfit/articles/model-native.md):
-- [Native engine: a latent
-  mediator](https://data-wise.github.io/medfit/articles/model-native-latent.md):
-- [Native engine: constraints and the MBCO
-  test](https://data-wise.github.io/medfit/articles/model-native-constraints.md):
-- [Native engine: several mediators and
-  weights](https://data-wise.github.io/medfit/articles/model-native-multi.md):
-- [Native engine: categorical
-  covariates](https://data-wise.github.io/medfit/articles/model-native-factors.md):
+- [The sem engine: paths and defined
+  parameters](https://data-wise.github.io/medfit/articles/model-sem.md):
+- [The sem engine: a latent
+  mediator](https://data-wise.github.io/medfit/articles/model-sem-latent.md):
+- [The sem engine: constraints and the MBCO
+  test](https://data-wise.github.io/medfit/articles/model-sem-constraints.md):
+- [The sem engine: several mediators and
+  weights](https://data-wise.github.io/medfit/articles/model-sem-multi.md):
+- [The sem engine: categorical
+  covariates](https://data-wise.github.io/medfit/articles/model-sem-factors.md):
 - [Missing data: bounded
   FIML](https://data-wise.github.io/medfit/articles/model-fiml.md):
 
 ### Guides
 
-Upgrading, errors, intervals and terms
+Upgrading, errors, engines, intervals and terms
 
 - [What changed since CRAN
   0.3.2](https://data-wise.github.io/medfit/articles/guide-changes.md):
 - [Troubleshooting: errors and
   warnings](https://data-wise.github.io/medfit/articles/guide-troubleshooting.md):
+- [Which engine should I
+  use?](https://data-wise.github.io/medfit/articles/guide-engines.md):
 - [Which interval should I
   use?](https://data-wise.github.io/medfit/articles/guide-intervals.md):
 - [Glossary and
@@ -80,22 +82,27 @@ Upgrading, errors, intervals and terms
   workflow](https://data-wise.github.io/medfit/articles/guide-twolevel-tutorial.md):
 - [How medfit is
   organized](https://data-wise.github.io/medfit/articles/guide-architecture.md):
-- [Native defaults in
-  0.15.0](https://data-wise.github.io/medfit/articles/native-defaults-0-15.md):
-- [Native engine in five
-  minutes](https://data-wise.github.io/medfit/articles/native-quickstart.md):
-- [Native engine, step by
-  step](https://data-wise.github.io/medfit/articles/native-tutorial.md):
-- [The native engine
-  guide](https://data-wise.github.io/medfit/articles/native-guide.md):
-- [lavaan and the native
+- [One model in medfit, lavaan, OpenMx and
+  semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md):
+- [lavaan and the sem
   engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md):
 - [probmed and
   medfit](https://data-wise.github.io/medfit/articles/probmed-comparison.md):
 - [RMediation and
   medfit](https://data-wise.github.io/medfit/articles/rmediation-comparison.md):
-- [One model in medfit, lavaan, OpenMx and
-  semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md):
+
+### The sem engine
+
+Fit models from syntax: quickstart, tutorial, guide and defaults
+
+- [Native defaults in
+  0.15.0](https://data-wise.github.io/medfit/articles/sem-defaults-0-15.md):
+- [The sem engine in five
+  minutes](https://data-wise.github.io/medfit/articles/sem-quickstart.md):
+- [The sem engine, step by
+  step](https://data-wise.github.io/medfit/articles/sem-tutorial.md):
+- [The sem engine
+  guide](https://data-wise.github.io/medfit/articles/sem-guide.md):
 - [Worked example: study hours, engagement and
   GPA](https://data-wise.github.io/medfit/articles/example-gpa.md):
 

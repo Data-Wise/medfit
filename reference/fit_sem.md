@@ -1,7 +1,7 @@
 # Fit a Structural Equation Model by Maximum Likelihood
 
-Fits a model written in lavaan-style syntax to raw data with medfit's
-native maximum-likelihood engine, and returns a
+Fits a model written in lavaan-style syntax to raw data with the sem
+engine, medfit's own maximum-likelihood SEM fitter, and returns a
 [SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md) object.
 The engine handles observed and latent variables, user labels, fixed
 values, starts and bounds, equality and inequality constraints (`==`,
@@ -81,8 +81,16 @@ fit_sem(
 
 - control:
 
-  List: options passed to the optimizer (`nloptr`). FIML requires the
-  empty list under its initial validated numerical protocol.
+  A
+  [`sem_control()`](https://data-wise.github.io/medfit/reference/sem_control.md)
+  object, or a plain list of options passed to the optimizer (`nloptr`),
+  the same as `sem_control(nloptr = <list>)`. An `n_starts` given both
+  here (in
+  [`sem_control()`](https://data-wise.github.io/medfit/reference/sem_control.md))
+  and as the argument must agree. FIML requires `optimizer = "auto"`, an
+  empty `nloptr` list (or the empty plain list) and `n_starts` `NULL` or
+  3, under its initial validated numerical protocol. The resolved
+  protocol is recorded in `fit@diagnostics$protocol`.
 
 - weights:
 
@@ -315,10 +323,10 @@ are errors. Require `meanstructure = TRUE`, `information = "observed"`,
 `se_type = "model"`, no weights, empty `control`, and `n_starts = NULL`
 or `3`. These numerical-control restrictions reproduce the initial
 validated protocol. Missing values never select FIML automatically, and
-a failed fit never falls back to listwise deletion. Native
+a failed fit never falls back to listwise deletion.
 [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md)
-forwards these settings through `engine_args`; its `se_type = "model"`
-remains a top-level argument.
+with `engine = "sem"` forwards these settings through `engine_args`; its
+`se_type = "model"` remains a top-level argument.
 
 [`nobs()`](https://rdrr.io/r/stats/nobs.html) counts rows with any
 observed model variable; `n_dropped` counts only all-empty rows.
@@ -372,9 +380,9 @@ parent and completed attempts; basic argument-type errors can occur
 earlier. A dedicated `fiml-1` ledger binds likelihood, rows, settings
 and attempts; the version-1 ledger below continues to describe listwise
 fits. See the Methods and Formulas article, Bounded FIML, for the
-likelihood and the native engine guide for the supported workflow.
-Bounded FIML was introduced in 0.16.0; released 0.15.0 does not provide
-this option.
+likelihood and the sem engine guide for the supported workflow. Bounded
+FIML was introduced in 0.16.0; released 0.15.0 does not provide this
+option.
 
 ## Nonzero-product search coverage
 

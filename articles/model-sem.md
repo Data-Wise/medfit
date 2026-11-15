@@ -1,52 +1,30 @@
-# Native engine: paths and defined parameters
+# The sem engine: paths and defined parameters
 
 Write the model as syntax and fit it by maximum likelihood with no other
-package. This is the first of five pages on the native engine. Part of
-the [Models](https://data-wise.github.io/medfit/articles/models.md)
+package. This is the first of five pages on the sem engine. Part of the
+[Models](https://data-wise.github.io/medfit/articles/models.md)
 collection.
 
 |  |  |
 |----|----|
 | **Structure** | any path model you can write as syntax; this page uses simple mediation |
 | **Class returned** | `SEMFit`, then `MediationData` from [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) |
-| **Routes** | `fit_sem(syntax, data)`, or `fit_mediation(model = syntax, engine = "native")` |
+| **Routes** | `fit_sem(syntax, data)`, or `fit_mediation(model = syntax, engine = "sem")` |
 | **Syntax** | [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md) lists every statement |
 
 The five pages: this one (paths and defined parameters), [a latent
-mediator](https://data-wise.github.io/medfit/articles/model-native-latent.md),
+mediator](https://data-wise.github.io/medfit/articles/model-sem-latent.md),
 [constraints and the MBCO
-test](https://data-wise.github.io/medfit/articles/model-native-constraints.md),
+test](https://data-wise.github.io/medfit/articles/model-sem-constraints.md),
 and [several mediators and
-weights](https://data-wise.github.io/medfit/articles/model-native-multi.md),
+weights](https://data-wise.github.io/medfit/articles/model-sem-multi.md),
 and [categorical
-covariates](https://data-wise.github.io/medfit/articles/model-native-factors.md).
+covariates](https://data-wise.github.io/medfit/articles/model-sem-factors.md).
 
-``` r
-library(medfit)
-```
-
-
-    Attaching package: 'medfit'
-
-    The following object is masked from 'package:stats':
-
-        decompose
-
-``` r
-library(generics)
-```
-
-
-    Attaching package: 'generics'
-
-    The following objects are masked from 'package:base':
-
-        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
-        setequal, union
-
-These examples use the default listwise path. For the separate
-unreleased bounded FIML opt-in and its narrower support, see the [native
-guide](https://data-wise.github.io/medfit/articles/native-guide.html#bounded-fiml).
+These examples use the default listwise path. For the separate bounded
+FIML opt-in (0.16.0 and 0.17.0) and its narrower support, see the
+[native
+guide](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml).
 
 ## Fit it
 
@@ -128,7 +106,7 @@ does both steps:
 ``` r
 x2 <- fit_mediation(model = syntax, data = mediation_demo,
                     treatment = "treatment", mediator = "mediator1",
-                    engine = "native")
+                    engine = "sem")
 nie(x2)
 ```
 
@@ -199,7 +177,7 @@ four-way decomposition ([below](#product-terms)).
 ## Compared with the `glm` engine
 
 The two engines agree on the estimates and differ slightly in the
-standard errors, because the native engine uses maximum-likelihood (not
+standard errors, because the sem engine uses maximum-likelihood (not
 least-squares) variances:
 
 ``` r
@@ -391,6 +369,10 @@ categorical mediator or outcome, for example): they will arrive as
 additions, not as a rename of `g_b`-style dummy names or of the `m:x`
 product name. A test (`test-api-freeze.R`) pins the current names.
 Numerical fixes are not breaking changes.
+
+**Next:** Constrain paths and test the indirect effect: [The sem engine:
+constraints and the MBCO
+test](https://data-wise.github.io/medfit/articles/model-sem-constraints.md)
 
 ## Related
 

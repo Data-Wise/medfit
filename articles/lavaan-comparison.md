@@ -1,6 +1,6 @@
-# lavaan and the native engine
+# lavaan and the sem engine
 
-medfit’s native engine fits covariance-structure models, with observed
+medfit’s sem engine fits covariance-structure models, with observed
 intercepts and means, from lavaan-style syntax. It is not a replacement
 for lavaan: it covers the path models behind mediation analysis and
 stops there. This page runs both on the same data, then lists what each
@@ -159,7 +159,7 @@ They differ in what follows. lavaan reports a chi-square for this model;
 medfit reports `NA`, because the product contains a regression target
 (`mediator1`) and the model treats it as exogenous, which makes the
 global test invalid (see [the native model
-page](https://data-wise.github.io/medfit/articles/model-native.html#product-terms)).
+page](https://data-wise.github.io/medfit/articles/model-sem.html#product-terms)).
 lavaan stores the product under the spelling you wrote
 (`treatment:mediator1`); medfit stores `mediator1:treatment`, whichever
 order you write. A model medfit rejects (a residual covariance between
@@ -185,7 +185,10 @@ runs the nonlinear form in lavaan or OpenMx from two starts and compares
 it with medfit’s result. lavaan starts from its own default and from its
 `"simple"` start (the paths at 0); OpenMx starts from medfit’s default
 start and from the same start with the tested paths set to 0, the start
-at which it drops the constraint:
+at which it drops the constraint. Its `engine` argument names the
+external comparison program (lavaan or OpenMx), not a fitter of the
+mediation model: the model is the native `SEMFit` passed in, and the
+result’s `reference` is medfit’s own LR.
 
 ``` r
 fit <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment", mediation_demo)

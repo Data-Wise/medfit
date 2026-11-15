@@ -93,7 +93,7 @@ c(estimate = boot@estimate, lower = boot@ci_lower, upper = boot@ci_upper)
 
 ## Native SEM: from a model to a discrepancy
 
-The native engine translates syntax into RAM matrices. Let \\A\\ contain
+The sem engine translates syntax into RAM matrices. Let \\A\\ contain
 directed paths, \\S_R\\ contain model variances and covariances, \\I\\
 be the identity matrix, and \\F\\ select observed variables. The implied
 covariance is
