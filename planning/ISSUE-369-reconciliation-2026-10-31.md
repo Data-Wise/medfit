@@ -50,3 +50,19 @@ appropriate #249 task-box changes and owner closure/re-scoping of #357/#360.
 Do not create duplicate solver/roadmap issues or restart completed release gates.
 The [roadmap current board](medfit-roadmap.md#current-board) owns future ordering;
 no version/date or implementation is assigned here.
+
+## 2026-11-15 closure
+
+| #369 item | Disposition | Evidence |
+|---|---|---|
+| #249 task list | closed 2026-11-11 | `gh issue view 249`; comparison engines shipped (#277-#280) |
+| #357 task list | closed 2026-11-11 | reduced milestone, PR #361 (`446cf12d`) |
+| #360 | closed 2026-11-11 | PR #363 (`edcf23d8`) |
+| D18 (SLSQP removal) | decided: SLSQP stays a permanent, user-selectable option, never the default | #276 (closed 2026-10-22); ADR D-14 |
+| D20 (standardization) | decided for Tier 1: standardized warm-start charts | ADR D-6 (owner confirmed Tier 1 only, 2026-11-15) |
+| Part B and Tier 1 | decided, not implemented; unscheduled roadmap work, no new issue | ADR Part B; `R/sem-control.R:6` (SLSQP default) |
+| `cc3fd88` | superseded: of its 8 files, 6 are identical to `origin/dev`; `.STATUS` and the roadmap differ only because dev moved on | `git diff cc3fd88 origin/dev` |
+| #320 | stays open: known external-engine limitation | issue #320 |
+| mbco-lrt decisions log (D18, D20 still "open") | stale upstream; syncing it is a separate, owner-authorized change in Data-Wise/mbco-lrt | `docs/decisions/decisions-log.md:24,26` there |
+
+The "Next disposition" above is complete: no #369 item remains open in medfit.

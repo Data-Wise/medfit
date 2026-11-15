@@ -1890,13 +1890,13 @@ historical checklists. Current dispositions:
 | FIML statistical admission (stage 0 and the 11 variants) | unresolved; nothing submitted | `PLAN-FIML-statistical-admission-2026-11-01.md` |
 | 0.17.0 release | **not authorized**; checklist drafted | `PLAN-0.17.0-release-checklist-2026-11-11.md` (PR #420) |
 
-Open: Dependabot #381; issues #369, #320 and #394 (to be retitled to S4 and S5).
+Open: Dependabot #381; issues #320 and #394 (to be retitled to S4 and S5).
 
 1. **Roadmap reconciliation merged via PR #377 (2026-10-31):** one current board and
    [clause-level issue dispositions](ISSUE-369-reconciliation-2026-10-31.md).
-   Existing issue #369 tracks administrative follow-through; #249 retains
-   unresolved solver/standardization/source-sync clauses, while #320 remains a
-   known external-engine limitation. FI-B1/FI-B2 are merged to dev; model-expansion implementation is not authorized.
+   Issue #369's follow-through is recorded in its 2026-11-15 closure section: #249
+   closed 2026-11-11, its solver and standardization clauses are decided (ADR D-14,
+   D-6) but not implemented, and #320 remains a known external-engine limitation. FI-B1/FI-B2 are merged to dev; model-expansion implementation is not authorized.
 2. **Next-release FIML expansion, planning only:**
    **FIML inference and observed-model expansion**
    ([paired plan](PLAN-FIML-inference-and-observed-models-2026-10-31.md)):
