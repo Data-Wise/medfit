@@ -17,7 +17,7 @@ side by side on one dataset, and states what each one assumes. It makes no
 coverage claim beyond what the package's tests show.
 
 The table below describes objects with the indicated inference methods. The
-[bounded FIML workflow](native-guide.html#bounded-fiml) currently
+[bounded FIML workflow](sem-guide.html#bounded-fiml) currently
 supports normal path/effect intervals. Source-fit intervals (retained-row FIML and joint Gaussian parameter-draw percentiles through explicit
 `bootstrap_mediation(source_fit = ..., effect = ..., method = ...)` calls) are
 implemented but withheld until statistical admission; the call raises
@@ -38,7 +38,7 @@ and fit tests remain unavailable. See the native guide and
 | Weights | `se_type = "sandwich"` | robust (heteroskedasticity-consistent) standard errors; see [Weights and robust SEs](model-weights.html) |
 | Treatment assigned to clusters, 25 or more | model-based intervals for the paths | the engine warns below 25 clusters |
 | Treatment assigned to clusters, fewer than 25 | `se_type = "kr"` for the paths; `bootstrap_mediation(cluster = )` for the products | see [Cluster-randomized trials](model-cluster.html) |
-| A test that the indirect effect is zero | `mbco_sem()` (native engine) | minimum of two likelihood-ratio tests; see [constraints and MBCO](model-native-constraints.html) |
+| A test that the indirect effect is zero | `mbco_sem()` (sem engine) | minimum of two likelihood-ratio tests; see [constraints and MBCO](model-sem-constraints.html) |
 | Only a point estimate | the plugin method | it has no interval; the bounds are `NA` |
 
 ## The same fit, four ways

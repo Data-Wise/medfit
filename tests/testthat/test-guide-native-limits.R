@@ -51,8 +51,8 @@ test_that("the refusal sentence is in the five documented places, and the check 
     }, logical(1)))
   }
   files <- c(
-    root_path("vignettes", "articles", "model-native.qmd"),
-    root_path("vignettes", "articles", "native-guide.qmd"),
+    root_path("vignettes", "articles", "model-sem.qmd"),
+    root_path("vignettes", "articles", "sem-guide.qmd"),
     root_path("vignettes", "articles", "model-interaction.qmd"),
     root_path("R", "methods-sem.R"),
     root_path("R", "sem-syntax-help.R")
@@ -130,5 +130,5 @@ test_that("every glossary link in the native table resolves to a page and a head
     }
   }
   # Positive control: a dead fragment is caught by the same check.
-  expect_false("no-such-heading" %in% heading_ids(root_path("vignettes", "articles", "model-native.qmd")))
+  expect_false("no-such-heading" %in% heading_ids(root_path("vignettes", "articles", "model-sem.qmd")))
 })

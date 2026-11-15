@@ -196,6 +196,7 @@ OpenBLAS
 optimizer's
 roundoff
 se
+sem
 Sobel
 varepsilon
 semopy

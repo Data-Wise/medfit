@@ -209,7 +209,7 @@ test_that("recipe 18: fixed_x leaves the structure alone, drops the parameter co
 test_that("the native quickstart, tutorial and guide exist, are indexed, and their links resolve", {
   pk <- article_text("cookbook.qmd") # skips without vignettes
   pkg <- paste(readLines(testthat::test_path("..", "..", "_pkgdown.yml"), warn = FALSE), collapse = "\n")
-  for (a in c("native-quickstart", "native-tutorial", "native-guide")) {
+  for (a in c("sem-quickstart", "sem-tutorial", "sem-guide")) {
     expect_true(grepl(paste0("articles/", a, "`"), pkg, fixed = TRUE), info = a)
     expect_true(grepl(paste0("articles/", a, ".html"), pkg, fixed = TRUE), info = a)
     txt <- article_text(paste0(a, ".qmd"))
@@ -308,7 +308,7 @@ test_that("recipe 21: the factor fit equals the hand-coded dummies, the label ro
 })
 
 test_that("tutorial step 10 runs after the earlier setup and the factor is expanded, not carried", {
-  txt <- article_text("native-tutorial.qmd")
+  txt <- article_text("sem-tutorial.qmd")
   expect_true(grepl("## Step 10. Add a categorical covariate", txt, fixed = TRUE))
   lines <- strsplit(txt, "\n", fixed = TRUE)[[1L]]
   open <- grep("^```\\{r", lines)

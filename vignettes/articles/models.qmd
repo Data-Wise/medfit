@@ -32,38 +32,38 @@ open its page. For a one-page lookup of every function see the
 | Treatment assigned to whole clusters | [Cluster-randomized trials](model-cluster.html) |
 | Treatment, mediator and outcome on units nested in clusters, within and between effects | [Two-level mediation (1-1-1)](model-twolevel.html) |
 | A lavaan fit | [lavaan fits](model-lavaan.html) |
-| A model written as syntax, with defined parameters | [Native: paths and defined parameters](model-native.html) |
-| A latent mediator | [Native: a latent mediator](model-native-latent.html) |
-| Constraints, or a test of the indirect effect | [Native: constraints and MBCO](model-native-constraints.html) |
-| Serial or parallel mediators, or weights, in syntax | [Native: several mediators and weights](model-native-multi.html) |
-| A factor, character or logical covariate in syntax | [Native: categorical covariates](model-native-factors.html) |
+| A model written as syntax, with defined parameters | [The sem engine: paths and defined parameters](model-sem.html) |
+| A latent mediator | [The sem engine: a latent mediator](model-sem-latent.html) |
+| Constraints, or a test of the indirect effect | [The sem engine: constraints and MBCO](model-sem-constraints.html) |
+| Serial or parallel mediators, or weights, in syntax | [The sem engine: several mediators and weights](model-sem-multi.html) |
+| A factor, character or logical covariate in syntax | [The sem engine: categorical covariates](model-sem-factors.html) |
 | Rows with missing values you want to keep (FIML) | [Missing data: bounded FIML](model-fiml.html) |
 
 ## Capabilities at a glance
 
 | Model | Class | Engines and routes | Standard errors | Page |
 |---|---|---|---|---|
-| Simple | `MediationData` | `glm`, `regmedint`, `extract_mediation()` (`lm`/`glm`, lavaan), native | model, sandwich | [simple](model-simple.html) |
+| Simple | `MediationData` | `glm`, `regmedint`, `extract_mediation()` (`lm`/`glm`, lavaan), the sem engine | model, sandwich | [simple](model-simple.html) |
 | Binary or count variables | `MediationData` | `glm` families | model, sandwich | [glm families](model-glm-families.html) |
-| Treatment-by-mediator | `InteractionMediationData` | `glm`, `regmedint`, lavaan, native (`fit_sem()` with `x:m`) | model; closed form (`regmedint`) | [interaction](model-interaction.html) |
+| Treatment-by-mediator | `InteractionMediationData` | `glm`, `regmedint`, lavaan, the sem engine (`fit_sem()` with `x:m`) | model; closed form (`regmedint`) | [interaction](model-interaction.html) |
 | Weighted | `MediationData` | `glm`; native `weights` | sandwich (HC3; native HC0-type) | [weights](model-weights.html) |
-| Serial | `SerialMediationData` | `lm`/`glm` with `mediator_models`, lavaan, native via `fit_sem()` | model | [serial](model-serial.html) |
-| Parallel | `ParallelMediationData` | `lm`/`glm`, lavaan, native via `fit_sem()` | model | [parallel](model-parallel.html) |
+| Serial | `SerialMediationData` | `lm`/`glm` with `mediator_models`, lavaan, the sem engine via `fit_sem()` | model | [serial](model-serial.html) |
+| Parallel | `ParallelMediationData` | `lm`/`glm`, lavaan, the sem engine via `fit_sem()` | model | [parallel](model-parallel.html) |
 | Joint, with products | `JointMediationData` | `lm` fits | delta method, bootstrap | [joint](model-joint.html) |
 | Cluster-level treatment (2-1-1) | `ClusterMediationData` | `lmer` fits or `engine = "lmer"` | model, Kenward-Roger (`"kr"`) | [cluster](model-cluster.html) |
 | Two-level, within and between (1-1-1) | `TwoLevelMediationData` | `extract_mediation()` on a two-level `lavaan` fit | delta method over the joint covariance (Wald) | [two-level](model-twolevel.html) |
-| Latent mediator, constraints | `SEMFit`, then extracted | `fit_sem()`, `engine = "native"` | model, sandwich | [native](model-native.html), [latent](model-native-latent.html) |
-| Categorical covariates (0.11.0) | `SEMFit`, then extracted | `fit_sem()` with a factor, character or logical column | model, sandwich | [categorical covariates](model-native-factors.html) |
+| Latent mediator, constraints | `SEMFit`, then extracted | `fit_sem()`, `engine = "sem"` | model, sandwich | [sem](model-sem.html), [latent](model-sem-latent.html) |
+| Categorical covariates (0.11.0) | `SEMFit`, then extracted | `fit_sem()` with a factor, character or logical column | model, sandwich | [categorical covariates](model-sem-factors.html) |
 
 Inference works on every row: delta-method intervals from `tidy()` and
 `confint()`, and the parametric, nonparametric and plugin bootstrap (see
 [Bootstrap Inference](bootstrap.html)).
 
 ::: {.callout-note}
-## The native engine takes one mediator in `fit_mediation()`
-`fit_mediation(engine = "native", model = )` accepts a single mediator. For
+## The sem engine takes one mediator in `fit_mediation()`
+`fit_mediation(engine = "sem", model = )` accepts a single mediator. For
 several mediators, fit the syntax with `fit_sem()` (see
-[Native: several mediators and weights](model-native-multi.html)) and then call
+[The sem engine: several mediators and weights](model-sem-multi.html)) and then call
 `extract_mediation(fit, mediator = c(...), outcome = )`, with
 `structure = "parallel"` for side-by-side mediators.
 :::
@@ -71,9 +71,10 @@ several mediators, fit the syntax with `fit_sem()` (see
 ## The `fit_mediation()` engines compared
 
 The four engines answer different questions and do not return interchangeable numbers. Read the row for your engine
-before you swap one for another.
+before you swap one for another. [Which engine should I use?](guide-engines.html) explains engines, estimators
+and optimizers.
 
-| | `glm` (default) | `regmedint` | `lmer` | `native` |
+| | `glm` (default) | `regmedint` | `lmer` | `sem` |
 |---|---|---|---|---|
 | Estimation | `stats::glm()` for the mediator and outcome models | closed-form natural effects from the regmedint package | REML mixed models, a random cluster intercept in both | maximum-likelihood SEM from syntax (`model =`) |
 | Outcome and mediator families | any `glm` family | a linear mediator model; the outcome may be logistic | Gaussian only | Gaussian only |
@@ -83,8 +84,8 @@ before you swap one for another.
 | Rows with missing values | dropped once, both models share the sample | dropped by the engine | dropped once | listwise by default; the separate bounded FIML opt-in drops only all-empty model rows |
 | Returns | `MediationData` or `InteractionMediationData` | the same two classes | `ClusterMediationData` | `SEMFit`, then `extract_mediation()` |
 
-The native column describes the default listwise path. The separate
-[bounded FIML workflow](native-guide.html#bounded-fiml) is limited to X, M and Y
+The `sem` column describes the default listwise path. The separate
+[bounded FIML workflow](sem-guide.html#bounded-fiml) is limited to X, M and Y
 with at most two covariates, or two parallel mediators with up to two covariates, or the saturated or pure-chain two-mediator serial graph with up to two covariates (numeric, continuous), explicit random X and observed/model SEs;
 weights and fit tests remain unavailable. Source-fit retained-row and
 Gaussian parameter-draw intervals are implemented but withheld until statistical
@@ -101,7 +102,7 @@ outcome through `glm` gives a path product on the log-odds scale, while `regmedi
   is extracted; see [Two-level mediation](model-twolevel.html)), and non-Gaussian outcomes or
   mediators in either cluster design. Random slopes, three-level and multigroup fits are not run.
 - Four-way or joint decompositions with non-Gaussian models.
-- Latent means (a free latent mean or intercept) on the native engine, and products with a latent variable.
+- Latent means (a free latent mean or intercept) on the sem engine, and products with a latent variable.
   Observed intercepts and means (`y ~ 1`, `meanstructure =`) and the observed product `x:m` with its four-way
   decomposition are supported.
 - Bayesian fits through `brms` (planned).

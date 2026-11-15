@@ -380,7 +380,7 @@
   checkmate::assert_count(n_starts, positive = TRUE, .var.name = "n_starts")
   checkmate::assert_list(control, .var.name = "control")
   checkmate::assert_flag(precondition, .var.name = "precondition")
-  opts <- list(algorithm = "NLOPT_LD_SLSQP", xtol_rel = 1e-10, ftol_rel = 1e-12, maxeval = 10000L)
+  opts <- list(algorithm = .sem_nloptr_algorithm, xtol_rel = 1e-10, ftol_rel = 1e-12, maxeval = 10000L)
   opts[names(control)] <- control
   # A model with a nonlinear constraint can have several local optima (`a*b > 0.1` is feasible on two
   # disjoint pieces), so every start is tried and the best accepted one is kept; otherwise the first accepted

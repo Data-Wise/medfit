@@ -25,9 +25,11 @@ defined parameter are refused. For a product of more than two paths pass
 them all as \code{paths}, or as a character vector in \code{a} with \code{b} missing.}
 
 \item{n_starts, control}{Passed to the optimizer for the two refits, as in
-\code{\link[=fit_sem]{fit_sem()}}. \code{NULL}, the default, uses the settings \code{object} was made with,
+\code{\link[=fit_sem]{fit_sem()}}: \code{control} is a \code{\link[=sem_control]{sem_control()}} object or a plain \code{nloptr}
+list. \code{NULL}, the default, uses the settings \code{object} was made with,
 so a better optimum in the full fit than in a refit cannot inflate the
-statistic; an explicit value overrides them.}
+statistic; an explicit value overrides them (an explicit \code{sem_control()}
+replaces the stored \code{nloptr} options, as an explicit list does).}
 
 \item{fit}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Renamed \code{object}; the old name
 still works with a warning.}

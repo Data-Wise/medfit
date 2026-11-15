@@ -12,7 +12,7 @@ execute:
   echo: true
 ---
 
-medfit's quality control checks the native engine against independent SEM software
+medfit's quality control checks the sem engine against independent SEM software
 ([Quality control of the optimizer](quality-control.html)). This page writes the same simple
 mediation model in each package's own syntax, so the comparisons can be read and rerun. The
 lavaan and OpenMx blocks run when the site is built and stop the build if they drift from

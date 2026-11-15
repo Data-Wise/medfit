@@ -12,6 +12,8 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Several mediators &rsaquo; Joint mediation with products</p>
+
 Several mediators when the outcome model has treatment-by-mediator products.
 The result is the joint effect through the whole mediator block. Part of the
 [Models](models.html) collection.
@@ -25,6 +27,7 @@ The result is the joint effect through the whole mediator block. Part of the
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 ```
@@ -68,6 +71,10 @@ The fit must meet these; each violation errors with its cause.
   to the same rows (medfit compares the values of the shared variables).
 - Every mediator appears in the outcome model, and the treatment is coded 0/1.
 - Only outcome-model products written with `:` or `*` are supported.
+
+::: {.next-action}
+**Next:** Choose an interval: [Which interval should I use?](guide-intervals.html)
+:::
 
 ## Related
 

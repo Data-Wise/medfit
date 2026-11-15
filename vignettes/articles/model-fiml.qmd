@@ -12,19 +12,25 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Clusters and latent variables &rsaquo; Missing data: bounded FIML</p>
+
 Keep partly observed rows instead of deleting them. Part of the
 [Models](models.html) collection.
+
+**Status:** these models are numerically verified against lavaan, not statistically admitted: no interval coverage is
+established, and every `source_fit` interval route is refused (`medfit_error_fiml_inference_unavailable`).
 
 | | |
 |---|---|
 | **Structure** | X to M to Y, two parallel mediators, or two serial mediators (the saturated graph or the pure chain), each with no, one or two covariates |
 | **Class returned** | `FIMLMediationData` (simple), `FIMLParallelMediationData` (parallel) and `FIMLSerialMediationData` (serial) |
-| **Route** | `fit_sem(model, data, missing = "fiml", fixed_x = FALSE)` then `extract_mediation()`, or `fit_mediation(engine = "native", engine_args = list(missing = "fiml", ...))` |
+| **Route** | `fit_sem(model, data, missing = "fiml", fixed_x = FALSE)` then `extract_mediation()`, or `fit_mediation(engine = "sem", engine_args = list(missing = "fiml", ...))` |
 | **Standard errors** | observed information, model-based; delta-method effect intervals |
-| **Availability** | simple model from 0.16.0; covariates, parallel and serial forms in the development version |
+| **Availability** | simple model from 0.16.0; covariates, parallel and serial forms from 0.17.0 |
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 ```
@@ -81,7 +87,7 @@ In the serial forms all three disturbance covariances (`M1 ~~ 0*M2`,
 `M1 ~~ 0*Y`, `M2 ~~ 0*Y`) must be written. With covariates, every covariate
 predicts every equation and the exogenous covariances are all written or none. The
 syntax rules, parameter counts and the extraction details are in the
-[native guide](native-guide.html#bounded-fiml).
+[native guide](sem-guide.html#bounded-fiml).
 
 In a serial fit, `extract_mediation()` names both mediators in the fitted order.
 In the pure chain the treatment is the variable with no path to the second
@@ -109,8 +115,12 @@ with an independent likelihood check and planted-defect tests (the `fiml` and
 `fiml-ext` simulation gates). Nothing here is a coverage claim for
 intervals under missing data.
 
+::: {.next-action}
+**Next:** Read the limits in full: [The sem engine guide: bounded FIML](sem-guide.html#bounded-fiml)
+:::
+
 ## Related
 
-[Native: paths and defined parameters](model-native.html) |
+[The sem engine: paths and defined parameters](model-sem.html) |
 [Parallel mediation](model-parallel.html) | [Serial mediation](model-serial.html) |
 [Choosing an interval](guide-intervals.html) | [Methods and Formulas](methods.html#fiml-source-intervals)

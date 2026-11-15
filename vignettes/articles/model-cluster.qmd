@@ -12,6 +12,8 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Clusters and latent variables &rsaquo; Cluster-randomized trials (2-1-1)</p>
+
 The treatment is assigned to whole clusters (schools, clinics); the mediator and
 outcome are measured on individuals. Part of the [Models](models.html) collection.
 
@@ -25,6 +27,7 @@ outcome are measured on individuals. Part of the [Models](models.html) collectio
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 has_lme4 <- requireNamespace("lme4", quietly = TRUE)
@@ -151,6 +154,10 @@ c(from_lmer_pair = unname(nie(x2)), from_engine = unname(nie(x)))
 - The own and spillover split is a large-cluster approximation, and the interval
   evidence for the cluster bootstrap is thin; see
   [Methods and Formulas](methods.html).
+
+::: {.next-action}
+**Next:** Resample whole clusters: [Bootstrap Inference](bootstrap.html)
+:::
 
 ## Related
 

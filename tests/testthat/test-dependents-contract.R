@@ -44,7 +44,9 @@
     "n_obs", "n_clusters", "cluster_sizes", "icc", "between_identified", "admissible",
     "converged", "cross_level_equal", "fixed_paths", "source", "fixed_x", "information",
     "h1_information", "se_type", "estimator", "missing", "lavaan_version", "call",
-    "between_parameterization", "data", "source_package"
+    "between_parameterization", "data", "source_package",
+    # 0.18.0 S4: optional provenance; additive
+    "source_version"
   )
 )
 

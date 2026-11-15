@@ -10,7 +10,7 @@ TwoLevelMediationData(
   n_clusters, cluster_sizes, icc, between_identified, admissible, converged,
   cross_level_equal, fixed_paths, source, fixed_x, information, h1_information,
   se_type, estimator, missing, lavaan_version, call, between_parameterization,
-  data, source_package
+  data, source_package, source_version
 )
 }
 \arguments{
@@ -58,20 +58,25 @@ are not copied); kept for the contract shared with the other mediation classes, 
 
 \item{source_package}{Character scalar: \code{"lavaan"}; kept for the dependents contract shared with the other
 mediation classes (\code{tests/testthat/test-dependents-contract.R} pins it across classes).}
+
+\item{source_version}{Character: \code{character(0)} (the default) or one non-empty string, the version of the
+package that made the fit. The lavaan adapter stores the lavaan version here and in \code{lavaan_version};
+\code{lavaan_version} may be \code{character(0)} for a fit lavaan did not make. Both are checked on construction
+and on assignment.}
 }
 \value{
 A \code{TwoLevelMediationData} S7 object.
 }
 \description{
 \strong{Experimental.} This class, \code{\link[=twolevel_statistic]{twolevel_statistic()}} and the \code{level} argument of the effect generics may
-change without the usual deprecation period (a native two-level fitter, a later milestone, could change the
-object).
+change without the usual deprecation period (a two-level fitter in the sem engine, a later milestone, could change
+the object).
 }
 \details{
 S7 class for two-level mediation in which treatment, mediator and outcome are all measured on level-1
 units nested in clusters (1-1-1), with the paths estimated separately at the within and the between
 level (latent cluster means, fixed slopes). Built by \code{\link[=extract_mediation]{extract_mediation()}} from a \code{lavaan} two-level
-fit; the same class is the target of a native fitter later (\code{source} says which).
+fit; the same class is the target of a sem engine fitter later (\code{source} says which).
 
 Per level the indirect effect is \eqn{NIE_l = a_l b_l}{NIE_l = a_l * b_l}, the direct effect is
 \eqn{c'_l}{c'_l}, and the contrast \eqn{NIE_w - NIE_b}{NIE_w - NIE_b} is descriptive, not a test. When the

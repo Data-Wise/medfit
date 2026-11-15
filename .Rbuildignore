@@ -38,3 +38,4 @@
 ^_agents_workspace$
 ^\.worktrees$
 ^\.agents$
+^tests/testthat/fixtures/make-twolevel-0\.17\.0\.R$

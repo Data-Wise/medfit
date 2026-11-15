@@ -37,7 +37,7 @@ test_that("the warning is silent when the starts agree", {
 
 test_that("the syntax help and the constraints page say it is best-effort", {
   path <- testthat::test_path("..", "..", "R", "sem-syntax-help.R")
-  page <- testthat::test_path("..", "..", "vignettes", "articles", "model-native-constraints.qmd")
+  page <- testthat::test_path("..", "..", "vignettes", "articles", "model-sem-constraints.qmd")
   if (!file.exists(path) || !file.exists(page)) testthat::skip("package sources not available")
   expect_match(paste(readLines(path), collapse = " "), "sum of products.*best-effort", perl = TRUE)
   expect_match(paste(readLines(page), collapse = " "), "sum of products.*best-effort", perl = TRUE)

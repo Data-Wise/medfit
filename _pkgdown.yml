@@ -15,7 +15,7 @@ template:
     heading_font: { google: "Montserrat" }
     code_font: { google: "Fira Code" }
     # Controls the global base font size (Default is 1rem)
-    font-size-base: 0.925rem
+    font-size-base: 1rem
 
 home:
   title: "medfit: Infrastructure for Mediation Analysis in R"
@@ -45,7 +45,7 @@ logo:
 
 navbar:
   structure:
-    left:  [home, reference, models, guides, cookbook, articles, qc, ecosystem, status, news]
+    left:  [home, reference, models, guides, cookbook, articles, project, news]
     right: [search, github]
   components:
     home:
@@ -88,16 +88,16 @@ navbar:
         href: articles/model-twolevel.html
       - text: "lavaan fits"
         href: articles/model-lavaan.html
-      - text: "Native: paths and defined parameters"
-        href: articles/model-native.html
-      - text: "Native: a latent mediator"
-        href: articles/model-native-latent.html
-      - text: "Native: constraints and MBCO"
-        href: articles/model-native-constraints.html
-      - text: "Native: several mediators and weights"
-        href: articles/model-native-multi.html
-      - text: "Native: categorical covariates"
-        href: articles/model-native-factors.html
+      - text: "The sem engine: paths and defined parameters"
+        href: articles/model-sem.html
+      - text: "The sem engine: a latent mediator"
+        href: articles/model-sem-latent.html
+      - text: "The sem engine: constraints and MBCO"
+        href: articles/model-sem-constraints.html
+      - text: "The sem engine: several mediators and weights"
+        href: articles/model-sem-multi.html
+      - text: "The sem engine: categorical covariates"
+        href: articles/model-sem-factors.html
       - text: "Missing data: bounded FIML"
         href: articles/model-fiml.html
     guides:
@@ -107,6 +107,8 @@ navbar:
         href: articles/guide-changes.html
       - text: "Troubleshooting"
         href: articles/guide-troubleshooting.html
+      - text: "Which engine should I use?"
+        href: articles/guide-engines.html
       - text: "Which interval should I use?"
         href: articles/guide-intervals.html
       - text: "Glossary and symbols"
@@ -116,14 +118,14 @@ navbar:
       - text: "How medfit is organized"
         href: articles/guide-architecture.html
       - text: "Native defaults in 0.15.0"
-        href: articles/native-defaults-0-15.html
-      - text: "Native engine in five minutes"
-        href: articles/native-quickstart.html
-      - text: "Native engine, step by step"
-        href: articles/native-tutorial.html
-      - text: "The native engine guide"
-        href: articles/native-guide.html
-      - text: "lavaan and the native engine"
+        href: articles/sem-defaults-0-15.html
+      - text: "The sem engine in five minutes"
+        href: articles/sem-quickstart.html
+      - text: "The sem engine, step by step"
+        href: articles/sem-tutorial.html
+      - text: "The sem engine guide"
+        href: articles/sem-guide.html
+      - text: "lavaan and the sem engine"
         href: articles/lavaan-comparison.html
       - text: "probmed and medfit"
         href: articles/probmed-comparison.html
@@ -211,19 +213,16 @@ navbar:
       - text: "What's new in 0.11"
         href: articles/whats-new-0-11.html
       - text: "What's new in 0.15: native defaults"
-        href: articles/native-defaults-0-15.html
+        href: articles/sem-defaults-0-15.html
       - text: "Quality control of the optimizer"
         href: articles/quality-control.html
-    qc:
-      text: Quality control
-      href: articles/quality-control.html
-    ecosystem:
-      text: Ecosystem
-      href: https://data-wise.github.io/mediationverse/articles/ecosystem.html
-    status:
-      icon: fas fa-chart-line
-      text: Status
+    project:
+      text: Project
       menu:
+      - text: "Quality control of the optimizer"
+        href: articles/quality-control.html
+      - text: "Ecosystem"
+        href: https://data-wise.github.io/mediationverse/articles/ecosystem.html
       - text: "Package Status Dashboard"
         href: https://github.com/data-wise/mediationverse/blob/main/STATUS.md
       - text: "Development Roadmap"
@@ -281,6 +280,7 @@ reference:
       - fit_mediation
       - fit_sem
       - mbco_sem
+      - sem_control
       - compare_lr
       - medfit-syntax
       - bootstrap_mediation
@@ -318,34 +318,38 @@ articles:
       - '`articles/model-parallel`'
       - '`articles/model-joint`'
   - title: "Models: clusters and structural equation models"
-    desc: "Treatment assigned to clusters, lavaan fits, and the native engine"
+    desc: "Treatment assigned to clusters, lavaan fits, and the sem engine"
     contents:
       - '`articles/model-cluster`'
       - '`articles/model-twolevel`'
       - '`articles/model-lavaan`'
-      - '`articles/model-native`'
-      - '`articles/model-native-latent`'
-      - '`articles/model-native-constraints`'
-      - '`articles/model-native-multi`'
-      - '`articles/model-native-factors`'
+      - '`articles/model-sem`'
+      - '`articles/model-sem-latent`'
+      - '`articles/model-sem-constraints`'
+      - '`articles/model-sem-multi`'
+      - '`articles/model-sem-factors`'
       - '`articles/model-fiml`'
   - title: "Guides"
-    desc: "Upgrading, errors, intervals and terms"
+    desc: "Upgrading, errors, engines, intervals and terms"
     contents:
       - '`articles/guide-changes`'
       - '`articles/guide-troubleshooting`'
+      - '`articles/guide-engines`'
       - '`articles/guide-intervals`'
       - '`articles/guide-glossary`'
       - '`articles/guide-twolevel-tutorial`'
       - '`articles/guide-architecture`'
-      - '`articles/native-defaults-0-15`'
-      - '`articles/native-quickstart`'
-      - '`articles/native-tutorial`'
-      - '`articles/native-guide`'
+      - '`articles/syntax-crosswalk`'
       - '`articles/lavaan-comparison`'
       - '`articles/probmed-comparison`'
       - '`articles/rmediation-comparison`'
-      - '`articles/syntax-crosswalk`'
+  - title: "The sem engine"
+    desc: "Fit models from syntax: quickstart, tutorial, guide and defaults"
+    contents:
+      - '`articles/sem-defaults-0-15`'
+      - '`articles/sem-quickstart`'
+      - '`articles/sem-tutorial`'
+      - '`articles/sem-guide`'
       - '`articles/example-gpa`'
   - title: "Detailed guides"
     contents:
@@ -356,6 +360,19 @@ articles:
       - '`articles/computation-algorithms`'
       - '`articles/whats-new-0-11`'
       - '`articles/quality-control`'
+
+# The sem engine articles were renamed in 0.18.0 (ADR-engine-vocabulary V-8). Each old address redirects and keeps
+# its #fragment through pkgdown/templates/layout-redirect.html.
+redirects:
+  - ["articles/model-native.html", "articles/model-sem.html"]
+  - ["articles/model-native-latent.html", "articles/model-sem-latent.html"]
+  - ["articles/model-native-constraints.html", "articles/model-sem-constraints.html"]
+  - ["articles/model-native-multi.html", "articles/model-sem-multi.html"]
+  - ["articles/model-native-factors.html", "articles/model-sem-factors.html"]
+  - ["articles/native-guide.html", "articles/sem-guide.html"]
+  - ["articles/native-quickstart.html", "articles/sem-quickstart.html"]
+  - ["articles/native-tutorial.html", "articles/sem-tutorial.html"]
+  - ["articles/native-defaults-0-15.html", "articles/sem-defaults-0-15.html"]
 
 development:
   mode: auto

@@ -1,5 +1,5 @@
 ---
-title: "Native engine: paths and defined parameters"
+title: "The sem engine: paths and defined parameters"
 format:
   html:
     code-tools: false
@@ -13,31 +13,31 @@ execute:
 ---
 
 Write the model as syntax and fit it by maximum likelihood with no other package.
-This is the first of five pages on the native engine.
+This is the first of five pages on the sem engine.
 Part of the [Models](models.html) collection.
 
 | | |
 |---|---|
 | **Structure** | any path model you can write as syntax; this page uses simple mediation |
 | **Class returned** | `SEMFit`, then `MediationData` from `extract_mediation()` |
-| **Routes** | `fit_sem(syntax, data)`, or `fit_mediation(model = syntax, engine = "native")` |
+| **Routes** | `fit_sem(syntax, data)`, or `fit_mediation(model = syntax, engine = "sem")` |
 | **Syntax** | `?"medfit-syntax"` lists every statement |
 
 The five pages: this one (paths and defined parameters),
-[a latent mediator](model-native-latent.html),
-[constraints and the MBCO test](model-native-constraints.html), and
-[several mediators and weights](model-native-multi.html), and
-[categorical covariates](model-native-factors.html).
+[a latent mediator](model-sem-latent.html),
+[constraints and the MBCO test](model-sem-constraints.html), and
+[several mediators and weights](model-sem-multi.html), and
+[categorical covariates](model-sem-factors.html).
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 ```
 
-These examples use the default listwise path. For the separate unreleased
-bounded FIML opt-in and its narrower support, see the
-[native guide](native-guide.html#bounded-fiml).
+These examples use the default listwise path. For the separate bounded FIML opt-in (0.16.0 and 0.17.0) and its narrower support, see the
+[native guide](sem-guide.html#bounded-fiml).
 
 ## Fit it
 
@@ -84,7 +84,7 @@ For one mediator, `fit_mediation()` does both steps:
 #| label: fit-mediation
 x2 <- fit_mediation(model = syntax, data = mediation_demo,
                     treatment = "treatment", mediator = "mediator1",
-                    engine = "native")
+                    engine = "sem")
 nie(x2)
 ```
 
@@ -125,7 +125,7 @@ four-way decomposition ([below](#product-terms)).
 ## Compared with the `glm` engine
 
 The two engines agree on the estimates and differ slightly in the standard
-errors, because the native engine uses maximum-likelihood (not least-squares)
+errors, because the sem engine uses maximum-likelihood (not least-squares)
 variances:
 
 ```{r}
@@ -254,6 +254,10 @@ a table row or a property that exists today keeps its meaning. This matters for 
 Limits (a categorical mediator or outcome, for example): they will arrive as additions, not as a rename of
 `g_b`-style dummy names or of the `m:x` product name. A test (`test-api-freeze.R`) pins the current names.
 Numerical fixes are not breaking changes.
+
+::: {.next-action}
+**Next:** Constrain paths and test the indirect effect: [The sem engine: constraints and the MBCO test](model-sem-constraints.html)
+:::
 
 ## Related
 

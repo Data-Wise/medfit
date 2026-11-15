@@ -31,7 +31,7 @@ test_that("no current article shows the opt-in as required or the 0.14.0 warning
     "print on the 0\\.14 defaults"
   )
   for (f in articles()) {
-    if (basename(f) %in% c("whats-new-0-11.qmd", "guide-changes.qmd", "native-defaults-0-15.qmd")) next
+    if (basename(f) %in% c("whats-new-0-11.qmd", "guide-changes.qmd", "sem-defaults-0-15.qmd")) next
     lines <- readLines(f, warn = FALSE)
     for (p in stale) {
       expect_false(any(grepl(p, lines)), label = paste(basename(f), "does not contain", p))

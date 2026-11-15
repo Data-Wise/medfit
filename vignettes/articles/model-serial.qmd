@@ -12,6 +12,8 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Several mediators &rsaquo; Serial mediation (a chain)</p>
+
 Treatment, then mediator 1, then mediator 2, then the outcome. Part of the
 [Models](models.html) collection.
 
@@ -24,6 +26,7 @@ Treatment, then mediator 1, then mediator 2, then the outcome. Part of the
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 ```
@@ -69,6 +72,10 @@ c(chain = unname(nie(x)), every_path = unname(nie(x, type = "total")),
   nonparametric bootstrap captures them. See [Model Extraction](extraction.html).
 - `tidy(x, type = "effects", conf_int = TRUE)` gives delta-method intervals for
   the effects; for a bootstrap interval see [Bootstrap Inference](bootstrap.html).
+
+::: {.next-action}
+**Next:** Compare with mediators side by side: [Parallel mediation](model-parallel.html)
+:::
 
 ## Related
 

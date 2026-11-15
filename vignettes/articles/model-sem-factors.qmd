@@ -1,5 +1,5 @@
 ---
-title: "Native engine: categorical covariates"
+title: "The sem engine: categorical covariates"
 format:
   html:
     code-tools: false
@@ -13,7 +13,7 @@ execute:
 ---
 
 Use a factor, character or logical column as a covariate in syntax. Part of the
-[Models](models.html) collection, with the other [native engine](model-native.html)
+[Models](models.html) collection, with the other [sem engine](model-sem.html)
 pages. This page needs medfit 0.11.0 or later
 (GitHub; CRAN has 0.3.2).
 
@@ -28,8 +28,13 @@ The page cuts `covariate1` into three groups to have a factor to use:
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
+```
+
+```{r}
+#| label: base-model
 dat <- transform(mediation_demo,
                  group = cut(covariate1, c(-Inf, -0.5, 0.5, Inf), labels = c("low", "mid", "high")))
 base <- "
@@ -101,7 +106,7 @@ mbco_sem(fit, paths = c("a", "b"))
 ## Products and the four-way decomposition
 
 `group:mediator1` expands to one product per dummy, each a product term under the
-rules in [the native model page](model-native.html). The fit warns that the global
+rules in [the native model page](model-sem.html). The fit warns that the global
 test is not valid with a product, so the chunk silences it and asks for the sandwich:
 
 ```{r}
@@ -128,7 +133,7 @@ tidy(extract_mediation(fw, treatment = "treatment", mediator = "mediator1",
 
 ## Limits
 
-- **A categorical outcome, mediator or treatment** is not supported in the native engine: only a covariate on a
+- **A categorical outcome, mediator or treatment** is not supported in the sem engine: only a covariate on a
   regression's right side is expanded. The supported routes today:
   - *A two-level treatment or mediator:* recode it as a 0/1 numeric column.
   - *A treatment with more than two levels:* compare two levels at a time. Keep the rows of those two levels
@@ -148,8 +153,12 @@ tidy(extract_mediation(fw, treatment = "treatment", mediator = "mediator1",
   resample) rebuilds the factor each time, so a level missing from a character column's
   resample changes the reference level.
 
+::: {.next-action}
+**Next:** Choose between the engines: [Which engine should I use?](guide-engines.html)
+:::
+
 ## Related
 
 [Cookbook recipe 21](cookbook.html#a-categorical-covariate-in-a-native-fit) |
-[Native engine: paths and defined parameters](model-native.html) |
+[The sem engine: paths and defined parameters](model-sem.html) |
 [Troubleshooting](guide-troubleshooting.html) | `?"medfit-syntax"`

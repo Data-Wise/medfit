@@ -1,0 +1,12 @@
+/* Readable, accessible defaults (proposal P8, decision 5, 2026-11-12).
+   Contrast measured by Lighthouse on the live site: navbar text 4.25 to 4.48:1,
+   version label 2.57:1, developer role 4.28:1; AA needs 4.5:1. */
+body { line-height: 1.6; }
+main { max-width: 72ch; }
+main table, main pre, main .sourceCode { max-width: 100%; }
+.navbar .nav-link,
+.navbar .nav-link.dropdown-toggle { color: #3f4244; }
+.navbar small.nav-text, .navbar .text-default { color: #4a4d50 !important; }
+.template-home .developers small.roles { color: #565a5d; }
+.breadcrumb-line { font-size: 0.9rem; color: #4a4d50; margin-bottom: 0.5rem; }
+.next-action { border-left: 4px solid #0054AD; padding: 0.4rem 0.8rem; margin: 1.5rem 0; background: #f4f7fb; }

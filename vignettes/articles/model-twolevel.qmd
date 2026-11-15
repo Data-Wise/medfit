@@ -12,6 +12,8 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Clusters and latent variables &rsaquo; Two-level mediation (1-1-1)</p>
+
 Treatment, mediator and outcome are all measured on the same level-1 units (students, patients, days)
 nested in clusters (schools, clinics, people), and you want the indirect effect at the within level and at
 the between level. Part of the [Models](models.html) collection.
@@ -33,6 +35,7 @@ If the treatment is assigned to whole clusters (a 2-1-1 design), use the
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 has_lavaan <- requireNamespace("lavaan", quietly = TRUE)
@@ -126,7 +129,8 @@ tidy(td, conf_int = TRUE)
 `tidy()` lists the six paths, the four effects at each level, and the contrast. Standard errors come from the
 delta method over the joint covariance; the intervals are Wald (normal) intervals with no small-sample
 correction. `summary(td)` adds the provenance of the fit and prints the assumptions in full, and `glance(td)`
-gives one row.
+gives one row. The provenance (`summary(td)$provenance`) records the fitting source, the version of the package that
+made the fit (`source_version`; the `print()` header shows it too) and the estimation settings.
 
 ```{r}
 #| label: summary
@@ -412,6 +416,10 @@ you have decided to accept can be muffled by class (see [Troubleshooting](guide-
 | `medfit_error_twolevel_constrained` | error | `twolevel_statistic(effect = "nie_contrast")` for a fit that equates both a and b across levels |
 
 The messages they carry are quoted in [Troubleshooting](guide-troubleshooting.html#two-level-mediation).
+
+::: {.next-action}
+**Next:** Work a full example: [Two-level workflow, step by step](guide-twolevel-tutorial.html)
+:::
 
 ## Related
 

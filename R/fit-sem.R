@@ -7,8 +7,8 @@
 #' Fit a Structural Equation Model by Maximum Likelihood
 #'
 #' @description
-#' Fits a model written in lavaan-style syntax to raw data with medfit's native
-#' maximum-likelihood engine, and returns a [SEMFit] object. The engine handles
+#' Fits a model written in lavaan-style syntax to raw data with the sem engine,
+#' medfit's own maximum-likelihood SEM fitter, and returns a [SEMFit] object. The engine handles
 #' observed and latent variables, user labels, fixed values, starts and bounds,
 #' equality and inequality constraints (`==`, `<`, `>`, linear or nonlinear), and defined
 #' parameters (`:=`) with delta-method standard errors.
@@ -43,8 +43,13 @@
 #'   branches independently, with `n_starts` starts per nonempty branch; aggregate
 #'   diagnostics report the actual attempts, not the number of branches. For FIML,
 #'   only `NULL` or `3` is supported: three starts per solver, with refinements counted separately.
-#' @param control List: options passed to the optimizer (`nloptr`). FIML requires
-#'   the empty list under its initial validated numerical protocol.
+#' @param control A [sem_control()] object, or a plain list of options passed to
+#'   the optimizer (`nloptr`), the same as `sem_control(nloptr = <list>)`. An
+#'   `n_starts` given both here (in `sem_control()`) and as the argument must
+#'   agree. FIML requires `optimizer = "auto"`, an empty `nloptr` list (or the
+#'   empty plain list) and `n_starts` `NULL` or 3, under its initial validated
+#'   numerical protocol. The resolved protocol is recorded
+#'   in `fit@diagnostics$protocol`.
 #' @param weights Optional numeric vector of non-negative case weights,
 #'   one per row of `data` (`NULL`, the default, fits unweighted). The fit is
 #'   weighted maximum likelihood on the weighted mean and covariance; the scale
@@ -196,7 +201,7 @@
 #' no weights, empty `control`, and `n_starts = NULL` or `3`. These numerical-control
 #' restrictions reproduce the initial validated protocol. Missing values never
 #' select FIML automatically, and a failed fit never falls back to listwise deletion.
-#' Native [fit_mediation()] forwards these settings through `engine_args`; its
+#' [fit_mediation()] with `engine = "sem"` forwards these settings through `engine_args`; its
 #' `se_type = "model"` remains a top-level argument.
 #'
 #' `nobs()` counts rows with any observed model variable; `n_dropped` counts only
@@ -233,7 +238,7 @@
 #' can occur earlier. A dedicated `fiml-1` ledger binds likelihood, rows, settings
 #' and attempts; the version-1 ledger below continues to describe listwise fits.
 #' See the Methods and Formulas article, Bounded FIML, for the likelihood and
-#' the native engine guide for the supported workflow. Bounded FIML was introduced
+#' the sem engine guide for the supported workflow. Bounded FIML was introduced
 #' in 0.16.0; released 0.15.0 does not provide this option.
 #'
 #' @section Nonzero-product search coverage:
@@ -375,7 +380,11 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   checkmate::assert_data_frame(data, min.rows = 1L, .var.name = "data")
   information <- match.arg(information)
   checkmate::assert_count(n_starts, positive = TRUE, null.ok = TRUE, .var.name = "n_starts")
-  checkmate::assert_list(control, .var.name = "control")
+  # a plain list or a sem_control() object, resolved once to the plain nloptr list every internal receives (S2)
+  resolved_control <- .sem_resolve_control(control, n_starts, !base::missing(n_starts) && !is.null(n_starts),
+                                           missing)
+  control <- resolved_control$control
+  n_starts <- resolved_control$n_starts
   checkmate::assert_flag(meanstructure, null.ok = TRUE, .var.name = "meanstructure")
   checkmate::assert(
     checkmate::check_flag(fixed_x),
@@ -384,8 +393,9 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   )
   se_type <- match.arg(se_type)
   if (missing == "fiml") {
-    return(.sem_fiml_syntax(paste(model, collapse = "\n"), data, information, n_starts,
-                            control, weights, se_type, meanstructure, fixed_x, fx_unset, match.call()))
+    fit <- .sem_fiml_syntax(paste(model, collapse = "\n"), data, information, n_starts, control, weights, se_type,
+                            meanstructure, fixed_x, fx_unset, match.call(), optimizer = resolved_control$optimizer)
+    return(.sem_record_protocol(fit, resolved_control$protocol))
   }
   if (!is.null(weights) && se_type == "model") {
     .notify_ipw_model_se()
@@ -399,7 +409,15 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   fit <- .sem_fit_syntax(model, data, information, n_starts = if (is.null(n_starts)) 5L else n_starts,
                          control = control, weights = weights, se_type = se_type, meanstructure = meanstructure,
                          fixed_x = fixed_x)
-  .sem_as_semfit(fit, model, match.call())
+  .sem_record_protocol(.sem_as_semfit(fit, model, match.call()), resolved_control$protocol)
+}
+
+# the resolved search protocol goes in diagnostics, after the fit (and the FIML ledger binding) are built
+.sem_record_protocol <- function(fit, protocol) {
+  dg <- fit@diagnostics
+  dg$protocol <- protocol
+  fit@diagnostics <- dg
+  fit
 }
 
 .sem_as_semfit <- function(fit, model, call = NULL) {

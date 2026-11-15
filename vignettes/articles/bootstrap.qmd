@@ -27,7 +27,7 @@ For bounded FIML, the source-fit route is withheld until statistical admission
 or joint Gaussian parameter-draw percentile intervals; the callback and extracted-data
 routes remain unavailable. This is narrower than the examples below. Any required
 failed or interrupted replicate withholds the whole interval, and statistical
-admission remains deferred. See the [native guide](native-guide.html#bounded-fiml)
+admission remains deferred. See the [native guide](sem-guide.html#bounded-fiml)
 and [Methods and Formulas](methods.html#fiml-source-intervals).
 
 ## Example Data

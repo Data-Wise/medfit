@@ -5,13 +5,13 @@
 #' TwoLevelMediationData Class
 #'
 #' **Experimental.** This class, [twolevel_statistic()] and the `level` argument of the effect generics may
-#' change without the usual deprecation period (a native two-level fitter, a later milestone, could change the
-#' object).
+#' change without the usual deprecation period (a two-level fitter in the sem engine, a later milestone, could change
+#' the object).
 #'
 #' S7 class for two-level mediation in which treatment, mediator and outcome are all measured on level-1
 #' units nested in clusters (1-1-1), with the paths estimated separately at the within and the between
 #' level (latent cluster means, fixed slopes). Built by [extract_mediation()] from a `lavaan` two-level
-#' fit; the same class is the target of a native fitter later (`source` says which).
+#' fit; the same class is the target of a sem engine fitter later (`source` says which).
 #'
 #' Per level the indirect effect is \eqn{NIE_l = a_l b_l}{NIE_l = a_l * b_l}, the direct effect is
 #' \eqn{c'_l}{c'_l}, and the contrast \eqn{NIE_w - NIE_b}{NIE_w - NIE_b} is descriptive, not a test. When the
@@ -44,6 +44,10 @@
 #'   are not copied); kept for the contract shared with the other mediation classes, which read `@data`.
 #' @param source_package Character scalar: `"lavaan"`; kept for the dependents contract shared with the other
 #'   mediation classes (`tests/testthat/test-dependents-contract.R` pins it across classes).
+#' @param source_version Character: `character(0)` (the default) or one non-empty string, the version of the
+#'   package that made the fit. The lavaan adapter stores the lavaan version here and in `lavaan_version`;
+#'   `lavaan_version` may be `character(0)` for a fit lavaan did not make. Both are checked on construction
+#'   and on assignment.
 #'
 #' @return A `TwoLevelMediationData` S7 object.
 #'
@@ -78,7 +82,7 @@
 #'   n_clusters, cluster_sizes, icc, between_identified, admissible, converged,
 #'   cross_level_equal, fixed_paths, source, fixed_x, information, h1_information,
 #'   se_type, estimator, missing, lavaan_version, call, between_parameterization,
-#'   data, source_package
+#'   data, source_package, source_version
 #' )
 #'
 #' @export
@@ -132,7 +136,9 @@ TwoLevelMediationData <- S7::new_class(
 
     # Data and metadata (`class_data.frame | NULL` has no NULL default of its own)
     data = S7::new_property(S7::class_data.frame | NULL, default = NULL),
-    source_package = S7::class_character
+    source_package = S7::class_character,
+    # Optional, last so positional 0.17.0 calls bind as before (0.18.0 S4)
+    source_version = S7::class_character
   ),
 
   validator = function(self) {
@@ -148,7 +154,7 @@ TwoLevelMediationData <- S7::new_class(
       converged = self@converged, source = self@source, fixed_x = self@fixed_x,
       information = self@information, h1_information = self@h1_information,
       se_type = self@se_type, estimator = self@estimator, missing = self@missing,
-      lavaan_version = self@lavaan_version, call = self@call,
+      call = self@call,
       between_parameterization = self@between_parameterization,
       source_package = self@source_package
     )
@@ -156,6 +162,16 @@ TwoLevelMediationData <- S7::new_class(
       if (length(scalars[[nm]]) != 1L || is.na(scalars[[nm]])) {
         return(sprintf("%s must be a single non-missing value", nm))
       }
+    }
+    # Optional provenance: empty, or one value. A supplied `lavaan_version` is checked as in 0.17.0 (one
+    # non-missing value); `source_version` must also be non-empty.
+    lv <- self@lavaan_version
+    if (length(lv) > 1L || anyNA(lv)) {
+      return("lavaan_version must be empty or a single non-missing value")
+    }
+    sv <- self@source_version
+    if (length(sv) > 1L || anyNA(sv) || any(sv == "")) {
+      return("source_version must be empty or a single non-missing, non-empty string")
     }
     for (nm in within_rows) {
       value <- S7::prop(self, nm)
@@ -255,6 +271,19 @@ TwoLevelMediationData <- S7::new_class(
 )
 
 
+# The version of the package that made the fit: `source_version` when set, else `lavaan_version` for a lavaan
+# fit, else NA. An object saved by medfit 0.17.0 keeps its old class definition after readRDS() and has no
+# `source_version` property (reading it errors), so the property is tested first.
+.twolevel_source_version <- function(x) {
+  if (S7::prop_exists(x, "source_version") && length(x@source_version) == 1L) {
+    return(x@source_version)
+  }
+  if (identical(x@source_package, "lavaan") && length(x@lavaan_version) == 1L && nzchar(x@lavaan_version)) {
+    return(x@lavaan_version)
+  }
+  NA_character_
+}
+
 # The contrast NIE_within - NIE_between is NA when the between level is unidentified or BOTH a and b are
 # equated across levels (it is then zero by constraint, not an estimate). With only one of them equated it is
 # a * (b_within - b_between) or (a_within - a_between) * b: estimable, descriptive, with a delta SE (C-Q1).
@@ -270,9 +299,11 @@ TwoLevelMediationData <- S7::new_class(
 S7::method(print, TwoLevelMediationData) <- function(x, ...) {
   nie_w <- x@a_within * x@b_within
   nie_b <- x@a_between * x@b_between
+  version <- .twolevel_source_version(x)
+  fit_label <- if (is.na(version)) x@source else paste(x@source, version)
   cat("<TwoLevelMediationData>\n")
   cat(sprintf("  %s -> %s -> %s  (clusters: %s; %s fit; between level: latent cluster means)\n",
-              x@treatment, x@mediator, x@outcome, x@cluster, x@source))
+              x@treatment, x@mediator, x@outcome, x@cluster, fit_label))
   cat(sprintf("  n = %d in %d clusters (sizes %d to %d)   |   ICC: %s\n",
               x@n_obs, x@n_clusters, min(x@cluster_sizes), max(x@cluster_sizes),
               paste(sprintf("%s %.3f", names(x@icc), x@icc), collapse = ", ")))
@@ -359,7 +390,9 @@ S7::method(summary, TwoLevelMediationData) <- function(object, level = 0.95, ...
       cluster_sizes = range(object@cluster_sizes),
       icc = object@icc,
       provenance = c(
-        source = object@source, lavaan_version = object@lavaan_version, estimator = object@estimator,
+        source = object@source, source_version = .twolevel_source_version(object),
+        lavaan_version = if (length(object@lavaan_version) == 1L) object@lavaan_version else NA_character_,
+        estimator = object@estimator,
         fixed_x = as.character(object@fixed_x), information = object@information,
         h1_information = object@h1_information, se = object@se_type, missing = object@missing
       ),
@@ -399,9 +432,12 @@ print_summary_twolevel_mediation_data <- function(x, ...) {
   cat(sprintf("\nSample Size: %d in %d clusters (sizes %d to %d)\n", x$n_obs, x$n_clusters,
               x$cluster_sizes[1], x$cluster_sizes[2]))
   cat("ICC:        ", paste(sprintf("%s %.3f", names(x$icc), x$icc), collapse = ", "), "\n")
+  # An unknown version (NA) prints the source alone, as print() does; the list keeps the NA
+  version <- x$provenance[["source_version"]]
+  fit_label <- if (is.na(version)) x$provenance[["source"]] else paste(x$provenance[["source"]], version)
   cat(sprintf(
-    "Fit:         %s %s (estimator %s, fixed_x %s, information %s, h1_information %s, se %s, missing %s)\n",
-    x$provenance[["source"]], x$provenance[["lavaan_version"]], x$provenance[["estimator"]],
+    "Fit:         %s (estimator %s, fixed_x %s, information %s, h1_information %s, se %s, missing %s)\n",
+    fit_label, x$provenance[["estimator"]],
     x$provenance[["fixed_x"]], x$provenance[["information"]], x$provenance[["h1_information"]],
     x$provenance[["se"]], x$provenance[["missing"]]
   ))

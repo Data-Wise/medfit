@@ -53,8 +53,13 @@ branches independently, with \code{n_starts} starts per nonempty branch; aggrega
 diagnostics report the actual attempts, not the number of branches. For FIML,
 only \code{NULL} or \code{3} is supported: three starts per solver, with refinements counted separately.}
 
-\item{control}{List: options passed to the optimizer (\code{nloptr}). FIML requires
-the empty list under its initial validated numerical protocol.}
+\item{control}{A \code{\link[=sem_control]{sem_control()}} object, or a plain list of options passed to
+the optimizer (\code{nloptr}), the same as \verb{sem_control(nloptr = <list>)}. An
+\code{n_starts} given both here (in \code{sem_control()}) and as the argument must
+agree. FIML requires \code{optimizer = "auto"}, an empty \code{nloptr} list (or the
+empty plain list) and \code{n_starts} \code{NULL} or 3, under its initial validated
+numerical protocol. The resolved protocol is recorded
+in \code{fit@diagnostics$protocol}.}
 
 \item{weights}{Optional numeric vector of non-negative case weights,
 one per row of \code{data} (\code{NULL}, the default, fits unweighted). The fit is
@@ -109,8 +114,8 @@ A \link{SEMFit} object. With a product term whose factor is a regression target 
 \code{diagnostics$ledger} holds the versioned outcome ledger described below.
 }
 \description{
-Fits a model written in lavaan-style syntax to raw data with medfit's native
-maximum-likelihood engine, and returns a \link{SEMFit} object. The engine handles
+Fits a model written in lavaan-style syntax to raw data with the sem engine,
+medfit's own maximum-likelihood SEM fitter, and returns a \link{SEMFit} object. The engine handles
 observed and latent variables, user labels, fixed values, starts and bounds,
 equality and inequality constraints (\code{==}, \code{<}, \code{>}, linear or nonlinear), and defined
 parameters (\verb{:=}) with delta-method standard errors.
@@ -228,7 +233,7 @@ Require \code{meanstructure = TRUE}, \code{information = "observed"}, \code{se_t
 no weights, empty \code{control}, and \code{n_starts = NULL} or \code{3}. These numerical-control
 restrictions reproduce the initial validated protocol. Missing values never
 select FIML automatically, and a failed fit never falls back to listwise deletion.
-Native \code{\link[=fit_mediation]{fit_mediation()}} forwards these settings through \code{engine_args}; its
+\code{\link[=fit_mediation]{fit_mediation()}} with \code{engine = "sem"} forwards these settings through \code{engine_args}; its
 \code{se_type = "model"} remains a top-level argument.
 
 \code{nobs()} counts rows with any observed model variable; \code{n_dropped} counts only
@@ -265,7 +270,7 @@ stage, reason, original parent and completed attempts; basic argument-type error
 can occur earlier. A dedicated \code{fiml-1} ledger binds likelihood, rows, settings
 and attempts; the version-1 ledger below continues to describe listwise fits.
 See the Methods and Formulas article, Bounded FIML, for the likelihood and
-the native engine guide for the supported workflow. Bounded FIML was introduced
+the sem engine guide for the supported workflow. Bounded FIML was introduced
 in 0.16.0; released 0.15.0 does not provide this option.
 }
 

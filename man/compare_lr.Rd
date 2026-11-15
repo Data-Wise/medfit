@@ -12,7 +12,11 @@ compare_lr(object, paths, engine = c("lavaan", "openmx"), tolerance = 1e-04)
 \item{paths}{Character vector: the labels of the regression paths whose
 product is the indirect effect, as in \code{\link[=mbco_sem]{mbco_sem()}}.}
 
-\item{engine}{\code{"lavaan"} or \code{"openmx"}. The package must be installed.}
+\item{engine}{\code{"lavaan"} or \code{"openmx"}: the external comparison program
+that runs the product-null LR for comparison, not a fitter of the
+mediation model. The mediation model is always medfit's native fit
+\code{object}, and the result's \code{reference} is medfit's LR. The package must be
+installed.}
 
 \item{tolerance}{Relative tolerance on the LR difference, scaled by
 \code{max(1, LR)}. Default \code{1e-4}; values above \code{1e-2} are refused, because a

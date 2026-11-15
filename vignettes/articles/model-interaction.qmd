@@ -12,6 +12,8 @@ execute:
   echo: true
 ---
 
+<p class="breadcrumb-line"><a href="models.html">Models</a> &rsaquo; Single mediator &rsaquo; Treatment-by-mediator interaction</p>
+
 When the effect of the mediator depends on the treatment, the outcome model
 carries a `treatment * mediator` term and the effect splits into four parts.
 Part of the [Models](models.html) collection.
@@ -25,6 +27,7 @@ Part of the [Models](models.html) collection.
 
 ```{r}
 #| label: setup
+#| include: false
 library(medfit)
 library(generics)
 ```
@@ -138,7 +141,7 @@ The chi-square, df and p-value are `NA` for this fit, `anova()` and `mbco_sem()`
 refuse, and `information = "expected"` is refused, because the product contains a
 regression target; `logLik()`, AIC and BIC stay defined, but those of a fit with the product are not
 comparable with those of a fit without it, so `AIC(fit_a, fit_b)` and `BIC()` refuse such a pair. The
-[supported class and each limit](model-native.html#product-terms) lists what else a product
+[supported class and each limit](model-sem.html#product-terms) lists what else a product
 model cannot contain, with the message for each.
 
 ```{r}
@@ -156,9 +159,13 @@ tryCatch(anova(sem, sem), error = function(e) conditionMessage(e))
   [glm families](model-glm-families.html) for what is supported there.
 - The native route reads a product written in the model syntax (`treatment:mediator1`), not
   a precomputed data column, and only inside the
-  [supported class](model-native.html#product-terms): recursive, no residual covariance between
+  [supported class](model-sem.html#product-terms): recursive, no residual covariance between
   outcomes, free coefficients and intercepts, none shared. Without the product,
   `decomposition = "four_way"` is refused with a message that says to add it.
+
+::: {.next-action}
+**Next:** Choose an interval: [Which interval should I use?](guide-intervals.html)
+:::
 
 ## Related
 
