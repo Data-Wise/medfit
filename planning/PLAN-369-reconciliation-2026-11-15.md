@@ -1,7 +1,7 @@
 # Plan: close out issue #369 (reconcile #249 and #357 with merged work)
 
 Status: EXECUTED 2026-11-15. T1-T3 in `bd2d9c7b` (on `origin/dev`); T4: #369 closed as completed; optional items:
-#276 "Sync the plan (D18)" ticked, mbco-lrt log D18/D20 marked decided in mbco-lrt `9daa6dd` (local, not pushed).
+#276 "Sync the plan (D18)" ticked, mbco-lrt log D18/D20 marked decided in mbco-lrt `3b9c2d9` (on `draft`).
 Revised before execution after an independent adversarial review. Docs and issue administration only;
 no `R/` or test change. Every GitHub write (issue comment, issue edit, close), every push and every edit in
 Data-Wise/mbco-lrt needs the owner's yes in chat. All evidence below is read on `origin/dev` (`0226c74c`).
