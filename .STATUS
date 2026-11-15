@@ -1,3 +1,7 @@
+# Issue #369 closed — 2026-11-15 MST
+
+# Reconciliation executed per planning/PLAN-369-reconciliation-2026-11-15.md: ADR D-14 (D18, SLSQP permanent option, never default) and Part B note, imported-plan banner, 2026-11-15 closure section, #369 dropped from live lists (bd2d9c7b); #369 closed as completed; #276 "Sync the plan (D18)" ticked; mbco-lrt decisions log D18/D20 marked decided (mbco-lrt 3b9c2d9 on draft). Docs and issue administration only; no R/ or test change. On 0.18.0.9000 dev.
+
 # Dev version bump to 0.18.0.9000 — 2026-11-14 MST
 
 # DESCRIPTION 0.18.0 -> 0.18.0.9000 on dev, NEWS opens with a 0.18.0.9000 section, CLAUDE.md status line, README, getting-started and refcard updated. pkgdown now builds dev as the development version. No release or CRAN submission.
