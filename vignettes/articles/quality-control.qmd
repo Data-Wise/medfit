@@ -201,10 +201,11 @@ estimates and their standard errors stay where they were.
 | Planted defects | a resolver that overwrites an explicit `FALSE`, or leaves the old default in `fit_mediation()` only, is caught by the tests; restoring the old default fails nine of the twelve rewritten test files (the other three pin explicit settings) |
 | Full suite | 1694 tests, 8580 expectations, 0 failed (reference BLAS) |
 
-**A documented limit.** `compare_lr()` with lavaan can put the product-null likelihood ratio above the reference (issue
-#320): 18 of 60 runs for lavaan and 13 of 60 for OpenMx, on the pinned design and seeds. The 2026-10-26 re-measure
-reproduced both counts on the `v0.14.0` tree and on `dev`, so the flip does not change them, and the limit is
-documented in `?compare_lr`.
+**A documented limit.** `compare_lr()` with lavaan or OpenMx can put the product-null likelihood ratio above the
+reference (issue #320): 18 of 60 runs for lavaan and 13 of 60 for OpenMx, on the pinned design and seeds. The 2026-10-26
+re-measure reproduced both counts on the `v0.14.0` tree and on `dev`, so the flip does not change them. Each such run
+equals the minimum of the other line of the null (`a = 0` instead of `b = 0`, or the reverse), where the optimizer
+settled; medfit's reference, the smaller of the two, stands. The limit is documented in `?compare_lr`.
 
 **At that local checkpoint.** The two OpenBLAS gate runs (`gates (rest)` and `gates (reliability)`) run on pull requests to `main`;
 they were deferred to the release pull request. The table above records the local checkpoint, not a later hosted run. The record, with its sources, is
