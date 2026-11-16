@@ -47,6 +47,14 @@
 #' `NA` when the between level is not identified, so asking for either raises a classed error here
 #' instead of returning a distribution of `NA`.
 #'
+#' **Several mediators.** An invalid `level`, or `level = "contrast"` with `effect = "nde"` or `"te"`, stops
+#' with class `medfit_error_twolevel_level`. An effect not defined for several mediators, `effect = "nie_j"`
+#' without `specific` or with a name that is not one of the mediators, and `specific` with another effect stop
+#' with class `medfit_error_twolevel_unsupported`, as do `level` and `specific` given for one mediator. A
+#' between effect or the contrast of a within-only fit stops with class `medfit_between_unidentified`, and the
+#' contrast of a mediator (for `"nie_j"`) or of every mediator (for `"nie"`) whose `a` and `b` are both equated
+#' across levels stops with class `medfit_error_twolevel_constrained`.
+#'
 #' @param x A [TwoLevelMediationData] or [TwoLevelParallelMediationData] object, or a two-level `lavaan`
 #'   fit.
 #' @param effect One of `"nie_within"` (default), `"nie_between"`, `"nie_contrast"` (within minus
@@ -63,7 +71,7 @@
 #'   returned.
 #'
 #' @return A function of one argument returning a number: a named parameter vector for a
-#'   [TwoLevelMediationData], a data frame for a `lavaan` fit.
+#'   [TwoLevelMediationData] or [TwoLevelParallelMediationData], a data frame for a `lavaan` fit.
 #'
 #' @examples
 #' \donttest{

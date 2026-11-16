@@ -38,7 +38,7 @@ returned.}
 }
 \value{
 A function of one argument returning a number: a named parameter vector for a
-\link{TwoLevelMediationData}, a data frame for a \code{lavaan} fit.
+\link{TwoLevelMediationData} or \link{TwoLevelParallelMediationData}, a data frame for a \code{lavaan} fit.
 }
 \description{
 \strong{Experimental.} The interface may change without the usual deprecation period.
@@ -84,6 +84,14 @@ objects. Calls written with a namespace, such as \code{lavaan::lavaan()} resolve
 The contrast is \code{NA} by constraint when both \code{a} and \code{b} are equated across levels and a between effect is
 \code{NA} when the between level is not identified, so asking for either raises a classed error here
 instead of returning a distribution of \code{NA}.
+
+\strong{Several mediators.} An invalid \code{level}, or \code{level = "contrast"} with \code{effect = "nde"} or \code{"te"}, stops
+with class \code{medfit_error_twolevel_level}. An effect not defined for several mediators, \code{effect = "nie_j"}
+without \code{specific} or with a name that is not one of the mediators, and \code{specific} with another effect stop
+with class \code{medfit_error_twolevel_unsupported}, as do \code{level} and \code{specific} given for one mediator. A
+between effect or the contrast of a within-only fit stops with class \code{medfit_between_unidentified}, and the
+contrast of a mediator (for \code{"nie_j"}) or of every mediator (for \code{"nie"}) whose \code{a} and \code{b} are both equated
+across levels stops with class \code{medfit_error_twolevel_constrained}.
 }
 \examples{
 \donttest{
