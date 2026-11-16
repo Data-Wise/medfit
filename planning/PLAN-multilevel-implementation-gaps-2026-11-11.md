@@ -13,7 +13,7 @@ owns priority. Standing decisions stay: Q3 (fixed slopes, `sigma_ab = 0`), Q4 (t
 | IG2 | Cluster-robust SEs and few-cluster adjustments (S6) | M after S4 | not started | IG1 |
 | IG3 | Two-level tests: product null per level, equal indirect effects across levels (optional, separate from the descriptive contrast) | M to L after S4 | not started | IG1; boundary-aware reference law |
 | IG4 | 1-1-1 random-slope estimand, `E[ab] = ab + cov(a_j, b_j)` | L, new class | needs a decision to reopen Q3 | maintainer |
-| IG5 | More than one mediator in a two-level model (the adapter refuses it) | M | not started | none technical; scope decision |
+| IG5 | More than one mediator in a two-level model (the adapter refuses it) | M | done for parallel mediators (experimental `TwoLevelParallelMediationData`, PRs #460 to #463 and the T5 docs; plan `planning/PLAN-IG5-twolevel-parallel-2026-11-15.md`); serial mediators still refused | none |
 | IG6 | Latent mediators with shared loadings (S5) | L on top of S4 | NO-GO | identification review (U5) |
 | IG7 | Level-specific fit, two-level FIML, categorical, three-level, Bayesian | M to XL | deferred or out | IG1; scope |
 
@@ -30,7 +30,7 @@ The seven-item admission checklist applies to any S4 PR: the solver files are on
 ## Order if work is authorized
 
 1. The few-clusters design study (proposal 2 in the book repository) supplies the U4 grid and needs only the shipped adapter.
-2. IG5 can proceed independently of S4 if the scope decision is made.
+2. IG5 is done for parallel mediators; serial two-level mediation would need its own scope decision.
 3. S4, then IG2 and IG3. IG4 only if Q3 is reopened.
 
 ## Not decided here

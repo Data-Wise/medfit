@@ -114,6 +114,16 @@ test_that("the model page runs and its claims hold against lm and lavaan", {
   expect_lt(env$b_k@ci_lower, env$b_k@estimate)
   expect_gt(env$b_k@ci_upper, env$b_k@estimate)
   expect_false(isTRUE(all.equal(env$b_k@estimate, as.numeric(nie(tk, level = "within")))))
+  # the page's own lavaan check: every := row is matched by term, estimate and SE
+  expect_identical(env$tidy_k$term, env$pe_k$lhs)
+  expect_equal(env$tidy_k$estimate, env$pe_k$est, tolerance = 1e-5)
+  expect_equal(env$tidy_k$std_error, env$pe_k$se, tolerance = 1e-4)
+  # one mediator equated: its specific contrast is NA, the other one and the total are estimates
+  expect_true(all(c("a_M1", "b_M1") %in% env$tk_eq@cross_level_equal))
+  ce_k <- suppressWarnings(nie(env$tk_eq, level = "contrast", type = "specific"))
+  expect_true(is.na(ce_k[["M1"]]))
+  expect_false(is.na(ce_k[["M2"]]))
+  expect_equal(as.numeric(nie(env$tk_eq, level = "contrast")), unname(ce_k[["M2"]]))
 
   # planted defect: a within path off by 0.1 fails the lm comparison
   bad <- unname(paths(td)[1:3]) + c(0.1, 0, 0)
@@ -149,6 +159,44 @@ test_that("recipe 23 runs after the setup chunk alone and its numbers match the 
   expect_true(grepl("set.seed(394)", paste(code, collapse = "\n"), fixed = TRUE))
   # planted defect: the between NIE is not the within NIE
   expect_gt(abs(as.numeric(nie(z, level = "between")) - as.numeric(nie(z))), 0.1)
+})
+
+test_that("recipe 24 runs after the setup chunk alone and its numbers match the page's estimands", {
+  skip_if_not_installed("lavaan")
+  testthat::skip_if_not(file.exists(doc_path("cookbook.qmd")), "vignettes are not available")
+  lines <- readLines(doc_path("cookbook.qmd"), warn = FALSE)
+  start <- grep("^## 24\\. ", lines)
+  expect_length(start, 1L)
+  rest <- lines[(start + 1L):length(lines)]
+  rest <- rest[seq_len(grep("^## ", rest)[1] - 1L)]
+  open <- grep("^```\\{r", rest)
+  code <- unlist(lapply(open, function(i) {
+    j <- i + 1L
+    while (!grepl("^```$", rest[j])) j <- j + 1L
+    b <- rest[(i + 1L):(j - 1L)]
+    b[!grepl("^#\\|", b)]
+  }))
+  env <- new.env(parent = asNamespace("medfit"))
+  assign("tidy", generics::tidy, env)
+  suppressWarnings(eval(parse(text = code), env))
+  zk <- env$zk
+  expect_s7_class(zk, TwoLevelParallelMediationData)
+  d3 <- env$d3
+  cw <- function(v) v - ave(v, d3$id)
+  dc <- data.frame(Xc = cw(d3$X), M1c = cw(d3$M1), M2c = cw(d3$M2), Yc = cw(d3$Y))
+  b_w <- coef(lm(Yc ~ 0 + M1c + M2c + Xc, dc))
+  ols <- c(coef(lm(M1c ~ 0 + Xc, dc))[["Xc"]] * b_w[["M1c"]],
+           coef(lm(M2c ~ 0 + Xc, dc))[["Xc"]] * b_w[["M2c"]])
+  spec <- as.numeric(nie(zk, type = "specific"))
+  expect_equal(spec, ols, tolerance = 5e-3)
+  # the total is the sum of the specific effects, at each level
+  expect_equal(as.numeric(nie(zk)), sum(spec), tolerance = 1e-10)
+  expect_equal(as.numeric(nie(zk, level = "between")),
+               sum(as.numeric(nie(zk, level = "between", type = "specific"))), tolerance = 1e-10)
+  # the recipe's own seed, distinct from recipe 23's
+  expect_true(grepl("set.seed(395)", paste(code, collapse = "\n"), fixed = TRUE))
+  # planted defect: swapping the mediators' b paths misses the oracle
+  expect_false(isTRUE(all.equal(spec, rev(ols), tolerance = 5e-3)))
 })
 
 # ---- every condition the guide quotes is real ----
@@ -225,15 +273,57 @@ tl_doc_cases <- function() {
            tl_catch(twolevel_statistic(tl_fixture("x_centered"), "nie_between", treatment = "X", mediator = "M",
                                        outcome = "Y"), "medfit_between_unidentified")
          }),
-    list("medfit_error_twolevel_constrained", "both a and b are equated across levels",
+    list("medfit_error_twolevel_constrained", "is NA: both a and b",
          function() {
            tl_catch(twolevel_statistic(tl_fixture("shared_ab"), "nie_contrast", treatment = "X", mediator = "M",
                                        outcome = "Y"), "medfit_error_twolevel_constrained")
+         }),
+    # the same fragment from the several-mediator error, whose wording differs ("both a and b of mediator ...")
+    list("medfit_error_twolevel_constrained", "is NA: both a and b",
+         function() {
+           td <- tlp_td(cross_level_equal = c("a_M1", "b_M1"))
+           tl_catch(twolevel_statistic(td, "nie_j", level = "contrast", specific = "M1"),
+                    "medfit_error_twolevel_constrained")
          }),
     list("medfit_error_twolevel_unsupported", "are required for a lavaan fit",
          function() {
            tl_catch(twolevel_statistic(tl_fixture("base"), "nie_within"), "medfit_error_twolevel_unsupported")
          }),
+    list("medfit_warning_twolevel_constrained", "The contrast NIE_within - NIE_between is NA",
+         function() {
+           td <- tlp_td(cross_level_equal = c("a_M1", "b_M1"))
+           tl_catch(nie(td, level = "contrast", type = "specific"), "medfit_warning_twolevel_constrained")
+         }),
+    list("medfit_error_twolevel_unsupported", "is listed more than once",
+         function() {
+           tl_catch(extract_mediation(tlp_fixture("base"), "X", c("M1", "M1"), "Y"),
+                    "medfit_error_twolevel_unsupported")
+         }),
+    list("medfit_error_twolevel_unsupported", "is listed both as a mediator and as the",
+         function() {
+           tl_catch(extract_mediation(tlp_fixture("base"), "X", c("M1", "Y"), "Y"),
+                    "medfit_error_twolevel_unsupported")
+         }),
+    list("medfit_error_twolevel_unsupported", "is listed as a mediator but is not regressed on the treatment",
+         function() {
+           tl_catch(extract_mediation(tlp_fixture("covariate_w"), "X", c("M1", "W"), "Y"),
+                    "medfit_error_twolevel_unsupported")
+         }),
+    list("medfit_error_twolevel_unsupported", "is not defined for several mediators",
+         function() tl_catch(twolevel_statistic(tlp_td(), "nie_between"), "medfit_error_twolevel_unsupported")),
+    list("medfit_error_twolevel_unsupported", "needs `specific`, one of the mediators",
+         function() tl_catch(twolevel_statistic(tlp_td(), "nie_j"), "medfit_error_twolevel_unsupported")),
+    list("medfit_error_twolevel_unsupported", "`specific` applies to `effect = \"nie_j\"` only",
+         function() {
+           tl_catch(twolevel_statistic(tlp_td(), "nie", specific = "M1"), "medfit_error_twolevel_unsupported")
+         }),
+    list("medfit_error_twolevel_unsupported", "apply to a model with several mediators",
+         function() {
+           tl_catch(twolevel_statistic(tl_extract(tl_fixture("base")), "nie_within", level = "within"),
+                    "medfit_error_twolevel_unsupported")
+         }),
+    list("medfit_error_twolevel_level", "must be one of \"within\", \"between\" or \"contrast\"",
+         function() tl_catch(twolevel_statistic(tlp_td(), "nie", level = "both"), "medfit_error_twolevel_level")),
     list("medfit_error_lavaan_multilevel", "The lavaan fit has more than two levels",
          function() {
            testthat::local_mocked_bindings(.lavaan_nlevels = function(object) 3L, .package = "medfit")

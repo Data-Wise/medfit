@@ -44,6 +44,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | Formulas, cluster treatment | `fit_mediation(engine = "lmer", cluster = )` with plain formulas, no `(1 \| id)` |
 | `lavaan` fit | `extract_mediation(lavaan_fit, ...)` |
 | Two-level `lavaan` fit (`level:` blocks, `cluster =`), X, M, Y on level-1 units | `extract_mediation(lavaan_fit, treatment = , mediator = , outcome = )`, a `TwoLevelMediationData`; `nie(x, level = "within" \| "between" \| "contrast" \| "both")` |
+| Two-level `lavaan` fit, two or more parallel mediators | `extract_mediation(lavaan_fit, treatment = , mediator = c("M1", "M2"), outcome = )`, a `TwoLevelParallelMediationData` (experimental); `nie(x, level = , type = "total" \| "specific")` |
 | IPW weights | `fit_mediation(weights = , se_type = "sandwich")` |
 | Choose an engine, estimator and optimizer | [Which engine should I use?](guide-engines.html): `"glm"`, `"regmedint"`, `"lmer"` or `"sem"` (`"native"` is the earlier spelling) |
 | Model syntax and data (observed or latent variables, constraints, `:=`) | `fit_sem(model, data)`, a `SEMFit` |
@@ -117,6 +118,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | `bootstrap_mediation(f, "nonparametric", data = d, cluster = "id")` | Resampled clusters, refit |
 | `bootstrap_mediation(f, "plugin", mediation_data = x)` | Point estimate only |
 | `twolevel_statistic(td_or_fit, "nie_between", ...)` | The `f` for a two-level fit: parametric from the object, cluster refit from the `lavaan` fit |
+| `twolevel_statistic(x, "nie_j", level = "between", specific = "M1")` | The same for parallel mediators: `effect` is `"nie"`, `"nie_j"`, `"nde"` or `"te"` |
 
 Every call returns a `BootstrapResult`: use `print()`, `summary()`, `coef()`, `confint()`, `tidy()`.
 

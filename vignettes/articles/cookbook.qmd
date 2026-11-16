@@ -12,11 +12,11 @@ execute:
   echo: true
 ---
 
-Twenty-three task-sized recipes. Each says when to use it, runs on `mediation_demo`
+Twenty-four task-sized recipes. Each says when to use it, runs on `mediation_demo`
 (except the cluster, two-level and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference Card](refcard.html).
 
-These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, recipe 21 needs 0.11.0, recipe 22 needs 0.16.0, and recipe 23 needs 0.17.0). CRAN has 0.3.2, which lacks
+These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, recipe 21 needs 0.11.0, recipe 22 needs 0.16.0, recipe 23 needs 0.17.0, and recipe 24 needs a version later than 0.18.0). CRAN has 0.3.2, which lacks
 `mediation_demo` and the native, joint and cluster functions; install from
 GitHub or r-universe (see the [home page](https://data-wise.github.io/medfit/#install)).
 
@@ -768,6 +768,53 @@ bootstrap, or the `lavaan` fit with `treatment`, `mediator`, `outcome` and `clus
 bootstrap (report its percentile interval). A treatment or mediator with almost no between-cluster variance gives a within-only result and the classed
 warning `medfit_between_unidentified`. More: [Two-level mediation](model-twolevel.html).
 
+## 24. Two parallel mediators in a two-level lavaan fit
+
+*When:* as in recipe 23, but two or more mediators each carry part of the effect and none is regressed on
+another. `extract_mediation()` with a mediator vector returns `TwoLevelParallelMediationData` (experimental):
+the specific indirect effect of each mediator and their total, at each level. The chunk simulates 100 clusters
+of 5.
+
+```{r}
+#| label: r24-twolevel-parallel
+#| eval: !expr requireNamespace("lavaan", quietly = TRUE)
+set.seed(395)
+J <- 100
+n <- 5
+id <- rep(seq_len(J), each = n)
+xb <- rnorm(J)[id]
+xw <- rnorm(J * n)
+m1 <- 0.4 * xw + 0.7 * xb + 0.5 * rnorm(J)[id] + rnorm(J * n)
+m2 <- 0.3 * xw + 0.5 * xb + 0.5 * rnorm(J)[id] + rnorm(J * n)
+y <- 0.3 * xw + 0.2 * xb + 0.5 * (m1 - ave(m1, id)) + 0.9 * ave(m1, id) +
+  0.4 * (m2 - ave(m2, id)) + 0.6 * ave(m2, id) + 0.5 * rnorm(J)[id] + rnorm(J * n)
+d3 <- data.frame(id = id, X = xb + xw, M1 = m1, M2 = m2, Y = y)
+model3 <- "
+  level: 1
+    M1 ~ X
+    M2 ~ X
+    Y ~ M1 + M2 + X
+  level: 2
+    M1 ~ X
+    M2 ~ X
+    Y ~ M1 + M2 + X
+"
+fit3 <- lavaan::sem(model3, data = d3, cluster = "id")
+zk <- extract_mediation(fit3, treatment = "X", mediator = c("M1", "M2"), outcome = "Y")
+nie(zk, level = "both")
+nie(zk, type = "specific")
+tidy(zk, type = "effects")
+bootstrap_mediation(
+  twolevel_statistic(zk, "nie_j", level = "between", specific = "M1"),
+  method = "parametric", mediation_data = zk, n_boot = 500, seed = 1
+)
+```
+
+`nie()` gives the total by default and one value per mediator with `type = "specific"`. In
+`twolevel_statistic()`, `effect` is `"nie"`, `"nie_j"` (with the mediator in `specific`), `"nde"` or `"te"`,
+and `level` is `"within"`, `"between"` or `"contrast"`. The between level is kept only when the treatment and
+every mediator have an ICC of at least 0.01. More: [Two-level mediation](model-twolevel.html).
+
 ## Which recipe returns which object
 
 Every exported class and function appears in a recipe, or the table says why not.
@@ -784,4 +831,4 @@ Every exported class and function appears in a recipe, or the table says why not
 | `BootstrapResult` | 9 and 20 (returned by `bootstrap_mediation()`) |
 | `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | 22 (the simple model; the parallel and serial forms are in [Bounded FIML](model-fiml.html)) |
 | `TwoLevelMediationData` | 23 (an `extract_mediation()` on a two-level `lavaan` fit, and `twolevel_statistic()` for its bootstrap; see [Two-level mediation](model-twolevel.html)) |
-| `TwoLevelParallelMediationData` | none yet (an `extract_mediation()` on a two-level `lavaan` fit with two or more mediators, and `twolevel_statistic()` for its bootstrap; see [Several parallel mediators](model-twolevel.html#several-parallel-mediators)) |
+| `TwoLevelParallelMediationData` | 24 (an `extract_mediation()` on a two-level `lavaan` fit with two or more mediators, and `twolevel_statistic()` for its bootstrap; see [Several parallel mediators](model-twolevel.html#several-parallel-mediators)) |

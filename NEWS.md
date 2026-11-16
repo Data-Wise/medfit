@@ -41,6 +41,10 @@
   above medfit's reference was checked and is the minimum of the other line of the null (`a = 0` instead of `b = 0`,
   or the reverse), so medfit's reference stands. Elsewhere, the warning is undiagnosed until both line minima are
   computed: an optimizer that stops short on either line raises the same warning.
+* Two-level parallel mediation (experimental) is documented: the Two-level mediation page has a worked example
+  with two mediators, a check against `lavaan`'s `:=` estimates and a fit with one mediator's paths equated across
+  levels; the troubleshooting guide lists the new conditions; Cookbook recipe 24 fits and bootstraps two parallel
+  mediators; the reference card has the extraction and bootstrap rows.
 
 # medfit 0.18.0
 
