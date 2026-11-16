@@ -376,8 +376,9 @@ available; the two calls above are the supported ones.
 
 ## Limits
 
-- **One mediator, linear paths, observed variables.** A second mediator stops extraction with class
-  `medfit_error_twolevel_unsupported`. Latent variables and non-Gaussian outcomes are not part of this
+- **One mediator, linear paths, observed variables.** Two or more mediators return the experimental
+  `TwoLevelParallelMediationData` instead; a mediator regressed on another mediator (serial) stops extraction with
+  class `medfit_error_twolevel_unsupported`. Latent variables and non-Gaussian outcomes are not part of this
   adapter.
 - **No `standardized = TRUE`.** A standardized two-level path mixes the within and the between variances;
   extraction stops with class `medfit_error_twolevel_standardized`.
@@ -409,7 +410,7 @@ you have decided to accept can be muffled by class (see [Troubleshooting](guide-
 | `medfit_warning_twolevel_labels_ignored` | warning | `a_label`, `b_label` or `cp_label` was set: the paths are read by variable names and level, not by label |
 | `medfit_error_twolevel_standardized` | error | `standardized = TRUE` |
 | `medfit_error_twolevel_product` | error | a product term or `interaction =` |
-| `medfit_error_twolevel_unsupported` | error | more than one mediator, a variable missing at a level (2-1-1), or an argument that does not apply |
+| `medfit_error_twolevel_unsupported` | error | a mediator regressed on another mediator (serial), a covariate passed as a mediator, a duplicate or overlapping role, a variable missing at a level (2-1-1), or an argument that does not apply |
 | `medfit_error_twolevel_path_missing` | error | a, b or c' absent at a level |
 | `medfit_error_twolevel_unusable` | error | the within block is unusable: the fit did not converge, or the within covariance is missing or not positive definite |
 | `medfit_error_twolevel_level` | error | `level = "contrast"` for `nde()`, `te()` or `pm()` |
