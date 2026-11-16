@@ -64,18 +64,22 @@ refused by name.
 Known limit (#320): an engine's statistic can land above medfit's reference
 because the null \eqn{a b = 0}{a*b = 0} is two lines, \eqn{a = 0}{a = 0} and
 \eqn{b = 0}{b = 0}, each with its own minimum. A general-purpose optimizer
-settles on one line and finds that line's minimum; when it settles on the
-line with the larger minimum, the engine's statistic is that line's LR, not
-the product-null LR. medfit fits each line as a linear model and keeps the
-smaller (see \code{\link[=mbco_sem]{mbco_sem()}}), so a \code{disagree} verdict with
-\code{medfit_warning_engine_statistic_above_max} leaves medfit's reference
-standing. Read it as the engine having chosen the wrong line, not as an
-error in either fit. On the pinned design (15 seeds by 4 cells, 60 runs per
-engine) this happens in 18 of 60 lavaan runs (either start) and 13 of 60
-OpenMx default-start runs. Each of those runs equals the other line's
-minimum, and the smaller of lavaan's two runs equals medfit's
-reference in all 60. The counts are unchanged by the 0.15.0 flip of the
-\code{fit_sem()} defaults, and no run is mislabeled.
+settles on one line; when it settles on the line with the larger minimum,
+the engine's statistic is that line's LR, not the product-null LR. medfit
+fits each line as a linear model and keeps the smaller (see \code{\link[=mbco_sem]{mbco_sem()}}).
+\code{medfit_warning_engine_statistic_above_max} says only that a feasible,
+converged engine statistic exceeds the reference; it does not say which line
+the engine reached or whether it reached that line's minimum. A run that
+stopped short of the minimum on either line raises the same warning. Treat
+the warning as undiagnosed until both line minima are computed: if the
+engine's statistic equals the other line's minimum, the engine chose the
+wrong line and medfit's reference stands; otherwise it may be an optimizer
+failure in the engine. On the pinned design (15 seeds by 4 cells, 60 runs
+per engine) the warning fires in 18 of 60 lavaan runs (either start) and 13
+of 60 OpenMx default-start runs; in that design each of those runs was
+checked and equals the other line's minimum, and the smaller of lavaan's two
+runs equals medfit's reference in all 60. The counts are unchanged by the
+0.15.0 flip of the \code{fit_sem()} defaults, and no run is mislabeled.
 }
 \examples{
 \donttest{
