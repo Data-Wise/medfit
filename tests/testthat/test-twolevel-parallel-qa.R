@@ -110,3 +110,24 @@ test_that("a non-finite between entry of the 10 x 10 block is found in the betwe
   expect_false(td@between_identified)
   expect_identical(dim(td@vcov), c(5L, 5L))
 })
+
+test_that("the covariate-as-mediator refusal is decided per level; true serial and in-model covariates are unchanged", {
+  # W is regressed on X within, but at the between level it only predicts M1: a covariate there, named at that level
+  fit <- tl_cached("tlq_covariate_between", tl_fit(tlp_sim_w(), paste0(
+    "level: 1\n  M1 ~ X\n  W ~ X\n  Y ~ M1 + W + X\n",
+    "level: 2\n  M1 ~ X + W\n  Y ~ M1 + W + X\n"
+  )))
+  err <- tl_catch(extract_mediation(fit, "X", c("M1", "W"), "Y"), "medfit_error_twolevel_unsupported")
+  expect_s3_class(err, "medfit_error_twolevel_unsupported")
+  expect_match(conditionMessage(err), "(no 'W ~ X' row at the between level); it predicts the mediator 'M1'",
+               fixed = TRUE)
+  # A genuine serial row (M2 regressed on X too) keeps the serial message at either level
+  for (lev in c("within", "between")) {
+    err <- tl_catch(extract_mediation(tlp_fixture(paste0("serial_", lev)), "X", c("M1", "M2"), "Y"),
+                    "medfit_error_twolevel_unsupported")
+    expect_match(conditionMessage(err), sprintf("('M2 ~ M1' at the %s level): serial mediation", lev), fixed = TRUE)
+    expect_no_match(conditionMessage(err), "is not regressed on the treatment", fixed = TRUE)
+  }
+  # W in the model but not declared a mediator: no refusal
+  expect_true(S7::S7_inherits(tlp_extract(tlp_fixture("covariate_w")), TwoLevelParallelMediationData))
+})
