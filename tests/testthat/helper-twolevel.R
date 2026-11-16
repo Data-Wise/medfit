@@ -188,6 +188,52 @@ tl_td <- function(within_only = FALSE, ...) {
   do.call(TwoLevelMediationData, args)
 }
 
+# A hand-built, valid TwoLevelParallelMediationData with k parallel mediators M1..Mk (IG5 D1): no lavaan needed.
+# Alias rows per level are a_<M>, ..., b_<M>, ..., c_prime (SPEC-IG5 section 5). `...` overrides any argument.
+tlp_td <- function(k = 2L, within_only = FALSE, ...) {
+  meds <- paste0("M", seq_len(k))
+  a_w <- stats::setNames(0.3 + 0.1 * seq_len(k), meds)
+  b_w <- stats::setNames(0.6 - 0.1 * seq_len(k), meds)
+  a_b <- stats::setNames(0.6 + 0.1 * seq_len(k), meds)
+  b_b <- stats::setNames(1.2 - 0.2 * seq_len(k), meds)
+  row_names <- function(level) {
+    c(paste0("a_", meds, "_", level), paste0("b_", meds, "_", level), paste0("c_prime_", level))
+  }
+  nm_w <- row_names("within")
+  nm_b <- row_names("between")
+  est_w <- c(a_w, b_w, 0.3)
+  est_b <- c(a_b, b_b, -0.1)
+  nms <- if (within_only) nm_w else c(nm_w, nm_b)
+  est <- stats::setNames(if (within_only) est_w else c(est_w, est_b), nms)
+  vc <- diag(0.01 * seq_along(est), length(est))
+  dimnames(vc) <- list(nms, nms)
+  pt <- data.frame(
+    path = c(nm_w, nm_b), level = rep(c("within", "between"), each = 2L * k + 1L),
+    lhs = rep(c(meds, rep("Y", k + 1L)), 2L), op = "~", rhs = rep(c(rep("X", k), meds, "X"), 2L),
+    label = "", free = seq_len(2L * (2L * k + 1L)), est = unname(c(est_w, est_b)), se = 0.1,
+    stringsAsFactors = FALSE
+  )
+  na_k <- stats::setNames(rep(NA_real_, k), meds)
+  args <- list(
+    a_within = a_w, b_within = b_w, c_prime_within = 0.3,
+    a_between = if (within_only) na_k else a_b,
+    b_between = if (within_only) na_k else b_b,
+    c_prime_between = if (within_only) NA_real_ else -0.1,
+    estimates = est, vcov = vc, parameter_table = pt,
+    treatment = "X", mediators = meds, outcome = "Y", cluster = "id",
+    n_obs = 500L, n_clusters = 100L, cluster_sizes = rep(5L, 100L),
+    icc = stats::setNames(c(0.4, rep(0.3, k), 0.4), c("X", meds, "Y")), between_identified = !within_only,
+    admissible = TRUE, converged = TRUE, cross_level_equal = character(0),
+    fixed_paths = character(0), source = "lavaan", fixed_x = TRUE, information = "observed",
+    h1_information = "structured", se_type = "standard", estimator = "ML", missing = "listwise",
+    lavaan_version = "0.7.3", call = "lavaan::sem()", between_parameterization = "latent",
+    data = NULL, source_package = "lavaan"
+  )
+  overrides <- list(...)
+  args[names(overrides)] <- overrides
+  do.call(TwoLevelParallelMediationData, args)
+}
+
 # A classed condition caught from `expr`: the first condition whose class includes `class`.
 tl_catch <- function(expr, class) {
   caught <- NULL

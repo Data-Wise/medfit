@@ -270,6 +270,7 @@ reference:
       - JointMediationData
       - ClusterMediationData
       - TwoLevelMediationData
+      - TwoLevelParallelMediationData
       - BootstrapResult
       - SEMFit
 

@@ -784,3 +784,4 @@ Every exported class and function appears in a recipe, or the table says why not
 | `BootstrapResult` | 9 and 20 (returned by `bootstrap_mediation()`) |
 | `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | 22 (the simple model; the parallel and serial forms are in [Bounded FIML](model-fiml.html)) |
 | `TwoLevelMediationData` | 23 (an `extract_mediation()` on a two-level `lavaan` fit, and `twolevel_statistic()` for its bootstrap; see [Two-level mediation](model-twolevel.html)) |
+| `TwoLevelParallelMediationData` | none yet (the class is defined; extraction from a two-level `lavaan` fit with parallel mediators comes in a later release; see [Two-level mediation](model-twolevel.html)) |

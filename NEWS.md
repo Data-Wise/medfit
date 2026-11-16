@@ -2,6 +2,13 @@
 
 * Development version. No change in results since 0.18.0.
 
+## Added
+
+* Two-level parallel mediation (experimental): the exported class `TwoLevelParallelMediationData` holds k >= 2
+  parallel mediators on level-1 units, with within and between `a` and `b` paths per mediator, a validator and a
+  print method. No function returns it yet; extraction from a two-level `lavaan` fit follows in a later release. The
+  class is experimental and may change without the usual deprecation period.
+
 ## Documentation
 
 * `?compare_lr` now explains its known limit (#320). On the pinned design, every lavaan or OpenMx product-null LR

@@ -47,6 +47,15 @@
     "between_parameterization", "data", "source_package",
     # 0.18.0 S4: optional provenance; additive
     "source_version"
+  ),
+  # IG5 T1 (SPEC-IG5 D1): the parallel two-level class; named path vectors and `mediators` in place of `mediator`
+  TwoLevelParallelMediationData = c(
+    "a_within", "b_within", "c_prime_within", "a_between", "b_between", "c_prime_between",
+    "estimates", "vcov", "parameter_table", "treatment", "mediators", "outcome", "cluster",
+    "n_obs", "n_clusters", "cluster_sizes", "icc", "between_identified", "admissible",
+    "converged", "cross_level_equal", "fixed_paths", "source", "fixed_x", "information",
+    "h1_information", "se_type", "estimator", "missing", "lavaan_version", "call",
+    "between_parameterization", "data", "source_package", "source_version"
   )
 )
 
@@ -126,5 +135,19 @@ testthat::test_that("property rename planted defect fails the contract", {
   )
   testthat::expect_failure(
     .expect_dependent_properties(renamed, "a_path")
+  )
+})
+
+testthat::test_that("the TwoLevelParallelMediationData pin is the class's full property set (SPEC-IG5 D1)", {
+  # the shared helper checks only that pinned names exist, so a name dropped from the pin would go unnoticed
+  testthat::expect_setequal(
+    .dependent_new_classes$TwoLevelParallelMediationData,
+    names(TwoLevelParallelMediationData@properties)
+  )
+  # D1: the same properties as TwoLevelMediationData, with `mediators` in place of `mediator`
+  one <- names(TwoLevelMediationData@properties)
+  testthat::expect_identical(
+    names(TwoLevelParallelMediationData@properties),
+    replace(one, one == "mediator", "mediators")
   )
 })
