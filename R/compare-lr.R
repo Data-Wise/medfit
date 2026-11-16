@@ -287,7 +287,8 @@
 #' an external SEM engine and compares it with medfit's own [mbco_sem()]
 #' statistic. A general-purpose optimizer handed the nonlinear constraint
 #' \eqn{a b = 0}{a*b = 0} can drop it (OpenMx at a zero start) or stop at the
-#' wrong branch (lavaan), which reports a statistic above the true minimum.
+#' wrong branch (lavaan from either start, OpenMx from its default start),
+#' which reports a statistic above the true minimum.
 #' `compare_lr()` flags exactly those cases and nothing else.
 #'
 #' A warning is raised only on observed evidence, never because an LR is zero:
@@ -311,10 +312,21 @@
 #' or shared parameters, start/bound modifiers and constraints in the model are
 #' refused by name.
 #'
-#' Known limit (#320): the flip of the `fit_sem()` defaults in 0.15.0 does not change what the comparison finds. On the
-#' pinned design (15 seeds by 4 cells, 60 runs per engine), the lavaan run ends above medfit's reference in 18 of 60
-#' runs and the OpenMx run in 13 of 60, the same counts as under the 0.14.x defaults. Each is reported as
-#' `medfit_warning_engine_statistic_above_max`, and no row is mislabeled.
+#' Known limit (#320): an engine's statistic can land above medfit's reference
+#' because the null \eqn{a b = 0}{a*b = 0} is two lines, \eqn{a = 0}{a = 0} and
+#' \eqn{b = 0}{b = 0}, each with its own minimum. A general-purpose optimizer
+#' settles on one line and finds that line's minimum; when it settles on the
+#' line with the larger minimum, the engine's statistic is that line's LR, not
+#' the product-null LR. medfit fits each line as a linear model and keeps the
+#' smaller (see [mbco_sem()]), so a `disagree` verdict with
+#' `medfit_warning_engine_statistic_above_max` leaves medfit's reference
+#' standing. Read it as the engine having chosen the wrong line, not as an
+#' error in either fit. On the pinned design (15 seeds by 4 cells, 60 runs per
+#' engine) this happens in 18 of 60 lavaan runs (either start) and 13 of 60
+#' OpenMx default-start runs. Each of those runs equals the other line's
+#' minimum, and the smaller of lavaan's two runs equals medfit's
+#' reference in all 60. The counts are unchanged by the 0.15.0 flip of the
+#' `fit_sem()` defaults, and no run is mislabeled.
 #'
 #' @param object A [SEMFit] from [fit_sem()].
 #' @param paths Character vector: the labels of the regression paths whose
