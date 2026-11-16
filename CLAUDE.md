@@ -83,7 +83,7 @@ R/
 ├── extract-joint.R         # JointMediationData worker, stacked-OLS vcov
 ├── extract-lavaan.R        # lavaan extraction
 ├── extract-lmer.R          # ClusterMediationData from lme4 fits (term detection by value, KR)
-├── classes-twolevel.R, extract-lavaan-twolevel.R, twolevel-statistic.R   # TwoLevelMediationData (1-1-1) and its lavaan two-level adapter (keyed by free-parameter index, joint vcov sub-block)
+├── classes-twolevel.R, extract-lavaan-twolevel.R, twolevel-statistic.R   # TwoLevelMediationData (1-1-1), TwoLevelParallelMediationData (parallel mediators) and the lavaan two-level adapter (keyed by free-parameter index, joint vcov sub-block)
 ├── sem-*.R                 # native SEM engine internals: parse, expr, model, ml, optim, constraints, se, sandwich, fit, mbco (mbco_sem()), outcomes (the versioned outcome ledger, `fit@diagnostics$ledger`, its validators `.sem_valid_outcome()` and `.sem_valid_mbco_outcome()`, and the D2 literal zero/nonzero certificates, `.sem_literal_zero_certificate()`)
 ├── fit-sem.R               # fit_sem(), .fit_mediation_native()
 ├── extract-sem.R           # accessor seam (lavaan and native), extract_mediation() for SEMFit
@@ -212,7 +212,11 @@ MyClass <- S7::new_class(
 **TwoLevelMediationData** (X, M, Y on level-1 units, two-level lavaan fit, 1-1-1)
 - Paths `a_within`, `b_within`, `c_prime_within` and the `_between` three; per level NIE = a × b, NDE = c', TE, PM; `nie(level = "within" | "between" | "contrast" | "both")`, contrast descriptive, not a test; the contrast is `NA` (constrained) only when both `a` and `b` are equated across levels, found by label, index, `==` row or the numeric zero-difference-and-variance check (never correlation; `.twolevel_pair_equal()`)
 - Fixed slopes (not ab + sigma_ab), latent cluster means; `@vcov` is the joint 6 × 6 sub-block (cross-level covariance carried); within-only object (`medfit_between_unidentified`) when the treatment or mediator ICC < 0.01; refuses `standardized`, products, three-level, multigroup
-- Page `model-twolevel.qmd`, cookbook recipe 23; `twolevel_statistic()` (`R/twolevel-statistic.R`) builds the `bootstrap_mediation()` callback: the object for the parametric route, the lavaan fit plus roles for the cluster refit (`se`, `test`, `check.post` overridden only; inadmissible refits kept, so report the percentile interval, not the SD)
+- Page `model-twolevel.qmd`, cookbook recipes 23 and 24; `twolevel_statistic()` (`R/twolevel-statistic.R`) builds the `bootstrap_mediation()` callback: the object for the parametric route, the lavaan fit plus roles for the cluster refit (`se`, `test`, `check.post` overridden only; inadmissible refits kept, so report the percentile interval, not the SD)
+
+**TwoLevelParallelMediationData** (parallel mediators M_j in a two-level lavaan fit, experimental)
+- Vector paths `a_within`, `b_within`, `a_between`, `b_between` (one entry per mediator), scalar `c_prime_within`/`c_prime_between`; NIE per level = Σ a_j b_j, `nie(type = "specific")` for one per mediator; `@vcov` carries Cov(a_j, a_j') from the joint fit; serial mediators are refused
+- `twolevel_statistic()` builds its bootstrap callback too; page `model-twolevel.qmd` (several-mediator example), cookbook recipe 24
 
 **BootstrapResult**
 - Inference: `estimate`, `ci_lower`, `ci_upper`
@@ -358,7 +362,7 @@ tests/testthat/
 ├── helper-test-data.R, helper-joint.R   # Test data generators, joint oracles
 ├── test-classes*.R, test-validators.R   # S7 validation
 ├── test-extract-*.R                     # lm/glm, lavaan, serial, parallel, interaction, joint
-├── test-twolevel-*.R, helper-twolevel*.R, test-twolevel-docs.R   # two-level: class, extraction, degenerate cases, effects, SEs, likelihood oracle O8; docs guard (page chunks, quoted conditions, recipe 23)
+├── test-twolevel-*.R, helper-twolevel*.R, test-twolevel-docs.R   # two-level: class, extraction, degenerate cases, effects, SEs, likelihood oracle O8; docs guard (page chunks, quoted conditions, recipes 23 and 24)
 ├── test-cluster-211.R, test-cluster-boot.R, test-cluster-harness.R, helper-cluster.R   # cluster mediation: guards, oracles, KR, fit engine, cluster bootstrap, harness
 ├── test-refcard-coverage.R, test-cookbook-consistency.R   # refcard names every export and class; cookbook recipes, links and cluster data match methods.qmd
 ├── test-docs-release.R                  # release-docs gates (ADR-docs-release-pipeline): NEWS heading and stale wording, version claims, What's new, CITATION, status lines, FIML caveat, model-page template, navbar size, CSS contrast, exports documented; planted defect per gate
