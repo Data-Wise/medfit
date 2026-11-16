@@ -1,6 +1,6 @@
 # R6 book render against v0.18.0 — 2026-11-15 MST
 
-# medfit-book HEAD cb33c156 (git archive, committed tree only) rendered in a scratch copy with medfit v0.18.0 (6d226fb1) in an isolated library ahead of the book's renv library; medfit-book and Dropbox untouched (its renv.lock still pins 0.16.0, and render-check.sh syncs PDFs on success). quarto render exit 0 in 327 s, 0 chunk or render errors in the log; render-check.sh --no-render (environment check removed, since it requires the locked 0.16.0): OK, 14 chapter pages + index + 2 appendix pages, PDF 410 pages. Chapters compute their numbers live; hard-coded prose numbers and the scripts/verify-*.R checks were not run. R6 PASS.
+# medfit-book origin/draft a8226ff (git archive, committed tree only; its renv.lock pins medfit 0.18.0 at 6d226fb1) rendered in a scratch copy with medfit v0.18.0 (6d226fb1, the same build) in an isolated library ahead of the book's renv library; medfit-book and Dropbox untouched (render-check.sh syncs PDFs on success). quarto render exit 0 in 321 s, 0 chunk or render errors in the log; render-check.sh --no-render (environment check removed only because the shared renv library still holds 0.16.0): OK, 14 chapter pages + index + 2 appendix pages, PDF 410 pages. Chapters compute their numbers live; hard-coded prose numbers and the scripts/verify-*.R checks were not run. R6 PASS. (A first render of the stale local checkout cb33c156, 3 commits behind draft, also passed and is superseded.)
 
 # Issue #320 closed — 2026-11-15 MST
 
