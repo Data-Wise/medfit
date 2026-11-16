@@ -66,6 +66,7 @@
   S7::S4_register(JointMediationData)
   S7::S4_register(ClusterMediationData)
   S7::S4_register(TwoLevelMediationData)
+  S7::S4_register(TwoLevelParallelMediationData)
   S7::S4_register(BootstrapResult)
   S7::S4_register(SEMFit)
 

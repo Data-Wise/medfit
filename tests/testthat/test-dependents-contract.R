@@ -47,6 +47,15 @@
     "between_parameterization", "data", "source_package",
     # 0.18.0 S4: optional provenance; additive
     "source_version"
+  ),
+  # IG5 T1 (SPEC-IG5 D1): the parallel two-level class; named path vectors and `mediators` in place of `mediator`
+  TwoLevelParallelMediationData = c(
+    "a_within", "b_within", "c_prime_within", "a_between", "b_between", "c_prime_between",
+    "estimates", "vcov", "parameter_table", "treatment", "mediators", "outcome", "cluster",
+    "n_obs", "n_clusters", "cluster_sizes", "icc", "between_identified", "admissible",
+    "converged", "cross_level_equal", "fixed_paths", "source", "fixed_x", "information",
+    "h1_information", "se_type", "estimator", "missing", "lavaan_version", "call",
+    "between_parameterization", "data", "source_package", "source_version"
   )
 )
 
