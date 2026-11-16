@@ -38,7 +38,8 @@ Omit this argument when supplying \code{source_fit}.
 
 \item{mediation_data}{A mediation data object (required for parametric/plugin):
 \link{MediationData}, \link{SerialMediationData}, \link{ParallelMediationData},
-\link{InteractionMediationData}, or \link{JointMediationData}. \code{statistic_fn}
+\link{InteractionMediationData}, \link{JointMediationData}, \link{TwoLevelMediationData}
+or \link{TwoLevelParallelMediationData} (see \code{\link[=twolevel_statistic]{twolevel_statistic()}}). \code{statistic_fn}
 receives its named \verb{@estimates} vector, which includes path aliases (e.g.
 \code{a}, \code{d1}, \code{b}, \code{c_prime} for a serial chain; \code{a1}, \code{b1}, \code{a2}, \code{b2} for
 parallel mediators). For a \link{JointMediationData} the aliases alone cannot

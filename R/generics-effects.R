@@ -913,24 +913,31 @@ S7::method(decompose, TwoLevelMediationData) <- function(x, ...) {
 # one-mediator class; a specific contrast is NA when both its a and b are equated across levels (D5), the total
 # contrast only when every specific one is, and every contrast when the between level is unidentified.
 .twolevel_parallel_effect_vec <- function(x) {
+  p <- c(.twolevel_parallel_paths(x, "within"), .twolevel_parallel_paths(x, "between"))
+  .twolevel_parallel_effects(p, x@mediators, .twolevel_parallel_contrast_available(x))
+}
+
+# The effect kernel shared by the effect generics and twolevel_statistic(): every effect from a named vector of
+# path rows (`a_<M>_<level>`, `b_<M>_<level>`, `c_prime_<level>`). Rows are read with single brackets, so a row
+# the vector lacks gives NA. `avail` is .twolevel_parallel_contrast_available() for the object.
+.twolevel_parallel_effects <- function(p, mediators, avail) {
   per_level <- function(level) {
-    a <- S7::prop(x, paste0("a_", level))
-    b <- S7::prop(x, paste0("b_", level))
-    cp <- S7::prop(x, paste0("c_prime_", level))
+    a <- unname(p[paste0("a_", mediators, "_", level)])
+    b <- unname(p[paste0("b_", mediators, "_", level)])
+    cp <- unname(p[paste0("c_prime_", level)])
     nie <- sum(a * b)
     te <- nie + cp
     pm <- if (.twolevel_te_defined(te, nie, cp)) nie / te else NA_real_
-    stats::setNames(c(unname(a * b), nie, cp, te, pm),
-                    c(paste0("nie_", x@mediators, "_", level), paste0(c("nie", "nde", "te", "pm"), "_", level)))
+    stats::setNames(c(a * b, nie, cp, te, pm),
+                    c(paste0("nie_", mediators, "_", level), paste0(c("nie", "nde", "te", "pm"), "_", level)))
   }
   w <- per_level("within")
   b <- per_level("between")
-  avail <- .twolevel_parallel_contrast_available(x)
-  spec_w <- w[paste0("nie_", x@mediators, "_within")]
-  spec_b <- b[paste0("nie_", x@mediators, "_between")]
+  spec_w <- w[paste0("nie_", mediators, "_within")]
+  spec_b <- b[paste0("nie_", mediators, "_between")]
   contr <- stats::setNames(c(unname(spec_w - spec_b), w[["nie_within"]] - b[["nie_between"]]),
-                           c(paste0("nie_", x@mediators, "_contrast"), "nie_contrast"))
-  contr[!c(avail[x@mediators], avail[["total"]])] <- NA_real_
+                           c(paste0("nie_", mediators, "_contrast"), "nie_contrast"))
+  contr[!c(avail[mediators], avail[["total"]])] <- NA_real_
   c(w, b, contr)
 }
 
