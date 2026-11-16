@@ -10,11 +10,12 @@
 
 # medfit Package Development Roadmap
 
-> Current checkpoint (2026-10-31 MDT): **0.16.0 is released** on GitHub at
-> `v0.16.0` / main `c37c7ee8`; the website is live. Bounded FIML, its regression
-> and teaching/docs milestones, D4 covariance corrections and nonzero-product
-> sign-branch fitting are shipped. See the completed
-> [release plan](PLAN-0.16.0-GitHub-release-2026-10-30.md).
+> Current checkpoint (2026-11-15 MST): **0.18.0 is released** on GitHub at
+> `v0.18.0` / main `6d226fb1` (0.17.0 at `6b9a943c`, 2026-11-12); `dev` is
+> 0.18.0.9000. 0.17.0 shipped the lavaan two-level adapter and FIML for covariates,
+> parallel and serial mediators (numerically verified, not statistically admitted);
+> 0.18.0 the sem engine name, `sem_control()` and two-level provenance. See the
+> [Current board](#current-board) reconciliation of 2026-11-15.
 > This file's [Current board](#current-board) owns medfit priorities; older phase
 > schedules and the extensions plan are historical design references.
 > Future feature versions/dates are unassigned. CRAN remains held; hosted
@@ -23,7 +24,7 @@
 **Package**: medfit - Mediation model fitting and extraction infrastructure
 **Historical status snapshot (2026-10-26)**: ✅ MVP complete (Phases 1–6 + 8) → **v0.3.2 accepted + published on CRAN** (2026-07-23); **v0.14.1 current on `main`/GitHub** (2026-10-26, tag `v0.14.1`; 0.14.0 released 2026-10-24; 0.15.0 (the flip) in progress, see item 3d; v0.10.0 was 2026-10-14; GitHub-only, not CRAN-submitted by decision; 0.7.0 shipped the native SEM engine 2026-10-10, 0.8.0 to 0.10.0 added nonlinear constraints, mean structure with `fixed_x`, and the `:` product term with native four-way). Extensions A (parallel mediation), B (VanderWeele four-way interaction), and C (regmedint engine adapter) shipped in 0.4.0 (2026-08-23). 0.5.0 added (#62-#82): `mediation_demo` dataset, delta-method effect SEs for all classes, D8(b) `JointMediationData` + `joint_effects()`, Methods and Formulas article, and two behavior changes (serial `te()`/`pm()` sum every path, #81; `confint(parm = "paths")` alias lookup, #82). Ext D module 1 (2-1-1 cluster mediation: `ClusterMediationData`, `lmer` engine, Kenward-Roger, cluster bootstrap; #90-#92, #95, #100) shipped in **0.6.0** (2026-10-09, GitHub-only); the native SEM engine shipped in **0.7.0** (2026-10-10, GitHub-only; #110-#124). Next = the 0.15.0 flip (native defaults; plan `PLAN-0.15.0-native-defaults-flip-2026-10-26.md`, PR #347); latent means deferred to 1.0; CRAN deferred (#83); board in `EXTENSIONS-PLAN-2026-06-03.md`.
 **Historical timeline**: MVP shipped; extensions A ✅, B ✅, C ✅ (0.4.0), D8(b) ✅ (0.5.0, released 2026-09-25); native SEM ✅ (0.7.0, released 2026-10-10); C.1 blocked (CMAverse); D/E brainstormed
-**Reconciled**: 2026-10-31 (historical phase details retained)
+**Reconciled**: 2026-11-15 (historical phase details retained)
 
 > **Design references:** Phases 7/7b/7c and `EXTENSIONS-PLAN-2026-06-03.md`
 > retain historical designs. They do not override the current board below.
@@ -1869,6 +1870,15 @@ Integration is successful when:
 
 ## Current board
 
+**Reconciliation 2026-11-15 (supersedes the release rows below).** 0.17.0 (tag `v0.17.0` at `6b9a943c`,
+2026-11-12) and 0.18.0 (tag `v0.18.0` at `6d226fb1`, 2026-11-14) are released, GitHub-only; CRAN stays on hold
+(#83). Every row of the 2026-11-11 table marked merged-dev is now **released** in 0.17.0, still numerically verified,
+not statistically admitted where it says so; the two-level API is experimental. The 0.17.0 checklist is complete,
+its R6 book render done 2026-11-15 against v0.18.0. Closed since: Dependabot #381, #320 (docs only: #453, #454; a
+known external-engine limit) and #369. Open: issue #394 (S4 and S5, NO-GO as written). Not authorized and
+unscheduled: FIML statistical admission, the multilevel gaps IG1 to IG7, the FIML efficiency baseline, CRAN, and
+any 0.19.0 scope.
+
 The 0.16 release/test/docs milestones are complete. Do not reopen them from
 historical checklists. Current dispositions:
 
@@ -1888,9 +1898,9 @@ historical checklists. Current dispositions:
 | Native two-level fitter (S4) and latent mediators (S5) | NO-GO as written; not started | issue #394 |
 | Multilevel implementation gaps IG1 to IG7 (register, unblock conditions U1 to U5) | planned, nothing authorized | `PLAN-multilevel-implementation-gaps-2026-11-11.md` |
 | FIML statistical admission (stage 0 and the 11 variants) | unresolved; nothing submitted | `PLAN-FIML-statistical-admission-2026-11-01.md` |
-| 0.17.0 release | **not authorized**; checklist drafted | `PLAN-0.17.0-release-checklist-2026-11-11.md` (PR #420) |
+| 0.17.0 release | **released 2026-11-12** (tag `v0.17.0` at `6b9a943c`); 0.18.0 released 2026-11-14 | `PLAN-0.17.0-release-checklist-2026-11-11.md` (complete) |
 
-Open: Dependabot #381; issues #320 and #394 (to be retitled to S4 and S5).
+Open on 2026-11-11: Dependabot #381; issues #320 and #394. On 2026-11-15 only #394 (retitled to S4 and S5) is open.
 
 1. **Roadmap reconciliation merged via PR #377 (2026-10-31):** one current board and
    [clause-level issue dispositions](ISSUE-369-reconciliation-2026-10-31.md).
@@ -2036,6 +2046,10 @@ history; old dates or incomplete task references are not the current queue:
     corrections and public docs/Chapter 8 shipped. The obsolete defaults option
     was removed. See `PLAN-0.16.0-GitHub-release-2026-10-30.md` for final evidence;
     `SCOPE-0.16-FIML-2026-10-30.md` retains its bounded inclusion contract.
+3f. **0.17.0 released (2026-11-12):** the lavaan two-level (1-1-1) adapter, the contrast rule, FIML for covariates,
+    parallel and serial mediators (not admitted); see `PLAN-0.17.0-release-checklist-2026-11-11.md`.
+3g. **0.18.0 released (2026-11-14):** the sem engine name (`"native"` kept as an alias), `sem_control()`,
+    two-level `source_version`, renamed sem engine pages with redirects; see NEWS.
 4. **Historical CRAN trigger** — the old 0.5.0 trigger is superseded by the current explicit CRAN hold; no submission is authorized.
 5. **Ext C.1 (CMAverse)** — blocked; see `planning/EXTENSIONS-PLAN-2026-06-03.md`
 6. **Categorical variables (backlog, added 2026-10-17, none scheduled; each needs a named consumer and an independent oracle before it starts):**
