@@ -29,7 +29,9 @@
 #'   (default) or one specific indirect effect per mediator.
 #'
 #' @return A numeric scalar of class `mediation_effect` carrying a `type`
-#'   attribute. For intervals use [confint()] or [bootstrap_mediation()].
+#'   attribute (a named vector, one value per mediator, for
+#'   `TwoLevelParallelMediationData` with `type = "specific"`). For intervals
+#'   use [confint()] or [bootstrap_mediation()].
 #'
 #' @details
 #' The effects are for a unit contrast of the treatment. By class:
@@ -47,12 +49,12 @@
 #'     (\theta_2 + \theta_3) \beta_1}{NIE = INTmed + PIE = (t2 + t3) * b1}.
 #'   \item `JointMediationData`: the joint NIE through all the mediators,
 #'     \eqn{\sum_i (\theta_{2i} + \theta_{3i}) \beta^*_{1i}}{sum((t2i + t3i) * b1i*)}.
-
 #'   \item `TwoLevelParallelMediationData` (experimental): per level, the
 #'     specific effects \eqn{a_j b_j}{a_j * b_j} and the total
 #'     \eqn{\sum_j a_j b_j}{sum(a_j * b_j)}; the contrast is within minus
-#'     between, `NA` for a mediator whose `a` and `b` are both equated across
-#'     levels.
+#'     between and descriptive, `NA` for a mediator whose `a` and `b` are both
+#'     equated across levels; the total contrast is `NA` only when every
+#'     mediator's contrast is.
 #' }
 #' The "Methods and Formulas" article on the package website gives the full
 #' formulas.

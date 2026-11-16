@@ -24,7 +24,9 @@ and \code{type = c("total", "specific")} selects the total indirect effect
 }
 \value{
 A numeric scalar of class \code{mediation_effect} carrying a \code{type}
-attribute. For intervals use \code{\link[=confint]{confint()}} or \code{\link[=bootstrap_mediation]{bootstrap_mediation()}}.
+attribute (a named vector, one value per mediator, for
+\code{TwoLevelParallelMediationData} with \code{type = "specific"}). For intervals
+use \code{\link[=confint]{confint()}} or \code{\link[=bootstrap_mediation]{bootstrap_mediation()}}.
 }
 \description{
 Extract the natural indirect effect from a mediation analysis result.
@@ -50,8 +52,9 @@ that skip a mediator, such as X -> M2 -> Y), which equals
 \item \code{TwoLevelParallelMediationData} (experimental): per level, the
 specific effects \eqn{a_j b_j}{a_j * b_j} and the total
 \eqn{\sum_j a_j b_j}{sum(a_j * b_j)}; the contrast is within minus
-between, \code{NA} for a mediator whose \code{a} and \code{b} are both equated across
-levels.
+between and descriptive, \code{NA} for a mediator whose \code{a} and \code{b} are both
+equated across levels; the total contrast is \code{NA} only when every
+mediator's contrast is.
 }
 The "Methods and Formulas" article on the package website gives the full
 formulas.

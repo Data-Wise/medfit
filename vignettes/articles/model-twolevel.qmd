@@ -374,10 +374,56 @@ c(err_within_only, err_constrained)
 Passing an object to `bootstrap_mediation()` and having it choose the cluster route by itself is not
 available; the two calls above are the supported ones.
 
+## Several parallel mediators
+
+With two or more mediators, none regressed on another, `extract_mediation()` returns the experimental
+`TwoLevelParallelMediationData`. Each mediator has its own `a` and `b` path at each level, and the effects
+come per level as for one mediator. `nie()` adds `type`: `"total"` (the default) is the sum of the specific
+effects, and `"specific"` gives one value per mediator. The contrast is again within minus between and
+descriptive. A mediator's contrast is `NA` only when both its `a` and its `b` are equated across levels, and
+the total contrast only when that holds for every mediator. The formulas and gradients are in the
+[Methods and Formulas](methods.html#several-parallel-mediators-experimental) article.
+
+```{r}
+#| label: parallel
+#| eval: !expr has_lavaan
+set.seed(2027)
+id_k <- rep(seq_len(100), each = 5)
+xb_k <- rnorm(100)[id_k]
+xw_k <- rnorm(500)
+m1 <- 0.4 * xw_k + 0.7 * xb_k + 0.5 * rnorm(100)[id_k] + rnorm(500)
+m2 <- 0.3 * xw_k + 0.5 * xb_k + 0.5 * rnorm(100)[id_k] + rnorm(500)
+y_k <- 0.3 * xw_k + 0.2 * xb_k + 0.5 * (m1 - ave(m1, id_k)) + 0.9 * ave(m1, id_k) +
+  0.4 * (m2 - ave(m2, id_k)) + 0.6 * ave(m2, id_k) + 0.5 * rnorm(100)[id_k] + rnorm(500)
+d_k <- data.frame(id = id_k, X = xb_k + xw_k, M1 = m1, M2 = m2, Y = y_k)
+model_k <- "
+  level: 1
+    M1 ~ X
+    M2 ~ X
+    Y ~ M1 + M2 + X
+  level: 2
+    M1 ~ X
+    M2 ~ X
+    Y ~ M1 + M2 + X
+"
+fit_k <- lavaan::sem(model_k, data = d_k, cluster = "id")
+tk <- extract_mediation(fit_k, treatment = "X", mediator = c("M1", "M2"), outcome = "Y")
+nie(tk, level = "both")
+nie(tk, type = "specific")
+nie(tk, level = "contrast", type = "specific")
+decompose(tk)
+tidy(tk, type = "effects")
+```
+
+`tidy()` lists each specific effect, the total, NDE, TE and PM at each level, then the specific and total
+contrasts. The standard errors use the joint covariance of all the paths, so the covariance between two
+mediators' paths enters the standard error of the total. `twolevel_statistic()` takes the one-mediator class
+only, so these effects have no bootstrap route yet.
+
 ## Limits
 
 - **One mediator, linear paths, observed variables.** Two or more mediators return the experimental
-  `TwoLevelParallelMediationData` instead; a mediator regressed on another mediator (serial) stops extraction with
+  `TwoLevelParallelMediationData` instead ([Several parallel mediators](#several-parallel-mediators)); a mediator regressed on another mediator (serial) stops extraction with
   class `medfit_error_twolevel_unsupported`. Latent variables and non-Gaussian outcomes are not part of this
   adapter.
 - **No `standardized = TRUE`.** A standardized two-level path mixes the within and the between variances;

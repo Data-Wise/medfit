@@ -56,6 +56,7 @@ is no longer a natural indirect effect on the outcome scale.
 | several mediators, $X \times M_i$ in the outcome | `JointMediationData` | joint NIE through all mediators |
 | treatment assigned to whole clusters, `lmer` fits | `ClusterMediationData` | $a \, b_B$, split into own $a \, b_W$ and spillover $a (b_B - b_W)$ |
 | $X$, $M$, $Y$ on level-1 units, two-level `lavaan` fit | `TwoLevelMediationData` | $a_w b_w$ within and $a_b b_b$ between; the contrast is descriptive |
+| the same with several parallel mediators (experimental) | `TwoLevelParallelMediationData` | $\sum_j a_{jw} b_{jw}$ within and $\sum_j a_{jb} b_{jb}$ between |
 
 `extract_mediation()` chooses the class from the models; `fit_mediation()`
 fits single-mediator models and returns the first two, or, with
@@ -440,6 +441,29 @@ cluster drawn twice counting as two clusters. Refits that are inadmissible are k
 keeps its own; a refit that fails or leaves the between level unidentified is excluded and counted. Because
 boundary refits give the between effects and the contrast heavy tails, report the percentile interval; the
 plain standard deviation of the draws is not a standard error for them.
+
+### Several parallel mediators (experimental)
+
+With mediators $M_1, \dots, M_k$ ($k \ge 2$), none regressed on another, each level $\ell$ has
+
+$$
+M_j = a_{j\ell} X + e_{M_j}, \qquad Y = \sum_j b_{j\ell} M_j + c'_\ell X + e_Y ,
+$$
+
+and `TwoLevelParallelMediationData` reports, per level, the specific indirect effects
+$\text{NIE}_{j\ell} = a_{j\ell} b_{j\ell}$, the total $\text{NIE}_\ell = \sum_j a_{j\ell} b_{j\ell}$, and
+$\text{NDE}_\ell$, $\text{TE}_\ell = \text{NIE}_\ell + c'_\ell$ and $\text{PM}_\ell = \text{NIE}_\ell / \text{TE}_\ell$
+as above, with the total NIE in place of $a_\ell b_\ell$. The contrasts are within minus between:
+$\text{NIE}_{jw} - \text{NIE}_{jb}$ for each mediator and $\text{NIE}_w - \text{NIE}_b$ for the total. They are
+descriptive, as for one mediator. Residual covariances among the mediators enter no effect.
+
+$\hat V$ is the $2(2k + 1)$-square sub-block of lavaan's joint covariance over the within then the between
+$(a_1, \dots, a_k, b_1, \dots, b_k, c')$, so the covariances across mediators and across levels are both carried.
+The gradient of $\text{NIE}_{j\ell}$ is $b_{j\ell}$ on $a_{j\ell}$, $a_{j\ell}$ on $b_{j\ell}$ and zero elsewhere;
+the total's is the sum of the specific gradients at that level; a contrast's is the within gradient minus the
+between gradient; $\text{TE}_\ell$ and $\text{PM}_\ell$ follow from the total as in the table above. A mediator's
+contrast is `NA` when both its $a_j$ and its $b_j$ are equated across levels (found as for one mediator); the
+total contrast is `NA` only when every mediator's contrast is, because otherwise it is an estimate.
 
 ### Caveats
 
