@@ -1,6 +1,11 @@
 # medfit 0.18.0.9000
 
-* Development version. No user-visible changes since 0.18.0.
+* Development version. No change in results since 0.18.0.
+
+## Documentation
+
+* `?compare_lr` now explains its known limit (#320). A lavaan or OpenMx product-null LR above medfit's reference is
+  the minimum of the other line of the null (`a = 0` instead of `b = 0`, or the reverse). medfit's reference stands.
 
 # medfit 0.18.0
 
