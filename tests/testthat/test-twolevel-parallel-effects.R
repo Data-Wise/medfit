@@ -242,3 +242,22 @@ test_that("k = 1 TwoLevelMediationData results are bit-identical to the pre-T3 s
     expect_identical(now(name), snap[[name]], label = name)
   }
 })
+
+test_that("summary() of a within-only object warns as k = 1 does (QA loop 1)", {
+  warn_classes <- function(expr) {
+    cls <- character()
+    withCallingHandlers(expr, warning = function(w) {
+      cls <<- c(cls, class(w)[1])
+      invokeRestart("muffleWarning")
+    })
+    cls
+  }
+  k1 <- warn_classes(summary(tl_td(within_only = TRUE)))
+  td <- suppressWarnings(tlp_extract(tlp_fixture("low_icc_m2")))
+  expect_false(td@between_identified)
+  k2 <- warn_classes(summary(td))
+  expect_identical(k2, k1)
+  # the NA rows are still there: between and contrast effects are NA
+  s <- summary(td)
+  expect_true(all(is.na(s$effects[c("nie_between", "nie_contrast"), "estimate"])))
+})

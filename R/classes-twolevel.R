@@ -816,8 +816,8 @@ S7::method(print, TwoLevelParallelMediationData) <- function(x, ...) {
 #' @noRd
 S7::method(summary, TwoLevelParallelMediationData) <- function(object, level = 0.95, ...) {
   checkmate::assert_number(level, lower = 0, upper = 1, .var.name = "level")
+  # Silent, as the k = 1 summary: NA rows are shown and flagged in the printout, not signaled
   est <- .twolevel_parallel_effect_vec(object)
-  .twolevel_parallel_signal_na(object, names(est))
   se <- .effect_se_or_na(object, names(est))
   z <- stats::qnorm(1 - (1 - level) / 2)
   effects <- data.frame(estimate = unname(est), std_error = unname(se),
