@@ -1,3 +1,7 @@
+# Issue #320 closed — 2026-11-15 MST
+
+# Triage: every compare_lr() run above medfit's reference equals the minimum of the other line of the product null (a = 0 vs b = 0); lavaan from either start (18/60), OpenMx from its default start (13/60); the smaller of lavaan's two runs equals the reference in 60/60; control settings cannot fix it. Docs only: ?compare_lr known limit and NEWS (#453, squash f6420544 on dev), QC and 0.15 defaults articles (#454, merge pending green CI). #320 closed as completed; no R/ code or result change. On 0.18.0.9000 dev.
+
 # Issue #369 closed — 2026-11-15 MST
 
 # Reconciliation executed per planning/PLAN-369-reconciliation-2026-11-15.md: ADR D-14 (D18, SLSQP permanent option, never default) and Part B note, imported-plan banner, 2026-11-15 closure section, #369 dropped from live lists (bd2d9c7b); #369 closed as completed; #276 "Sync the plan (D18)" ticked; mbco-lrt decisions log D18/D20 marked decided (mbco-lrt 3b9c2d9 on draft). Docs and issue administration only; no R/ or test change. On 0.18.0.9000 dev.
