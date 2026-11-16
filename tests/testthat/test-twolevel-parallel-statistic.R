@@ -147,6 +147,47 @@ test_that("bootstrap_mediation() runs the cluster refit on the fixture", {
   expect_true(all(is.finite(c(res@ci_lower, res@ci_upper))))
 })
 
+test_that("the refit callback refits on the resampled clusters: it equals a fresh lavaan refit's := values", {
+  skip_on_cran()
+  skip_if_not_installed("lavaan")
+  # Oracle: lavaan's own defined parameters from a fresh fit of the same model on the resampled data, with the
+  # refit's three overrides only; the object's effect code is not used.
+  defs <- paste0(
+    "  ind1w := a1*b1\n  ind2w := a2*b2\n  niew := ind1w + ind2w\n  tew := niew + cp\n",
+    "  ind1b := a1B*b1B\n  ind2b := a2B*b2B\n  nieb := ind1b + ind2b\n  teb := nieb + cpB\n",
+    "  niec := niew - nieb\n  ind2c := ind2w - ind2b\n"
+  )
+  d <- tlp_sim()
+  set.seed(42)
+  ids <- sample(unique(d$id), replace = TRUE)
+  db <- do.call(rbind, lapply(seq_along(ids), function(i) {
+    z <- d[d$id == ids[[i]], ]
+    z$id <- i
+    z
+  }))
+  fresh <- lavaan::sem(paste0(tlp_model(), defs), data = db, cluster = "id", se = "none", test = "none",
+                       check.post = FALSE)
+  pe <- lavaan::parameterEstimates(fresh, se = FALSE)
+  oracle <- stats::setNames(pe$est, pe$lhs)[pe$op == ":="]
+  fit <- tlp_fixture("base")
+  td <- tlp_extract(fit)
+  cells <- list(
+    list("nie", "within", NULL, "niew"), list("nie", "between", NULL, "nieb"), list("nie", "contrast", NULL, "niec"),
+    list("nie_j", "within", "M1", "ind1w"), list("nie_j", "between", "M2", "ind2b"),
+    list("nie_j", "contrast", "M2", "ind2c"), list("nde", "between", NULL, "cpB"), list("te", "within", NULL, "tew"),
+    list("te", "between", NULL, "teb")
+  )
+  oracle[["cpB"]] <- pe$est[pe$label == "cpB" & pe$op == "~"]
+  for (cl in cells) {
+    stat <- twolevel_statistic(fit, cl[[1]], treatment = "X", mediator = c("M1", "M2"), outcome = "Y",
+                               level = cl[[2]], specific = cl[[3]])
+    got <- stat(db)
+    expect_equal(got, oracle[[cl[[4]]]], tolerance = 1e-6, info = cl[[4]])
+    # a resample is a different data set: the value moves away from the estimate on the fit's own data
+    expect_gt(abs(got - stat(d)), 1e-4)
+  }
+})
+
 test_that("a refit whose mediator loses its between level is a failed replicate (D2 over every mediator)", {
   skip_on_cran()
   skip_if_not_installed("lavaan")
