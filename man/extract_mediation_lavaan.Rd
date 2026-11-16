@@ -114,8 +114,10 @@ and \code{outcome} arguments.
 \section{Limits}{
 
 A two-level fit (\code{lavaan::sem(..., cluster = )} with \verb{level:} blocks) returns a \link{TwoLevelMediationData}
-object with the a, b and c' paths at the within and the between level (one mediator, linear paths, no
-products, \code{standardized = FALSE}); see that class for the identification rules. Fits with more than two
+object with the a, b and c' paths at the within and the between level (linear paths, no products,
+\code{standardized = FALSE}); see that class for the identification rules. Two or more mediators return a
+\link{TwoLevelParallelMediationData} object (experimental); serial mediators, a covariate passed as a mediator,
+and duplicate or overlapping roles are refused with \code{medfit_error_twolevel_unsupported}. Fits with more than two
 levels are refused with the classed error \code{medfit_error_lavaan_multilevel}; extraction would otherwise
 read the within level only.
 Multigroup fits (\verb{group =}) are refused with \code{medfit_error_lavaan_multigroup}; extraction would otherwise

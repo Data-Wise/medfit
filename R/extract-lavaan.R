@@ -115,8 +115,10 @@
 #'
 #' @section Limits:
 #' A two-level fit (`lavaan::sem(..., cluster = )` with `level:` blocks) returns a [TwoLevelMediationData]
-#' object with the a, b and c' paths at the within and the between level (one mediator, linear paths, no
-#' products, `standardized = FALSE`); see that class for the identification rules. Fits with more than two
+#' object with the a, b and c' paths at the within and the between level (linear paths, no products,
+#' `standardized = FALSE`); see that class for the identification rules. Two or more mediators return a
+#' [TwoLevelParallelMediationData] object (experimental); serial mediators, a covariate passed as a mediator,
+#' and duplicate or overlapping roles are refused with `medfit_error_twolevel_unsupported`. Fits with more than two
 #' levels are refused with the classed error `medfit_error_lavaan_multilevel`; extraction would otherwise
 #' read the within level only.
 #' Multigroup fits (`group =`) are refused with `medfit_error_lavaan_multigroup`; extraction would otherwise

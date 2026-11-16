@@ -6,8 +6,14 @@
 
 * Two-level parallel mediation (experimental): the exported class `TwoLevelParallelMediationData` holds k >= 2
   parallel mediators on level-1 units, with within and between `a` and `b` paths per mediator, a validator and a
-  print method. No function returns it yet; extraction from a two-level `lavaan` fit follows in a later release. The
-  class is experimental and may change without the usual deprecation period.
+  print method. `extract_mediation()` on a two-level `lavaan` fit returns it when two or more mediators are given;
+  one mediator still returns `TwoLevelMediationData`, unchanged. The between level is kept only when the treatment
+  and every mediator have an ICC of at least 0.01; otherwise the object is within-only and the warning names each
+  variable below the threshold. A mediator regressed on another mediator (serial), a covariate passed as a mediator,
+  and a mediator listed twice or also as the treatment or outcome are refused with
+  `medfit_error_twolevel_unsupported`. So far the object has only a print method; effects and standard errors
+  (`nie()`, `tidy()` and the rest) follow. The class is experimental and may change without the usual deprecation
+  period.
 
 ## Documentation
 

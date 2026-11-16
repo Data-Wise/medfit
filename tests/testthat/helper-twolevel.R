@@ -234,6 +234,106 @@ tlp_td <- function(k = 2L, within_only = FALSE, ...) {
   do.call(TwoLevelParallelMediationData, args)
 }
 
+# --- Two parallel mediators (IG5 T2) ---
+
+# Data from a two-level DGP with two parallel mediators M1, M2 (distinct paths at each level, correlated
+# mediator residuals at both levels). `m2_between = FALSE` removes the between part of M2 (its ICC near 0).
+tlp_sim <- function(J = 100L, n = 5L, seed = 20261115L, m2_between = TRUE) {
+  set.seed(seed)
+  id <- rep(seq_len(J), each = n)
+  xb <- stats::rnorm(J)[id]
+  xw <- stats::rnorm(J * n)
+  ub <- stats::rnorm(J)[id]
+  uw <- stats::rnorm(J * n)
+  m1 <- 0.4 * xw + 0.6 * xb + 0.5 * (0.6 * ub + 0.8 * stats::rnorm(J)[id]) + 0.6 * uw + 0.8 * stats::rnorm(J * n)
+  m2 <- 0.2 * xw + 0.3 * xb + 0.5 * ub + 0.6 * uw + 0.8 * stats::rnorm(J * n)
+  if (!m2_between) m2 <- 0.2 * xw + 0.6 * uw + 0.8 * stats::rnorm(J * n)
+  m1c <- m1 - stats::ave(m1, id)
+  m2c <- m2 - stats::ave(m2, id)
+  y <- 0.3 * xw + 0.2 * xb + 0.5 * m1c + 0.25 * m2c + 0.9 * stats::ave(m1, id) + 0.4 * stats::ave(m2, id) +
+    0.5 * stats::rnorm(J)[id] + stats::rnorm(J * n)
+  data.frame(id = id, X = xw + xb, M1 = m1, M2 = m2, Y = y)
+}
+
+# tlp_sim() plus a covariate W and a third mediator M3 (both with a between part).
+tlp_sim_w <- function() {
+  d <- tlp_sim()
+  set.seed(20261116L)
+  J <- max(d$id)
+  d$W <- stats::rnorm(J)[d$id] + stats::rnorm(nrow(d))
+  d$M3 <- 0.3 * d$X + stats::rnorm(J)[d$id] + stats::rnorm(nrow(d))
+  d$Y <- d$Y + 0.3 * d$M3
+  d
+}
+
+# The two-mediator model: unique labels at both levels; `extra` is appended (constraints, serial rows).
+tlp_model <- function(within_a1 = "a1*X", between_a1 = "a1B*X", within_y = "b1*M1 + b2*M2 + cp*X",
+                      between_y = "b1B*M1 + b2B*M2 + cpB*X", extra = "") {
+  paste0(
+    "level: 1\n  M1 ~ ", within_a1, "\n  M2 ~ a2*X\n  Y ~ ", within_y, "\n  M1 ~~ M2\n",
+    "level: 2\n  M1 ~ ", between_a1, "\n  M2 ~ a2B*X\n  Y ~ ", between_y, "\n  M1 ~~ M2\n", extra
+  )
+}
+
+tlp_fixture <- function(name = "base") {
+  tl_cached(paste0("tlp_fit_", name), {
+    switch(name,
+      base = tl_fit(tlp_sim(), tlp_model()),
+      unlabeled = tl_fit(tlp_sim(), paste0(
+        "level: 1\n  M1 ~ X\n  M2 ~ X\n  Y ~ M1 + M2 + X\n  M1 ~~ M2\n",
+        "level: 2\n  M1 ~ X\n  M2 ~ X\n  Y ~ M1 + M2 + X\n  M1 ~~ M2\n"
+      )),
+      # M1's a shared by label across levels (D5: a_M1 equated, b_M1 not)
+      shared_a1 = tl_fit(tlp_sim(), tlp_model(between_a1 = "a1*X")),
+      # M1's a and b both shared by label: the M1 specific contrast is constrained, M2's is not
+      shared_ab1 = tl_fit(tlp_sim(), tlp_model(between_a1 = "a1*X", between_y = "b1*M1 + b2B*M2 + cpB*X")),
+      # M1's a equated by a `==` row
+      equal_row_a1 = tl_fit(tlp_sim(), tlp_model(extra = "  a1 == a1B\n")),
+      # M1's b equated algebraically (lavaan keeps two parameters): the numeric detector only
+      nl_b1 = tl_fit(tlp_sim(), tlp_model(extra = "  b1^2 - b1B^2 == 0\n")),
+      # M2 has no between part (ICC near 0): a real within-only fit (D2)
+      low_icc_m2 = tl_fit(tlp_sim(m2_between = FALSE), tlp_model()),
+      serial_within = tl_fit(tlp_sim(), sub("M2 ~ a2*X", "M2 ~ a2*X + d*M1", tlp_model(), fixed = TRUE)),
+      serial_between = tl_fit(tlp_sim(), sub("M2 ~ a2B*X", "M2 ~ a2B*X + dB*M1", tlp_model(), fixed = TRUE)),
+      # a covariate W predicts M1 at both levels (W is not regressed on X): W is not a mediator
+      covariate_w = tl_fit(tlp_sim_w(), tlp_model(within_a1 = "a1*X + W", between_a1 = "a1B*X + W")),
+      # M2 ~ M1 with a third mediator M3; extracted with the mediators M1 and M3 (M2 undeclared)
+      undeclared_m2 = tl_fit(tlp_sim_w(), paste0(
+        "level: 1\n  M1 ~ X\n  M2 ~ X + M1\n  M3 ~ X\n  Y ~ M1 + M2 + M3 + X\n",
+        "level: 2\n  M1 ~ X\n  M2 ~ X + M1\n  M3 ~ X\n  Y ~ M1 + M2 + M3 + X\n"
+      )),
+      stop("unknown fixture: ", name)
+    )
+  })
+}
+
+tlp_extract <- function(fit, mediator = c("M1", "M2"), ...) {
+  suppressWarnings(extract_mediation(fit, treatment = "X", mediator = mediator, outcome = "Y", ...))
+}
+
+# lavaan's own estimates and joint covariance for the ten path rows of the base fixture, read by LABEL (not by
+# the adapter's free-index key): the independent oracle for paths and `@vcov`.
+tlp_lavaan_rows <- function() {
+  c(a_M1_within = "a1", a_M2_within = "a2", b_M1_within = "b1", b_M2_within = "b2", c_prime_within = "cp",
+    a_M1_between = "a1B", a_M2_between = "a2B", b_M1_between = "b1B", b_M2_between = "b2B",
+    c_prime_between = "cpB")
+}
+
+# Boolean: the object's paths, alias rows and `@vcov` equal lavaan's, read by label. Asserted with
+# expect_true() normally and expect_false() under a planted defect.
+tlp_oracle_ok <- function(td, fit, tol = 1e-12) {
+  rows <- tlp_lavaan_rows()
+  est <- lavaan::coef(fit)[rows]
+  V <- lavaan::vcov(fit)[rows, rows]
+  vec_ok <- function(x, nm) isTRUE(all.equal(unname(x), unname(est[rows[nm]]), tolerance = tol))
+  isTRUE(all.equal(unname(td@estimates[names(rows)]), unname(est), tolerance = tol)) &&
+    isTRUE(all.equal(unname(td@vcov[names(rows), names(rows)]), unname(V), tolerance = tol)) &&
+    vec_ok(td@a_within, c("a_M1_within", "a_M2_within")) && vec_ok(td@b_within, c("b_M1_within", "b_M2_within")) &&
+    vec_ok(td@a_between, c("a_M1_between", "a_M2_between")) &&
+    vec_ok(td@b_between, c("b_M1_between", "b_M2_between")) &&
+    vec_ok(td@c_prime_within, "c_prime_within") && vec_ok(td@c_prime_between, "c_prime_between")
+}
+
 # A classed condition caught from `expr`: the first condition whose class includes `class`.
 tl_catch <- function(expr, class) {
   caught <- NULL

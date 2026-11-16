@@ -461,7 +461,7 @@ plain standard deviation of the draws is not a standard error for them.
 
 ### What is not supported
 
-Random slopes, latent or non-Gaussian variables, more than one mediator, product terms, standardized
+Random slopes, latent or non-Gaussian variables, serial mediators, product terms, standardized
 effects, three-level and multigroup fits, and manifest cluster means.
 
 ## Covariance of the estimates
