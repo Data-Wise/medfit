@@ -99,6 +99,24 @@ test_that("T1: datasets are reproducible, leave the session RNG alone, and diffe
   expect_identical(as.integer(table(d1$id)), fc_sizes(cell$J, cell$n, cell$balance))
 })
 
+test_that("T1: simulated data recover the section 4 ICC_X and the within and between a paths (ANOVA estimator)", {
+  # independent of fc_implied()/fc_icc(): method-of-moments within and between covariances from the raw data, so a
+  # generator that swaps the level-1 and level-2 draws (ICC_X .8 instead of .2) or mis-assigns cluster ids fails
+  cell <- data.frame(cell_id = 990L, J = 1000, n = 20, icc_x = .20, balance = "unequal", nie_b = .18)
+  d <- fc_simulate(cell, 1L)
+  nj <- as.numeric(table(d$id))
+  expect_identical(as.integer(nj), fc_sizes(1000, 20, "unequal")) # the unequal sizes reach the data
+  big_n <- nrow(d)
+  n0 <- (big_n - sum(nj^2) / big_n) / (length(nj) - 1)
+  z <- as.matrix(d[, c("X", "M")])
+  gm <- rowsum(z, d$id) / nj
+  sw <- crossprod(z - gm[d$id, ]) / (big_n - length(nj))
+  sb <- (crossprod(sweep(gm, 2, colMeans(z)) * sqrt(nj)) / (length(nj) - 1) - sw) / n0
+  expect_lt(abs(sb[1, 1] / (sb[1, 1] + sw[1, 1]) - .20), .03)
+  expect_lt(abs(sw[1, 2] / sw[1, 1] - .5), .03)
+  expect_lt(abs(sb[1, 2] / sb[1, 1] - .3), .1)
+})
+
 test_that("T1: the O8 likelihood oracle agrees with lavaan's logLik on three harness datasets", {
   g <- fc_grid()
   pick <- list(
