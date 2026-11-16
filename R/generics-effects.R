@@ -23,7 +23,10 @@
 #'   chain-specific (default) or the total indirect effect (see Details). For a
 #'   `TwoLevelMediationData`, `level = c("within", "between", "contrast", "both")`
 #'   selects the level (within is the default; the contrast, within minus
-#'   between, is descriptive and exists for `nie()` only).
+#'   between, is descriptive and exists for `nie()` only). For a
+#'   `TwoLevelParallelMediationData`, `level` as for `TwoLevelMediationData`
+#'   and `type = c("total", "specific")` selects the total indirect effect
+#'   (default) or one specific indirect effect per mediator.
 #'
 #' @return A numeric scalar of class `mediation_effect` carrying a `type`
 #'   attribute. For intervals use [confint()] or [bootstrap_mediation()].
@@ -44,6 +47,12 @@
 #'     (\theta_2 + \theta_3) \beta_1}{NIE = INTmed + PIE = (t2 + t3) * b1}.
 #'   \item `JointMediationData`: the joint NIE through all the mediators,
 #'     \eqn{\sum_i (\theta_{2i} + \theta_{3i}) \beta^*_{1i}}{sum((t2i + t3i) * b1i*)}.
+
+#'   \item `TwoLevelParallelMediationData` (experimental): per level, the
+#'     specific effects \eqn{a_j b_j}{a_j * b_j} and the total
+#'     \eqn{\sum_j a_j b_j}{sum(a_j * b_j)}; the contrast is within minus
+#'     between, `NA` for a mediator whose `a` and `b` are both equated across
+#'     levels.
 #' }
 #' The "Methods and Formulas" article on the package website gives the full
 #' formulas.
@@ -886,6 +895,159 @@ S7::method(decompose, TwoLevelMediationData) <- function(x, ...) {
   out
 }
 
+
+# --- Methods for TwoLevelParallelMediationData ---
+
+# The effect keys in canonical order: per level (within, then between) each specific NIE (nie_<M>_<level>),
+# the total nie, nde, te, pm; then each specific contrast (nie_<M>_contrast) and the total contrast.
+.twolevel_parallel_effect_keys <- function(x) {
+  per_level <- function(level) {
+    c(paste0("nie_", x@mediators, "_", level), paste0(c("nie", "nde", "te", "pm"), "_", level))
+  }
+  c(per_level("within"), per_level("between"), paste0("nie_", x@mediators, "_contrast"), "nie_contrast")
+}
+
+# All effects as a named vector, with no condition signaled. The contrast is within minus between, as in the
+# one-mediator class; a specific contrast is NA when both its a and b are equated across levels (D5), the total
+# contrast only when every specific one is, and every contrast when the between level is unidentified.
+.twolevel_parallel_effect_vec <- function(x) {
+  per_level <- function(level) {
+    a <- S7::prop(x, paste0("a_", level))
+    b <- S7::prop(x, paste0("b_", level))
+    cp <- S7::prop(x, paste0("c_prime_", level))
+    nie <- sum(a * b)
+    te <- nie + cp
+    pm <- if (.twolevel_te_defined(te, nie, cp)) nie / te else NA_real_
+    stats::setNames(c(unname(a * b), nie, cp, te, pm),
+                    c(paste0("nie_", x@mediators, "_", level), paste0(c("nie", "nde", "te", "pm"), "_", level)))
+  }
+  w <- per_level("within")
+  b <- per_level("between")
+  avail <- .twolevel_parallel_contrast_available(x)
+  spec_w <- w[paste0("nie_", x@mediators, "_within")]
+  spec_b <- b[paste0("nie_", x@mediators, "_between")]
+  contr <- stats::setNames(c(unname(spec_w - spec_b), w[["nie_within"]] - b[["nie_between"]]),
+                           c(paste0("nie_", x@mediators, "_contrast"), "nie_contrast"))
+  contr[!c(avail[x@mediators], avail[["total"]])] <- NA_real_
+  c(w, b, contr)
+}
+
+# Signal why the requested effects are NA: the between level is unidentified (a within-only object), or a
+# requested contrast is zero by constraint (both its a and b equated across levels).
+.twolevel_parallel_signal_na <- function(x, terms) {
+  if (!isTRUE(x@between_identified) && any(grepl("between|contrast", terms))) {
+    .twolevel_warn(
+      paste0("The between level of this two-level fit is not identified (a within-only result), so the ",
+             "between effects and the contrasts are NA."),
+      "medfit_between_unidentified"
+    )
+    return(invisible(NULL))
+  }
+  avail <- .twolevel_parallel_contrast_available(x)
+  keys <- c(paste0("nie_", x@mediators, "_contrast"), "nie_contrast")
+  na_keys <- keys[!c(avail[x@mediators], avail[["total"]])]
+  hit <- intersect(terms, na_keys)
+  if (length(hit) > 0L) {
+    .twolevel_warn(
+      paste0("The contrast NIE_within - NIE_between is NA for ", paste(hit, collapse = ", "), ": both a and b ",
+             "of the mediator are equated across levels, so the contrast is zero by constraint. The within and ",
+             "between effects are still reported."),
+      "medfit_warning_twolevel_constrained"
+    )
+  }
+  invisible(NULL)
+}
+
+# One effect type at the requested level(s) as a `mediation_effect`. `specific` (nie only) gives one value per
+# mediator, named by mediator (`<M>_<level>` for `both`); `both` names the total by level.
+.twolevel_parallel_effect <- function(x, type, level, specific = FALSE) {
+  if (identical(level, "contrast") && !identical(type, "nie")) {
+    .twolevel_abort(
+      sprintf("`level = \"contrast\"` is defined only for nie(); %s() has no first-class contrast. Use tidy().",
+              type),
+      "medfit_error_twolevel_level"
+    )
+  }
+  levels <- switch(level, both = c("within", "between"), level)
+  terms <- if (specific) {
+    unlist(lapply(levels, function(l) paste0("nie_", x@mediators, "_", l)))
+  } else {
+    paste0(type, "_", levels)
+  }
+  .twolevel_parallel_signal_na(x, terms)
+  eff <- .twolevel_parallel_effect_vec(x)
+  value <- eff[terms]
+  if (identical(type, "pm")) {
+    te <- eff[paste0("te_", levels)]
+    nie_l <- eff[paste0("nie_", levels)]
+    nde_l <- eff[paste0("nde_", levels)]
+    if (any(is.finite(te) & !.twolevel_te_defined(te, nie_l, nde_l))) {
+      warning("Total effect is approximately zero; proportion mediated is undefined.", call. = FALSE)
+    }
+  }
+  names(value) <- if (specific && identical(level, "both")) {
+    unlist(lapply(levels, function(l) paste0(x@mediators, "_", l)))
+  } else if (specific) {
+    x@mediators
+  } else if (identical(level, "both")) {
+    levels
+  }
+  class(value) <- c("mediation_effect", "numeric")
+  attr(value, "type") <- type
+  attr(value, "level") <- level
+  value
+}
+
+#' @describeIn nie Method for TwoLevelParallelMediationData; `level` as for TwoLevelMediationData, `type` is
+#'   `"total"` (default, the sum over mediators) or `"specific"` (one value per mediator)
+#' @noRd
+S7::method(nie, TwoLevelParallelMediationData) <- function(x, level = c("within", "between", "contrast", "both"),
+                                                           type = c("total", "specific"), ...) {
+  .twolevel_parallel_effect(x, "nie", match.arg(level), specific = identical(match.arg(type), "specific"))
+}
+
+#' @describeIn nde Method for TwoLevelParallelMediationData (c' at the level)
+#' @noRd
+S7::method(nde, TwoLevelParallelMediationData) <- function(x, level = c("within", "between", "both", "contrast"),
+                                                           ...) {
+  .twolevel_parallel_effect(x, "nde", match.arg(level))
+}
+
+#' @describeIn te Method for TwoLevelParallelMediationData (sum of a_j * b_j plus c' at the level)
+#' @noRd
+S7::method(te, TwoLevelParallelMediationData) <- function(x, level = c("within", "between", "both", "contrast"),
+                                                          ...) {
+  .twolevel_parallel_effect(x, "te", match.arg(level))
+}
+
+#' @describeIn pm Method for TwoLevelParallelMediationData (total NIE / TE at the level)
+#' @noRd
+S7::method(pm, TwoLevelParallelMediationData) <- function(x, level = c("within", "between", "both", "contrast"),
+                                                          ...) {
+  .twolevel_parallel_effect(x, "pm", match.arg(level))
+}
+
+#' @describeIn paths Method for TwoLevelParallelMediationData (the within then the between paths, named by
+#'   their alias rows; between entries `NA` when within-only)
+#' @noRd
+S7::method(paths, TwoLevelParallelMediationData) <- function(x, ...) {
+  c(.twolevel_parallel_paths(x, "within"), .twolevel_parallel_paths(x, "between"))
+}
+
+#' @describeIn decompose Method for TwoLevelParallelMediationData: a matrix with one row per mediator (the
+#'   specific NIE) and a `total` row, columns within, between and contrast (descriptive; the contrast is not a
+#'   test)
+#' @noRd
+S7::method(decompose, TwoLevelParallelMediationData) <- function(x, ...) {
+  rows <- c(x@mediators, "total")
+  key <- function(level) c(paste0("nie_", x@mediators, "_", level), paste0("nie_", level))
+  .twolevel_parallel_signal_na(x, c(key("between"), key("contrast")))
+  eff <- .twolevel_parallel_effect_vec(x)
+  out <- cbind(within = eff[key("within")], between = eff[key("between")], contrast = eff[key("contrast")])
+  rownames(out) <- rows
+  attr(out, "label") <- "descriptive; the contrast is not a test"
+  out
+}
 
 # --- Methods for BootstrapResult ---
 

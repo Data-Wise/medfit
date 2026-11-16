@@ -118,6 +118,9 @@ tidy_s7_object <- function(x, ...) {
   if (S7::S7_inherits(x, TwoLevelMediationData)) {
     return(.tidy_twolevel_mediation_data(x, ...))
   }
+  if (S7::S7_inherits(x, TwoLevelParallelMediationData)) {
+    return(.tidy_twolevel_parallel_mediation_data(x, ...))
+  }
   if (S7::S7_inherits(x, BootstrapResult)) {
     return(.tidy_bootstrap_result(x, ...))
   }
@@ -151,6 +154,9 @@ glance_s7_object <- function(x, ...) {
   }
   if (S7::S7_inherits(x, TwoLevelMediationData)) {
     return(.glance_twolevel_mediation_data(x, ...))
+  }
+  if (S7::S7_inherits(x, TwoLevelParallelMediationData)) {
+    return(.glance_twolevel_parallel_mediation_data(x, ...))
   }
   if (S7::S7_inherits(x, BootstrapResult)) {
     return(.glance_bootstrap_result(x, ...))
@@ -633,6 +639,60 @@ glance_s7_object <- function(x, ...) {
     .twolevel_effect_vec(x)
   }
   .tidy_paths_effects(x, path_vec, effect_vec, conf_int, conf_level)
+}
+
+
+#' Tidy a TwoLevelParallelMediationData Object
+#'
+#' @param x A TwoLevelParallelMediationData object
+#' @param type `"all"` (default), `"paths"` (within then between paths), or `"effects"` (per level each
+#'   specific NIE, the total NIE, NDE, TE, PM, then each specific contrast and the total contrast)
+#' @param conf_int Logical: add normal-approximation CIs from `std_error`?
+#' @param conf_level Confidence level (default 0.95)
+#' @param ... Additional arguments (ignored)
+#' @return A tibble with `term`, `estimate`, `std_error` (and `conf_low`, `conf_high` when `conf_int = TRUE`).
+#'   Between rows of a within-only object, and a contrast whose a and b are both equated across levels, are
+#'   `NA` with a classed warning.
+#' @noRd
+.tidy_twolevel_parallel_mediation_data <- function(x, type = c("all", "paths", "effects"),
+                                                   conf_int = FALSE, conf_level = 0.95, ...) {
+  type <- match.arg(type)
+  path_vec <- if (type %in% c("all", "paths")) paths(x) else NULL
+  effect_vec <- if (type %in% c("all", "effects")) {
+    .twolevel_parallel_signal_na(x, .twolevel_parallel_effect_keys(x))
+    .twolevel_parallel_effect_vec(x)
+  }
+  .tidy_paths_effects(x, path_vec, effect_vec, conf_int, conf_level)
+}
+
+
+#' Glance at a TwoLevelParallelMediationData Object
+#'
+#' @param x A TwoLevelParallelMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return A one-row tibble: nie_within, nie_between, nie_contrast (the totals), n_mediators, n_clusters, nobs,
+#'   converged, between_identified, admissible. The effects are `NA` (with no warning) as in `tidy()`.
+#' @noRd
+.glance_twolevel_parallel_mediation_data <- function(x, ...) {
+  eff <- .twolevel_parallel_effect_vec(x)
+  result <- data.frame(
+    nie_within = eff[["nie_within"]],
+    nie_between = eff[["nie_between"]],
+    nie_contrast = eff[["nie_contrast"]],
+    n_mediators = length(x@mediators),
+    n_clusters = x@n_clusters,
+    nobs = nobs(x),
+    converged = x@converged,
+    between_identified = x@between_identified,
+    admissible = x@admissible,
+    stringsAsFactors = FALSE
+  )
+
+  if (requireNamespace("tibble", quietly = TRUE)) {
+    result <- tibble::as_tibble(result)
+  }
+
+  result
 }
 
 
