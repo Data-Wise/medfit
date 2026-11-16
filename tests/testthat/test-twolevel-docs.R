@@ -108,6 +108,12 @@ test_that("the model page runs and its claims hold against lm and lavaan", {
     outer(grepl("M2", rownames(v)), grepl("M1", colnames(v)))
   v[cross] <- 0
   expect_false(isTRUE(all.equal(sqrt(drop(t(g) %*% v %*% g)), se_k[2], tolerance = 1e-3)))
+  # the several-mediators bootstrap: each estimate is the object's own effect, and the interval brackets it
+  expect_equal(env$b_k@estimate, as.numeric(nie(tk, level = "between")))
+  expect_equal(env$b_k_m1@estimate, unname(nie(tk, type = "specific")["M1"]))
+  expect_lt(env$b_k@ci_lower, env$b_k@estimate)
+  expect_gt(env$b_k@ci_upper, env$b_k@estimate)
+  expect_false(isTRUE(all.equal(env$b_k@estimate, as.numeric(nie(tk, level = "within")))))
 
   # planted defect: a within path off by 0.1 fails the lm comparison
   bad <- unname(paths(td)[1:3]) + c(0.1, 0, 0)

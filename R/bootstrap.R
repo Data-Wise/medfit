@@ -22,7 +22,8 @@
 #'   - `"plugin"`: Point estimate only, no CI (fastest)
 #' @param mediation_data A mediation data object (required for parametric/plugin):
 #'   [MediationData], [SerialMediationData], [ParallelMediationData],
-#'   [InteractionMediationData], or [JointMediationData]. `statistic_fn`
+#'   [InteractionMediationData], [JointMediationData], [TwoLevelMediationData]
+#'   or [TwoLevelParallelMediationData] (see [twolevel_statistic()]). `statistic_fn`
 #'   receives its named `@estimates` vector, which includes path aliases (e.g.
 #'   `a`, `d1`, `b`, `c_prime` for a serial chain; `a1`, `b1`, `a2`, `b2` for
 #'   parallel mediators). For a [JointMediationData] the aliases alone cannot
@@ -681,13 +682,14 @@ bootstrap_mediation <- function(statistic_fn,
   supported <- list(
     MediationData, SerialMediationData,
     ParallelMediationData, InteractionMediationData, JointMediationData,
-    ClusterMediationData, TwoLevelMediationData
+    ClusterMediationData, TwoLevelMediationData, TwoLevelParallelMediationData
   )
   ok <- any(vapply(supported, function(cls) S7::S7_inherits(x, cls), logical(1)))
   if (!ok) {
     stop("mediation_data must be a MediationData, SerialMediationData, ",
          "ParallelMediationData, InteractionMediationData, ",
-         "JointMediationData, ClusterMediationData, or TwoLevelMediationData object",
+         "JointMediationData, ClusterMediationData, TwoLevelMediationData, or ",
+         "TwoLevelParallelMediationData object",
          call. = FALSE)
   }
   invisible(x)

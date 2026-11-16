@@ -22,6 +22,18 @@
   effects with delta-method standard errors over the joint covariance of the paths, so the covariances across
   mediators and across levels both enter. The formulas are in the Methods and Formulas article. One-mediator
   results are unchanged.
+* Bootstrap for two-level parallel mediation (experimental). `twolevel_statistic()` now takes a
+  `TwoLevelParallelMediationData` object (the callback for `method = "parametric"` or `"plugin"`) or a two-level
+  `lavaan` fit with a `mediator` vector of length two or more (the cluster refit callback), and
+  `bootstrap_mediation()` accepts the class as `mediation_data`. For several mediators `effect` is `"nie"` (the
+  total, the default), `"nie_j"` (the specific effect of the mediator named in the new argument `specific`),
+  `"nde"` or `"te"`, and the new argument `level` is `"within"` (the default), `"between"` or `"contrast"` (within
+  minus between, for `"nie"` and `"nie_j"` only). At the estimate the callback returns the value of `nie()`,
+  `nde()` or `te()`. A refit's between level counts as identified only when the treatment and every mediator
+  have an ICC of at least 0.01. An invalid `level`, or a contrast asked of `"nde"` or `"te"`, stops with
+  `medfit_error_twolevel_level`; an unknown effect or a missing or unknown `specific` stops with
+  `medfit_error_twolevel_unsupported`. One-mediator calls are unchanged, and `level` or `specific` with one
+  mediator stops with `medfit_error_twolevel_unsupported`.
 
 ## Documentation
 
