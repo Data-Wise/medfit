@@ -3,9 +3,9 @@
 
 skip_if_not_installed("lavaan")
 
-# Three parallel mediators and a covariate W at both levels; unlabeled except for b3 (equated by a `==` row).
-tlq_fit_k3 <- function() {
-  tl_cached("tlq_fit_k3", {
+test_that("k = 3 with a covariate: paths and the 14 x 14 vcov equal lavaan's, read by lhs/rhs/level", {
+  # Three parallel mediators and a covariate W at both levels; unlabeled except for b3 (equated by a `==` row).
+  fit <- tl_cached("tlq_fit_k3", {
     set.seed(11)
     J <- 120L
     n <- 6L
@@ -21,16 +21,14 @@ tlq_fit_k3 <- function() {
     y <- 0.2 * xw + 0.3 * xb + 0.4 * m1 + 0.3 * m2 - 0.5 * m3 + 0.2 * ww + 0.5 * stats::rnorm(J)[id] +
       stats::rnorm(N)
     d <- data.frame(id = id, X = xw + xb, W = ww + wb, M1 = m1, M2 = m2, M3 = m3, Y = y)
-    blk <- function(b3) paste0(
-      "  M1 ~ X + W\n  M2 ~ X + W\n  M3 ~ X + W\n  Y ~ M1 + M2 + ", b3, "*M3 + X + W\n",
-      "  M1 ~~ M2 + M3\n  M2 ~~ M3\n"
-    )
+    blk <- function(b3) {
+      paste0(
+        "  M1 ~ X + W\n  M2 ~ X + W\n  M3 ~ X + W\n  Y ~ M1 + M2 + ", b3, "*M3 + X + W\n",
+        "  M1 ~~ M2 + M3\n  M2 ~~ M3\n"
+      )
+    }
     tl_fit(d, paste0("level: 1\n", blk("b3w"), "level: 2\n", blk("b3b"), "  b3w == b3b\n"))
   })
-}
-
-test_that("k = 3 with a covariate: paths and the 14 x 14 vcov equal lavaan's, read by lhs/rhs/level", {
-  fit <- tlq_fit_k3()
   meds <- c("M1", "M2", "M3")
   td <- tlp_extract(fit, mediator = meds)
   expect_true(S7::S7_inherits(td, TwoLevelParallelMediationData))
