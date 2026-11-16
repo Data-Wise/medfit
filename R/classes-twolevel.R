@@ -291,6 +291,16 @@ TwoLevelMediationData <- S7::new_class(
   isTRUE(x@between_identified) && !all(c("a", "b") %in% x@cross_level_equal)
 }
 
+# D5 (IG5) for TwoLevelParallelMediationData: per mediator, the specific contrast is NA only when both a_j and
+# b_j are equated across levels; the total contrast (element "total") is NA only when every specific one is.
+.twolevel_parallel_contrast_available <- function(x) {
+  meds <- x@mediators
+  specific <- vapply(meds, function(m) {
+    isTRUE(x@between_identified) && !all(paste0(c("a_", "b_"), m) %in% x@cross_level_equal)
+  }, logical(1))
+  c(stats::setNames(specific, meds), total = any(specific))
+}
+
 #' Print Method for TwoLevelMediationData
 #'
 #' @param x A TwoLevelMediationData object

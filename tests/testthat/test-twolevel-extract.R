@@ -330,7 +330,7 @@ test_that("a product term or interaction = is refused with a classed error", {
   expect_s3_class(err2, "medfit_error_twolevel_product")
 })
 
-test_that("more than one mediator is refused", {
+test_that("the outcome listed as a mediator is refused", {
   fit <- tl_fixture("base")
   err <- tl_catch(extract_mediation(fit, "X", c("M", "Y"), "Y"), "medfit_error_twolevel_unsupported")
   expect_s3_class(err, "medfit_error_twolevel_unsupported")

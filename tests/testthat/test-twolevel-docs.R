@@ -143,9 +143,10 @@ tl_doc_cases <- function() {
          function() tl_ex("medfit_error_twolevel_standardized", standardized = TRUE)),
     list("medfit_error_twolevel_product", "A product (interaction) term is not supported for a two-level fit",
          function() tl_ex("medfit_error_twolevel_product", interaction = "X:M")),
-    list("medfit_error_twolevel_unsupported", "A two-level fit supports exactly one mediator",
+    list("medfit_error_twolevel_unsupported", "serial mediation is not supported for a two-level fit",
          function() {
-           tl_catch(extract_mediation(tl_fixture("base"), "X", c("M", "Y"), "Y"), "medfit_error_twolevel_unsupported")
+           tl_catch(extract_mediation(tlp_fixture("serial_within"), "X", c("M1", "M2"), "Y"),
+                    "medfit_error_twolevel_unsupported")
          }),
     list("medfit_error_twolevel_unsupported", "is not in the model at the",
          function() {

@@ -93,7 +93,7 @@ one kind.
 | `is ignored for a two-level fit` (a warning, once per session) | `medfit_warning_twolevel_labels_ignored` | `a_label`, `b_label` or `cp_label` was set | none needed: the paths are read by variable names and level |
 | `standardized = TRUE is not supported for a two-level fit` | `medfit_error_twolevel_standardized` | a standardized path mixes the within and the between variances | use the unstandardized paths |
 | `A product (interaction) term is not supported for a two-level fit` | `medfit_error_twolevel_product` | a `:` term in a regression, or `interaction =` | remove the product |
-| `A two-level fit supports exactly one mediator` | `medfit_error_twolevel_unsupported` | more than one mediator | one mediator only |
+| `serial mediation is not supported for a two-level fit` | `medfit_error_twolevel_unsupported` | a mediator is regressed on another mediator at either level | keep the mediators parallel (each regressed on the treatment only) |
 | `is not in the model at the` | `medfit_error_twolevel_unsupported` | the treatment or mediator is missing at one level (a cluster-level treatment, 2-1-1) | use `fit_mediation(engine = "lmer", cluster = )`; see [Cluster-randomized trials](model-cluster.html) |
 | `is not assumed to be 0` | `medfit_error_twolevel_path_missing` | a path (`M ~ X`, `Y ~ M` or `Y ~ X`) is absent at a level | add it to the model, or fix it with `0*` |
 | `The two-level fit is not usable` | `medfit_error_twolevel_unusable` | the fit did not converge, or the within covariance is missing or not positive definite | fix the fit |
