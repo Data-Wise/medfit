@@ -1873,8 +1873,8 @@ Integration is successful when:
 **Reconciliation 2026-11-15 (supersedes the release rows below).** 0.17.0 (tag `v0.17.0` at `6b9a943c`,
 2026-11-12) and 0.18.0 (tag `v0.18.0` at `6d226fb1`, 2026-11-14) are released, GitHub-only; CRAN stays on hold
 (#83). Every row of the 2026-11-11 table marked merged-dev is now **released** in 0.17.0, still numerically verified,
-not statistically admitted where it says so; the two-level API is experimental. The 0.17.0 checklist is complete,
-its R6 book render done 2026-11-15 against v0.18.0. Closed since: Dependabot #381, #320 (docs only: #453, #454; a
+not statistically admitted where it says so; the two-level API is experimental. The 0.17.0 checklist is complete except R6:
+its book render passed 2026-11-15 against v0.18.0 only, number checks not run, so R6 is not met for 0.17.0 (no waiver recorded). Closed since: Dependabot #381, #320 (docs only: #453, #454; a
 known external-engine limit) and #369. Open: issue #394 (S4 and S5, NO-GO as written). Not authorized and
 unscheduled: FIML statistical admission, the multilevel gaps IG1 to IG7, the FIML efficiency baseline, CRAN, and
 any 0.19.0 scope.
