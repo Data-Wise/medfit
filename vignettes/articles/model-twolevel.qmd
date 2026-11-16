@@ -418,7 +418,7 @@ tidy(tk, type = "effects")
 `tidy()` lists each specific effect, the total, NDE, TE and PM at each level, then the specific and total
 contrasts. The standard errors use the joint covariance of all the paths, so the covariance between two
 mediators' paths enters the standard error of the total. `twolevel_statistic()` takes the one-mediator class
-only, so these effects have no bootstrap route yet.
+only; there is no ready-made bootstrap statistic for these effects yet.
 
 ## Limits
 
