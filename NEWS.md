@@ -4,8 +4,10 @@
 
 ## Documentation
 
-* `?compare_lr` now explains its known limit (#320). A lavaan or OpenMx product-null LR above medfit's reference is
-  the minimum of the other line of the null (`a = 0` instead of `b = 0`, or the reverse). medfit's reference stands.
+* `?compare_lr` now explains its known limit (#320). On the pinned design, every lavaan or OpenMx product-null LR
+  above medfit's reference was checked and is the minimum of the other line of the null (`a = 0` instead of `b = 0`,
+  or the reverse), so medfit's reference stands. Elsewhere, the warning is undiagnosed until both line minima are
+  computed: an optimizer that stops short on either line raises the same warning.
 
 # medfit 0.18.0
 
