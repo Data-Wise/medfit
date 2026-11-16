@@ -255,6 +255,17 @@ tlp_sim <- function(J = 100L, n = 5L, seed = 20261115L, m2_between = TRUE) {
   data.frame(id = id, X = xw + xb, M1 = m1, M2 = m2, Y = y)
 }
 
+# tlp_sim() plus a covariate W and a third mediator M3 (both with a between part).
+tlp_sim_w <- function() {
+  d <- tlp_sim()
+  set.seed(20261116L)
+  J <- max(d$id)
+  d$W <- stats::rnorm(J)[d$id] + stats::rnorm(nrow(d))
+  d$M3 <- 0.3 * d$X + stats::rnorm(J)[d$id] + stats::rnorm(nrow(d))
+  d$Y <- d$Y + 0.3 * d$M3
+  d
+}
+
 # The two-mediator model: unique labels at both levels; `extra` is appended (constraints, serial rows).
 tlp_model <- function(within_a1 = "a1*X", between_a1 = "a1B*X", within_y = "b1*M1 + b2*M2 + cp*X",
                       between_y = "b1B*M1 + b2B*M2 + cpB*X", extra = "") {
@@ -284,6 +295,13 @@ tlp_fixture <- function(name = "base") {
       low_icc_m2 = tl_fit(tlp_sim(m2_between = FALSE), tlp_model()),
       serial_within = tl_fit(tlp_sim(), sub("M2 ~ a2*X", "M2 ~ a2*X + d*M1", tlp_model(), fixed = TRUE)),
       serial_between = tl_fit(tlp_sim(), sub("M2 ~ a2B*X", "M2 ~ a2B*X + dB*M1", tlp_model(), fixed = TRUE)),
+      # a covariate W predicts M1 at both levels (W is not regressed on X): W is not a mediator
+      covariate_w = tl_fit(tlp_sim_w(), tlp_model(within_a1 = "a1*X + W", between_a1 = "a1B*X + W")),
+      # M2 ~ M1 with a third mediator M3; extracted with the mediators M1 and M3 (M2 undeclared)
+      undeclared_m2 = tl_fit(tlp_sim_w(), paste0(
+        "level: 1\n  M1 ~ X\n  M2 ~ X + M1\n  M3 ~ X\n  Y ~ M1 + M2 + M3 + X\n",
+        "level: 2\n  M1 ~ X\n  M2 ~ X + M1\n  M3 ~ X\n  Y ~ M1 + M2 + M3 + X\n"
+      )),
       stop("unknown fixture: ", name)
     )
   })

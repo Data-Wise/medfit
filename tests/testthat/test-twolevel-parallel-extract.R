@@ -144,3 +144,26 @@ test_that("a variable listed in two roles, or a mediator listed twice, is refuse
     expect_match(conditionMessage(err), cs$msg, fixed = TRUE)
   }
 })
+
+test_that("a covariate listed as a mediator is refused as not on a treatment -> mediator path", {
+  err <- tl_catch(extract_mediation(tlp_fixture("covariate_w"), "X", c("M1", "W"), "Y"),
+                  "medfit_error_twolevel_unsupported")
+  expect_s3_class(err, "medfit_error_twolevel_unsupported")
+  expect_identical(
+    conditionMessage(err),
+    paste0("'W' is listed as a mediator but is not regressed on the treatment (no 'W ~ X' row at the within ",
+           "level); it predicts the mediator 'M1' ('M1 ~ W'). A mediator lies on a treatment -> mediator -> ",
+           "outcome path; pass a covariate in the model, not as a mediator.")
+  )
+})
+
+test_that("an undeclared mediator downstream of a declared one is accepted, as with one mediator (O7c)", {
+  # origin/dev's one-mediator adapter accepts M2 ~ M1 with mediator = "M1"; k >= 2 is kept consistent
+  fit <- tlp_fixture("undeclared_m2")
+  expect_true(S7::S7_inherits(tlp_extract(fit, mediator = "M1"), TwoLevelMediationData))
+  td <- tlp_extract(fit, mediator = c("M1", "M3"))
+  expect_true(S7::S7_inherits(td, TwoLevelParallelMediationData))
+  pe <- lavaan::parameterEstimates(fit)
+  b_m1_w <- pe$est[pe$op == "~" & pe$lhs == "Y" & pe$rhs == "M1" & pe$level == 1]
+  expect_equal(td@b_within[["M1"]], b_m1_w, tolerance = 1e-12)
+})

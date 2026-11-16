@@ -316,6 +316,18 @@
   serial <- pt$op == "~" & pt$lhs %in% mediator & pt$rhs %in% mediator & pt$lhs != pt$rhs
   if (any(serial)) {
     i <- which(serial)[1L]
+    # A predictor that is not itself regressed on the treatment at that level is a covariate, not a mediator
+    pred <- pt$rhs[i]
+    lvl <- pt$level[i]
+    if (!any(pt$op == "~" & pt$lhs == pred & pt$rhs == treatment & pt$level == lvl)) {
+      .twolevel_abort(
+        sprintf(paste0("'%s' is listed as a mediator but is not regressed on the treatment (no '%s ~ %s' row ",
+                       "at the %s level); it predicts the mediator '%s' ('%s ~ %s'). A mediator lies on a ",
+                       "treatment -> mediator -> outcome path; pass a covariate in the model, not as a mediator."),
+                pred, pred, treatment, c("within", "between")[lvl], pt$lhs[i], pt$lhs[i], pred),
+        "medfit_error_twolevel_unsupported"
+      )
+    }
     .twolevel_abort(
       sprintf(paste0("A mediator predicts another mediator ('%s ~ %s' at the %s level): serial mediation is not ",
                      "supported for a two-level fit. The mediators must be parallel (each regressed on the ",
