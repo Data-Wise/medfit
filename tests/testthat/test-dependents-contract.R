@@ -137,3 +137,17 @@ testthat::test_that("property rename planted defect fails the contract", {
     .expect_dependent_properties(renamed, "a_path")
   )
 })
+
+testthat::test_that("the TwoLevelParallelMediationData pin is the class's full property set (SPEC-IG5 D1)", {
+  # the shared helper checks only that pinned names exist, so a name dropped from the pin would go unnoticed
+  testthat::expect_setequal(
+    .dependent_new_classes$TwoLevelParallelMediationData,
+    names(TwoLevelParallelMediationData@properties)
+  )
+  # D1: the same properties as TwoLevelMediationData, with `mediators` in place of `mediator`
+  one <- names(TwoLevelMediationData@properties)
+  testthat::expect_identical(
+    names(TwoLevelParallelMediationData@properties),
+    replace(one, one == "mediator", "mediators")
+  )
+})

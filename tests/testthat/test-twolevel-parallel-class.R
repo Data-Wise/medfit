@@ -168,3 +168,27 @@ test_that("print flags equated, fixed and inadmissible fits", {
   expect_match(out, "fixed: c_prime_between", fixed = TRUE)
   expect_match(out, "not admissible", fixed = TRUE)
 })
+
+# QA additions (IG5 T1 oracle QA): each closes a planted defect the tests above let through.
+
+test_that("the class is registered as an S4 class, not only matched by its class attribute", {
+  # methods::is() falls back to the S3 class attribute, so it passes even without S4_register()
+  expect_true(methods::isClass("medfit::TwoLevelParallelMediationData"))
+})
+
+test_that("alias rows must equal the path properties exactly, not within a loose tolerance", {
+  td <- tlp_td(k = 2L)
+  est <- td@estimates
+  est["b_M2_within"] <- est["b_M2_within"] + 1e-8
+  expect_error(tlp_td(estimates = est), "alias rows of estimates")
+})
+
+test_that("print rows pair each mediator with its own a and b and the level totals are sums of a * b", {
+  td <- tlp_td(k = 2L)
+  out <- paste(utils::capture.output(print(td)), collapse = "\n")
+  # hand values: within a = (0.4, 0.5), b = (0.5, 0.4); between a = (0.7, 0.8), b = (1.0, 0.8)
+  expect_match(out, "M1\\s+a = \\+0\\.4000\\s+b = \\+0\\.5000\\s+a \\* b = \\+0\\.2000")
+  expect_match(out, "M2\\s+a = \\+0\\.8000\\s+b = \\+0\\.8000\\s+a \\* b = \\+0\\.6400")
+  expect_match(out, "NIE within (sum of a * b) = +0.4000", fixed = TRUE)
+  expect_match(out, "NIE between (sum of a * b) = +1.3400", fixed = TRUE)
+})
