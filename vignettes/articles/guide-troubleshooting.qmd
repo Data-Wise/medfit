@@ -79,14 +79,14 @@ Examples on this site use medfit 0.13.0. If `mediation_demo` or
 ## Two-level mediation
 
 The two-level route is `extract_mediation()` on a `lavaan` fit with `level:` blocks (see
-[Two-level mediation](model-twolevel.html)). Each condition carries a class, so you can handle or silence
-one kind.
+[Two-level mediation](model-twolevel.html)); with several mediators, `mediator = c("M1", "M2")`. Each condition
+carries a class, so you can handle or silence one kind.
 
 | You see | Class | Cause | Fix |
 |---|---|---|---|
-| `The between level is not identified, so only the within-level paths are returned` (a warning) | `medfit_between_unidentified` | the ICC of the treatment or the mediator is below 0.01, a between covariance is not finite or not positive definite, or the fit did not converge | read the within results, or fix the design; the between effects and the contrast are `NA` |
+| `The between level is not identified, so only the within-level paths are returned` (a warning) | `medfit_between_unidentified` | the ICC of the treatment or of any mediator is below 0.01, a between covariance is not finite or not positive definite, or the fit did not converge | read the within results, or fix the design; the between effects and the contrast are `NA` |
 | `The between-level variance of the treatment or the mediator is small` (a warning) | `medfit_warning_between_weak` | an ICC between 0.01 and 0.05 | the between results are kept but may be imprecise |
-| `The contrast NIE_within - NIE_between is NA` (a warning) | `medfit_warning_twolevel_constrained` | both a and b are equated across levels (a shared label, an `==` row or an algebraic equality), so the contrast is zero by constraint; with only one of them equated the contrast is returned | free `a` or `b` across levels to compare the levels |
+| `The contrast NIE_within - NIE_between is NA` (a warning) | `medfit_warning_twolevel_constrained` | both a and b are equated across levels (a shared label, an `==` row or an algebraic equality), so the contrast is zero by constraint; with only one of them equated the contrast is returned. With several mediators the rule is per mediator: a specific contrast is `NA` when both a and b of that mediator are equated, the total contrast only when that holds for every mediator | free `a` or `b` across levels to compare the levels |
 | `The lavaan fit is not admissible` (a warning) | `medfit_warning_twolevel_inadmissible` | lavaan's `post.check` is `FALSE`, for example a negative variance | inspect the fit before using the numbers |
 | `is negative or missing; its standard error is NA` (a warning) | `medfit_warning_vcov_diagonal` | a variance on the diagonal of the two-level covariance matrix is negative, missing or not finite; one warning covers the whole vector | the affected standard errors are `NA`, not guessed; inspect the lavaan fit (often an inadmissible fit, see the row above) before using them |
 | `Two-level estimates and between-level standard errors are unreliable with few clusters` (a warning) | `medfit_warning_twolevel_few_clusters` | fewer than 50 clusters (a judgment, not a published cutoff) | treat the between results as rough; `options(medfit.twolevel_min_clusters = )` changes the threshold |
@@ -97,10 +97,18 @@ one kind.
 | `is not in the model at the` | `medfit_error_twolevel_unsupported` | the treatment or mediator is missing at one level (a cluster-level treatment, 2-1-1) | use `fit_mediation(engine = "lmer", cluster = )`; see [Cluster-randomized trials](model-cluster.html) |
 | `is not assumed to be 0` | `medfit_error_twolevel_path_missing` | a path (`M ~ X`, `Y ~ M` or `Y ~ X`) is absent at a level | add it to the model, or fix it with `0*` |
 | `The two-level fit is not usable` | `medfit_error_twolevel_unusable` | the fit did not converge, or the within covariance is missing or not positive definite | fix the fit |
-| `is defined only for nie()` | `medfit_error_twolevel_level` | `level = "contrast"` for `nde()`, `te()` or `pm()` | use `tidy()` for those contrasts |
-| `needs the between level, which is not identified` | `medfit_between_unidentified` (an error here) | `twolevel_statistic()` was asked for a between effect or the contrast of a within-only fit | fix the between level (see the first row of this section), or bootstrap a within effect |
-| `both a and b are equated across levels` | `medfit_error_twolevel_constrained` | `twolevel_statistic(effect = "nie_contrast")` on a fit that equates both a and b across levels | bootstrap the within and the between effect separately |
-| `are required for a lavaan fit` | `medfit_error_twolevel_unsupported` | `twolevel_statistic()` got a `lavaan` fit without `treatment`, `mediator` and `outcome` | name the three variables |
+| `is defined only for nie()` | `medfit_error_twolevel_level` | `level = "contrast"` for `nde()`, `te()` or `pm()`, or for `twolevel_statistic()` with `effect = "nde"` or `"te"` | use `tidy()` for those contrasts |
+| `needs the between level, which is not identified` | `medfit_between_unidentified` (an error here) | `twolevel_statistic()` was asked for a between effect or the contrast of a within-only fit (with several mediators, a `level` other than `"within"`) | fix the between level (see the first row of this section), or bootstrap a within effect |
+| `is NA: both a and b` | `medfit_error_twolevel_constrained` | `twolevel_statistic(effect = "nie_contrast")` on a fit that equates both a and b across levels; with several mediators, `level = "contrast"` for `effect = "nie_j"` when both a and b of that mediator are equated, or for `effect = "nie"` when that holds for every mediator | bootstrap the within and the between effect separately |
+| `are required for a lavaan fit` | `medfit_error_twolevel_unsupported` | `twolevel_statistic()` got a `lavaan` fit without `treatment`, `mediator` and `outcome` | name the three variables (`mediator` as a vector for several mediators) |
+| `is listed more than once` | `medfit_error_twolevel_unsupported` | a name appears twice in `mediator` | pass each mediator once |
+| `is listed both as a mediator and as the` | `medfit_error_twolevel_unsupported` | the treatment or the outcome is also in `mediator` | give each variable one role |
+| `is listed as a mediator but is not regressed on the treatment` | `medfit_error_twolevel_unsupported` | a variable in `mediator` predicts another mediator but has no row on the treatment at that level: it is a covariate | leave it in the model and drop it from `mediator` |
+| `is not defined for several mediators` | `medfit_error_twolevel_unsupported` | `twolevel_statistic()` with several mediators got a one-mediator effect such as `"nie_between"` | use `effect = "nie"`, `"nie_j"`, `"nde"` or `"te"` with the level in `level` |
+| `` needs `specific`, one of the mediators `` | `medfit_error_twolevel_unsupported` | `effect = "nie_j"` without `specific`, or with a name that is not a mediator | name the mediator, `specific = "M1"` |
+| `` `specific` applies to `effect = "nie_j"` only `` | `medfit_error_twolevel_unsupported` | `specific` was set for another effect | drop `specific`, or use `effect = "nie_j"` |
+| `apply to a model with several mediators` | `medfit_error_twolevel_unsupported` | `level` or `specific` was set for a one-mediator model | put the level in `effect`, for example `"nie_between"` |
+| `must be one of "within", "between" or "contrast"` | `medfit_error_twolevel_level` | `twolevel_statistic()` with several mediators got another `level` | use one of the three levels |
 | `The lavaan fit has more than two levels` | `medfit_error_lavaan_multilevel` | a three-level fit | fit a one- or two-level model |
 | `The lavaan fit has more than one group` | `medfit_error_lavaan_multigroup` | a multigroup fit | fit each group as its own model |
 

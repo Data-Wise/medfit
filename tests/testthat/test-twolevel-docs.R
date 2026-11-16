@@ -225,15 +225,57 @@ tl_doc_cases <- function() {
            tl_catch(twolevel_statistic(tl_fixture("x_centered"), "nie_between", treatment = "X", mediator = "M",
                                        outcome = "Y"), "medfit_between_unidentified")
          }),
-    list("medfit_error_twolevel_constrained", "both a and b are equated across levels",
+    list("medfit_error_twolevel_constrained", "is NA: both a and b",
          function() {
            tl_catch(twolevel_statistic(tl_fixture("shared_ab"), "nie_contrast", treatment = "X", mediator = "M",
                                        outcome = "Y"), "medfit_error_twolevel_constrained")
+         }),
+    # the same fragment from the several-mediator error, whose wording differs ("both a and b of mediator ...")
+    list("medfit_error_twolevel_constrained", "is NA: both a and b",
+         function() {
+           td <- tlp_td(cross_level_equal = c("a_M1", "b_M1"))
+           tl_catch(twolevel_statistic(td, "nie_j", level = "contrast", specific = "M1"),
+                    "medfit_error_twolevel_constrained")
          }),
     list("medfit_error_twolevel_unsupported", "are required for a lavaan fit",
          function() {
            tl_catch(twolevel_statistic(tl_fixture("base"), "nie_within"), "medfit_error_twolevel_unsupported")
          }),
+    list("medfit_warning_twolevel_constrained", "The contrast NIE_within - NIE_between is NA",
+         function() {
+           td <- tlp_td(cross_level_equal = c("a_M1", "b_M1"))
+           tl_catch(nie(td, level = "contrast", type = "specific"), "medfit_warning_twolevel_constrained")
+         }),
+    list("medfit_error_twolevel_unsupported", "is listed more than once",
+         function() {
+           tl_catch(extract_mediation(tlp_fixture("base"), "X", c("M1", "M1"), "Y"),
+                    "medfit_error_twolevel_unsupported")
+         }),
+    list("medfit_error_twolevel_unsupported", "is listed both as a mediator and as the",
+         function() {
+           tl_catch(extract_mediation(tlp_fixture("base"), "X", c("M1", "Y"), "Y"),
+                    "medfit_error_twolevel_unsupported")
+         }),
+    list("medfit_error_twolevel_unsupported", "is listed as a mediator but is not regressed on the treatment",
+         function() {
+           tl_catch(extract_mediation(tlp_fixture("covariate_w"), "X", c("M1", "W"), "Y"),
+                    "medfit_error_twolevel_unsupported")
+         }),
+    list("medfit_error_twolevel_unsupported", "is not defined for several mediators",
+         function() tl_catch(twolevel_statistic(tlp_td(), "nie_between"), "medfit_error_twolevel_unsupported")),
+    list("medfit_error_twolevel_unsupported", "needs `specific`, one of the mediators",
+         function() tl_catch(twolevel_statistic(tlp_td(), "nie_j"), "medfit_error_twolevel_unsupported")),
+    list("medfit_error_twolevel_unsupported", "`specific` applies to `effect = \"nie_j\"` only",
+         function() {
+           tl_catch(twolevel_statistic(tlp_td(), "nie", specific = "M1"), "medfit_error_twolevel_unsupported")
+         }),
+    list("medfit_error_twolevel_unsupported", "apply to a model with several mediators",
+         function() {
+           tl_catch(twolevel_statistic(tl_extract(tl_fixture("base")), "nie_within", level = "within"),
+                    "medfit_error_twolevel_unsupported")
+         }),
+    list("medfit_error_twolevel_level", "must be one of \"within\", \"between\" or \"contrast\"",
+         function() tl_catch(twolevel_statistic(tlp_td(), "nie", level = "both"), "medfit_error_twolevel_level")),
     list("medfit_error_lavaan_multilevel", "The lavaan fit has more than two levels",
          function() {
            testthat::local_mocked_bindings(.lavaan_nlevels = function(object) 3L, .package = "medfit")
