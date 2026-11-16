@@ -93,6 +93,21 @@ test_that("D2: a low ICC in any mediator (not only the first) makes the object w
   }
 })
 
+test_that("D2 on a real fit: a mediator with no between variance gives a within-only object", {
+  fit <- tlp_fixture("low_icc_m2")
+  expect_lt(.twolevel_icc(fit)[["M2"]], 0.01)
+  expect_gt(.twolevel_icc(fit)[["M1"]], 0.05)
+  w <- tl_catch(extract_mediation(fit, "X", c("M1", "M2"), "Y"), "medfit_between_unidentified")
+  expect_s3_class(w, "medfit_between_unidentified")
+  expect_match(conditionMessage(w), "the ICC of the mediator 'M2'", fixed = TRUE)
+  td <- tlp_extract(fit)
+  expect_false(td@between_identified)
+  expect_identical(td@a_between, c(M1 = NA_real_, M2 = NA_real_))
+  rows <- names(tlp_lavaan_rows())[1:5]
+  expect_identical(names(td@estimates), rows)
+  expect_equal(unname(td@estimates), unname(lavaan::coef(fit)[tlp_lavaan_rows()[rows]]), tolerance = 1e-12)
+})
+
 test_that("D5: equality is found per mediator and the contrast is NA only when a_j and b_j are both equated", {
   sa <- tlp_extract(tlp_fixture("shared_a1"))
   expect_identical(sa@cross_level_equal, "a_M1")

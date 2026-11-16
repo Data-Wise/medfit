@@ -280,6 +280,8 @@ tlp_fixture <- function(name = "base") {
       equal_row_a1 = tl_fit(tlp_sim(), tlp_model(extra = "  a1 == a1B\n")),
       # M1's b equated algebraically (lavaan keeps two parameters): the numeric detector only
       nl_b1 = tl_fit(tlp_sim(), tlp_model(extra = "  b1^2 - b1B^2 == 0\n")),
+      # M2 has no between part (ICC near 0): a real within-only fit (D2)
+      low_icc_m2 = tl_fit(tlp_sim(m2_between = FALSE), tlp_model()),
       serial_within = tl_fit(tlp_sim(), sub("M2 ~ a2*X", "M2 ~ a2*X + d*M1", tlp_model(), fixed = TRUE)),
       serial_between = tl_fit(tlp_sim(), sub("M2 ~ a2B*X", "M2 ~ a2B*X + dB*M1", tlp_model(), fixed = TRUE)),
       stop("unknown fixture: ", name)
