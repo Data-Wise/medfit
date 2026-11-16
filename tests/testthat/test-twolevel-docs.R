@@ -161,6 +161,44 @@ test_that("recipe 23 runs after the setup chunk alone and its numbers match the 
   expect_gt(abs(as.numeric(nie(z, level = "between")) - as.numeric(nie(z))), 0.1)
 })
 
+test_that("recipe 24 runs after the setup chunk alone and its numbers match the page's estimands", {
+  skip_if_not_installed("lavaan")
+  testthat::skip_if_not(file.exists(doc_path("cookbook.qmd")), "vignettes are not available")
+  lines <- readLines(doc_path("cookbook.qmd"), warn = FALSE)
+  start <- grep("^## 24\\. ", lines)
+  expect_length(start, 1L)
+  rest <- lines[(start + 1L):length(lines)]
+  rest <- rest[seq_len(grep("^## ", rest)[1] - 1L)]
+  open <- grep("^```\\{r", rest)
+  code <- unlist(lapply(open, function(i) {
+    j <- i + 1L
+    while (!grepl("^```$", rest[j])) j <- j + 1L
+    b <- rest[(i + 1L):(j - 1L)]
+    b[!grepl("^#\\|", b)]
+  }))
+  env <- new.env(parent = asNamespace("medfit"))
+  assign("tidy", generics::tidy, env)
+  suppressWarnings(eval(parse(text = code), env))
+  zk <- env$zk
+  expect_s7_class(zk, TwoLevelParallelMediationData)
+  d3 <- env$d3
+  cw <- function(v) v - ave(v, d3$id)
+  dc <- data.frame(Xc = cw(d3$X), M1c = cw(d3$M1), M2c = cw(d3$M2), Yc = cw(d3$Y))
+  b_w <- coef(lm(Yc ~ 0 + M1c + M2c + Xc, dc))
+  ols <- c(coef(lm(M1c ~ 0 + Xc, dc))[["Xc"]] * b_w[["M1c"]],
+           coef(lm(M2c ~ 0 + Xc, dc))[["Xc"]] * b_w[["M2c"]])
+  spec <- as.numeric(nie(zk, type = "specific"))
+  expect_equal(spec, ols, tolerance = 5e-3)
+  # the total is the sum of the specific effects, at each level
+  expect_equal(as.numeric(nie(zk)), sum(spec), tolerance = 1e-10)
+  expect_equal(as.numeric(nie(zk, level = "between")),
+               sum(as.numeric(nie(zk, level = "between", type = "specific"))), tolerance = 1e-10)
+  # the recipe's own seed, distinct from recipe 23's
+  expect_true(grepl("set.seed(395)", paste(code, collapse = "\n"), fixed = TRUE))
+  # planted defect: swapping the mediators' b paths misses the oracle
+  expect_false(isTRUE(all.equal(spec, rev(ols), tolerance = 5e-3)))
+})
+
 # ---- every condition the guide quotes is real ----
 
 # The condition of class `class` raised by extracting the cached fixture `fixture`.
