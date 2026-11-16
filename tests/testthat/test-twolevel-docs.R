@@ -114,6 +114,16 @@ test_that("the model page runs and its claims hold against lm and lavaan", {
   expect_lt(env$b_k@ci_lower, env$b_k@estimate)
   expect_gt(env$b_k@ci_upper, env$b_k@estimate)
   expect_false(isTRUE(all.equal(env$b_k@estimate, as.numeric(nie(tk, level = "within")))))
+  # the page's own lavaan check: every := row is matched by term, estimate and SE
+  expect_identical(env$tidy_k$term, env$pe_k$lhs)
+  expect_equal(env$tidy_k$estimate, env$pe_k$est, tolerance = 1e-5)
+  expect_equal(env$tidy_k$std_error, env$pe_k$se, tolerance = 1e-4)
+  # one mediator equated: its specific contrast is NA, the other one and the total are estimates
+  expect_true(all(c("a_M1", "b_M1") %in% env$tk_eq@cross_level_equal))
+  ce_k <- suppressWarnings(nie(env$tk_eq, level = "contrast", type = "specific"))
+  expect_true(is.na(ce_k[["M1"]]))
+  expect_false(is.na(ce_k[["M2"]]))
+  expect_equal(as.numeric(nie(env$tk_eq, level = "contrast")), unname(ce_k[["M2"]]))
 
   # planted defect: a within path off by 0.1 fails the lm comparison
   bad <- unname(paths(td)[1:3]) + c(0.1, 0, 0)

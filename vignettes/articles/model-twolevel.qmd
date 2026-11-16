@@ -417,7 +417,69 @@ tidy(tk, type = "effects")
 
 `tidy()` lists each specific effect, the total, NDE, TE and PM at each level, then the specific and total
 contrasts. The standard errors use the joint covariance of all the paths, so the covariance between two
-mediators' paths enters the standard error of the total.
+mediators' paths enters the standard error of the total. Here `@vcov` carries the covariance of `a_M1` and
+`a_M2`, which the lm/glm `ParallelMediationData` leaves out. The between level is kept only when the ICC of the
+treatment and of every mediator is at least 0.01; one mediator without a between part makes the whole result
+within-only (`medfit_between_unidentified`).
+
+### Check it against lavaan
+
+`paths()` names each path by mediator and level. Label the same model and define the effects with `:=`; the
+estimates and standard errors match `tidy()`:
+
+```{r}
+#| label: parallel-check-lavaan
+#| eval: !expr has_lavaan
+paths(tk)
+labeled_k <- "
+  level: 1
+    M1 ~ a1w*X
+    M2 ~ a2w*X
+    Y ~ b1w*M1 + b2w*M2 + cw*X
+  level: 2
+    M1 ~ a1b*X
+    M2 ~ a2b*X
+    Y ~ b1b*M1 + b2b*M2 + cb*X
+  nie_M1_within := a1w*b1w
+  nie_within := a1w*b1w + a2w*b2w
+  nie_between := a1b*b1b + a2b*b2b
+  nie_contrast := (a1w*b1w + a2w*b2w) - (a1b*b1b + a2b*b2b)
+"
+pe_k <- lavaan::parameterEstimates(lavaan::sem(labeled_k, data = d_k, cluster = "id"))
+pe_k <- pe_k[pe_k$op == ":=", ]
+tidy_k <- tidy(tk, type = "effects")
+tidy_k <- tidy_k[match(pe_k$lhs, tidy_k$term), ]
+round(cbind(lavaan_est = pe_k$est, medfit_est = tidy_k$estimate,
+            lavaan_se = pe_k$se, medfit_se = tidy_k$std_error), 5)
+```
+
+### One mediator's paths equated across levels
+
+When both `a` and `b` of one mediator carry the same label at the two levels, that mediator's contrast is
+zero by constraint and is `NA`, with the warning `medfit_warning_twolevel_constrained`. The other mediator's
+contrast and the total contrast are still returned (lavaan warns that level-specific fit measures are not
+available with cross-level constraints; that warning is lavaan's, so the fit is wrapped in `suppressWarnings()`):
+
+```{r}
+#| label: parallel-equated
+#| eval: !expr has_lavaan
+model_k_eq <- "
+  level: 1
+    M1 ~ a1*X
+    M2 ~ X
+    Y ~ b1*M1 + M2 + X
+  level: 2
+    M1 ~ a1*X
+    M2 ~ X
+    Y ~ b1*M1 + M2 + X
+"
+fit_k_eq <- suppressWarnings(lavaan::sem(model_k_eq, data = d_k, cluster = "id"))
+tk_eq <- extract_mediation(fit_k_eq, treatment = "X", mediator = c("M1", "M2"), outcome = "Y")
+nie(tk_eq, level = "contrast", type = "specific")
+nie(tk_eq, level = "contrast")
+```
+
+The total contrast equals the M2 contrast here, because the M1 part is zero by constraint.
 
 `twolevel_statistic()` builds the bootstrap callback for several mediators too. `effect` is `"nie"` (the total,
 the default), `"nie_j"` (the specific effect of the mediator named in `specific`), `"nde"` or `"te"`, and
@@ -450,10 +512,10 @@ unknown `specific` stops with class `medfit_error_twolevel_unsupported`.
 
 ## Limits
 
-- **One mediator, linear paths, observed variables.** Two or more mediators return the experimental
-  `TwoLevelParallelMediationData` instead ([Several parallel mediators](#several-parallel-mediators)); a mediator regressed on another mediator (serial) stops extraction with
-  class `medfit_error_twolevel_unsupported`. Latent variables and non-Gaussian outcomes are not part of this
-  adapter.
+- **One mediator or several parallel ones, linear paths, observed variables.** Two or more mediators return
+  the experimental `TwoLevelParallelMediationData` ([Several parallel mediators](#several-parallel-mediators));
+  a mediator regressed on another mediator (serial) stops extraction with class
+  `medfit_error_twolevel_unsupported`. Latent variables and non-Gaussian outcomes are not part of this adapter.
 - **No `standardized = TRUE`.** A standardized two-level path mixes the within and the between variances;
   extraction stops with class `medfit_error_twolevel_standardized`.
 - **No product terms.** A `:` term in a regression, or `interaction =`, stops extraction with class
@@ -477,8 +539,8 @@ you have decided to accept can be muffled by class (see [Troubleshooting](guide-
 | Class | Kind | When |
 |---|---|---|
 | `medfit_between_unidentified` | warning (error from `twolevel_statistic()`) | the between level is not identified: the result is within-only. Also from a between accessor on a within-only object; `twolevel_statistic()` stops with this class for a between effect or the contrast |
-| `medfit_warning_between_weak` | warning | the ICC of the treatment or the mediator is in [0.01, 0.05) |
-| `medfit_warning_twolevel_constrained` | warning | the contrast is `NA` because both a and b are equated across levels |
+| `medfit_warning_between_weak` | warning | the ICC of the treatment or of a mediator is in [0.01, 0.05) |
+| `medfit_warning_twolevel_constrained` | warning | the contrast is `NA` because both a and b are equated across levels (with several mediators, those of that mediator, or of every mediator for the total) |
 | `medfit_warning_twolevel_inadmissible` | warning | lavaan's `post.check` is `FALSE` (for example a negative variance) |
 | `medfit_warning_twolevel_few_clusters` | warning | fewer than 50 clusters |
 | `medfit_warning_twolevel_labels_ignored` | warning | `a_label`, `b_label` or `cp_label` was set: the paths are read by variable names and level, not by label |
@@ -498,7 +560,8 @@ The messages they carry are quoted in [Troubleshooting](guide-troubleshooting.ht
 
 ## Related
 
-[Cookbook recipe 23](cookbook.html#a-two-level-lavaan-fit-within-and-between) | [lavaan fits](model-lavaan.html) |
+[Cookbook recipe 23](cookbook.html#a-two-level-lavaan-fit-within-and-between) |
+[Cookbook recipe 24](cookbook.html#two-parallel-mediators-in-a-two-level-lavaan-fit) | [lavaan fits](model-lavaan.html) |
 [Cluster-randomized trials](model-cluster.html) | [Methods and Formulas](methods.html#two-level-mediation-1-1-1)
 
 ## References
