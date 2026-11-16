@@ -24,6 +24,8 @@ exclusions: list(
     "tests/testthat/test-twolevel-effects.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-hardening-qa.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-bootstrap.R" = list(object_usage_linter = Inf),
+    # the k = 3 QA oracle's helper calls testthat expectations outside test_that()
+    "tests/testthat/test-twolevel-parallel-effects-qa.R" = list(object_usage_linter = Inf),
     "tests/testthat/helper-fiml-golden.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g1-covariate.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g1-two-covariates.R" = list(object_usage_linter = Inf),
