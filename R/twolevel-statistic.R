@@ -250,7 +250,9 @@ twolevel_statistic <- function(x,
 .twolevel_stat_parallel <- function(x, effect, treatment, mediator, outcome, level, specific, env) {
   checkmate::assert_string(effect, .var.name = "effect")
   level <- if (is.null(level)) "within" else level
-  checkmate::assert_choice(level, c("within", "between", "contrast"), .var.name = "level")
+  if (!checkmate::test_choice(level, c("within", "between", "contrast"))) {
+    .twolevel_abort("`level` must be one of \"within\", \"between\" or \"contrast\".", "medfit_error_twolevel_level")
+  }
   checkmate::assert_string(specific, null.ok = TRUE, .var.name = "specific")
   checkmate::assert_string(treatment, null.ok = TRUE, .var.name = "treatment")
   checkmate::assert_character(mediator, min.len = 2L, any.missing = FALSE, unique = TRUE, null.ok = TRUE,

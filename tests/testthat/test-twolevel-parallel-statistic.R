@@ -211,7 +211,9 @@ test_that("undefined effects, levels and mediators are classed errors", {
   expect_error(twolevel_statistic(td, "pm"), class = "medfit_error_twolevel_unsupported")
   expect_error(twolevel_statistic(td, "nde", level = "contrast"), class = "medfit_error_twolevel_level")
   expect_error(twolevel_statistic(td, "te", level = "contrast"), class = "medfit_error_twolevel_level")
-  expect_error(twolevel_statistic(td, "nie", level = "both"))
+  for (lev in list("both", "Within", c("within", "between"), NA_character_, 1)) {
+    expect_error(twolevel_statistic(td, "nie", level = lev), class = "medfit_error_twolevel_level")
+  }
   expect_error(twolevel_statistic(td, "nie", treatment = "X"), class = "medfit_error_twolevel_unsupported")
 
   # the one-mediator object keeps its own vocabulary and refuses the parallel arguments
