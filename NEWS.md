@@ -11,9 +11,17 @@
   and every mediator have an ICC of at least 0.01; otherwise the object is within-only and the warning names each
   variable below the threshold. A mediator regressed on another mediator (serial), a covariate passed as a mediator,
   and a mediator listed twice or also as the treatment or outcome are refused with
-  `medfit_error_twolevel_unsupported`. So far the object has only a print method; effects and standard errors
-  (`nie()`, `tidy()` and the rest) follow. The class is experimental and may change without the usual deprecation
+  `medfit_error_twolevel_unsupported`. The class is experimental and may change without the usual deprecation
   period.
+* Effects and standard errors for `TwoLevelParallelMediationData` (experimental). `nie()` takes `level =` as for
+  one mediator and `type = "total"` (the default, the sum over mediators of `a_j * b_j`) or `"specific"` (one
+  value per mediator); `nde()`, `te()`, `pm()`, `paths()` and `decompose()` work per level. The contrast is within
+  minus between, as for one mediator, and is descriptive, not a test; a mediator's contrast is `NA` only when both
+  its `a` and its `b` are equated across levels, and the total contrast only when every mediator's is.
+  `tidy()`, `glance()`, `coef()`, `vcov()`, `nobs()`, `confint()` and `summary()` report the specific and total
+  effects with delta-method standard errors over the joint covariance of the paths, so the covariances across
+  mediators and across levels both enter. The formulas are in the Methods and Formulas article. One-mediator
+  results are unchanged.
 
 ## Documentation
 

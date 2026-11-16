@@ -214,6 +214,9 @@
   if (S7::S7_inherits(x, TwoLevelMediationData)) {
     return(.effect_gradients_twolevel(x))
   }
+  if (S7::S7_inherits(x, TwoLevelParallelMediationData)) {
+    return(.effect_gradients_twolevel_parallel(x))
+  }
 
   if (S7::S7_inherits(x, MediationData)) {
     a <- x@a_path
@@ -306,6 +309,55 @@
   } else {
     c(nie_contrast_unavailable = NA_real_)
   }
+  out
+}
+
+
+#' Effect Gradients for a TwoLevelParallelMediationData Object
+#'
+#' Per level, the specific NIE `a_j b_j` has gradient `(b_j, a_j)` over `(a_<M_j>_<level>, b_<M_j>_<level>)`;
+#' the total NIE sums them; NDE, TE and PM as in the one-mediator class. A contrast's gradient is the within
+#' minus the between gradient (the contrast is within minus between); an unavailable contrast (D5, or a
+#' within-only object) gets a gradient over a row that does not exist, so its SE is `NA`. Between rows absent from
+#' `@vcov` (within-only) give `NA` the same way.
+#'
+#' @param x A TwoLevelParallelMediationData object.
+#' @return Named list: effect key (`.twolevel_parallel_effect_keys(x)`) -> named gradient over `@vcov`.
+#' @keywords internal
+#' @noRd
+.effect_gradients_twolevel_parallel <- function(x) {
+  meds <- x@mediators
+  per_level <- function(level) {
+    a <- S7::prop(x, paste0("a_", level))
+    b <- S7::prop(x, paste0("b_", level))
+    cp <- S7::prop(x, paste0("c_prime_", level))
+    g_spec <- lapply(seq_along(meds), function(j) {
+      stats::setNames(c(b[[j]], a[[j]]), paste0(c("a_", "b_"), meds[[j]], "_", level))
+    })
+    names(g_spec) <- paste0("nie_", meds, "_", level)
+    g_nie <- do.call(.add_gradients, unname(g_spec))
+    g_nde <- stats::setNames(1, paste0("c_prime_", level))
+    g_te <- .add_gradients(g_nie, g_nde)
+    nie <- sum(a * b)
+    te <- nie + cp
+    g_pm <- if (.twolevel_te_defined(te, nie, cp)) {
+      .add_gradients(g_nie / te, g_te * (-nie / te^2))
+    } else {
+      g_te * NA_real_
+    }
+    c(g_spec, stats::setNames(list(g_nie, g_nde, g_te, g_pm), paste0(c("nie", "nde", "te", "pm"), "_", level)))
+  }
+  out <- c(per_level("within"), per_level("between"))
+  avail <- .twolevel_parallel_contrast_available(x)
+  contrast <- function(within, between, ok, key) {
+    if (!ok) return(stats::setNames(NA_real_, paste0(key, "_unavailable")))
+    .add_gradients(out[[within]], -out[[between]])
+  }
+  for (m in meds) {
+    key <- paste0("nie_", m, "_contrast")
+    out[[key]] <- contrast(paste0("nie_", m, "_within"), paste0("nie_", m, "_between"), avail[[m]], key)
+  }
+  out$nie_contrast <- contrast("nie_within", "nie_between", avail[["total"]], "nie_contrast")
   out
 }
 

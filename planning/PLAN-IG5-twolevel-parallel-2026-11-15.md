@@ -9,7 +9,7 @@ Each task runs through the `medfit-orchestrator` pipeline (implement, oracle QA,
 | Task | Content | Depends on | Acceptance |
 |---|---|---|---|
 | - [x] T1 | Class `TwoLevelParallelMediationData`, validator, S4 registration, print; contract pin | spec (approved) | validator rejects length mismatches and duplicate mediators; contract test lists the properties |
-| - [ ] T2 | Extraction: vector key rows, `2(2k+1)` vcov block, ICC rule (D2), contrast rule (D5), serial refusal | T1 | lavaan oracle on paths and `@vcov`; k = 1 equals `TwoLevelMediationData`; planted key swap caught |
+| - [x] T2 | Extraction: vector key rows, `2(2k+1)` vcov block, ICC rule (D2), contrast rule (D5), serial refusal | T1 | lavaan oracle on paths and `@vcov`; k = 1 equals `TwoLevelMediationData`; planted key swap caught |
 | - [ ] T3 | Effects and SEs: `nie(type =)`, `nde`, `te`, `pm`, `paths`, `decompose`, gradient builder, `tidy`/`confint`/`summary` | T2 | lavaan `:=` oracle per level and contrast, at 1e-6; zeroed cross-mediator block caught |
 | - [ ] T4 | `twolevel_statistic()` for k mediators (D4) | T3 | parametric and refit statistics equal `nie()` at the estimate; bootstrap runs on the fixture |
 | - [ ] T5 | Docs: model page, troubleshooting row, cookbook recipe, reference card, NEWS, gap register | T4 | docs-consistency tests pass; each quoted message is triggered |

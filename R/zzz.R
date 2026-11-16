@@ -92,6 +92,7 @@
   S7::method(show, JointMediationData) <- .show_via_print
   S7::method(show, ClusterMediationData) <- .show_via_print
   S7::method(show, TwoLevelMediationData) <- .show_via_print
+  S7::method(show, TwoLevelParallelMediationData) <- .show_via_print
   S7::method(show, SEMFit) <- .show_via_print
 
   # Explicitly register the S3 print method for `mediation_effect`.
@@ -122,6 +123,8 @@
   registerS3method("print", "summary_JointMediationData", print_summary_joint_mediation_data)
   registerS3method("print", "summary_ClusterMediationData", print_summary_cluster_mediation_data)
   registerS3method("print", "summary_TwoLevelMediationData", print_summary_twolevel_mediation_data)
+  registerS3method("print", "summary_TwoLevelParallelMediationData",
+                   print_summary_twolevel_parallel)
   registerS3method("print", "summary_SEMFit", print_summary_semfit)
 
   # tidy()/glance() methods for S7 objects (function names avoid dots, so NAMESPACE directives cannot register them)

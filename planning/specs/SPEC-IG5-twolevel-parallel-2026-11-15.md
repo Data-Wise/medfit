@@ -24,7 +24,7 @@ Per level:
 - specific indirect effect `a_j^l b_j^l`
 - total NIE `sum_j a_j^l b_j^l`
 - NDE `c'^l`; TE = NIE + NDE; PM = NIE / TE
-- contrast (between minus within) of each specific effect and of the total, descriptive and not a test, as in the
+- contrast (within minus between) of each specific effect and of the total, descriptive and not a test, as in the
   one-mediator class
 
 Mediator residual covariances (`M_1 ~~ M_2`) at either level are allowed. They do not enter any effect, but the
@@ -67,8 +67,8 @@ predicts another mediator at either level (serial; `medfit_error_twolevel_unsupp
 - `.twolevel_check_args()` accepts `length(mediator) >= 1`; a duplicate or the treatment/outcome among the
   mediators errors.
 - `.twolevel_identification()` loops the ICC check over the mediators (D2).
-- Gradients: `d(sum a_j b_j)/d a_j = b_j`, `d/d b_j = a_j`, per level; the contrast gradient is the between minus the
-  within gradient.
+- Gradients: `d(sum a_j b_j)/d a_j = b_j`, `d/d b_j = a_j`, per level; the contrast gradient is the within minus the
+  between gradient.
 
 ## 6. Verification
 

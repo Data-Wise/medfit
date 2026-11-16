@@ -857,6 +857,91 @@ S7::method(confint, TwoLevelMediationData) <- function(object, parm = "paths", l
 }
 
 
+
+# --- Base-generic methods for TwoLevelParallelMediationData ---
+
+#' Extract Coefficients from TwoLevelParallelMediationData
+#'
+#' @param object A TwoLevelParallelMediationData object
+#' @param type One of `"paths"` (within then between paths), `"effects"` (the effect terms of `tidy()`), or
+#'   `"all"` (the stored `@estimates`, the identified path rows).
+#' @param ... Additional arguments (ignored)
+#' @return A named numeric vector
+#' @noRd
+S7::method(coef, TwoLevelParallelMediationData) <- function(object, type = c("paths", "effects", "all"), ...) {
+  type <- match.arg(type)
+  if (identical(type, "effects")) .twolevel_parallel_signal_na(object, .twolevel_parallel_effect_keys(object))
+  switch(type,
+    paths = paths(object),
+    effects = .twolevel_parallel_effect_vec(object),
+    all = object@estimates
+  )
+}
+
+#' Extract Variance-Covariance Matrix from TwoLevelParallelMediationData
+#'
+#' @param object A TwoLevelParallelMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return The path block of the fit's joint covariance, with the cross-level and cross-mediator covariances
+#' @noRd
+S7::method(vcov, TwoLevelParallelMediationData) <- function(object, ...) {
+  object@vcov
+}
+
+#' Number of Observations from TwoLevelParallelMediationData
+#'
+#' @param object A TwoLevelParallelMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return Integer: number of observations the fit used
+#' @noRd
+S7::method(nobs, TwoLevelParallelMediationData) <- function(object, ...) {
+  object@n_obs
+}
+
+#' Confidence Intervals for TwoLevelParallelMediationData
+#'
+#' @description
+#' Wald (normal) intervals with the SEs of `tidy()`: path SEs from the diagonal of `@vcov`, effect SEs by the
+#' delta method over the joint `@vcov` (cross-level and cross-mediator covariances included). No small-J t
+#' correction. Between rows of a within-only object, and a constrained contrast, are `NA` with a classed warning.
+#'
+#' @param object A TwoLevelParallelMediationData object.
+#' @param parm `"paths"`, `"effects"`, or term names (any path or effect term of `tidy()`).
+#' @param level Confidence level (default 0.95).
+#' @param ... Additional arguments (ignored).
+#' @return A two-column matrix of lower/upper bounds, one row per term.
+#' @noRd
+S7::method(confint, TwoLevelParallelMediationData) <- function(object, parm = "paths", level = 0.95, ...) {
+  checkmate::assert_number(level, lower = 0, upper = 1)
+  checkmate::assert_character(parm, min.len = 1, any.missing = FALSE, .var.name = "parm")
+  path_names <- names(paths(object))
+  effect_keys <- .twolevel_parallel_effect_keys(object)
+  terms <- if (identical(parm, "paths")) {
+    path_names
+  } else if (identical(parm, "effects")) {
+    effect_keys
+  } else {
+    checkmate::assert_subset(parm, c(path_names, effect_keys), .var.name = "parm")
+    parm
+  }
+  is_path <- terms %in% path_names
+  est <- c(paths(object), .twolevel_parallel_effect_vec(object))[terms]
+  se <- numeric(length(terms))
+  vc <- object@vcov
+  se[is_path] <- sqrt(diag(vc)[match(terms[is_path], rownames(vc))])
+  if (any(!is_path)) se[!is_path] <- .effect_se_or_na(object, terms[!is_path])
+  .twolevel_parallel_signal_na(object, terms[!is_path])
+  z <- stats::qnorm(1 - (1 - level) / 2)
+  ci_mat <- cbind(est - z * se, est + z * se)
+  rownames(ci_mat) <- terms
+  alpha <- 1 - level
+  colnames(ci_mat) <- c(
+    paste0(format(100 * alpha / 2, digits = 3), " %"),
+    paste0(format(100 * (1 - alpha / 2), digits = 3), " %")
+  )
+  ci_mat
+}
+
 # --- Base-generic methods for BootstrapResult ---
 
 #' Extract the Point Estimate from a BootstrapResult

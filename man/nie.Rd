@@ -17,11 +17,16 @@ estimate (with a warning if the statistic was not an NIE).}
 chain-specific (default) or the total indirect effect (see Details). For a
 \code{TwoLevelMediationData}, \code{level = c("within", "between", "contrast", "both")}
 selects the level (within is the default; the contrast, within minus
-between, is descriptive and exists for \code{nie()} only).}
+between, is descriptive and exists for \code{nie()} only). For a
+\code{TwoLevelParallelMediationData}, \code{level} as for \code{TwoLevelMediationData}
+and \code{type = c("total", "specific")} selects the total indirect effect
+(default) or one specific indirect effect per mediator.}
 }
 \value{
 A numeric scalar of class \code{mediation_effect} carrying a \code{type}
-attribute. For intervals use \code{\link[=confint]{confint()}} or \code{\link[=bootstrap_mediation]{bootstrap_mediation()}}.
+attribute (a named vector, one value per mediator, for
+\code{TwoLevelParallelMediationData} with \code{type = "specific"}). For intervals
+use \code{\link[=confint]{confint()}} or \code{\link[=bootstrap_mediation]{bootstrap_mediation()}}.
 }
 \description{
 Extract the natural indirect effect from a mediation analysis result.
@@ -44,6 +49,12 @@ that skip a mediator, such as X -> M2 -> Y), which equals
     (\theta_2 + \theta_3) \beta_1}{NIE = INTmed + PIE = (t2 + t3) * b1}.
 \item \code{JointMediationData}: the joint NIE through all the mediators,
 \eqn{\sum_i (\theta_{2i} + \theta_{3i}) \beta^*_{1i}}{sum((t2i + t3i) * b1i*)}.
+\item \code{TwoLevelParallelMediationData} (experimental): per level, the
+specific effects \eqn{a_j b_j}{a_j * b_j} and the total
+\eqn{\sum_j a_j b_j}{sum(a_j * b_j)}; the contrast is within minus
+between and descriptive, \code{NA} for a mediator whose \code{a} and \code{b} are both
+equated across levels; the total contrast is \code{NA} only when every
+mediator's contrast is.
 }
 The "Methods and Formulas" article on the package website gives the full
 formulas.

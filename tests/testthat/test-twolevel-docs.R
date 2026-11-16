@@ -70,6 +70,45 @@ test_that("the model page runs and its claims hold against lm and lavaan", {
   expect_identical(env$err_within_only, "medfit_between_unidentified")
   expect_identical(env$err_constrained, "medfit_error_twolevel_constrained")
 
+  # the several-mediators section: the total is the sum of the specific effects, the contrasts are within minus
+  # between, and the total-NIE SEs are lavaan's own := standard errors
+  tk <- env$tk
+  expect_s7_class(tk, TwoLevelParallelMediationData)
+  for (lv in c("within", "between")) {
+    expect_equal(as.numeric(nie(tk, level = lv)), sum(nie(tk, level = lv, type = "specific")))
+  }
+  expect_equal(unname(as.numeric(nie(tk, level = "contrast", type = "specific"))),
+               unname(as.numeric(nie(tk, type = "specific")) -
+                        as.numeric(nie(tk, level = "between", type = "specific"))))
+  labeled_k <- "
+    level: 1
+      M1 ~ a1w*X
+      M2 ~ a2w*X
+      Y ~ b1w*M1 + b2w*M2 + X
+    level: 2
+      M1 ~ a1b*X
+      M2 ~ a2b*X
+      Y ~ b1b*M1 + b2b*M2 + X
+    tw := a1w*b1w + a2w*b2w
+    tb := a1b*b1b + a2b*b2b
+    tc := tw - tb
+  "
+  pe_k <- lavaan::parameterEstimates(lavaan::sem(labeled_k, data = env$d_k, cluster = "id"))
+  eff_k <- tidy(tk, type = "effects")
+  se_k <- eff_k$std_error[match(c("nie_within", "nie_between", "nie_contrast"), eff_k$term)]
+  expect_equal(se_k, pe_k[pe_k$op == ":=", "se"], tolerance = 1e-4)
+  # the hand delta-method SE of the total between NIE reproduces tidy(); dropping the M1-M2 covariance moves it
+  v <- tk@vcov
+  p <- paths(tk)
+  g <- stats::setNames(numeric(nrow(v)), rownames(v))
+  ab <- c("a_M1_between", "a_M2_between", "b_M1_between", "b_M2_between")
+  g[ab] <- p[c("b_M1_between", "b_M2_between", "a_M1_between", "a_M2_between")]
+  expect_equal(sqrt(drop(t(g) %*% v %*% g)), se_k[2], tolerance = 1e-8)
+  cross <- outer(grepl("M1", rownames(v)), grepl("M2", colnames(v))) |
+    outer(grepl("M2", rownames(v)), grepl("M1", colnames(v)))
+  v[cross] <- 0
+  expect_false(isTRUE(all.equal(sqrt(drop(t(g) %*% v %*% g)), se_k[2], tolerance = 1e-3)))
+
   # planted defect: a within path off by 0.1 fails the lm comparison
   bad <- unname(paths(td)[1:3]) + c(0.1, 0, 0)
   expect_false(isTRUE(all.equal(bad, unname(env$ols), tolerance = 1e-3)))
