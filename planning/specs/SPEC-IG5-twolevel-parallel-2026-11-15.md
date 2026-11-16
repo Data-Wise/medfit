@@ -1,6 +1,6 @@
 # Spec: IG5, parallel mediators in the two-level (1-1-1) lavaan adapter
 
-**Date:** 2026-11-15 · **Status:** draft, decisions D1-D5 awaiting approval
+**Date:** 2026-11-15 · **Status:** **approved** 2026-11-15 (D1-D5 as recommended)
 **Gap register:** [PLAN-multilevel-implementation-gaps-2026-11-11.md](../PLAN-multilevel-implementation-gaps-2026-11-11.md) (IG5)
 **Scope decision (user, 2026-11-15):** parallel mediators only. Serial chains are out of scope.
 **Plan:** [PLAN-IG5-twolevel-parallel-2026-11-15.md](../PLAN-IG5-twolevel-parallel-2026-11-15.md)
@@ -32,7 +32,7 @@ parameter covariance carries them through the joint information.
 
 ## 3. Decisions
 
-Each decision has a recommendation. None is final until approved.
+Each decision was approved by the user on 2026-11-15 as recommended.
 
 | # | Question | Recommendation | Alternative |
 |---|---|---|---|
