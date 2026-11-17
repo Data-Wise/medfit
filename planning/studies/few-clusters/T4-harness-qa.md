@@ -38,8 +38,8 @@ The CSVs stay in `_agents_workspace/fc-t4/` (git-ignored).
 
 - Coverage is unconditional: a row with an NA interval (adapter error, non-converged fit) counts as a miss.
   MCSE = sqrt(p (1 - p) / R).
-- Band call: `outside` if the coverage is outside (0.925, 0.975); `ambiguous` if it is inside but within 2 MCSE of an
-  edge; `inside` otherwise.
+- Band call (`fc_band()`): `ambiguous` if the coverage is within 2 MCSE of either edge of (0.925, 0.975), on either
+  side; otherwise `inside` or `outside` by the point coverage. An `ambiguous` call can sit just outside the band.
 - Mutant `truth`: every truth shifted by +.05. Mutant `narrow`: every delta interval narrowed 20% about its center.
 - Determinism check: the truth and narrow runs equal the base run in every column except their own (truths, or
   lo/hi). TRUE for both.
@@ -57,7 +57,14 @@ Baseline health (12000 rows): 0 lavaan errors, 121 adapter errors, 88 non-conver
 | c_prime_between | 11 / 9 / 4 | 19 / 1 / 4 | 4 / 0 / 20 |
 | nie_contrast | 10 / 5 / 9 | 11 / 4 / 9 | 12 / 1 / 11 |
 
-Mutant cells called `inside` (the S1 cases):
+S1 count by point coverage (mutant coverage in (0.925, 0.975), whatever the call), 120 cell-estimands per mutant:
+
+| Mutant | cells inside | nie_within | c_prime_within | nie_between | c_prime_between | nie_contrast |
+|---|---|---|---|---|---|---|
+| truth | 31 | 0 | 0 | 4 | 14 | 13 |
+| narrow | 14 | 0 | 0 | 7 | 0 | 7 |
+
+Those called `inside` outright (not `ambiguous`):
 
 | Mutant | Cell | Estimand | base | mutant | median SE | predicted truth coverage |
 |---|---|---|---|---|---|---|
@@ -94,17 +101,24 @@ The adapter's ICC thresholds and `.twolevel_pair_equal()` (relative variance tes
 
 Result over 1200 datasets (24 cells x reps 1 to 50):
 
-- 1176 datasets have identical coverage indicators and flags. Median |k est' - est| / se = 1.3e-4; max 0.259.
+- 1176 datasets have identical coverage indicators and flags.
 - 24 datasets differ in a flag; 17 of them also flip at least one coverage indicator (nie_within 12, nie_between 8,
   nie_contrast 8, c_prime_within 12, c_prime_between 8 indicator flips in total).
-- **All 24 are in the four n = 5, ICC_X = .05 cells** (1005, 1035, 1065, 1095), where the fit sits on a boundary.
-  The flags that change: converged (lavaan's optimizer is not scale-free: its starts and convergence tolerance are
-  absolute), admissible / neg_l2_var (a level-2 variance near 0 crosses 0), and between_identified (the ICC of the
-  fitted between block straddles its threshold). 19 of the 24 are a converged or adapter-error switch, which makes
-  the interval NA on one side only. No flag or indicator flips in the other 20 cells.
+- **All 24 are in the four n = 5, ICC_X = .05 cells** (1005, 1035, 1065, 1095), where the fit sits near a boundary.
+  14 of them switch convergence or adapter error (the interval is NA on one side only); the rest switch
+  admissible / neg_l2_var (a level-2 variance near 0 crosses 0) or between_identified. Likely mechanisms, not
+  checked: lavaan's optimizer starts and stopping rule are not scale-free, and the fitted between-block ICC sits
+  near the adapter's threshold.
+- NA gaps: 19 datasets, of which 5 have identical flags (both sides errored the same way) and 14 are the switches.
+- **Gap on the 1171 clean datasets with an estimate** (identical flags and indicators): median 1.3e-4 SE, 90th
+  percentile 6.9e-4, 99th 4.4e-3, max 0.244 (cell 1065 rep 22, an inadmissible fit). 79 exceed the 1e-3 SE
+  tolerance of the unit test (J = 50, ICC .4); outside the four boundary cells the max is 4.4e-3 SE. The gaps
+  above 1e-2 (9 datasets) are all in the four boundary cells, 8 of them inadmissible fits.
+  This is a separate finding: the estimate identity holds to optimizer precision, not to 1e-3 SE, across the
+  J = 100 grid. No indicator flips on the clean set.
 
-The rescale identity therefore holds wherever the fit is interior; flips come from lavaan's absolute optimizer
-tolerances on near-boundary fits, not from the harness truths, which scale exactly (`fc_truth(scale_x = )`,
+The rescale identity therefore holds wherever the fit is interior; flips come from near-boundary fits (likely lavaan's
+optimizer), not from the harness truths, which scale exactly (`fc_truth(scale_x = )`,
 tested with a planted unscaled-truth defect).
 
 ## Per-cell coverage (R = 500; coverage (MCSE) band)
