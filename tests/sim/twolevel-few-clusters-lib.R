@@ -107,11 +107,18 @@ fc_seed <- function(cell_id, rep) {
   as.integer(cell_id * 1e5 + rep)
 }
 
+# withr::with_seed() leaves the RNG kind changed when the session had no .Random.seed; restore the kind as well.
+fc_with_seed <- function(seed, kind, code) {
+  old_kind <- RNGkind()
+  on.exit(if (!identical(RNGkind(), old_kind)) RNGkind(old_kind[1], old_kind[2], old_kind[3]), add = TRUE)
+  withr::with_seed(seed, .rng_kind = kind, code)
+}
+
 # One dataset for a grid row; L'Ecuyer-CMRG streams, the session's RNG state left untouched.
 fc_simulate <- function(cell, rep) {
   sizes <- fc_sizes(cell$J, cell$n, cell$balance)
   imp <- fc_implied(fc_scale(cell$icc_x), cell$nie_b)
-  draws <- withr::with_seed(fc_seed(cell$cell_id, rep), .rng_kind = "L'Ecuyer-CMRG", {
+  draws <- fc_with_seed(fc_seed(cell$cell_id, rep), "L'Ecuyer-CMRG", {
     list(
       u = matrix(stats::rnorm(cell$J * 3), cell$J, 3) %*% chol(imp$sb),
       e = matrix(stats::rnorm(sum(sizes) * 3), sum(sizes), 3) %*% chol(imp$sw)
