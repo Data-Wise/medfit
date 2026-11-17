@@ -1,4 +1,4 @@
-# Few-clusters design study, tasks T1 and T2 (planning/PLAN-few-clusters-design-study-2026-11-16.md): the harness in
+# Few-clusters design study, tasks T1 to T3 (planning/PLAN-few-clusters-design-study-2026-11-16.md): the harness in
 # tests/sim/twolevel-few-clusters-lib.R. T1: the between-level scale `s` and the implied ICCs match the section 4 table
 # to 1e-3 (computed from the implied covariance matrices, not from the closed form), the unequal cluster sizes keep
 # the mean and reach a CV near .5, seeds follow section 9, and the O8 likelihood oracle
@@ -93,6 +93,11 @@ test_that("T1: datasets are reproducible, leave the session RNG alone, and diffe
   expect_identical(RNGkind(), kind_before)
   expect_identical(.Random.seed, state_before)
   expect_identical(fc_simulate(cell, 1L), d1)
+  RNGkind("Mersenne-Twister")
+  rm(".Random.seed", envir = globalenv())
+  fc_simulate(cell, 1L)
+  expect_identical(RNGkind()[1], "Mersenne-Twister")
+  set.seed(99)
   expect_false(identical(fc_simulate(cell, 2L)$X, d1$X))
   expect_named(d1, c("id", "X", "M", "Y"))
   expect_identical(nrow(d1), as.integer(cell$J * cell$n))
@@ -188,4 +193,171 @@ test_that("T1: MUTANT switches shift the truth or narrow the delta interval; unk
   expect_equal(narrowed$hi_nie_within - narrowed$lo_nie_within, .8 * .2)
   expect_equal(narrowed$est_nie_within, .2)
   expect_error(fc_apply_mutant(row, "wider"), "unknown mutant")
+})
+
+# --- T3: the three-effect cluster-bootstrap closure (one refit, three statistics) -------------------------------------
+
+# Value of one callback on one resample, as bootstrap_mediation()'s cluster loop sees it: an error is NA, and a warning
+# marks the replicate as failed (NA) and is recorded.
+fc_t3_eval <- function(f, d, n) {
+  warned <- FALSE
+  v <- withCallingHandlers(
+    tryCatch(f(d), error = function(e) rep(NA_real_, n)),
+    warning = function(w) {
+      warned <<- TRUE
+      invokeRestart("muffleWarning")
+    }
+  )
+  if (warned) v[] <- NA_real_
+  list(value = unname(v), warned = warned)
+}
+
+# One resample per seed: the dataset is replicate `seed` of a cell with `J` clusters (default 20), the clusters are
+# drawn with set.seed(seed) exactly as bootstrap_mediation(cluster = ) draws them, and relabeled by the shipped helper.
+fc_t3_cases <- function(seeds, J = 20) {
+  g <- fc_grid() # nolint: object_usage_linter. (sourced from tests/sim)
+  cell <- g[g$J == J & g$n == 5 & g$icc_x == .4 & g$balance == "equal" & g$nie_b == .18, ]
+  lapply(seeds, function(s) {
+    d <- fc_simulate(cell, s) # nolint: object_usage_linter.
+    fit <- fc_fit(d, "p0")$fit # nolint: object_usage_linter.
+    ids <- withr::with_seed(s, sample(unique(d$id), length(unique(d$id)), replace = TRUE))
+    list(seed = s, data = d, fit = fit, resample = medfit:::.relabel_clusters(d, "id", ids))
+  })
+}
+
+# The shipped side: three separate twolevel_statistic() callbacks, one refit each.
+fc_t3_shipped <- function(cases) {
+  out <- lapply(cases, function(cs) {
+    r <- lapply(fc_boot_effects, function(e) { # nolint: object_usage_linter.
+      fn <- twolevel_statistic(cs$fit, e, treatment = "X", mediator = "M", outcome = "Y") # nolint: object_usage_linter.
+      fc_t3_eval(fn, cs$resample, 1L)
+    })
+    list(value = vapply(r, `[[`, numeric(1), "value"), warned = vapply(r, `[[`, logical(1), "warned"))
+  })
+  fc_t3_matrix(out, cases)
+}
+
+# The closure side: one refit returns all three.
+fc_t3_closure <- function(cases, defect = "") {
+  out <- lapply(cases, function(cs) {
+    fn <- fc_boot_closure(cs$fit, data = cs$data, defect = defect) # nolint: object_usage_linter.
+    r <- fc_t3_eval(fn, cs$resample, 3L)
+    list(value = r$value, warned = rep(r$warned, 3L))
+  })
+  fc_t3_matrix(out, cases)
+}
+
+fc_t3_matrix <- function(out, cases) {
+  dn <- list(paste0("seed", vapply(cases, `[[`, numeric(1), "seed")), fc_boot_effects) # nolint: object_usage_linter.
+  list(
+    value = matrix(unlist(lapply(out, `[[`, "value")), length(out), 3L, byrow = TRUE, dimnames = dn),
+    warned = matrix(unlist(lapply(out, `[[`, "warned")), length(out), 3L, byrow = TRUE, dimnames = dn)
+  )
+}
+
+# one expectation over the whole seeds x effects table, so a planted defect is one failure
+fc_t3_check <- function(closure, shipped) {
+  testthat::expect_identical(closure, shipped)
+}
+
+test_that("T3: the closure equals three runs of the shipped callback on 20 seeds, exactly; planted defects fail", {
+  skip_on_cran()
+  cases <- fc_t3_cases(1:20)
+  shipped <- fc_t3_shipped(cases)
+  # the comparison is not vacuous: most resamples give three finite values, and a resample is not the original data
+  expect_gte(sum(stats::complete.cases(shipped$value)), 15L)
+  expect_false(identical(cases[[1]]$resample$X, cases[[1]]$data$X))
+  fc_t3_check(fc_t3_closure(cases), shipped)
+
+  # planted defects on the first five seeds (enough to differ, and faster)
+  first <- cases[1:5]
+  sub <- lapply(shipped, function(m) m[1:5, , drop = FALSE])
+  expect_failure(fc_t3_check(fc_t3_closure(first, "swap"), sub))
+  expect_failure(fc_t3_check(fc_t3_closure(first, "sign"), sub))
+  expect_failure(fc_t3_check(fc_t3_closure(first, "original"), sub))
+})
+
+test_that("T3: below the ICC floor the closure blanks NIE_B and the contrast only, as the shipped callback does", {
+  skip_on_cran()
+  cases <- fc_t3_cases(1:3)
+  # the shipped callbacks are built first: twolevel_statistic() reads the floor when it extracts the original fit,
+  # and the refit reads it again on every call
+  callbacks <- lapply(cases, function(cs) {
+    lapply(fc_boot_effects, function(e) { # nolint: object_usage_linter.
+      twolevel_statistic(cs$fit, e, treatment = "X", mediator = "M", outcome = "Y")
+    })
+  })
+  withr::local_options(medfit.between_icc_error = .99)
+  shipped <- fc_t3_matrix(lapply(seq_along(cases), function(i) {
+    r <- lapply(callbacks[[i]], fc_t3_eval, d = cases[[i]]$resample, n = 1L)
+    list(value = vapply(r, `[[`, numeric(1), "value"), warned = vapply(r, `[[`, logical(1), "warned"))
+  }), cases)
+  expect_true(all(is.finite(shipped$value[, "nie_within"])))
+  expect_true(all(is.na(shipped$value[, c("nie_between", "nie_contrast")])))
+  fc_t3_check(fc_t3_closure(cases), shipped)
+  expect_failure(fc_t3_check(fc_t3_closure(cases, "gate_all"), shipped))
+})
+
+test_that("T3: the closure validates its defect switch and needs the original data for the 'original' mutant", {
+  skip_on_cran()
+  fit <- fc_fit(fc_planted_negative(), "p1")$fit # nolint: object_usage_linter.
+  expect_error(fc_boot_closure(fit, defect = "wider"), "defect") # nolint: object_usage_linter.
+  expect_error(fc_boot_closure(fit, defect = "original"), "data") # nolint: object_usage_linter.
+})
+
+# Per effect, what construction gives: "ok", or the class of the refusal. The shipped side builds each
+# twolevel_statistic() callback; the closure side builds the closure once and reads its `refused` attribute.
+fc_t3_class <- function(e) paste(class(e), collapse = "/")
+fc_t3_refusals_shipped <- function(fit) {
+  vapply(fc_boot_effects, function(e) { # nolint: object_usage_linter.
+    r <- tryCatch(
+      twolevel_statistic(fit, e, treatment = "X", mediator = "M", outcome = "Y"), # nolint: object_usage_linter.
+      error = function(err) err
+    )
+    if (inherits(r, "error")) fc_t3_class(r) else "ok"
+  }, character(1))
+}
+fc_t3_refusals_closure <- function(fit, defect = "") {
+  fn <- tryCatch(fc_boot_closure(fit, defect = defect), error = function(err) err) # nolint: object_usage_linter.
+  if (inherits(fn, "error")) return(stats::setNames(rep(fc_t3_class(fn), 3L), fc_boot_effects)) # nolint
+  refused <- attr(fn, "refused")
+  vapply(fc_boot_effects, function(e) { # nolint: object_usage_linter.
+    if (is.null(refused[[e]])) "ok" else fc_t3_class(refused[[e]])
+  }, character(1))
+}
+
+test_that("T3: the closure refuses at build time per effect exactly as the shipped constructor (J = 10, seeds 7, 13)", {
+  skip_on_cran()
+  cases <- fc_t3_cases(c(7, 13), J = 10)
+  shipped <- lapply(cases, function(cs) fc_t3_refusals_shipped(cs$fit))
+  closure <- lapply(cases, function(cs) fc_t3_refusals_closure(cs$fit))
+  # seed 7: the between level is not identified; seed 13: the original fit is unusable, every effect refused
+  expect_identical(shipped[[1]][["nie_within"]], "ok")
+  expect_match(shipped[[1]][c("nie_between", "nie_contrast")], "medfit_between_unidentified")
+  expect_match(shipped[[2]], "medfit_error_twolevel_unusable")
+  expect_identical(closure, shipped)
+  # where an effect builds, its value on the resample is the shipped one, and refused effects come back NA
+  within <- twolevel_statistic(cases[[1]]$fit, "nie_within", treatment = "X", mediator = "M", outcome = "Y")
+  v <- fc_t3_eval(fc_boot_closure(cases[[1]]$fit), cases[[1]]$resample, 3L)$value # nolint: object_usage_linter.
+  expect_identical(v[1], fc_t3_eval(within, cases[[1]]$resample, 1L)$value)
+  expect_true(all(is.na(v[2:3])))
+  # built at the default floor, evaluated with the refit ICC gate off: the resample's between effects are finite,
+  # so only the build-time mask makes them NA
+  masked <- fc_boot_closure(cases[[1]]$fit)
+  raw <- fc_boot_closure(cases[[1]]$fit, defect = "nobuild")
+  withr::with_options(list(medfit.between_icc_error = -Inf), {
+    v_off <- fc_t3_eval(masked, cases[[1]]$resample, 3L)$value # nolint: object_usage_linter.
+    v_raw <- fc_t3_eval(raw, cases[[1]]$resample, 3L)$value # nolint: object_usage_linter.
+  })
+  expect_true(is.finite(v_raw[2]))
+  expect_true(all(is.na(v_off[2:3])))
+  expect_failure(expect_identical(lapply(cases, function(cs) fc_t3_refusals_closure(cs$fit, "nobuild")), shipped))
+})
+
+test_that("T3: the closure equals three runs of the shipped callback on the J = 10 seeds that build, exactly", {
+  skip_on_cran()
+  cases <- fc_t3_cases(setdiff(1:20, c(7, 13)), J = 10)
+  shipped <- fc_t3_shipped(cases)
+  expect_gte(sum(stats::complete.cases(shipped$value)), 12L)
+  fc_t3_check(fc_t3_closure(cases), shipped)
 })
