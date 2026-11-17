@@ -290,6 +290,8 @@ fc_boot_effects <- c("nie_within", "nie_between", "nie_contrast")
 
 fc_boot_closure <- function(fit, treatment = "X", mediator = "M", outcome = "Y", data = NULL, defect = "",
                             env = parent.frame()) {
+  # forced here, as the shipped refit does: the frame that called the closure builder resolves the stored call's names
+  force(env)
   checkmate::assert_choice(defect, c("", "swap", "sign", "original", "gate_all"), .var.name = "defect")
   if (defect == "original") checkmate::assert_data_frame(data, .var.name = "data")
   call <- fit@call

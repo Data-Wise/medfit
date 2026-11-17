@@ -1,4 +1,4 @@
-# Few-clusters design study, tasks T1 and T2 (planning/PLAN-few-clusters-design-study-2026-11-16.md): the harness in
+# Few-clusters design study, tasks T1 to T3 (planning/PLAN-few-clusters-design-study-2026-11-16.md): the harness in
 # tests/sim/twolevel-few-clusters-lib.R. T1: the between-level scale `s` and the implied ICCs match the section 4 table
 # to 1e-3 (computed from the implied covariance matrices, not from the closed form), the unequal cluster sizes keep
 # the mean and reach a CV near .5, seeds follow section 9, and the O8 likelihood oracle
