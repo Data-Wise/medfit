@@ -121,8 +121,11 @@ sem_fd_grad <- function(f, x, h = 1e-6) {
 
 # Rebuild an internal function with one source pattern replaced, to plant a
 # defect. The pattern must match exactly once, so a refactor cannot turn a
-# planted defect into a silent no-op.
+# planted defect into a silent no-op. covr rewrites the code it measures (covr 4.0.0
+# instruments it in a way the deparsed copy no longer runs), so a test that rebuilds
+# a function this way is skipped under coverage and runs in R CMD check.
 sem_mutate <- function(fn, pattern, replacement) {
+  testthat::skip_if(identical(Sys.getenv("R_COVR"), "true"), "covr instruments the code the mutation edits")
   src <- paste(deparse(fn, width.cutoff = 500L), collapse = "\n")
   hits <- gregexpr(pattern, src, fixed = TRUE)[[1]]
   stopifnot(hits[1] > 0, length(hits) == 1)

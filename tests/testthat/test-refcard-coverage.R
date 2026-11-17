@@ -33,7 +33,7 @@ test_that("the refcard names every export and every class", {
   classes <- c(
     "MediationData", "SerialMediationData", "ParallelMediationData",
     "InteractionMediationData", "JointMediationData", "ClusterMediationData",
-    "TwoLevelMediationData", "FIMLMediationData", "FIMLParallelMediationData",
+    "TwoLevelMediationData", "TwoLevelParallelMediationData", "FIMLMediationData", "FIMLParallelMediationData",
     "FIMLSerialMediationData"
   )
   expect_identical(refcard_missing(text, c(refcard_exports(), classes, "tidy(", "glance(")),

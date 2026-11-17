@@ -1,3 +1,78 @@
+# medfit 0.19.0
+
+## Release summary
+
+* **Two-level parallel mediation (experimental).** `extract_mediation()` on a two-level `lavaan` fit with two or more
+  mediators returns the new `TwoLevelParallelMediationData`: per-mediator and total indirect effects at the within
+  and the between level, with delta-method standard errors over the joint covariance of the paths, and
+  `twolevel_statistic()` for `bootstrap_mediation()` (#458 to #465).
+* Additions only: no existing call changes its result. A two-level fit with one mediator still returns
+  `TwoLevelMediationData`, unchanged.
+* Internal: the harness for a planned few-clusters design study lives in `tests/sim/` and is not shipped; no study
+  results are part of this release.
+* GitHub-only release; CRAN stays on hold (#83).
+
+## Known limits
+
+* The two-level API (`TwoLevelMediationData`, `TwoLevelParallelMediationData`, `twolevel_statistic()`,
+  `nie(level = )`) is experimental and may change without the usual deprecation period
+  ([Two-level mediation](https://data-wise.github.io/medfit/articles/model-twolevel.html)).
+* The within-minus-between contrast is descriptive, not a test
+  ([The contrast is descriptive](https://data-wise.github.io/medfit/articles/model-twolevel.html#the-contrast-is-descriptive)).
+* When the treatment or a mediator has an ICC below 0.01, the object is within-only and the between level is not
+  reported
+  ([When the between level is not identified](https://data-wise.github.io/medfit/articles/model-twolevel.html#when-the-between-level-is-not-identified)).
+* Two-level mediators must be parallel: a mediator regressed on another mediator (serial) is refused
+  ([Limits](https://data-wise.github.io/medfit/articles/model-twolevel.html#limits)).
+* No native two-level fitting (S4) and no latent mediators in the two-level adapter (S5); both are NO-GO as written
+  ([#394](https://github.com/data-wise/medfit/issues/394)). Two-level models are fitted in `lavaan` and extracted.
+* Bounded FIML is numerically verified, not statistically admitted
+  ([FIML page](https://data-wise.github.io/medfit/articles/model-fiml.html)).
+
+## Added
+
+* Two-level parallel mediation (experimental): the exported class `TwoLevelParallelMediationData` holds k >= 2
+  parallel mediators on level-1 units, with within and between `a` and `b` paths per mediator, a validator and a
+  print method. `extract_mediation()` on a two-level `lavaan` fit returns it when two or more mediators are given;
+  one mediator still returns `TwoLevelMediationData`, unchanged. The between level is kept only when the treatment
+  and every mediator have an ICC of at least 0.01; otherwise the object is within-only and the warning names each
+  variable below the threshold. A mediator regressed on another mediator (serial), a covariate passed as a mediator,
+  and a mediator listed twice or also as the treatment or outcome are refused with
+  `medfit_error_twolevel_unsupported`. The class is experimental and may change without the usual deprecation
+  period.
+* Effects and standard errors for `TwoLevelParallelMediationData` (experimental). `nie()` takes `level =` as for
+  one mediator and `type = "total"` (the default, the sum over mediators of `a_j * b_j`) or `"specific"` (one
+  value per mediator); `nde()`, `te()`, `pm()`, `paths()` and `decompose()` work per level. The contrast is within
+  minus between, as for one mediator, and is descriptive, not a test; a mediator's contrast is `NA` only when both
+  its `a` and its `b` are equated across levels, and the total contrast only when every mediator's is.
+  `tidy()`, `glance()`, `coef()`, `vcov()`, `nobs()`, `confint()` and `summary()` report the specific and total
+  effects with delta-method standard errors over the joint covariance of the paths, so the covariances across
+  mediators and across levels both enter. The formulas are in the Methods and Formulas article. One-mediator
+  results are unchanged.
+* Bootstrap for two-level parallel mediation (experimental). `twolevel_statistic()` now takes a
+  `TwoLevelParallelMediationData` object (the callback for `method = "parametric"` or `"plugin"`) or a two-level
+  `lavaan` fit with a `mediator` vector of length two or more (the cluster refit callback), and
+  `bootstrap_mediation()` accepts the class as `mediation_data`. For several mediators `effect` is `"nie"` (the
+  total, the default), `"nie_j"` (the specific effect of the mediator named in the new argument `specific`),
+  `"nde"` or `"te"`, and the new argument `level` is `"within"` (the default), `"between"` or `"contrast"` (within
+  minus between, for `"nie"` and `"nie_j"` only). At the estimate the callback returns the value of `nie()`,
+  `nde()` or `te()`. A refit's between level counts as identified only when the treatment and every mediator
+  have an ICC of at least 0.01. An invalid `level`, or a contrast asked of `"nde"` or `"te"`, stops with
+  `medfit_error_twolevel_level`; an unknown effect or a missing or unknown `specific` stops with
+  `medfit_error_twolevel_unsupported`. One-mediator calls are unchanged, and `level` or `specific` with one
+  mediator stops with `medfit_error_twolevel_unsupported`.
+
+## Documentation
+
+* `?compare_lr` now explains its known limit (#320). On the pinned design, every lavaan or OpenMx product-null LR
+  above medfit's reference was checked and is the minimum of the other line of the null (`a = 0` instead of `b = 0`,
+  or the reverse), so medfit's reference stands. Elsewhere, the warning is undiagnosed until both line minima are
+  computed: an optimizer that stops short on either line raises the same warning.
+* Two-level parallel mediation (experimental) is documented: the Two-level mediation page has a worked example
+  with two mediators, a check against `lavaan`'s `:=` estimates and a fit with one mediator's paths equated across
+  levels; the troubleshooting guide lists the new conditions; Cookbook recipe 24 fits and bootstraps two parallel
+  mediators; the reference card has the extraction and bootstrap rows.
+
 # medfit 0.18.0
 
 ## Release summary

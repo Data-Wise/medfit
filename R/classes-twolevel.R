@@ -291,6 +291,16 @@ TwoLevelMediationData <- S7::new_class(
   isTRUE(x@between_identified) && !all(c("a", "b") %in% x@cross_level_equal)
 }
 
+# D5 (IG5) for TwoLevelParallelMediationData: per mediator, the specific contrast is NA only when both a_j and
+# b_j are equated across levels; the total contrast (element "total") is NA only when every specific one is.
+.twolevel_parallel_contrast_available <- function(x) {
+  meds <- x@mediators
+  specific <- vapply(meds, function(m) {
+    isTRUE(x@between_identified) && !all(paste0(c("a_", "b_"), m) %in% x@cross_level_equal)
+  }, logical(1))
+  c(stats::setNames(specific, meds), total = any(specific))
+}
+
 #' Print Method for TwoLevelMediationData
 #'
 #' @param x A TwoLevelMediationData object
@@ -433,6 +443,446 @@ print_summary_twolevel_mediation_data <- function(x, ...) {
               x$cluster_sizes[1], x$cluster_sizes[2]))
   cat("ICC:        ", paste(sprintf("%s %.3f", names(x$icc), x$icc), collapse = ", "), "\n")
   # An unknown version (NA) prints the source alone, as print() does; the list keeps the NA
+  version <- x$provenance[["source_version"]]
+  fit_label <- if (is.na(version)) x$provenance[["source"]] else paste(x$provenance[["source"]], version)
+  cat(sprintf(
+    "Fit:         %s (estimator %s, fixed_x %s, information %s, h1_information %s, se %s, missing %s)\n",
+    fit_label, x$provenance[["estimator"]],
+    x$provenance[["fixed_x"]], x$provenance[["information"]], x$provenance[["h1_information"]],
+    x$provenance[["se"]], x$provenance[["missing"]]
+  ))
+  if (length(x$flags) > 0L) cat(paste0("  ", x$flags, "\n"), sep = "")
+  cat("\n")
+  cat(paste0(x$block, "\n"), sep = "")
+  invisible(x)
+}
+
+
+# =============================================================================
+# TwoLevelParallelMediationData: k parallel mediators in a two-level (1-1-1) lavaan fit (IG5, SPEC-IG5 D1)
+# =============================================================================
+
+#' TwoLevelParallelMediationData Class
+#'
+#' **Experimental.** Like [TwoLevelMediationData], this class may change without the usual deprecation period.
+#'
+#' S7 class for two-level mediation with \eqn{k \ge 2}{k >= 2} parallel mediators, all measured on level-1 units
+#' nested in clusters (1-1-1), with the paths estimated separately at the within and the between level (latent
+#' cluster means, fixed slopes). It is the parallel counterpart of [TwoLevelMediationData]: a separate class, so
+#' the one-mediator object keeps its scalar paths. Every property other than the paths and `mediators` has the
+#' meaning it has there.
+#'
+#' Per level \eqn{l} the specific indirect effect through \eqn{M_j} is
+#' \eqn{a_{jl} b_{jl}}{a_jl * b_jl}, the total indirect effect is
+#' \eqn{\sum_j a_{jl} b_{jl}}{sum_j a_jl * b_jl} and the direct effect is \eqn{c'_l}{c'_l}. When the between
+#' level cannot be identified the object is **within-only**: the between path vectors hold `NA_real_` (still
+#' named by `mediators`), `c_prime_between` is `NA_real_`, and the between rows are absent from `estimates` and
+#' `vcov`.
+#'
+#' The alias rows of `estimates` and `vcov` are, per level, `a_<M>_within` for each mediator, then
+#' `b_<M>_within`, then `c_prime_within`, and the same set with `_between`.
+#'
+#' @param a_within,b_within Named numeric vectors of length k (names `mediators`): within-level paths
+#'   \eqn{X \to M_j}{X -> M_j} and \eqn{M_j \to Y}{M_j -> Y} (always finite).
+#' @param c_prime_within Numeric scalar: within-level direct path (always finite).
+#' @param a_between,b_between Named numeric vectors of length k: between-level paths; all `NA_real_` when
+#'   `between_identified` is `FALSE`.
+#' @param c_prime_between Numeric scalar: between-level direct path; `NA_real_` when `between_identified` is
+#'   `FALSE`.
+#' @param estimates Named numeric vector of the identified path rows (the alias rows above).
+#' @param vcov Covariance matrix of `estimates`: the sub-block of the fit's joint covariance, so the
+#'   cross-level and cross-mediator covariances are carried.
+#' @param parameter_table Data frame, one row per path row (`path`, `level`, `lhs`, `op`, `rhs`, `label`,
+#'   `free`, `est`, `se`), kept for audit.
+#' @param treatment,outcome,cluster Character scalars: variable names.
+#' @param mediators Character vector of length \eqn{k \ge 2}{k >= 2}: unique mediator names, in the order of the
+#'   path vectors.
+#' @param n_obs,n_clusters Integer scalars: rows used and number of clusters.
+#' @param cluster_sizes Integer vector of cluster sizes (length `n_clusters`).
+#' @param icc Named numeric vector: intraclass correlation of the treatment, each mediator and the outcome.
+#' @param between_identified Logical scalar: whether the between level is identified.
+#' @param admissible Logical scalar: `lavaan::lavInspect(fit, "post.check")`.
+#' @param converged Logical scalar: whether the fit converged.
+#' @param cross_level_equal Character vector: paths equated across levels.
+#' @param fixed_paths Character vector: path rows with `free == 0` (variance 0 in `vcov`).
+#' @param source Character scalar: `"lavaan"` or `"native"`.
+#' @param fixed_x,information,h1_information,se_type,estimator,missing How the fit was made, read from it.
+#' @param lavaan_version,call Character scalars: provenance of the fit.
+#' @param between_parameterization Character scalar: `"latent"` (cluster means are latent).
+#' @param data Data frame or `NULL`: always `NULL` for the lavaan adapter.
+#' @param source_package Character scalar: `"lavaan"`.
+#' @param source_version Character: `character(0)` (the default) or one non-empty string, the version of the
+#'   package that made the fit.
+#'
+#' @return A `TwoLevelParallelMediationData` S7 object.
+#'
+#' @usage
+#' TwoLevelParallelMediationData(
+#'   a_within, b_within, c_prime_within, a_between, b_between, c_prime_between,
+#'   estimates, vcov, parameter_table, treatment, mediators, outcome, cluster, n_obs,
+#'   n_clusters, cluster_sizes, icc, between_identified, admissible, converged,
+#'   cross_level_equal, fixed_paths, source, fixed_x, information, h1_information,
+#'   se_type, estimator, missing, lavaan_version, call, between_parameterization,
+#'   data, source_package, source_version
+#' )
+#'
+#' @export
+TwoLevelParallelMediationData <- S7::new_class(
+  "TwoLevelParallelMediationData",
+  package = "medfit",
+  properties = list(
+    # Paths: named vectors of length k (names = mediators) and the scalar direct paths; also stored as alias rows
+    a_within = S7::class_numeric,
+    b_within = S7::class_numeric,
+    c_prime_within = S7::class_numeric,
+    a_between = S7::class_numeric,
+    b_between = S7::class_numeric,
+    c_prime_between = S7::class_numeric,
+
+    # Parameters
+    estimates = S7::class_numeric,
+    vcov = S7::new_S3_class("matrix"),
+    parameter_table = S7::class_data.frame,
+
+    # Variables
+    treatment = S7::class_character,
+    mediators = S7::class_character,
+    outcome = S7::class_character,
+    cluster = S7::class_character,
+
+    # Design
+    n_obs = S7::class_integer,
+    n_clusters = S7::class_integer,
+    cluster_sizes = S7::class_integer,
+
+    # Diagnostics
+    icc = S7::class_numeric,
+    between_identified = S7::class_logical,
+    admissible = S7::class_logical,
+    converged = S7::class_logical,
+    cross_level_equal = S7::class_character,
+    fixed_paths = S7::class_character,
+
+    # Provenance: read from the fit, never refit
+    source = S7::class_character,
+    fixed_x = S7::class_logical,
+    information = S7::class_character,
+    h1_information = S7::class_character,
+    se_type = S7::class_character,
+    estimator = S7::class_character,
+    missing = S7::class_character,
+    lavaan_version = S7::class_character,
+    call = S7::class_character,
+    between_parameterization = S7::class_character,
+
+    # Data and metadata
+    data = S7::new_property(S7::class_data.frame | NULL, default = NULL),
+    source_package = S7::class_character,
+    source_version = S7::class_character
+  ),
+
+  validator = function(self) {
+    # --- Scalars ---
+    scalars <- list(
+      treatment = self@treatment, outcome = self@outcome,
+      cluster = self@cluster, n_obs = self@n_obs, n_clusters = self@n_clusters,
+      between_identified = self@between_identified, admissible = self@admissible,
+      converged = self@converged, source = self@source, fixed_x = self@fixed_x,
+      information = self@information, h1_information = self@h1_information,
+      se_type = self@se_type, estimator = self@estimator, missing = self@missing,
+      call = self@call,
+      between_parameterization = self@between_parameterization,
+      source_package = self@source_package
+    )
+    for (nm in names(scalars)) {
+      if (length(scalars[[nm]]) != 1L || is.na(scalars[[nm]])) {
+        return(sprintf("%s must be a single non-missing value", nm))
+      }
+    }
+    identified <- self@between_identified
+    lv <- self@lavaan_version
+    if (length(lv) > 1L || anyNA(lv)) {
+      return("lavaan_version must be empty or a single non-missing value")
+    }
+    sv <- self@source_version
+    if (length(sv) > 1L || anyNA(sv) || any(sv == "")) {
+      return("source_version must be empty or a single non-missing, non-empty string")
+    }
+    if (!self@source %in% c("lavaan", "native")) {
+      return("source must be \"lavaan\" or \"native\"")
+    }
+
+    # --- Mediators and the path vectors ---
+    meds <- self@mediators
+    k <- length(meds)
+    if (k < 2L) {
+      return("TwoLevelParallelMediationData requires at least 2 mediators (use TwoLevelMediationData for 1)")
+    }
+    if (anyNA(meds) || any(meds == "")) {
+      return("mediators must be non-missing, non-empty names")
+    }
+    if (anyDuplicated(meds)) {
+      return("All mediator names must be unique")
+    }
+    for (nm in c("a_within", "b_within", "a_between", "b_between")) {
+      value <- S7::prop(self, nm)
+      if (length(value) != k) {
+        return(sprintf("%s must have length %d (one per mediator), found %d", nm, k, length(value)))
+      }
+      if (!identical(names(value), meds)) {
+        return(sprintf("names(%s) must equal mediators", nm))
+      }
+    }
+    for (nm in c("a_within", "b_within")) {
+      if (any(!is.finite(S7::prop(self, nm)))) {
+        return(sprintf("%s must be finite", nm))
+      }
+    }
+    if (length(self@c_prime_within) != 1L || !is.finite(self@c_prime_within)) {
+      return("c_prime_within must be a single finite value")
+    }
+    if (length(self@c_prime_between) != 1L) {
+      return("c_prime_between must be a single value")
+    }
+    for (nm in c("a_between", "b_between", "c_prime_between")) {
+      value <- S7::prop(self, nm)
+      if (identified && any(!is.finite(value))) {
+        return(sprintf("%s must be finite when between_identified is TRUE", nm))
+      }
+      if (!identified && !all(is.na(value))) {
+        return(sprintf("%s must be NA when between_identified is FALSE", nm))
+      }
+    }
+
+    # --- Design ---
+    if (self@n_clusters != length(self@cluster_sizes)) {
+      return("n_clusters must equal length(cluster_sizes)")
+    }
+    if (self@n_clusters < 2L) {
+      return("a cluster design needs at least 2 clusters")
+    }
+    if (anyNA(self@cluster_sizes) || any(self@cluster_sizes < 1L)) {
+      return("cluster_sizes must all be at least 1")
+    }
+    if (self@n_obs != sum(self@cluster_sizes)) {
+      return("n_obs must equal sum(cluster_sizes)")
+    }
+
+    # --- Diagnostics ---
+    icc <- self@icc
+    if (anyNA(icc) || any(icc < 0) || any(icc > 1)) {
+      return("icc must hold values in [0, 1]")
+    }
+    if (!identified && length(self@cross_level_equal) > 0L) {
+      return("cross_level_equal must be empty when between_identified is FALSE")
+    }
+
+    # --- Estimates, vcov and the alias rows ---
+    if (nrow(self@vcov) != ncol(self@vcov)) {
+      return("vcov must be a square matrix")
+    }
+    if (length(self@estimates) != nrow(self@vcov)) {
+      return("Number of estimates must match vcov dimensions")
+    }
+    nms <- names(self@estimates)
+    if (is.null(nms) || anyNA(nms) || anyDuplicated(nms)) {
+      return("estimates must have unique names")
+    }
+    if (!identical(rownames(self@vcov), nms) || !identical(colnames(self@vcov), nms)) {
+      return("vcov dimnames must equal names(estimates)")
+    }
+    if (any(!is.finite(self@estimates))) {
+      return("estimates must be finite")
+    }
+    if (any(!is.finite(self@vcov))) {
+      return("vcov must be finite")
+    }
+    vscale <- max(1, abs(self@vcov))
+    if (max(abs(self@vcov - t(self@vcov))) > 1e-8 * vscale) {
+      return("vcov must be symmetric")
+    }
+    if (any(diag(self@vcov) < -1e-8 * vscale)) {
+      return("the diagonal of vcov (the variances) must be non-negative")
+    }
+    if (!all(self@fixed_paths %in% nms)) {
+      return("fixed_paths must name rows of estimates")
+    }
+    within_paths <- .twolevel_parallel_paths(self, "within")
+    between_paths <- .twolevel_parallel_paths(self, "between")
+    if (!identified && any(names(between_paths) %in% nms)) {
+      return("a within-only object must not carry between rows in estimates and vcov")
+    }
+    paths <- if (identified) c(within_paths, between_paths) else within_paths
+    aliases <- names(paths)
+    if (!all(aliases %in% nms)) {
+      return(sprintf("estimates and vcov must carry the alias rows %s", paste(aliases, collapse = ", ")))
+    }
+    if (!isTRUE(all.equal(unname(self@estimates[aliases]), unname(paths), tolerance = 1e-12))) {
+      return("alias rows of estimates must equal the path properties")
+    }
+
+    # --- Parameter table ---
+    needed <- c("path", "level", "lhs", "op", "rhs", "label", "free", "est", "se")
+    if (!all(needed %in% names(self@parameter_table))) {
+      return(sprintf("parameter_table must have the columns %s", paste(needed, collapse = ", ")))
+    }
+
+    NULL
+  }
+)
+
+# The paths of one level of a TwoLevelParallelMediationData, named by their alias rows: a_<M>_<level> for each
+# mediator, then b_<M>_<level>, then c_prime_<level> (SPEC-IG5 section 5).
+.twolevel_parallel_paths <- function(x, level) {
+  a <- S7::prop(x, paste0("a_", level))
+  b <- S7::prop(x, paste0("b_", level))
+  cp <- S7::prop(x, paste0("c_prime_", level))
+  stats::setNames(
+    c(unname(a), unname(b), cp),
+    c(paste0("a_", x@mediators, "_", level), paste0("b_", x@mediators, "_", level), paste0("c_prime_", level))
+  )
+}
+
+#' Print Method for TwoLevelParallelMediationData
+#'
+#' @param x A TwoLevelParallelMediationData object
+#' @param ... Additional arguments (unused)
+#' @noRd
+S7::method(print, TwoLevelParallelMediationData) <- function(x, ...) {
+  version <- .twolevel_source_version(x)
+  fit_label <- if (is.na(version)) x@source else paste(x@source, version)
+  cat("<TwoLevelParallelMediationData>\n")
+  cat(sprintf("  %s -> {%s} -> %s  (clusters: %s; %s fit; between level: latent cluster means)\n",
+              x@treatment, paste(x@mediators, collapse = ", "), x@outcome, x@cluster, fit_label))
+  cat(sprintf("  n = %d in %d clusters (sizes %d to %d)   |   ICC: %s\n",
+              x@n_obs, x@n_clusters, min(x@cluster_sizes), max(x@cluster_sizes),
+              paste(sprintf("%s %.3f", names(x@icc), x@icc), collapse = ", ")))
+  path_table <- function(level, label) {
+    a <- S7::prop(x, paste0("a_", level))
+    b <- S7::prop(x, paste0("b_", level))
+    rows <- sprintf("    %-12s a = %+.4f   b = %+.4f   a * b = %+.4f", x@mediators, a, b, a * b)
+    cat(sprintf("  %s level:\n", label))
+    cat(paste0(rows, "\n"), sep = "")
+    cat(sprintf("    c_prime_%s = %+.4f   NIE %s (sum of a * b) = %+.4f\n", level,
+                S7::prop(x, paste0("c_prime_", level)), level, sum(a * b)))
+  }
+  path_table("within", "Within")
+  if (x@between_identified) {
+    path_table("between", "Between")
+  } else {
+    cat("  Between level: not identified (within-only result); between paths are NA\n")
+  }
+  if (length(x@cross_level_equal) > 0L) {
+    cat(sprintf("  Paths equated across levels: %s\n", paste(x@cross_level_equal, collapse = ", ")))
+  }
+  if (length(x@fixed_paths) > 0L) {
+    cat(sprintf("  Paths fixed: %s\n", paste(x@fixed_paths, collapse = ", ")))
+  }
+  if (!isTRUE(x@admissible)) cat("  Warning: the fit is not admissible (lavaan post.check is FALSE)\n")
+  invisible(x)
+}
+
+
+# The "Estimand and assumptions" block of summary() for k parallel mediators: the k = 1 block with the mediator
+# set, the specific and total NIE per level, and the cross-mediator covariances the effect SEs carry.
+.twolevel_parallel_assumptions_block <- function(x) {
+  items <- c(
+    sprintf(paste0("Design: treatment `%s`, parallel mediators %s and outcome `%s` measured on level-1 units in ",
+                   "%d clusters (`%s`); the paths are estimated separately at the within and the between level."),
+            x@treatment, paste0("`", x@mediators, "`", collapse = ", "), x@outcome, x@n_clusters, x@cluster),
+    "Fixed slopes (no random slopes); between effects are through latent cluster means.",
+    "Linear paths with no mediator-by-treatment product; no confounding of the paths beyond the model.",
+    paste0("Per level specific NIE_j = a_j * b_j, total NIE = sum of a_j * b_j, NDE = c', TE = NIE + c'; ",
+           "each contrast is within minus between."),
+    "No cross-level total effect or proportion mediated is defined.",
+    paste0("Intervals are Wald (delta method over @vcov, which carries Cov(a_j, a_j') and the other ",
+           "cross-mediator and cross-level covariances); there is no small-sample correction.")
+  )
+  if (isTRUE(x@fixed_x)) {
+    items <- c(items, paste0(
+      "fixed_x is TRUE: the between-path standard errors are conditional on the sample between-level ",
+      "moments of the treatment; refit with fixed.x = FALSE for the unconditional ones."
+    ))
+  }
+  wrap <- function(txt, first) strwrap(txt, width = 88, initial = first, prefix = "", exdent = 4)
+  c("Estimand and assumptions:", wrap(items[1], "  "), unlist(lapply(items[-1], wrap, first = "  - ")))
+}
+
+#' Summary Method for TwoLevelParallelMediationData
+#'
+#' @param object A TwoLevelParallelMediationData object
+#' @param level Confidence level for the Wald intervals.
+#' @param ... Additional arguments (ignored)
+#' @noRd
+S7::method(summary, TwoLevelParallelMediationData) <- function(object, level = 0.95, ...) {
+  checkmate::assert_number(level, lower = 0, upper = 1, .var.name = "level")
+  # Silent, as the k = 1 summary: NA rows are shown and flagged in the printout, not signaled
+  est <- .twolevel_parallel_effect_vec(object)
+  se <- .effect_se_or_na(object, names(est))
+  z <- stats::qnorm(1 - (1 - level) / 2)
+  effects <- data.frame(estimate = unname(est), std_error = unname(se),
+                        conf_low = unname(est - z * se), conf_high = unname(est + z * se),
+                        row.names = names(est))
+  p <- paths(object)
+  # A path with no row in vcov (the between paths of a within-only object) has no SE
+  p_idx <- match(names(p), rownames(object@vcov))
+  p_se <- rep(NA_real_, length(p))
+  p_se[!is.na(p_idx)] <- .safe_se(diag(object@vcov)[p_idx[!is.na(p_idx)]], "the two-level paths")
+  structure(
+    list(
+      effects = effects,
+      level = level,
+      paths = data.frame(estimate = unname(p), std_error = unname(p_se), row.names = names(p)),
+      block = .twolevel_parallel_assumptions_block(object),
+      variables = c(treatment = object@treatment, outcome = object@outcome, cluster = object@cluster),
+      mediators = object@mediators,
+      n_obs = object@n_obs,
+      n_clusters = object@n_clusters,
+      cluster_sizes = range(object@cluster_sizes),
+      icc = object@icc,
+      provenance = c(
+        source = object@source, source_version = .twolevel_source_version(object),
+        lavaan_version = if (length(object@lavaan_version) == 1L) object@lavaan_version else NA_character_,
+        estimator = object@estimator,
+        fixed_x = as.character(object@fixed_x), information = object@information,
+        h1_information = object@h1_information, se = object@se_type, missing = object@missing
+      ),
+      flags = c(
+        if (!object@between_identified) "Between level not identified: within-only result",
+        if (length(object@cross_level_equal) > 0L) {
+          paste0("Paths equated across levels: ", paste(object@cross_level_equal, collapse = ", "))
+        },
+        if (length(object@fixed_paths) > 0L) {
+          paste0("Paths fixed: ", paste(object@fixed_paths, collapse = ", "))
+        },
+        if (!isTRUE(object@admissible)) "The fit is not admissible (lavaan post.check is FALSE)",
+        if (!isTRUE(object@converged)) "The fit did not converge"
+      )
+    ),
+    class = "summary_TwoLevelParallelMediationData"
+  )
+}
+
+#' Print Summary for TwoLevelParallelMediationData
+#'
+#' @param x A summary_TwoLevelParallelMediationData object
+#' @param ... Additional arguments (ignored)
+#' @return Invisibly returns `x`. Called for its side effect of printing the formatted summary.
+#' @noRd
+print_summary_twolevel_parallel <- function(x, ...) {
+  cat("Summary of TwoLevelParallelMediationData\n")
+  cat("========================================\n\n")
+  cat(sprintf("%s -> {%s} -> %s, clusters `%s`\n", x$variables["treatment"],
+              paste(x$mediators, collapse = ", "), x$variables["outcome"], x$variables["cluster"]))
+  cat("\nPath coefficients:\n")
+  print(round(x$paths, 4))
+  cat("\nEffects (unit contrast 0 -> 1):\n")
+  print(round(x$effects, 4))
+  cat(sprintf("  %g%% Wald intervals (delta method over the joint covariance).\n", 100 * x$level))
+  cat("  The contrasts (within - between) are descriptive, not tests.\n")
+  cat(sprintf("\nSample Size: %d in %d clusters (sizes %d to %d)\n", x$n_obs, x$n_clusters,
+              x$cluster_sizes[1], x$cluster_sizes[2]))
+  cat("ICC:        ", paste(sprintf("%s %.3f", names(x$icc), x$icc), collapse = ", "), "\n")
   version <- x$provenance[["source_version"]]
   fit_label <- if (is.na(version)) x$provenance[["source"]] else paste(x$provenance[["source"]], version)
   cat(sprintf(

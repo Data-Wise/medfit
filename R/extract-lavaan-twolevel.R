@@ -60,15 +60,29 @@
   v
 }
 
-# Rows of the parameter table for the three paths at both levels, in the order a, b, c' within then
-# between. Exactly one row per path and level; a path absent at one level is not assumed to be 0.
-# Each row's key is its free-parameter index `free` (0 for a fixed row).
+# The path stems of the key, one per path and level: "a", "b", "c_prime" for one mediator; "a_<M>" for each
+# mediator, then "b_<M>", then "c_prime" for k parallel mediators (SPEC-IG5 section 5). The key's `path` is the
+# stem with the level suffix ("a_within", "a_M1_between").
+.twolevel_path_stems <- function(mediator) {
+  if (length(mediator) == 1L) return(c("a", "b", "c_prime"))
+  c(paste0("a_", mediator), paste0("b_", mediator), "c_prime")
+}
+
+# The stems of a key, in key order (the within rows come first).
+.twolevel_key_stems <- function(key) {
+  unique(sub("_(within|between)$", "", key$path))
+}
+
+# Rows of the parameter table for the paths at both levels: per level a (one per mediator), b (one per
+# mediator), c', within then between. Exactly one row per path and level; a path absent at one level is not
+# assumed to be 0. Each row's key is its free-parameter index `free` (0 for a fixed row).
 .twolevel_key_rows <- function(pt, treatment, mediator, outcome) {
   pt <- pt[pt$op == "~", , drop = FALSE]
+  k <- length(mediator)
   spec <- data.frame(
-    path = c("a", "b", "c_prime"),
-    lhs = c(mediator, outcome, outcome),
-    rhs = c(treatment, mediator, treatment),
+    path = .twolevel_path_stems(mediator),
+    lhs = c(mediator, rep(outcome, k + 1L)),
+    rhs = c(rep(treatment, k), mediator, treatment),
     stringsAsFactors = FALSE
   )
   rows <- list()
@@ -95,7 +109,8 @@
   do.call(rbind, rows)
 }
 
-# The 6x6 sub-block of the joint covariance for the keyed rows, by position (free index), never by name
+# The 2(2k + 1) square sub-block (6x6 for one mediator) of the joint covariance for the keyed rows, by position
+# (free index), never by name
 # (a label shared across levels gives duplicate column names). A fixed row (free == 0) is a zero row and
 # column. Two paths that share an index repeat that row and column (correlation 1), which is the correct
 # covariance of an equated parameter.
@@ -128,7 +143,7 @@
 
 # Paths equated across the levels by the numeric criterion, among the free rows (a fixed row has no variance).
 .twolevel_numeric_equal <- function(key, V) {
-  equal <- vapply(c("a", "b", "c_prime"), function(p) {
+  equal <- vapply(.twolevel_key_stems(key), function(p) {
     nm <- paste0(p, c("_within", "_between"))
     rows <- match(nm, key$path)
     if (anyNA(rows) || any(key$free[rows] <= 0L) || is.null(V) || !all(nm %in% rownames(V))) return(FALSE)
@@ -137,13 +152,15 @@
   names(equal)[equal]
 }
 
-# Paths ("a", "b", "c_prime") equated across the two levels: (i) a shared non-zero free index, (ii) a shared
-# non-empty label, (iii) a `==` row naming both labels (or their plabels), or (iv) the numeric criterion
-# (`.twolevel_numeric_equal()`), which also finds an algebraic equality lavaan keeps as two parameters.
+# Paths equated across the two levels, by stem ("a", "b", "c_prime"; "a_<M>", "b_<M>", "c_prime" with k
+# mediators, SPEC-IG5 D5): (i) a shared non-zero free index, (ii) a shared non-empty label, (iii) a `==` row
+# naming both labels (or their plabels), or (iv) the numeric criterion (`.twolevel_numeric_equal()`), which also
+# finds an algebraic equality lavaan keeps as two parameters.
 .twolevel_cross_equal <- function(pt, key, V = NULL) {
   eq_rows <- pt[pt$op == "==", , drop = FALSE]
   tags <- function(row) setdiff(c(row$label, row$plabel), "")
-  equal <- vapply(c("a", "b", "c_prime"), function(p) {
+  stems <- .twolevel_key_stems(key)
+  equal <- vapply(stems, function(p) {
     w <- key[key$path == paste0(p, "_within"), ]
     b <- key[key$path == paste0(p, "_between"), ]
     by_index <- w$free > 0L && w$free == b$free
@@ -156,7 +173,7 @@
     by_index || by_label || by_row
   }, logical(1))
   found <- union(names(equal)[equal], .twolevel_numeric_equal(key, V))
-  found[order(match(found, c("a", "b", "c_prime")))]
+  found[order(match(found, stems))]
 }
 
 # Intraclass correlation per variable from the model-implied within and between covariances:
@@ -206,15 +223,18 @@
   icc_error <- .twolevel_option("icc_error")
   icc_warn <- .twolevel_option("icc_warn")
   icc_x <- icc[[treatment]]
-  icc_m <- icc[[mediator]]
+  # D2 (IG5): all or nothing, the between level needs every mediator's ICC above `icc_error`
+  icc_m <- unlist(icc[mediator], use.names = FALSE)
   reasons <- character(0)
   if (icc_x < icc_error) {
     reasons <- c(reasons, sprintf("the ICC of the treatment '%s' is %.4f (below %s)", treatment, icc_x, icc_error))
   }
-  if (icc_m < icc_error) {
-    reasons <- c(reasons, sprintf("the ICC of the mediator '%s' is %.4f (below %s)", mediator, icc_m, icc_error))
+  for (j in which(icc_m < icc_error)) {
+    reasons <- c(reasons, sprintf("the ICC of the mediator '%s' is %.4f (below %s)", mediator[j], icc_m[j],
+                                  icc_error))
   }
-  between <- 4:6
+  # The key holds the within rows, then as many between rows
+  between <- if (is.null(V6)) integer(0) else seq_len(nrow(V6))[-seq_len(nrow(V6) / 2)]
   if (is.null(V6) || any(!is.finite(V6[between, between]))) {
     reasons <- c(reasons, "a between-level covariance entry is not finite")
   } else if (!.twolevel_is_pd(V6)) {
@@ -224,7 +244,7 @@
   list(
     icc = icc[unique(c(treatment, mediator, outcome))],
     identified = length(reasons) == 0L,
-    weak = length(reasons) == 0L && (icc_x < icc_warn || icc_m < icc_warn),
+    weak = length(reasons) == 0L && (icc_x < icc_warn || any(icc_m < icc_warn)),
     reasons = reasons
   )
 }
@@ -243,15 +263,10 @@
       "medfit_error_twolevel_standardized"
     )
   }
-  if (!is.character(mediator) || length(mediator) != 1L) {
-    .twolevel_abort(
-      "A two-level fit supports exactly one mediator; pass a single mediator name.",
-      "medfit_error_twolevel_unsupported"
-    )
-  }
   checkmate::assert_string(treatment, .var.name = "treatment")
-  checkmate::assert_string(mediator, .var.name = "mediator")
+  checkmate::assert_character(mediator, min.len = 1L, any.missing = FALSE, min.chars = 1L, .var.name = "mediator")
   checkmate::assert_string(outcome, null.ok = TRUE, .var.name = "outcome")
+  .twolevel_check_roles(pt, treatment, mediator, outcome)
   has_product <- any(grepl(":", pt$rhs[pt$op == "~"], fixed = TRUE))
   if (!is.null(interaction) || has_product) {
     .twolevel_abort(
@@ -275,6 +290,50 @@
              "the paths are read from the parameter table by variable names and level, not by label."),
       "medfit_warning_twolevel_labels_ignored",
       .frequency = "once", .frequency_id = "medfit_twolevel_labels_ignored"
+    )
+  }
+  invisible(NULL)
+}
+
+# Roles (IG5): each mediator once, the treatment and the outcome not among them, and no mediator regressed on
+# another at either level (a serial chain, which the parallel adapter does not decompose).
+.twolevel_check_roles <- function(pt, treatment, mediator, outcome) {
+  if (anyDuplicated(mediator)) {
+    .twolevel_abort(
+      sprintf("The mediator '%s' is listed more than once; pass each mediator once.",
+              mediator[anyDuplicated(mediator)]),
+      "medfit_error_twolevel_unsupported"
+    )
+  }
+  overlap <- intersect(c(treatment, outcome), mediator)
+  if (length(overlap) > 0L) {
+    .twolevel_abort(
+      sprintf("'%s' is listed both as a mediator and as the %s; a variable can have one role only.",
+              overlap[1L], if (identical(overlap[1L], treatment)) "treatment" else "outcome"),
+      "medfit_error_twolevel_unsupported"
+    )
+  }
+  serial <- pt$op == "~" & pt$lhs %in% mediator & pt$rhs %in% mediator & pt$lhs != pt$rhs
+  if (any(serial)) {
+    i <- which(serial)[1L]
+    # A predictor that is not itself regressed on the treatment at that level is a covariate, not a mediator
+    pred <- pt$rhs[i]
+    lvl <- pt$level[i]
+    if (!any(pt$op == "~" & pt$lhs == pred & pt$rhs == treatment & pt$level == lvl)) {
+      .twolevel_abort(
+        sprintf(paste0("'%s' is listed as a mediator but is not regressed on the treatment (no '%s ~ %s' row ",
+                       "at the %s level); it predicts the mediator '%s' ('%s ~ %s'). A mediator lies on a ",
+                       "treatment -> mediator -> outcome path; pass a covariate in the model, not as a mediator."),
+                pred, pred, treatment, c("within", "between")[lvl], pt$lhs[i], pt$lhs[i], pred),
+        "medfit_error_twolevel_unsupported"
+      )
+    }
+    .twolevel_abort(
+      sprintf(paste0("A mediator predicts another mediator ('%s ~ %s' at the %s level): serial mediation is not ",
+                     "supported for a two-level fit. The mediators must be parallel (each regressed on the ",
+                     "treatment only)."),
+              pt$lhs[i], pt$rhs[i], c("within", "between")[pt$level[i]]),
+      "medfit_error_twolevel_unsupported"
     )
   }
   invisible(NULL)
@@ -329,7 +388,7 @@
   converged <- .twolevel_converged(object)
 
   # The within block must be usable whatever happens at the between level.
-  within <- 1:3
+  within <- which(key$level == "within")
   if (is.null(V6) || !.twolevel_is_pd(V6[within, within, drop = FALSE]) ||
         !all(is.finite(key$est[within]))) {
     .twolevel_abort(
@@ -379,11 +438,11 @@
 
   # --- Assemble ---
   equal <- if (identified) .twolevel_cross_equal(pt, key, V6) else character(0)
-  rows <- if (identified) seq_len(6L) else within
+  rows <- if (identified) seq_len(nrow(key)) else within
   est <- stats::setNames(key$est[rows], key$path[rows])
   # A within-only object keeps the audit rows but not between numbers it says do not exist
-  shown <- if (identified) rep(TRUE, 6L) else key$level == "within"
-  se <- rep(NA_real_, 6L)
+  shown <- if (identified) rep(TRUE, nrow(key)) else key$level == "within"
+  se <- rep(NA_real_, nrow(key))
   se[shown] <- .safe_se(diag(V6)[shown], "the two-level fit")
   table <- data.frame(
     path = key$path, level = key$level, lhs = key$lhs, op = key$op, rhs = key$rhs, label = key$label,
@@ -395,15 +454,12 @@
   between_val <- function(nm) if (identified) unname(paths[[nm]]) else NA_real_
   version <- .twolevel_fit_version(object)
 
-  TwoLevelMediationData(
-    a_within = unname(paths[["a_within"]]), b_within = unname(paths[["b_within"]]),
-    c_prime_within = unname(paths[["c_prime_within"]]),
-    a_between = between_val("a_between"), b_between = between_val("b_between"),
-    c_prime_between = between_val("c_prime_between"),
+  shared <- list(
+    c_prime_within = unname(paths[["c_prime_within"]]), c_prime_between = between_val("c_prime_between"),
     estimates = est,
     vcov = V6[rows, rows, drop = FALSE],
     parameter_table = table,
-    treatment = treatment, mediator = mediator, outcome = outcome,
+    treatment = treatment, outcome = outcome,
     cluster = as.character(lavaan::lavInspect(object, "cluster"))[1L],
     n_obs = n_obs, n_clusters = n_clusters, cluster_sizes = cluster_sizes,
     icc = ident$icc,
@@ -424,4 +480,23 @@
     source_package = "lavaan",
     source_version = version
   )
+  if (length(mediator) == 1L) {
+    return(do.call(TwoLevelMediationData, c(list(
+      a_within = unname(paths[["a_within"]]), b_within = unname(paths[["b_within"]]),
+      a_between = between_val("a_between"), b_between = between_val("b_between"),
+      mediator = mediator
+    ), shared)))
+  }
+  # k >= 2 (IG5): the a and b paths are vectors named by the mediators; a within-only object keeps NA between
+  path_vec <- function(stem, level) {
+    nm <- paste0(stem, "_", mediator, "_", level)
+    value <- vapply(nm, function(n) if (identical(level, "within")) unname(paths[[n]]) else between_val(n),
+                    numeric(1))
+    stats::setNames(value, mediator)
+  }
+  do.call(TwoLevelParallelMediationData, c(list(
+    a_within = path_vec("a", "within"), b_within = path_vec("b", "within"),
+    a_between = path_vec("a", "between"), b_between = path_vec("b", "between"),
+    mediators = mediator
+  ), shared))
 }

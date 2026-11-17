@@ -6,8 +6,9 @@
 > The upstream source remains authoritative; this reconciliation does not edit or
 > claim synchronization with it. See
 > [#369 clause dispositions](../ISSUE-369-reconciliation-2026-10-31.md): comparison
-> engines and the reduced #357 milestone shipped, while D18/D20/source-sync
-> clauses remain unresolved. Do not infer that SLSQP was removed from released
+> engines and the reduced #357 milestone shipped. D18 is decided in #276 (ADR
+> D-14) and D20 for Tier 1 in ADR D-6; neither Part B nor Tier 1 is implemented,
+> and the upstream source sync is a separate change there. Do not infer that SLSQP was removed from released
 > medfit or that broad chart/global-certification machinery was implemented.
 
 **Status:** approved 2026-10-19 (see §7); revised after the adversarial review (`codex-review-solver-2026-10-19/review.md`; Claude's

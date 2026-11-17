@@ -11,24 +11,34 @@ twolevel_statistic(
     "c_prime_within", "a_between", "b_between", "c_prime_between"),
   treatment = NULL,
   mediator = NULL,
-  outcome = NULL
+  outcome = NULL,
+  level = NULL,
+  specific = NULL
 )
 }
 \arguments{
-\item{x}{A \link{TwoLevelMediationData} object, or a two-level \code{lavaan} fit.}
+\item{x}{A \link{TwoLevelMediationData} or \link{TwoLevelParallelMediationData} object, or a two-level \code{lavaan}
+fit.}
 
 \item{effect}{One of \code{"nie_within"} (default), \code{"nie_between"}, \code{"nie_contrast"} (within minus
 between, descriptive), \code{"nde_within"}, \code{"nde_between"}, \code{"te_within"}, \code{"te_between"},
 \code{"pm_within"}, \code{"pm_between"}, or a path row: \code{"a_within"}, \code{"b_within"}, \code{"c_prime_within"},
 \code{"a_between"}, \code{"b_between"}, \code{"c_prime_between"}. The proportion mediated is \code{NA} where the
-total effect is zero.}
+total effect is zero. For several mediators: \code{"nie"} (default), \code{"nie_j"}, \code{"nde"} or \code{"te"}.}
 
-\item{treatment, mediator, outcome}{Character scalars: variable names. Required for a \code{lavaan} fit;
-taken from the object for a \link{TwoLevelMediationData}.}
+\item{treatment, mediator, outcome}{Variable names. Required for a \code{lavaan} fit; taken from the object
+for a \link{TwoLevelMediationData} or \link{TwoLevelParallelMediationData}. \code{mediator} is a character vector of
+length two or more for a fit with several mediators, a character scalar otherwise.}
+
+\item{level}{For several mediators only: \code{"within"} (default), \code{"between"} or \code{"contrast"}. For one
+mediator the level is part of \code{effect}, and \code{level} must be left unset.}
+
+\item{specific}{For \code{effect = "nie_j"} only: the name of the mediator whose specific indirect effect is
+returned.}
 }
 \value{
 A function of one argument returning a number: a named parameter vector for a
-\link{TwoLevelMediationData}, a data frame for a \code{lavaan} fit.
+\link{TwoLevelMediationData} or \link{TwoLevelParallelMediationData}, a data frame for a \code{lavaan} fit.
 }
 \description{
 \strong{Experimental.} The interface may change without the usual deprecation period.
@@ -47,10 +57,16 @@ cross-level covariance is part of every draw.
 set (the call stored in the fit, with \code{data} replaced) and returns the effect. The cluster
 bootstrap gives every drawn cluster a fresh id, so a cluster drawn twice is refitted as two
 clusters.
+\item \code{x} a \link{TwoLevelParallelMediationData} (several mediators), or a two-level \code{lavaan} fit with a \code{mediator}
+vector of length two or more: the same two callbacks for the effects that \code{\link[=nie]{nie()}}, \code{\link[=nde]{nde()}} and \code{\link[=te]{te()}}
+define for that class. \code{effect} is then one of \code{"nie"} (the total indirect effect, the default), \code{"nie_j"}
+(the specific indirect effect of the mediator named in \code{specific}), \code{"nde"} or \code{"te"}, and \code{level} is
+\code{"within"} (default), \code{"between"} or \code{"contrast"} (within minus between, \code{"nie"} and \code{"nie_j"} only). The
+callback evaluates the same effect code as those generics, so at the estimate it returns their value.
 }
 
 A refit that errors, does not converge, warns, or leaves the between level unidentified (a treatment
-or mediator ICC below \code{getOption("medfit.between_icc_error", 0.01)}, for a between effect or the
+or any mediator ICC below \code{getOption("medfit.between_icc_error", 0.01)}, for a between effect or the
 contrast) is a failed replicate: \code{\link[=bootstrap_mediation]{bootstrap_mediation()}} excludes it and reports the count in a
 warning. An inadmissible refit (a negative variance) is kept, as the point estimate keeps it. The
 covariance checks of the point-estimate extraction are not repeated per refit (no standard errors are
@@ -68,6 +84,14 @@ objects. Calls written with a namespace, such as \code{lavaan::lavaan()} resolve
 The contrast is \code{NA} by constraint when both \code{a} and \code{b} are equated across levels and a between effect is
 \code{NA} when the between level is not identified, so asking for either raises a classed error here
 instead of returning a distribution of \code{NA}.
+
+\strong{Several mediators.} An invalid \code{level}, or \code{level = "contrast"} with \code{effect = "nde"} or \code{"te"}, stops
+with class \code{medfit_error_twolevel_level}. An effect not defined for several mediators, \code{effect = "nie_j"}
+without \code{specific} or with a name that is not one of the mediators, and \code{specific} with another effect stop
+with class \code{medfit_error_twolevel_unsupported}, as do \code{level} and \code{specific} given for one mediator. A
+between effect or the contrast of a within-only fit stops with class \code{medfit_between_unidentified}, and the
+contrast of a mediator (for \code{"nie_j"}) or of every mediator (for \code{"nie"}) whose \code{a} and \code{b} are both equated
+across levels stops with class \code{medfit_error_twolevel_constrained}.
 }
 \examples{
 \donttest{
@@ -99,5 +123,5 @@ if (requireNamespace("lavaan", quietly = TRUE) && requireNamespace("MASS", quiet
 
 }
 \seealso{
-\code{\link[=bootstrap_mediation]{bootstrap_mediation()}}, \link{TwoLevelMediationData}
+\code{\link[=bootstrap_mediation]{bootstrap_mediation()}}, \link{TwoLevelMediationData}, \link{TwoLevelParallelMediationData}
 }

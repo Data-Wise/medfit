@@ -15,6 +15,7 @@ decisions:
   - {id: D-11, title: "A partial branch result is an error (PR #303)", status: decided, date: 2026-10-23}
   - {id: D-12, title: "The D1 outcome ledger rides on the D-11 error as $ledger", status: decided, date: 2026-10-24}
   - {id: D-13, title: "semopy as a monthly third oracle for estimates and SEs", status: decided, date: 2026-10-26}
+  - {id: D-14, title: "D18: SLSQP stays a permanent user-selectable option, never the default (#276)", status: decided, date: 2026-10-21}
 ---
 
 # ADR: the solver behind the built-in SEM engine, and which engine to use when
@@ -29,7 +30,7 @@ decisions:
 | A. SLSQP as default solver (2026-10-09, D19) | **Accepted, implemented** |
 | B. Replace SLSQP for constrained fits, tiered path (2026-10-19, D16) | **Approved plan, not implemented**; evidence revised 2026-10-20 |
 | C. The engines and when to use each | Description of current behavior |
-| D. A `solver` option; `nlminb` first on branch fits, then unconstrained fits (2026-10-23) | D-1 to D-3, D-6 (structure and Tier 1 method), D-7 to D-13 **decided**; D-4 **deferred** (2026-11-11), unmeasured, staged after D-2; D-5 conditional |
+| D. A `solver` option; `nlminb` first on branch fits, then unconstrained fits (2026-10-23) | D-1 to D-3, D-6 (structure and Tier 1 method), D-7 to D-14 **decided**; D-4 **deferred** (2026-11-11), unmeasured, staged after D-2; D-5 conditional |
 
 **Author's call needed** on the open questions in section 6. Superseded drafts are in Appendix A.
 
@@ -98,6 +99,11 @@ recorded as D16): a tiered path becomes the default for constrained fits.
 - `solver = "slsqp_legacy"` would reproduce today's results with a deprecation warning for one or two releases
   (Part D proposes a permanent, non-deprecated `"slsqp"` option instead).
 - Implement in medfit after milestone M3 (D13).
+
+Upstream D18 (#276, decided 2026-10-21: SLSQP is kept as a permanent, user-selectable backup and is never the
+default; the `slsqp_legacy` removal is dropped) is recorded here as D-14. Upstream D20 is covered for Tier 1 by D-6;
+neither Part B nor Tier 1 is implemented. The label "D19" for the SLSQP default (Part A) is the 2026-10-09
+numbering, not the current upstream D19.
 
 **What is implemented in medfit today** (checked 2026-10-23): Tier 0 only, since 0.8.0 (`.sem_fit_branches()`), with
 the unresolved handling added in 0.13.0 (#300). There is **no `solver` argument, no AUGLAG and no Tier 1** in
