@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.19.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -178,7 +178,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.18.0/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -187,8 +187,8 @@
 
 
 
-    <p>Twenty-three task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster, two-level and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
-<p>These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, recipe 21 needs 0.11.0, recipe 22 needs 0.16.0, and recipe 23 needs 0.17.0). CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#install">home page</a>).</p>
+    <p>Twenty-four task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster, two-level and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
+<p>These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, recipe 21 needs 0.11.0, recipe 22 needs 0.16.0, recipe 23 needs 0.17.0, and recipe 24 needs 0.19.0). CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#install">home page</a>).</p>
 <div class="cell">
 <pre class="r cell-code"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stderr">
@@ -384,7 +384,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">xj</span><span class="op">)</span><span class="op">)</span>, lower <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code> estimate     lower     upper
-0.6560315 0.4349603 0.8927176 </code></pre>
+0.6560315 0.4351678 0.8930074 </code></pre>
 </div>
 </div>
 <p>More: <a href="methods.html">Methods and Formulas</a>.</p>
@@ -610,10 +610,10 @@ reduced  1 0.1335    0.13346       1     0.7149</code></pre>
 <span>      full <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">full</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"npar"</span>, <span class="st">"chisq"</span>, <span class="st">"AIC"</span>, <span class="st">"BIC"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2 × 4
-   npar chisq   AIC   BIC
-* &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-1     6 0.133 2408. 2432.
-2     7 0     2409. 2437.</code></pre>
+   npar    chisq   AIC   BIC
+* &lt;int&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1     6 1.33e- 1 2408. 2432.
+2     7 4.54e-30 2409. 2437.</code></pre>
 </div>
 </div>
 <p>The restricted model is the one with more degrees of freedom. A small chi-square difference says dropping <code>cp</code> costs little.</p>
@@ -1021,6 +1021,80 @@ N bootstrap samples: 500
 </div>
 </div>
 <p><code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code> builds the callback for <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code>: pass the object for the parametric bootstrap, or the <code>lavaan</code> fit with <code>treatment</code>, <code>mediator</code>, <code>outcome</code> and <code>cluster =</code> for the cluster bootstrap (report its percentile interval). A treatment or mediator with almost no between-cluster variance gives a within-only result and the classed warning <code>medfit_between_unidentified</code>. More: <a href="model-twolevel.html">Two-level mediation</a>.</p>
+</section><section class="level2"><h2 id="two-parallel-mediators-in-a-two-level-lavaan-fit">24. Two parallel mediators in a two-level lavaan fit<a class="anchor" aria-label="anchor" href="#two-parallel-mediators-in-a-two-level-lavaan-fit"></a>
+</h2>
+<p><em>When:</em> as in recipe 23, but two or more mediators each carry part of the effect and none is regressed on another. <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> with a mediator vector returns <code>TwoLevelParallelMediationData</code> (experimental): the specific indirect effect of each mediator and their total, at each level. The chunk simulates 100 clusters of 5.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">395</span><span class="op">)</span></span>
+<span><span class="va">J</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">5</span></span>
+<span><span class="va">id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">J</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">xb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span><span class="op">)</span><span class="op">[</span><span class="va">id</span><span class="op">]</span></span>
+<span><span class="va">xw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">m1</span> <span class="op">&lt;-</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">xw</span> <span class="op">+</span> <span class="fl">0.7</span> <span class="op">*</span> <span class="va">xb</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span><span class="op">)</span><span class="op">[</span><span class="va">id</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">m2</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">xw</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">xb</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span><span class="op">)</span><span class="op">[</span><span class="va">id</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">xw</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">xb</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="op">(</span><span class="va">m1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ave.html" class="external-link">ave</a></span><span class="op">(</span><span class="va">m1</span>, <span class="va">id</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.9</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/ave.html" class="external-link">ave</a></span><span class="op">(</span><span class="va">m1</span>, <span class="va">id</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fl">0.4</span> <span class="op">*</span> <span class="op">(</span><span class="va">m2</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ave.html" class="external-link">ave</a></span><span class="op">(</span><span class="va">m2</span>, <span class="va">id</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/ave.html" class="external-link">ave</a></span><span class="op">(</span><span class="va">m2</span>, <span class="va">id</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span><span class="op">)</span><span class="op">[</span><span class="va">id</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">J</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">d3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">id</span>, X <span class="op">=</span> <span class="va">xb</span> <span class="op">+</span> <span class="va">xw</span>, M1 <span class="op">=</span> <span class="va">m1</span>, M2 <span class="op">=</span> <span class="va">m2</span>, Y <span class="op">=</span> <span class="va">y</span><span class="op">)</span></span>
+<span><span class="va">model3</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
+<span><span class="st">  level: 1</span></span>
+<span><span class="st">    M1 ~ X</span></span>
+<span><span class="st">    M2 ~ X</span></span>
+<span><span class="st">    Y ~ M1 + M2 + X</span></span>
+<span><span class="st">  level: 2</span></span>
+<span><span class="st">    M1 ~ X</span></span>
+<span><span class="st">    M2 ~ X</span></span>
+<span><span class="st">    Y ~ M1 + M2 + X</span></span>
+<span><span class="st">"</span></span>
+<span><span class="va">fit3</span> <span class="op">&lt;-</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem</a></span><span class="op">(</span><span class="va">model3</span>, data <span class="op">=</span> <span class="va">d3</span>, cluster <span class="op">=</span> <span class="st">"id"</span><span class="op">)</span></span>
+<span><span class="va">zk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">fit3</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"M1"</span>, <span class="st">"M2"</span><span class="op">)</span>, outcome <span class="op">=</span> <span class="st">"Y"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">zk</span>, level <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>Natural Indirect Effect (NIE), both levels: within = 0.3626, between = 1.0946</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">zk</span>, type <span class="op">=</span> <span class="st">"specific"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>Natural Indirect Effect (NIE): M1 = 0.1861, M2 = 0.1766</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">zk</span>, type <span class="op">=</span> <span class="st">"effects"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 15 × 3
+   term            estimate std_error
+   &lt;chr&gt;              &lt;dbl&gt;     &lt;dbl&gt;
+ 1 nie_M1_within     0.186     0.0314
+ 2 nie_M2_within     0.177     0.0302
+ 3 nie_within        0.363     0.0438
+ 4 nde_within        0.244     0.0591
+ 5 te_within         0.606     0.0612
+ 6 pm_within         0.598     0.0730
+ 7 nie_M1_between    0.617     0.109
+ 8 nie_M2_between    0.477     0.124
+ 9 nie_between       1.09      0.165
+10 nde_between       0.0786    0.138
+11 te_between        1.17      0.119
+12 pm_between        0.933     0.116
+13 nie_M1_contrast  -0.431     0.117
+14 nie_M2_contrast  -0.301     0.132
+15 nie_contrast     -0.732     0.177 </code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/twolevel_statistic.html">twolevel_statistic</a></span><span class="op">(</span><span class="va">zk</span>, <span class="st">"nie_j"</span>, level <span class="op">=</span> <span class="st">"between"</span>, specific <span class="op">=</span> <span class="st">"M1"</span><span class="op">)</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"parametric"</span>, mediation_data <span class="op">=</span> <span class="va">zk</span>, n_boot <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>BootstrapResult object
+======================
+
+Method:   parametric
+Estimate:   0.6174
+N bootstrap samples: 500
+
+95% Confidence Interval:
+  Lower:   0.4025
+  Upper:   0.8424</code></pre>
+</div>
+</div>
+<p><code><a href="../reference/nie.html">nie()</a></code> gives the total by default and one value per mediator with <code>type = "specific"</code>. In <code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code>, <code>effect</code> is <code>"nie"</code>, <code>"nie_j"</code> (with the mediator in <code>specific</code>), <code>"nde"</code> or <code>"te"</code>, and <code>level</code> is <code>"within"</code>, <code>"between"</code> or <code>"contrast"</code>. The between level is kept only when the treatment and every mediator have an ICC of at least 0.01. More: <a href="model-twolevel.html">Two-level mediation</a>.</p>
 </section><section class="level2"><h2 id="which-recipe-returns-which-object">Which recipe returns which object<a class="anchor" aria-label="anchor" href="#which-recipe-returns-which-object"></a>
 </h2>
 <p>Every exported class and function appears in a recipe, or the table says why not.</p>
@@ -1071,6 +1145,10 @@ N bootstrap samples: 500
 <tr class="even">
 <td><code>TwoLevelMediationData</code></td>
 <td>23 (an <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on a two-level <code>lavaan</code> fit, and <code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code> for its bootstrap; see <a href="model-twolevel.html">Two-level mediation</a>)</td>
+</tr>
+<tr class="odd">
+<td><code>TwoLevelParallelMediationData</code></td>
+<td>24 (an <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on a two-level <code>lavaan</code> fit with two or more mediators, and <code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code> for its bootstrap; see <a href="model-twolevel.html#several-parallel-mediators">Several parallel mediators</a>)</td>
 </tr>
 </tbody>
 </table></section><script id="quarto-html-after-body" type="application/javascript">

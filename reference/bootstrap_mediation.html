@@ -17,7 +17,7 @@ plugin methods."><meta property="og:image" content="https://data-wise.github.io/
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.19.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -139,7 +139,7 @@ plugin methods."><meta property="og:image" content="https://data-wise.github.io/
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Perform Bootstrap Inference for Mediation Statistics</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.18.0/R/bootstrap.R" class="external-link"><code>R/bootstrap.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/bootstrap.R" class="external-link"><code>R/bootstrap.R</code></a></small>
       <div class="d-none name"><code>bootstrap_mediation.Rd</code></div>
     </div>
 
@@ -190,7 +190,8 @@ Omit this argument when supplying <code>source_fit</code>.</p></li>
 <dt id="arg-mediation-data">mediation_data<a class="anchor" aria-label="anchor" href="#arg-mediation-data"></a></dt>
 <dd><p>A mediation data object (required for parametric/plugin):
 <a href="MediationData.html">MediationData</a>, <a href="SerialMediationData.html">SerialMediationData</a>, <a href="ParallelMediationData.html">ParallelMediationData</a>,
-<a href="InteractionMediationData.html">InteractionMediationData</a>, or <a href="JointMediationData.html">JointMediationData</a>. <code>statistic_fn</code>
+<a href="InteractionMediationData.html">InteractionMediationData</a>, <a href="JointMediationData.html">JointMediationData</a>, <a href="TwoLevelMediationData.html">TwoLevelMediationData</a>
+or <a href="TwoLevelParallelMediationData.html">TwoLevelParallelMediationData</a> (see <code><a href="twolevel_statistic.html">twolevel_statistic()</a></code>). <code>statistic_fn</code>
 receives its named <code>@estimates</code> vector, which includes path aliases (e.g.
 <code>a</code>, <code>d1</code>, <code>b</code>, <code>c_prime</code> for a serial chain; <code>a1</code>, <code>b1</code>, <code>a2</code>, <code>b2</code> for
 parallel mediators). For a <a href="JointMediationData.html">JointMediationData</a> the aliases alone cannot

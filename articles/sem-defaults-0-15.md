@@ -354,7 +354,14 @@ stop above medfit’s reference, and
 reports that as a classed warning rather than blaming either side. On
 the pinned design (15 seeds by 4 cells) lavaan ended above the reference
 in 18 of 60 runs and OpenMx in 13 of 60, the same counts as under
-0.14.x, with no mislabeled row (issue \#320).
+0.14.x, with no mislabeled row (issue \#320). The cause is the shape of
+the null: `a*b == 0` is two lines, `a = 0` and `b = 0`, and each of
+those runs was checked and settled on the line with the larger minimum.
+medfit fits both lines and keeps the smaller, so its reference stands.
+On another design the warning alone does not show that; compute both
+line minima before reading it as a wrong line rather than an optimizer
+failure (see
+[`?compare_lr`](https://data-wise.github.io/medfit/reference/compare_lr.md)).
 
 ## See also
 

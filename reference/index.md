@@ -55,6 +55,8 @@ Core S7 class definitions for mediation data structures
   : ClusterMediationData: Cluster-Level Treatment Mediation (2-1-1)
 - [`TwoLevelMediationData()`](https://data-wise.github.io/medfit/reference/TwoLevelMediationData.md)
   : TwoLevelMediationData Class
+- [`TwoLevelParallelMediationData()`](https://data-wise.github.io/medfit/reference/TwoLevelParallelMediationData.md)
+  : TwoLevelParallelMediationData Class
 - [`BootstrapResult()`](https://data-wise.github.io/medfit/reference/BootstrapResult.md)
   : BootstrapResult S7 Class
 - [`SEMFit()`](https://data-wise.github.io/medfit/reference/SEMFit.md) :

@@ -175,15 +175,24 @@ card](https://data-wise.github.io/medfit/articles/refcard.html) \|
 0.3.2](https://data-wise.github.io/medfit/articles/guide-changes.html)
 \| [Methods](https://data-wise.github.io/medfit/articles/methods.html)
 
-**What’s new in 0.18.0**
+**What’s new in 0.19.0**
 
-- **The sem engine:** `fit_mediation(engine = "sem")` names medfit’s own
-  SEM fitter; `engine = "native"` still works, with identical results.
+- **Two-level parallel mediation (experimental):**
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  on a two-level `lavaan` fit with two or more mediators returns
+  `TwoLevelParallelMediationData`, with per-mediator and total effects
+  at each level, delta-method SEs and
+  [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md)
+  for the bootstrap. One-mediator results are unchanged. See the [model
+  page](https://data-wise.github.io/medfit/articles/model-twolevel.html#several-parallel-mediators).
+- **The sem engine (0.18.0):** `fit_mediation(engine = "sem")` names
+  medfit’s own SEM fitter; `engine = "native"` still works, with
+  identical results.
   [`sem_control()`](https://data-wise.github.io/medfit/reference/sem_control.md)
   collects its optimizer settings. See [Which engine should I
   use?](https://data-wise.github.io/medfit/articles/guide-engines.html).
-- **Renamed pages:** the sem engine articles moved (`native-guide` is
-  now `sem-guide`, and so on); old links redirect.
+- **Renamed pages (0.18.0):** the sem engine articles moved
+  (`native-guide` is now `sem-guide`, and so on); old links redirect.
 - **Bounded FIML expansion (0.17.0):** one or two covariates, two
   parallel and two serial mediators (numerically verified, not
   statistically admitted). See the [model
@@ -357,7 +366,7 @@ for version compatibility and development guidelines.
 |----|----|
 | Run your first model | [Get Started](https://data-wise.github.io/medfit/articles/getting-started.html) |
 | Find the page for your model | [Models](https://data-wise.github.io/medfit/articles/models.html) |
-| Copy a short recipe | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (twenty-three recipes) |
+| Copy a short recipe | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (twenty-four recipes) |
 | Look up a function or class | [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html) |
 | Understand the classes | [Introduction](https://data-wise.github.io/medfit/articles/introduction.html) |
 | Extract from fitted models | [Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html) |
@@ -412,7 +421,7 @@ GPL (\>= 3)
 If you use medfit in your research, please cite:
 
     Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-    R package version 0.18.0. https://data-wise.github.io/medfit/
+    R package version 0.19.0. https://data-wise.github.io/medfit/
 
 For the entry matching your installed version, run `citation("medfit")`.
 

@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.19.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -135,12 +135,12 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="logo.png" class="logo" alt=""><h1>Contributing to medfit</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.18.0/CONTRIBUTING.md" class="external-link"><code>CONTRIBUTING.md</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/CONTRIBUTING.md" class="external-link"><code>CONTRIBUTING.md</code></a></small>
     </div>
 
 <div id="contributing-to-medfit" class="section level1">
 
-<p>medfit is the foundation package of the mediationverse: it provides S7 classes, extraction, fitting and bootstrap infrastructure, and leaves effect-size methods to the packages built on it. Read <a href="vignettes/articles/guide-architecture.qmd">the architecture guide</a> for how the pieces fit together.</p>
+<p>medfit is the foundation package of the mediationverse: it provides S7 classes, extraction, fitting and bootstrap infrastructure, and leaves effect-size methods to the packages built on it. Read <a href="https://data-wise.github.io/medfit/articles/guide-architecture.html">the architecture guide</a> for how the pieces fit together.</p>
 <div class="section level2">
 <h2 id="branches">Branches<a class="anchor" aria-label="anchor" href="#branches"></a></h2>
 <table class="table"><thead><tr><th>Branch</th>
@@ -191,7 +191,7 @@
 </div>
 <div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a></h2>
-<p>Articles in <code>vignettes/articles/</code> are Quarto files that evaluate their code at site build; chunk options use the hash-pipe form (<code>#| label: my-chunk</code>, lowercase <code>true</code>/<code>false</code>). Every <code>guide-*.qmd</code> must be in the articles index and the Guides menu of <code>_pkgdown.yml</code>; <code>tests/testthat/test-guide-pages.R</code> checks this. Every classed condition the package signals (<code>medfit_error_*</code>, <code>medfit_warning_*</code>) must be named in the docs; <code>tests/testthat/test-condition-docs.R</code> checks this, so add a row to the <a href="vignettes/articles/guide-troubleshooting.qmd">Troubleshooting guide</a> with a new condition.</p>
+<p>Articles in <code>vignettes/articles/</code> are Quarto files that evaluate their code at site build; chunk options use the hash-pipe form (<code>#| label: my-chunk</code>, lowercase <code>true</code>/<code>false</code>). Every <code>guide-*.qmd</code> must be in the articles index and the Guides menu of <code>_pkgdown.yml</code>; <code>tests/testthat/test-guide-pages.R</code> checks this. Every classed condition the package signals (<code>medfit_error_*</code>, <code>medfit_warning_*</code>) must be named in the docs; <code>tests/testthat/test-condition-docs.R</code> checks this, so add a row to the <a href="https://data-wise.github.io/medfit/articles/guide-troubleshooting.html">Troubleshooting guide</a> with a new condition.</p>
 <p>Update <code>NEWS.md</code> under the development heading for any user-visible change. Spelling is US English.</p>
 </div>
 <div class="section level2">

@@ -13,7 +13,9 @@ twolevel_statistic(
     "c_prime_within", "a_between", "b_between", "c_prime_between"),
   treatment = NULL,
   mediator = NULL,
-  outcome = NULL
+  outcome = NULL,
+  level = NULL,
+  specific = NULL
 )
 ```
 
@@ -23,6 +25,8 @@ twolevel_statistic(
 
   A
   [TwoLevelMediationData](https://data-wise.github.io/medfit/reference/TwoLevelMediationData.md)
+  or
+  [TwoLevelParallelMediationData](https://data-wise.github.io/medfit/reference/TwoLevelParallelMediationData.md)
   object, or a two-level `lavaan` fit.
 
 - effect:
@@ -32,19 +36,37 @@ twolevel_statistic(
   `"te_within"`, `"te_between"`, `"pm_within"`, `"pm_between"`, or a
   path row: `"a_within"`, `"b_within"`, `"c_prime_within"`,
   `"a_between"`, `"b_between"`, `"c_prime_between"`. The proportion
-  mediated is `NA` where the total effect is zero.
+  mediated is `NA` where the total effect is zero. For several
+  mediators: `"nie"` (default), `"nie_j"`, `"nde"` or `"te"`.
 
 - treatment, mediator, outcome:
 
-  Character scalars: variable names. Required for a `lavaan` fit; taken
-  from the object for a
-  [TwoLevelMediationData](https://data-wise.github.io/medfit/reference/TwoLevelMediationData.md).
+  Variable names. Required for a `lavaan` fit; taken from the object for
+  a
+  [TwoLevelMediationData](https://data-wise.github.io/medfit/reference/TwoLevelMediationData.md)
+  or
+  [TwoLevelParallelMediationData](https://data-wise.github.io/medfit/reference/TwoLevelParallelMediationData.md).
+  `mediator` is a character vector of length two or more for a fit with
+  several mediators, a character scalar otherwise.
+
+- level:
+
+  For several mediators only: `"within"` (default), `"between"` or
+  `"contrast"`. For one mediator the level is part of `effect`, and
+  `level` must be left unset.
+
+- specific:
+
+  For `effect = "nie_j"` only: the name of the mediator whose specific
+  indirect effect is returned.
 
 ## Value
 
 A function of one argument returning a number: a named parameter vector
 for a
-[TwoLevelMediationData](https://data-wise.github.io/medfit/reference/TwoLevelMediationData.md),
+[TwoLevelMediationData](https://data-wise.github.io/medfit/reference/TwoLevelMediationData.md)
+or
+[TwoLevelParallelMediationData](https://data-wise.github.io/medfit/reference/TwoLevelParallelMediationData.md),
 a data frame for a `lavaan` fit.
 
 ## Details
@@ -69,8 +91,23 @@ callback depends on the first argument:
   effect. The cluster bootstrap gives every drawn cluster a fresh id, so
   a cluster drawn twice is refitted as two clusters.
 
+- `x` a
+  [TwoLevelParallelMediationData](https://data-wise.github.io/medfit/reference/TwoLevelParallelMediationData.md)
+  (several mediators), or a two-level `lavaan` fit with a `mediator`
+  vector of length two or more: the same two callbacks for the effects
+  that [`nie()`](https://data-wise.github.io/medfit/reference/nie.md),
+  [`nde()`](https://data-wise.github.io/medfit/reference/nde.md) and
+  [`te()`](https://data-wise.github.io/medfit/reference/te.md) define
+  for that class. `effect` is then one of `"nie"` (the total indirect
+  effect, the default), `"nie_j"` (the specific indirect effect of the
+  mediator named in `specific`), `"nde"` or `"te"`, and `level` is
+  `"within"` (default), `"between"` or `"contrast"` (within minus
+  between, `"nie"` and `"nie_j"` only). The callback evaluates the same
+  effect code as those generics, so at the estimate it returns their
+  value.
+
 A refit that errors, does not converge, warns, or leaves the between
-level unidentified (a treatment or mediator ICC below
+level unidentified (a treatment or any mediator ICC below
 `getOption("medfit.between_icc_error", 0.01)`, for a between effect or
 the contrast) is a failed replicate:
 [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
@@ -98,10 +135,23 @@ across levels and a between effect is `NA` when the between level is not
 identified, so asking for either raises a classed error here instead of
 returning a distribution of `NA`.
 
+**Several mediators.** An invalid `level`, or `level = "contrast"` with
+`effect = "nde"` or `"te"`, stops with class
+`medfit_error_twolevel_level`. An effect not defined for several
+mediators, `effect = "nie_j"` without `specific` or with a name that is
+not one of the mediators, and `specific` with another effect stop with
+class `medfit_error_twolevel_unsupported`, as do `level` and `specific`
+given for one mediator. A between effect or the contrast of a
+within-only fit stops with class `medfit_between_unidentified`, and the
+contrast of a mediator (for `"nie_j"`) or of every mediator (for
+`"nie"`) whose `a` and `b` are both equated across levels stops with
+class `medfit_error_twolevel_constrained`.
+
 ## See also
 
 [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md),
-[TwoLevelMediationData](https://data-wise.github.io/medfit/reference/TwoLevelMediationData.md)
+[TwoLevelMediationData](https://data-wise.github.io/medfit/reference/TwoLevelMediationData.md),
+[TwoLevelParallelMediationData](https://data-wise.github.io/medfit/reference/TwoLevelParallelMediationData.md)
 
 ## Examples
 

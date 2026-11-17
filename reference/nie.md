@@ -33,13 +33,18 @@ nie(x, ...)
   `TwoLevelMediationData`,
   `level = c("within", "between", "contrast", "both")` selects the level
   (within is the default; the contrast, within minus between, is
-  descriptive and exists for `nie()` only).
+  descriptive and exists for `nie()` only). For a
+  `TwoLevelParallelMediationData`, `level` as for
+  `TwoLevelMediationData` and `type = c("total", "specific")` selects
+  the total indirect effect (default) or one specific indirect effect
+  per mediator.
 
 ## Value
 
-A numeric scalar of class `mediation_effect` carrying a `type`
-attribute. For intervals use
-[`confint()`](https://rdrr.io/r/stats/confint.html) or
+A numeric scalar of class `mediation_effect` carrying a `type` attribute
+(a named vector, one value per mediator, for
+`TwoLevelParallelMediationData` with `type = "specific"`). For intervals
+use [`confint()`](https://rdrr.io/r/stats/confint.html) or
 [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md).
 
 ## Details
@@ -62,6 +67,12 @@ The effects are for a unit contrast of the treatment. By class:
 
 - `JointMediationData`: the joint NIE through all the mediators,
   \\\sum_i (\theta\_{2i} + \theta\_{3i}) \beta^\*\_{1i}\\.
+
+- `TwoLevelParallelMediationData` (experimental): per level, the
+  specific effects \\a_j b_j\\ and the total \\\sum_j a_j b_j\\; the
+  contrast is within minus between and descriptive, `NA` for a mediator
+  whose `a` and `b` are both equated across levels; the total contrast
+  is `NA` only when every mediator's contrast is.
 
 The "Methods and Formulas" article on the package website gives the full
 formulas.

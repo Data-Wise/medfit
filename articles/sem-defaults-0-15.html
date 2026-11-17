@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.19.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -178,7 +178,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.18.0/vignettes/articles/sem-defaults-0-15.qmd" class="external-link"><code>vignettes/articles/sem-defaults-0-15.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/sem-defaults-0-15.qmd" class="external-link"><code>vignettes/articles/sem-defaults-0-15.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -393,7 +393,7 @@ Attaching package: 'generics'</code></pre>
 </section><section class="level2"><h2 id="compare_lr-under-the-new-defaults">
 <code>compare_lr()</code> under the new defaults<a class="anchor" aria-label="anchor" href="#compare_lr-under-the-new-defaults"></a>
 </h2>
-<p><code><a href="../reference/compare_lr.html">compare_lr()</a></code> accepts fits made under the 0.15.0 defaults (a saturated mean structure and <code>fixed_x</code>), in lavaan and in OpenMx. Its known limit does not change with the flip: a general-purpose optimizer handed the product null can stop above medfit’s reference, and <code><a href="../reference/compare_lr.html">compare_lr()</a></code> reports that as a classed warning rather than blaming either side. On the pinned design (15 seeds by 4 cells) lavaan ended above the reference in 18 of 60 runs and OpenMx in 13 of 60, the same counts as under 0.14.x, with no mislabeled row (issue #320).</p>
+<p><code><a href="../reference/compare_lr.html">compare_lr()</a></code> accepts fits made under the 0.15.0 defaults (a saturated mean structure and <code>fixed_x</code>), in lavaan and in OpenMx. Its known limit does not change with the flip: a general-purpose optimizer handed the product null can stop above medfit’s reference, and <code><a href="../reference/compare_lr.html">compare_lr()</a></code> reports that as a classed warning rather than blaming either side. On the pinned design (15 seeds by 4 cells) lavaan ended above the reference in 18 of 60 runs and OpenMx in 13 of 60, the same counts as under 0.14.x, with no mislabeled row (issue #320). The cause is the shape of the null: <code>a*b == 0</code> is two lines, <code>a = 0</code> and <code>b = 0</code>, and each of those runs was checked and settled on the line with the larger minimum. medfit fits both lines and keeps the smaller, so its reference stands. On another design the warning alone does not show that; compute both line minima before reading it as a wrong line rather than an optimizer failure (see <code><a href="../reference/compare_lr.html">?compare_lr</a></code>).</p>
 </section><section class="level2"><h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a>
 </h2>
 <ul>

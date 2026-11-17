@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.19.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -178,7 +178,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.18.0/vignettes/articles/model-twolevel.qmd" class="external-link"><code>vignettes/articles/model-twolevel.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/model-twolevel.qmd" class="external-link"><code>vignettes/articles/model-twolevel.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -550,8 +550,8 @@ Estimate:   0.5344
 N bootstrap samples: 1000
 
 95% Confidence Interval:
-  Lower:   0.2980
-  Upper:   0.8209</code></pre>
+  Lower:   0.2901
+  Upper:   0.8234</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="va">b_cl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/twolevel_statistic.html">twolevel_statistic</a></span><span class="op">(</span><span class="va">fit</span>, <span class="st">"nie_between"</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span>, outcome <span class="op">=</span> <span class="st">"Y"</span><span class="op">)</span>,</span>
@@ -588,11 +588,171 @@ N bootstrap samples: 1000
 </div>
 </div>
 <p>Passing an object to <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> and having it choose the cluster route by itself is not available; the two calls above are the supported ones.</p>
-</section><section class="level2"><h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
+</section><section class="level2"><h2 id="several-parallel-mediators">Several parallel mediators<a class="anchor" aria-label="anchor" href="#several-parallel-mediators"></a>
+</h2>
+<p>With two or more mediators, none regressed on another, <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> returns the experimental <code>TwoLevelParallelMediationData</code>. Each mediator has its own <code>a</code> and <code>b</code> path at each level, and the effects come per level as for one mediator. <code><a href="../reference/nie.html">nie()</a></code> adds <code>type</code>: <code>"total"</code> (the default) is the sum of the specific effects, and <code>"specific"</code> gives one value per mediator. The contrast is again within minus between and descriptive. A mediator’s contrast is <code>NA</code> only when both its <code>a</code> and its <code>b</code> are equated across levels, and the total contrast only when that holds for every mediator. The formulas and gradients are in the <a href="methods.html#several-parallel-mediators-experimental">Methods and Formulas</a> article.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2027</span><span class="op">)</span></span>
+<span><span class="va">id_k</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="va">xb_k</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span><span class="op">[</span><span class="va">id_k</span><span class="op">]</span></span>
+<span><span class="va">xw_k</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">500</span><span class="op">)</span></span>
+<span><span class="va">m1</span> <span class="op">&lt;-</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">xw_k</span> <span class="op">+</span> <span class="fl">0.7</span> <span class="op">*</span> <span class="va">xb_k</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span><span class="op">[</span><span class="va">id_k</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">500</span><span class="op">)</span></span>
+<span><span class="va">m2</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">xw_k</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">xb_k</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span><span class="op">[</span><span class="va">id_k</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">500</span><span class="op">)</span></span>
+<span><span class="va">y_k</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">xw_k</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">xb_k</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="op">(</span><span class="va">m1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ave.html" class="external-link">ave</a></span><span class="op">(</span><span class="va">m1</span>, <span class="va">id_k</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.9</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/ave.html" class="external-link">ave</a></span><span class="op">(</span><span class="va">m1</span>, <span class="va">id_k</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fl">0.4</span> <span class="op">*</span> <span class="op">(</span><span class="va">m2</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ave.html" class="external-link">ave</a></span><span class="op">(</span><span class="va">m2</span>, <span class="va">id_k</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/ave.html" class="external-link">ave</a></span><span class="op">(</span><span class="va">m2</span>, <span class="va">id_k</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span><span class="op">[</span><span class="va">id_k</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">500</span><span class="op">)</span></span>
+<span><span class="va">d_k</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">id_k</span>, X <span class="op">=</span> <span class="va">xb_k</span> <span class="op">+</span> <span class="va">xw_k</span>, M1 <span class="op">=</span> <span class="va">m1</span>, M2 <span class="op">=</span> <span class="va">m2</span>, Y <span class="op">=</span> <span class="va">y_k</span><span class="op">)</span></span>
+<span><span class="va">model_k</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
+<span><span class="st">  level: 1</span></span>
+<span><span class="st">    M1 ~ X</span></span>
+<span><span class="st">    M2 ~ X</span></span>
+<span><span class="st">    Y ~ M1 + M2 + X</span></span>
+<span><span class="st">  level: 2</span></span>
+<span><span class="st">    M1 ~ X</span></span>
+<span><span class="st">    M2 ~ X</span></span>
+<span><span class="st">    Y ~ M1 + M2 + X</span></span>
+<span><span class="st">"</span></span>
+<span><span class="va">fit_k</span> <span class="op">&lt;-</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem</a></span><span class="op">(</span><span class="va">model_k</span>, data <span class="op">=</span> <span class="va">d_k</span>, cluster <span class="op">=</span> <span class="st">"id"</span><span class="op">)</span></span>
+<span><span class="va">tk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">fit_k</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"M1"</span>, <span class="st">"M2"</span><span class="op">)</span>, outcome <span class="op">=</span> <span class="st">"Y"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">tk</span>, level <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>Natural Indirect Effect (NIE), both levels: within = 0.3794, between = 1.4093</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">tk</span>, type <span class="op">=</span> <span class="st">"specific"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>Natural Indirect Effect (NIE): M1 = 0.2294, M2 = 0.1499</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">tk</span>, level <span class="op">=</span> <span class="st">"contrast"</span>, type <span class="op">=</span> <span class="st">"specific"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>Natural Indirect Effect (NIE), within - between contrast: M1 = -0.5667, M2 = -0.4632</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="../reference/decompose.html">decompose</a></span><span class="op">(</span><span class="va">tk</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>         within   between   contrast
+M1    0.2294339 0.7961111 -0.5666772
+M2    0.1499245 0.6131525 -0.4632281
+total 0.3793584 1.4092637 -1.0299053
+attr(,"label")
+[1] "descriptive; the contrast is not a test"</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">tk</span>, type <span class="op">=</span> <span class="st">"effects"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 15 × 3
+   term            estimate std_error
+   &lt;chr&gt;              &lt;dbl&gt;     &lt;dbl&gt;
+ 1 nie_M1_within      0.229    0.0359
+ 2 nie_M2_within      0.150    0.0277
+ 3 nie_within         0.379    0.0451
+ 4 nde_within         0.255    0.0548
+ 5 te_within          0.635    0.0618
+ 6 pm_within          0.598    0.0648
+ 7 nie_M1_between     0.796    0.161
+ 8 nie_M2_between     0.613    0.170
+ 9 nie_between        1.41     0.244
+10 nde_between       -0.201    0.234
+11 te_between         1.21     0.113
+12 pm_between         1.17     0.197
+13 nie_M1_contrast   -0.567    0.170
+14 nie_M2_contrast   -0.463    0.177
+15 nie_contrast      -1.03     0.254 </code></pre>
+</div>
+</div>
+<p><code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> lists each specific effect, the total, NDE, TE and PM at each level, then the specific and total contrasts. The standard errors use the joint covariance of all the paths, so the covariance between two mediators’ paths enters the standard error of the total. Here <code>@vcov</code> carries the covariance of <code>a_M1</code> and <code>a_M2</code>, which the lm/glm <code>ParallelMediationData</code> leaves out. The between level is kept only when the ICC of the treatment and of every mediator is at least 0.01; one mediator without a between part makes the whole result within-only (<code>medfit_between_unidentified</code>).</p>
+<section class="level3"><h3 id="check-it-against-lavaan">Check it against lavaan<a class="anchor" aria-label="anchor" href="#check-it-against-lavaan"></a>
+</h3>
+<p><code><a href="../reference/paths.html">paths()</a></code> names each path by mediator and level. Label the same model and define the effects with <code>:=</code>; the estimates and standard errors match <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="fu"><a href="../reference/paths.html">paths</a></span><span class="op">(</span><span class="va">tk</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>    a_M1_within     a_M2_within     b_M1_within     b_M2_within  c_prime_within
+      0.3867350       0.3482710       0.5932587       0.4304822       0.2552809
+   a_M1_between    a_M2_between    b_M1_between    b_M2_between c_prime_between
+      0.6936137       0.5418557       1.1477732       1.1315790      -0.2008242 </code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="va">labeled_k</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
+<span><span class="st">  level: 1</span></span>
+<span><span class="st">    M1 ~ a1w*X</span></span>
+<span><span class="st">    M2 ~ a2w*X</span></span>
+<span><span class="st">    Y ~ b1w*M1 + b2w*M2 + cw*X</span></span>
+<span><span class="st">  level: 2</span></span>
+<span><span class="st">    M1 ~ a1b*X</span></span>
+<span><span class="st">    M2 ~ a2b*X</span></span>
+<span><span class="st">    Y ~ b1b*M1 + b2b*M2 + cb*X</span></span>
+<span><span class="st">  nie_M1_within := a1w*b1w</span></span>
+<span><span class="st">  nie_within := a1w*b1w + a2w*b2w</span></span>
+<span><span class="st">  nie_between := a1b*b1b + a2b*b2b</span></span>
+<span><span class="st">  nie_contrast := (a1w*b1w + a2w*b2w) - (a1b*b1b + a2b*b2b)</span></span>
+<span><span class="st">"</span></span>
+<span><span class="va">pe_k</span> <span class="op">&lt;-</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/parameterEstimates.html" class="external-link">parameterEstimates</a></span><span class="op">(</span><span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem</a></span><span class="op">(</span><span class="va">labeled_k</span>, data <span class="op">=</span> <span class="va">d_k</span>, cluster <span class="op">=</span> <span class="st">"id"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">pe_k</span> <span class="op">&lt;-</span> <span class="va">pe_k</span><span class="op">[</span><span class="va">pe_k</span><span class="op">$</span><span class="va">op</span> <span class="op">==</span> <span class="st">":="</span>, <span class="op">]</span></span>
+<span><span class="va">tidy_k</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">tk</span>, type <span class="op">=</span> <span class="st">"effects"</span><span class="op">)</span></span>
+<span><span class="va">tidy_k</span> <span class="op">&lt;-</span> <span class="va">tidy_k</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/match.html" class="external-link">match</a></span><span class="op">(</span><span class="va">pe_k</span><span class="op">$</span><span class="va">lhs</span>, <span class="va">tidy_k</span><span class="op">$</span><span class="va">term</span><span class="op">)</span>, <span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>lavaan_est <span class="op">=</span> <span class="va">pe_k</span><span class="op">$</span><span class="va">est</span>, medfit_est <span class="op">=</span> <span class="va">tidy_k</span><span class="op">$</span><span class="va">estimate</span>,</span>
+<span>            lavaan_se <span class="op">=</span> <span class="va">pe_k</span><span class="op">$</span><span class="va">se</span>, medfit_se <span class="op">=</span> <span class="va">tidy_k</span><span class="op">$</span><span class="va">std_error</span><span class="op">)</span>, <span class="fl">5</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>     lavaan_est medfit_est lavaan_se medfit_se
+[1,]    0.22943    0.22943   0.03594   0.03594
+[2,]    0.37936    0.37936   0.04512   0.04512
+[3,]    1.40926    1.40926   0.24362   0.24362
+[4,]   -1.02991   -1.02991   0.25438   0.25438</code></pre>
+</div>
+</div>
+</section><section class="level3"><h3 id="one-mediators-paths-equated-across-levels">One mediator’s paths equated across levels<a class="anchor" aria-label="anchor" href="#one-mediators-paths-equated-across-levels"></a>
+</h3>
+<p>When both <code>a</code> and <code>b</code> of one mediator carry the same label at the two levels, that mediator’s contrast is zero by constraint and is <code>NA</code>, with the warning <code>medfit_warning_twolevel_constrained</code>. The other mediator’s contrast and the total contrast are still returned (lavaan warns that level-specific fit measures are not available with cross-level constraints; that warning is lavaan’s, so the fit is wrapped in <code><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings()</a></code>):</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">model_k_eq</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
+<span><span class="st">  level: 1</span></span>
+<span><span class="st">    M1 ~ a1*X</span></span>
+<span><span class="st">    M2 ~ X</span></span>
+<span><span class="st">    Y ~ b1*M1 + M2 + X</span></span>
+<span><span class="st">  level: 2</span></span>
+<span><span class="st">    M1 ~ a1*X</span></span>
+<span><span class="st">    M2 ~ X</span></span>
+<span><span class="st">    Y ~ b1*M1 + M2 + X</span></span>
+<span><span class="st">"</span></span>
+<span><span class="va">fit_k_eq</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem</a></span><span class="op">(</span><span class="va">model_k_eq</span>, data <span class="op">=</span> <span class="va">d_k</span>, cluster <span class="op">=</span> <span class="st">"id"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">tk_eq</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">fit_k_eq</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"M1"</span>, <span class="st">"M2"</span><span class="op">)</span>, outcome <span class="op">=</span> <span class="st">"Y"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">tk_eq</span>, level <span class="op">=</span> <span class="st">"contrast"</span>, type <span class="op">=</span> <span class="st">"specific"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: The contrast NIE_within - NIE_between is NA for nie_M1_contrast: both
+a and b of the mediator are equated across levels, so the contrast is zero by
+constraint. The within and between effects are still reported.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Natural Indirect Effect (NIE), within - between contrast: M1 =      NA, M2 = -0.4251</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">tk_eq</span>, level <span class="op">=</span> <span class="st">"contrast"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>Natural Indirect Effect (NIE), within - between contrast: -0.4251</code></pre>
+</div>
+</div>
+<p>The total contrast equals the M2 contrast here, because the M1 part is zero by constraint.</p>
+<p><code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code> builds the bootstrap callback for several mediators too. <code>effect</code> is <code>"nie"</code> (the total, the default), <code>"nie_j"</code> (the specific effect of the mediator named in <code>specific</code>), <code>"nde"</code> or <code>"te"</code>, and <code>level</code> is <code>"within"</code> (the default), <code>"between"</code> or <code>"contrast"</code> (within minus between, for <code>"nie"</code> and <code>"nie_j"</code> only). Pass the object for the parametric bootstrap:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">b_k</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/twolevel_statistic.html">twolevel_statistic</a></span><span class="op">(</span><span class="va">tk</span>, <span class="st">"nie"</span>, level <span class="op">=</span> <span class="st">"between"</span><span class="op">)</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"parametric"</span>, mediation_data <span class="op">=</span> <span class="va">tk</span>, n_boot <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">b_k_m1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/twolevel_statistic.html">twolevel_statistic</a></span><span class="op">(</span><span class="va">tk</span>, <span class="st">"nie_j"</span>, specific <span class="op">=</span> <span class="st">"M1"</span><span class="op">)</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"parametric"</span>, mediation_data <span class="op">=</span> <span class="va">tk</span>, n_boot <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>  total_between <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="va">b_k</span><span class="op">@</span><span class="va">estimate</span>, lower <span class="op">=</span> <span class="va">b_k</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">b_k</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span>,</span>
+<span>  M1_within <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="va">b_k_m1</span><span class="op">@</span><span class="va">estimate</span>, lower <span class="op">=</span> <span class="va">b_k_m1</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">b_k_m1</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>               estimate     lower     upper
+total_between 1.4092637 1.0077536 1.9359104
+M1_within     0.2294339 0.1584271 0.3057644</code></pre>
+</div>
+</div>
+<p>For the cluster bootstrap, pass the <code>lavaan</code> fit with all the mediators, as in <code>twolevel_statistic(fit_k, "nie", level = "between", treatment = "X", mediator = c("M1", "M2"), outcome = "Y")</code>, and give <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> the data and <code>cluster =</code>, as for one mediator. A refit’s between level counts as identified only when the treatment and every mediator pass the ICC check. An invalid <code>level</code>, or a contrast asked of <code>"nde"</code> or <code>"te"</code>, stops with class <code>medfit_error_twolevel_level</code>; an unknown effect or a missing or unknown <code>specific</code> stops with class <code>medfit_error_twolevel_unsupported</code>.</p>
+</section></section><section class="level2"><h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
 </h2>
 <ul>
 <li>
-<strong>One mediator, linear paths, observed variables.</strong> A second mediator stops extraction with class <code>medfit_error_twolevel_unsupported</code>. Latent variables and non-Gaussian outcomes are not part of this adapter.</li>
+<strong>One mediator or several parallel ones, linear paths, observed variables.</strong> Two or more mediators return the experimental <code>TwoLevelParallelMediationData</code> (<a href="#several-parallel-mediators">Several parallel mediators</a>); a mediator regressed on another mediator (serial) stops extraction with class <code>medfit_error_twolevel_unsupported</code>. Latent variables and non-Gaussian outcomes are not part of this adapter.</li>
 <li>
 <strong>No <code>standardized = TRUE</code>.</strong> A standardized two-level path mixes the within and the between variances; extraction stops with class <code>medfit_error_twolevel_standardized</code>.</li>
 <li>
@@ -630,12 +790,12 @@ N bootstrap samples: 1000
 <tr class="even">
 <td><code>medfit_warning_between_weak</code></td>
 <td>warning</td>
-<td>the ICC of the treatment or the mediator is in [0.01, 0.05)</td>
+<td>the ICC of the treatment or of a mediator is in [0.01, 0.05)</td>
 </tr>
 <tr class="odd">
 <td><code>medfit_warning_twolevel_constrained</code></td>
 <td>warning</td>
-<td>the contrast is <code>NA</code> because both a and b are equated across levels</td>
+<td>the contrast is <code>NA</code> because both a and b are equated across levels (with several mediators, those of that mediator, or of every mediator for the total)</td>
 </tr>
 <tr class="even">
 <td><code>medfit_warning_twolevel_inadmissible</code></td>
@@ -667,7 +827,7 @@ N bootstrap samples: 1000
 <tr class="odd">
 <td><code>medfit_error_twolevel_unsupported</code></td>
 <td>error</td>
-<td>more than one mediator, a variable missing at a level (2-1-1), or an argument that does not apply</td>
+<td>a mediator regressed on another mediator (serial), a covariate passed as a mediator, a duplicate or overlapping role, a variable missing at a level (2-1-1), or an argument that does not apply</td>
 </tr>
 <tr class="even">
 <td><code>medfit_error_twolevel_path_missing</code></td>
@@ -683,14 +843,14 @@ N bootstrap samples: 1000
 <td><code>medfit_error_twolevel_level</code></td>
 <td>error</td>
 <td>
-<code>level = "contrast"</code> for <code><a href="../reference/nde.html">nde()</a></code>, <code><a href="../reference/te.html">te()</a></code> or <code><a href="../reference/pm.html">pm()</a></code>
+<code>level = "contrast"</code> for <code><a href="../reference/nde.html">nde()</a></code>, <code><a href="../reference/te.html">te()</a></code> or <code><a href="../reference/pm.html">pm()</a></code>; from <code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code> with several mediators, an invalid <code>level</code> or <code>level = "contrast"</code> with <code>"nde"</code> or <code>"te"</code>
 </td>
 </tr>
 <tr class="odd">
 <td><code>medfit_error_twolevel_constrained</code></td>
 <td>error</td>
 <td>
-<code>twolevel_statistic(effect = "nie_contrast")</code> for a fit that equates both a and b across levels</td>
+<code>twolevel_statistic(effect = "nie_contrast")</code> for a fit that equates both a and b across levels; with several mediators, <code>level = "contrast"</code> when both a and b of the mediator (<code>"nie_j"</code>) or of every mediator (<code>"nie"</code>) are equated</td>
 </tr>
 </tbody>
 </table>
@@ -700,7 +860,7 @@ N bootstrap samples: 1000
 </div>
 </section><section class="level2"><h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
 </h2>
-<p><a href="cookbook.html#a-two-level-lavaan-fit-within-and-between">Cookbook recipe 23</a> | <a href="model-lavaan.html">lavaan fits</a> | <a href="model-cluster.html">Cluster-randomized trials</a> | <a href="methods.html#two-level-mediation-1-1-1">Methods and Formulas</a></p>
+<p><a href="cookbook.html#a-two-level-lavaan-fit-within-and-between">Cookbook recipe 23</a> | <a href="cookbook.html#two-parallel-mediators-in-a-two-level-lavaan-fit">Cookbook recipe 24</a> | <a href="model-lavaan.html">lavaan fits</a> | <a href="model-cluster.html">Cluster-randomized trials</a> | <a href="methods.html#two-level-mediation-1-1-1">Methods and Formulas</a></p>
 </section><section class="level2"><h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <p>Bauer, D. J., Preacher, K. J., &amp; Gil, K. M. (2006). Conceptualizing and testing random indirect effects and moderated mediation in multilevel models. <em>Psychological Methods</em>, 11(2), 142-163. <a href="https://doi.org/10.1037/1082-989X.11.2.142" class="external-link uri">https://doi.org/10.1037/1082-989X.11.2.142</a></p>

@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.19.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -178,7 +178,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.18.0/vignettes/articles/guide-troubleshooting.qmd" class="external-link"><code>vignettes/articles/guide-troubleshooting.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/guide-troubleshooting.qmd" class="external-link"><code>vignettes/articles/guide-troubleshooting.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -432,7 +432,7 @@
 </tbody>
 </table></section><section class="level2"><h2 id="two-level-mediation">Two-level mediation<a class="anchor" aria-label="anchor" href="#two-level-mediation"></a>
 </h2>
-<p>The two-level route is <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on a <code>lavaan</code> fit with <code>level:</code> blocks (see <a href="model-twolevel.html">Two-level mediation</a>). Each condition carries a class, so you can handle or silence one kind.</p>
+<p>The two-level route is <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on a <code>lavaan</code> fit with <code>level:</code> blocks (see <a href="model-twolevel.html">Two-level mediation</a>); with several mediators, <code>mediator = c("M1", "M2")</code>. Each condition carries a class, so you can handle or silence one kind.</p>
 <table class="table caption-top">
 <thead><tr class="header">
 <th>You see</th>
@@ -445,7 +445,7 @@
 <td>
 <code>The between level is not identified, so only the within-level paths are returned</code> (a warning)</td>
 <td><code>medfit_between_unidentified</code></td>
-<td>the ICC of the treatment or the mediator is below 0.01, a between covariance is not finite or not positive definite, or the fit did not converge</td>
+<td>the ICC of the treatment or of any mediator is below 0.01, a between covariance is not finite or not positive definite, or the fit did not converge</td>
 <td>read the within results, or fix the design; the between effects and the contrast are <code>NA</code>
 </td>
 </tr>
@@ -460,7 +460,7 @@
 <td>
 <code>The contrast NIE_within - NIE_between is NA</code> (a warning)</td>
 <td><code>medfit_warning_twolevel_constrained</code></td>
-<td>both a and b are equated across levels (a shared label, an <code>==</code> row or an algebraic equality), so the contrast is zero by constraint; with only one of them equated the contrast is returned</td>
+<td>both a and b are equated across levels (a shared label, an <code>==</code> row or an algebraic equality), so the contrast is zero by constraint; with only one of them equated the contrast is returned. With several mediators the rule is per mediator: a specific contrast is <code>NA</code> when both a and b of that mediator are equated, the total contrast only when that holds for every mediator</td>
 <td>free <code>a</code> or <code>b</code> across levels to compare the levels</td>
 </tr>
 <tr class="even">
@@ -506,10 +506,10 @@
 <td>remove the product</td>
 </tr>
 <tr class="even">
-<td><code>A two-level fit supports exactly one mediator</code></td>
+<td><code>serial mediation is not supported for a two-level fit</code></td>
 <td><code>medfit_error_twolevel_unsupported</code></td>
-<td>more than one mediator</td>
-<td>one mediator only</td>
+<td>a mediator is regressed on another mediator at either level</td>
+<td>keep the mediators parallel (each regressed on the treatment only)</td>
 </tr>
 <tr class="odd">
 <td><code>is not in the model at the</code></td>
@@ -535,7 +535,7 @@
 <td><code>is defined only for nie()</code></td>
 <td><code>medfit_error_twolevel_level</code></td>
 <td>
-<code>level = "contrast"</code> for <code><a href="../reference/nde.html">nde()</a></code>, <code><a href="../reference/te.html">te()</a></code> or <code><a href="../reference/pm.html">pm()</a></code>
+<code>level = "contrast"</code> for <code><a href="../reference/nde.html">nde()</a></code>, <code><a href="../reference/te.html">te()</a></code> or <code><a href="../reference/pm.html">pm()</a></code>, or for <code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code> with <code>effect = "nde"</code> or <code>"te"</code>
 </td>
 <td>use <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> for those contrasts</td>
 </tr>
@@ -544,14 +544,14 @@
 <td>
 <code>medfit_between_unidentified</code> (an error here)</td>
 <td>
-<code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code> was asked for a between effect or the contrast of a within-only fit</td>
+<code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code> was asked for a between effect or the contrast of a within-only fit (with several mediators, a <code>level</code> other than <code>"within"</code>)</td>
 <td>fix the between level (see the first row of this section), or bootstrap a within effect</td>
 </tr>
 <tr class="even">
-<td><code>both a and b are equated across levels</code></td>
+<td><code>is NA: both a and b</code></td>
 <td><code>medfit_error_twolevel_constrained</code></td>
 <td>
-<code>twolevel_statistic(effect = "nie_contrast")</code> on a fit that equates both a and b across levels</td>
+<code>twolevel_statistic(effect = "nie_contrast")</code> on a fit that equates both a and b across levels; with several mediators, <code>level = "contrast"</code> for <code>effect = "nie_j"</code> when both a and b of that mediator are equated, or for <code>effect = "nie"</code> when that holds for every mediator</td>
 <td>bootstrap the within and the between effect separately</td>
 </tr>
 <tr class="odd">
@@ -560,7 +560,69 @@
 <td>
 <code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code> got a <code>lavaan</code> fit without <code>treatment</code>, <code>mediator</code> and <code>outcome</code>
 </td>
-<td>name the three variables</td>
+<td>name the three variables (<code>mediator</code> as a vector for several mediators)</td>
+</tr>
+<tr class="even">
+<td><code>is listed more than once</code></td>
+<td><code>medfit_error_twolevel_unsupported</code></td>
+<td>a name appears twice in <code>mediator</code>
+</td>
+<td>pass each mediator once</td>
+</tr>
+<tr class="odd">
+<td><code>is listed both as a mediator and as the</code></td>
+<td><code>medfit_error_twolevel_unsupported</code></td>
+<td>the treatment or the outcome is also in <code>mediator</code>
+</td>
+<td>give each variable one role</td>
+</tr>
+<tr class="even">
+<td><code>is listed as a mediator but is not regressed on the treatment</code></td>
+<td><code>medfit_error_twolevel_unsupported</code></td>
+<td>a variable in <code>mediator</code> predicts another mediator but has no row on the treatment at that level: it is a covariate</td>
+<td>leave it in the model and drop it from <code>mediator</code>
+</td>
+</tr>
+<tr class="odd">
+<td><code>is not defined for several mediators</code></td>
+<td><code>medfit_error_twolevel_unsupported</code></td>
+<td>
+<code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code> with several mediators got a one-mediator effect such as <code>"nie_between"</code>
+</td>
+<td>use <code>effect = "nie"</code>, <code>"nie_j"</code>, <code>"nde"</code> or <code>"te"</code> with the level in <code>level</code>
+</td>
+</tr>
+<tr class="even">
+<td><code>needs `specific`, one of the mediators</code></td>
+<td><code>medfit_error_twolevel_unsupported</code></td>
+<td>
+<code>effect = "nie_j"</code> without <code>specific</code>, or with a name that is not a mediator</td>
+<td>name the mediator, <code>specific = "M1"</code>
+</td>
+</tr>
+<tr class="odd">
+<td><code>`specific` applies to `effect = "nie_j"` only</code></td>
+<td><code>medfit_error_twolevel_unsupported</code></td>
+<td>
+<code>specific</code> was set for another effect</td>
+<td>drop <code>specific</code>, or use <code>effect = "nie_j"</code>
+</td>
+</tr>
+<tr class="even">
+<td><code>apply to a model with several mediators</code></td>
+<td><code>medfit_error_twolevel_unsupported</code></td>
+<td>
+<code>level</code> or <code>specific</code> was set for a one-mediator model</td>
+<td>put the level in <code>effect</code>, for example <code>"nie_between"</code>
+</td>
+</tr>
+<tr class="odd">
+<td><code>must be one of "within", "between" or "contrast"</code></td>
+<td><code>medfit_error_twolevel_level</code></td>
+<td>
+<code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code> with several mediators got another <code>level</code>
+</td>
+<td>use one of the three levels</td>
 </tr>
 <tr class="even">
 <td><code>The lavaan fit has more than two levels</code></td>

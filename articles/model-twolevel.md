@@ -524,8 +524,8 @@ b_par
     N bootstrap samples: 1000
 
     95% Confidence Interval:
-      Lower:   0.2980
-      Upper:   0.8209
+      Lower:   0.2901
+      Upper:   0.8234
 
 ``` r
 b_cl <- bootstrap_mediation(
@@ -587,12 +587,241 @@ Passing an object to
 and having it choose the cluster route by itself is not available; the
 two calls above are the supported ones.
 
+## Several parallel mediators
+
+With two or more mediators, none regressed on another,
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+returns the experimental `TwoLevelParallelMediationData`. Each mediator
+has its own `a` and `b` path at each level, and the effects come per
+level as for one mediator.
+[`nie()`](https://data-wise.github.io/medfit/reference/nie.md) adds
+`type`: `"total"` (the default) is the sum of the specific effects, and
+`"specific"` gives one value per mediator. The contrast is again within
+minus between and descriptive. A mediator’s contrast is `NA` only when
+both its `a` and its `b` are equated across levels, and the total
+contrast only when that holds for every mediator. The formulas and
+gradients are in the [Methods and
+Formulas](https://data-wise.github.io/medfit/articles/methods.html#several-parallel-mediators-experimental)
+article.
+
+``` r
+set.seed(2027)
+id_k <- rep(seq_len(100), each = 5)
+xb_k <- rnorm(100)[id_k]
+xw_k <- rnorm(500)
+m1 <- 0.4 * xw_k + 0.7 * xb_k + 0.5 * rnorm(100)[id_k] + rnorm(500)
+m2 <- 0.3 * xw_k + 0.5 * xb_k + 0.5 * rnorm(100)[id_k] + rnorm(500)
+y_k <- 0.3 * xw_k + 0.2 * xb_k + 0.5 * (m1 - ave(m1, id_k)) + 0.9 * ave(m1, id_k) +
+  0.4 * (m2 - ave(m2, id_k)) + 0.6 * ave(m2, id_k) + 0.5 * rnorm(100)[id_k] + rnorm(500)
+d_k <- data.frame(id = id_k, X = xb_k + xw_k, M1 = m1, M2 = m2, Y = y_k)
+model_k <- "
+  level: 1
+    M1 ~ X
+    M2 ~ X
+    Y ~ M1 + M2 + X
+  level: 2
+    M1 ~ X
+    M2 ~ X
+    Y ~ M1 + M2 + X
+"
+fit_k <- lavaan::sem(model_k, data = d_k, cluster = "id")
+tk <- extract_mediation(fit_k, treatment = "X", mediator = c("M1", "M2"), outcome = "Y")
+nie(tk, level = "both")
+```
+
+    Natural Indirect Effect (NIE), both levels: within = 0.3794, between = 1.4093
+
+``` r
+nie(tk, type = "specific")
+```
+
+    Natural Indirect Effect (NIE): M1 = 0.2294, M2 = 0.1499
+
+``` r
+nie(tk, level = "contrast", type = "specific")
+```
+
+    Natural Indirect Effect (NIE), within - between contrast: M1 = -0.5667, M2 = -0.4632
+
+``` r
+decompose(tk)
+```
+
+             within   between   contrast
+    M1    0.2294339 0.7961111 -0.5666772
+    M2    0.1499245 0.6131525 -0.4632281
+    total 0.3793584 1.4092637 -1.0299053
+    attr(,"label")
+    [1] "descriptive; the contrast is not a test"
+
+``` r
+tidy(tk, type = "effects")
+```
+
+    # A tibble: 15 × 3
+       term            estimate std_error
+       <chr>              <dbl>     <dbl>
+     1 nie_M1_within      0.229    0.0359
+     2 nie_M2_within      0.150    0.0277
+     3 nie_within         0.379    0.0451
+     4 nde_within         0.255    0.0548
+     5 te_within          0.635    0.0618
+     6 pm_within          0.598    0.0648
+     7 nie_M1_between     0.796    0.161
+     8 nie_M2_between     0.613    0.170
+     9 nie_between        1.41     0.244
+    10 nde_between       -0.201    0.234
+    11 te_between         1.21     0.113
+    12 pm_between         1.17     0.197
+    13 nie_M1_contrast   -0.567    0.170
+    14 nie_M2_contrast   -0.463    0.177
+    15 nie_contrast      -1.03     0.254 
+
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) lists each
+specific effect, the total, NDE, TE and PM at each level, then the
+specific and total contrasts. The standard errors use the joint
+covariance of all the paths, so the covariance between two mediators’
+paths enters the standard error of the total. Here `@vcov` carries the
+covariance of `a_M1` and `a_M2`, which the lm/glm
+`ParallelMediationData` leaves out. The between level is kept only when
+the ICC of the treatment and of every mediator is at least 0.01; one
+mediator without a between part makes the whole result within-only
+(`medfit_between_unidentified`).
+
+### Check it against lavaan
+
+[`paths()`](https://data-wise.github.io/medfit/reference/paths.md) names
+each path by mediator and level. Label the same model and define the
+effects with `:=`; the estimates and standard errors match
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html):
+
+``` r
+paths(tk)
+```
+
+        a_M1_within     a_M2_within     b_M1_within     b_M2_within  c_prime_within
+          0.3867350       0.3482710       0.5932587       0.4304822       0.2552809
+       a_M1_between    a_M2_between    b_M1_between    b_M2_between c_prime_between
+          0.6936137       0.5418557       1.1477732       1.1315790      -0.2008242 
+
+``` r
+labeled_k <- "
+  level: 1
+    M1 ~ a1w*X
+    M2 ~ a2w*X
+    Y ~ b1w*M1 + b2w*M2 + cw*X
+  level: 2
+    M1 ~ a1b*X
+    M2 ~ a2b*X
+    Y ~ b1b*M1 + b2b*M2 + cb*X
+  nie_M1_within := a1w*b1w
+  nie_within := a1w*b1w + a2w*b2w
+  nie_between := a1b*b1b + a2b*b2b
+  nie_contrast := (a1w*b1w + a2w*b2w) - (a1b*b1b + a2b*b2b)
+"
+pe_k <- lavaan::parameterEstimates(lavaan::sem(labeled_k, data = d_k, cluster = "id"))
+pe_k <- pe_k[pe_k$op == ":=", ]
+tidy_k <- tidy(tk, type = "effects")
+tidy_k <- tidy_k[match(pe_k$lhs, tidy_k$term), ]
+round(cbind(lavaan_est = pe_k$est, medfit_est = tidy_k$estimate,
+            lavaan_se = pe_k$se, medfit_se = tidy_k$std_error), 5)
+```
+
+         lavaan_est medfit_est lavaan_se medfit_se
+    [1,]    0.22943    0.22943   0.03594   0.03594
+    [2,]    0.37936    0.37936   0.04512   0.04512
+    [3,]    1.40926    1.40926   0.24362   0.24362
+    [4,]   -1.02991   -1.02991   0.25438   0.25438
+
+### One mediator’s paths equated across levels
+
+When both `a` and `b` of one mediator carry the same label at the two
+levels, that mediator’s contrast is zero by constraint and is `NA`, with
+the warning `medfit_warning_twolevel_constrained`. The other mediator’s
+contrast and the total contrast are still returned (lavaan warns that
+level-specific fit measures are not available with cross-level
+constraints; that warning is lavaan’s, so the fit is wrapped in
+[`suppressWarnings()`](https://rdrr.io/r/base/warning.html)):
+
+``` r
+model_k_eq <- "
+  level: 1
+    M1 ~ a1*X
+    M2 ~ X
+    Y ~ b1*M1 + M2 + X
+  level: 2
+    M1 ~ a1*X
+    M2 ~ X
+    Y ~ b1*M1 + M2 + X
+"
+fit_k_eq <- suppressWarnings(lavaan::sem(model_k_eq, data = d_k, cluster = "id"))
+tk_eq <- extract_mediation(fit_k_eq, treatment = "X", mediator = c("M1", "M2"), outcome = "Y")
+nie(tk_eq, level = "contrast", type = "specific")
+```
+
+    Warning: The contrast NIE_within - NIE_between is NA for nie_M1_contrast: both
+    a and b of the mediator are equated across levels, so the contrast is zero by
+    constraint. The within and between effects are still reported.
+
+    Natural Indirect Effect (NIE), within - between contrast: M1 =      NA, M2 = -0.4251
+
+``` r
+nie(tk_eq, level = "contrast")
+```
+
+    Natural Indirect Effect (NIE), within - between contrast: -0.4251
+
+The total contrast equals the M2 contrast here, because the M1 part is
+zero by constraint.
+
+[`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md)
+builds the bootstrap callback for several mediators too. `effect` is
+`"nie"` (the total, the default), `"nie_j"` (the specific effect of the
+mediator named in `specific`), `"nde"` or `"te"`, and `level` is
+`"within"` (the default), `"between"` or `"contrast"` (within minus
+between, for `"nie"` and `"nie_j"` only). Pass the object for the
+parametric bootstrap:
+
+``` r
+b_k <- bootstrap_mediation(
+  twolevel_statistic(tk, "nie", level = "between"),
+  method = "parametric", mediation_data = tk, n_boot = 200, seed = 1
+)
+b_k_m1 <- bootstrap_mediation(
+  twolevel_statistic(tk, "nie_j", specific = "M1"),
+  method = "parametric", mediation_data = tk, n_boot = 200, seed = 1
+)
+rbind(
+  total_between = c(estimate = b_k@estimate, lower = b_k@ci_lower, upper = b_k@ci_upper),
+  M1_within = c(estimate = b_k_m1@estimate, lower = b_k_m1@ci_lower, upper = b_k_m1@ci_upper)
+)
+```
+
+                   estimate     lower     upper
+    total_between 1.4092637 1.0077536 1.9359104
+    M1_within     0.2294339 0.1584271 0.3057644
+
+For the cluster bootstrap, pass the `lavaan` fit with all the mediators,
+as in
+`twolevel_statistic(fit_k, "nie", level = "between", treatment = "X", mediator = c("M1", "M2"), outcome = "Y")`,
+and give
+[`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
+the data and `cluster =`, as for one mediator. A refit’s between level
+counts as identified only when the treatment and every mediator pass the
+ICC check. An invalid `level`, or a contrast asked of `"nde"` or `"te"`,
+stops with class `medfit_error_twolevel_level`; an unknown effect or a
+missing or unknown `specific` stops with class
+`medfit_error_twolevel_unsupported`.
+
 ## Limits
 
-- **One mediator, linear paths, observed variables.** A second mediator
-  stops extraction with class `medfit_error_twolevel_unsupported`.
-  Latent variables and non-Gaussian outcomes are not part of this
-  adapter.
+- **One mediator or several parallel ones, linear paths, observed
+  variables.** Two or more mediators return the experimental
+  `TwoLevelParallelMediationData` ([Several parallel
+  mediators](#several-parallel-mediators)); a mediator regressed on
+  another mediator (serial) stops extraction with class
+  `medfit_error_twolevel_unsupported`. Latent variables and non-Gaussian
+  outcomes are not part of this adapter.
 - **No `standardized = TRUE`.** A standardized two-level path mixes the
   within and the between variances; extraction stops with class
   `medfit_error_twolevel_standardized`.
@@ -629,18 +858,18 @@ class (see
 | Class | Kind | When |
 |----|----|----|
 | `medfit_between_unidentified` | warning (error from [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md)) | the between level is not identified: the result is within-only. Also from a between accessor on a within-only object; [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md) stops with this class for a between effect or the contrast |
-| `medfit_warning_between_weak` | warning | the ICC of the treatment or the mediator is in \[0.01, 0.05) |
-| `medfit_warning_twolevel_constrained` | warning | the contrast is `NA` because both a and b are equated across levels |
+| `medfit_warning_between_weak` | warning | the ICC of the treatment or of a mediator is in \[0.01, 0.05) |
+| `medfit_warning_twolevel_constrained` | warning | the contrast is `NA` because both a and b are equated across levels (with several mediators, those of that mediator, or of every mediator for the total) |
 | `medfit_warning_twolevel_inadmissible` | warning | lavaan’s `post.check` is `FALSE` (for example a negative variance) |
 | `medfit_warning_twolevel_few_clusters` | warning | fewer than 50 clusters |
 | `medfit_warning_twolevel_labels_ignored` | warning | `a_label`, `b_label` or `cp_label` was set: the paths are read by variable names and level, not by label |
 | `medfit_error_twolevel_standardized` | error | `standardized = TRUE` |
 | `medfit_error_twolevel_product` | error | a product term or `interaction =` |
-| `medfit_error_twolevel_unsupported` | error | more than one mediator, a variable missing at a level (2-1-1), or an argument that does not apply |
+| `medfit_error_twolevel_unsupported` | error | a mediator regressed on another mediator (serial), a covariate passed as a mediator, a duplicate or overlapping role, a variable missing at a level (2-1-1), or an argument that does not apply |
 | `medfit_error_twolevel_path_missing` | error | a, b or c’ absent at a level |
 | `medfit_error_twolevel_unusable` | error | the within block is unusable: the fit did not converge, or the within covariance is missing or not positive definite |
-| `medfit_error_twolevel_level` | error | `level = "contrast"` for [`nde()`](https://data-wise.github.io/medfit/reference/nde.md), [`te()`](https://data-wise.github.io/medfit/reference/te.md) or [`pm()`](https://data-wise.github.io/medfit/reference/pm.md) |
-| `medfit_error_twolevel_constrained` | error | `twolevel_statistic(effect = "nie_contrast")` for a fit that equates both a and b across levels |
+| `medfit_error_twolevel_level` | error | `level = "contrast"` for [`nde()`](https://data-wise.github.io/medfit/reference/nde.md), [`te()`](https://data-wise.github.io/medfit/reference/te.md) or [`pm()`](https://data-wise.github.io/medfit/reference/pm.md); from [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md) with several mediators, an invalid `level` or `level = "contrast"` with `"nde"` or `"te"` |
+| `medfit_error_twolevel_constrained` | error | `twolevel_statistic(effect = "nie_contrast")` for a fit that equates both a and b across levels; with several mediators, `level = "contrast"` when both a and b of the mediator (`"nie_j"`) or of every mediator (`"nie"`) are equated |
 
 The messages they carry are quoted in
 [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html#two-level-mediation).
@@ -652,6 +881,8 @@ step](https://data-wise.github.io/medfit/articles/guide-twolevel-tutorial.md)
 
 [Cookbook recipe
 23](https://data-wise.github.io/medfit/articles/cookbook.html#a-two-level-lavaan-fit-within-and-between)
+\| [Cookbook recipe
+24](https://data-wise.github.io/medfit/articles/cookbook.html#two-parallel-mediators-in-a-two-level-lavaan-fit)
 \| [lavaan
 fits](https://data-wise.github.io/medfit/articles/model-lavaan.md) \|
 [Cluster-randomized

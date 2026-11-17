@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.19.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -178,7 +178,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.18.0/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -287,6 +287,12 @@ e_Y\)</span>, with a product term <span class="math inline">\(\theta_3 X M\)</sp
 <td><code>TwoLevelMediationData</code></td>
 <td>
 <span class="math inline">\(a_w b_w\)</span> within and <span class="math inline">\(a_b b_b\)</span> between; the contrast is descriptive</td>
+</tr>
+<tr class="even">
+<td>the same with several parallel mediators (experimental)</td>
+<td><code>TwoLevelParallelMediationData</code></td>
+<td>
+<span class="math inline">\(\sum_j a_{jw} b_{jw}\)</span> within and <span class="math inline">\(\sum_j a_{jb} b_{jb}\)</span> between</td>
 </tr>
 </tbody>
 </table>
@@ -602,6 +608,14 @@ M = a_\ell X + e_M, \qquad Y = b_\ell M + c'_\ell X + e_Y .
 </section><section class="level3"><h3 id="bootstrap">Bootstrap<a class="anchor" aria-label="anchor" href="#bootstrap"></a>
 </h3>
 <p><code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code> gives <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> the scalar <span class="math inline">\(g(\theta)\)</span> of the effect above. The parametric route draws <span class="math inline">\(\theta^{*} \sim N(\hat\theta, \hat V)\)</span>, so the cross-level covariance is part of every draw. The cluster route resamples whole clusters with replacement and refits the fit’s own model on each resample, a cluster drawn twice counting as two clusters. Refits that are inadmissible are kept, as the point estimate keeps its own; a refit that fails or leaves the between level unidentified is excluded and counted. Because boundary refits give the between effects and the contrast heavy tails, report the percentile interval; the plain standard deviation of the draws is not a standard error for them.</p>
+</section><section class="level3"><h3 id="several-parallel-mediators-experimental">Several parallel mediators (experimental)<a class="anchor" aria-label="anchor" href="#several-parallel-mediators-experimental"></a>
+</h3>
+<p>With mediators <span class="math inline">\(M_1, \dots, M_k\)</span> (<span class="math inline">\(k \ge 2\)</span>), none regressed on another, each level <span class="math inline">\(\ell\)</span> has</p>
+<p><span class="math display">\[
+M_j = a_{j\ell} X + e_{M_j}, \qquad Y = \sum_j b_{j\ell} M_j + c'_\ell X + e_Y ,
+\]</span></p>
+<p>and <code>TwoLevelParallelMediationData</code> reports, per level, the specific indirect effects <span class="math inline">\(\text{NIE}_{j\ell} = a_{j\ell} b_{j\ell}\)</span>, the total <span class="math inline">\(\text{NIE}_\ell = \sum_j a_{j\ell} b_{j\ell}\)</span>, and <span class="math inline">\(\text{NDE}_\ell\)</span>, <span class="math inline">\(\text{TE}_\ell = \text{NIE}_\ell + c'_\ell\)</span> and <span class="math inline">\(\text{PM}_\ell = \text{NIE}_\ell / \text{TE}_\ell\)</span> as above, with the total NIE in place of <span class="math inline">\(a_\ell b_\ell\)</span>. The contrasts are within minus between: <span class="math inline">\(\text{NIE}_{jw} - \text{NIE}_{jb}\)</span> for each mediator and <span class="math inline">\(\text{NIE}_w - \text{NIE}_b\)</span> for the total. They are descriptive, as for one mediator. Residual covariances among the mediators enter no effect.</p>
+<p><span class="math inline">\(\hat V\)</span> is the <span class="math inline">\(2(2k + 1)\)</span>-square sub-block of lavaan’s joint covariance over the within then the between <span class="math inline">\((a_1, \dots, a_k, b_1, \dots, b_k, c')\)</span>, so the covariances across mediators and across levels are both carried. The gradient of <span class="math inline">\(\text{NIE}_{j\ell}\)</span> is <span class="math inline">\(b_{j\ell}\)</span> on <span class="math inline">\(a_{j\ell}\)</span>, <span class="math inline">\(a_{j\ell}\)</span> on <span class="math inline">\(b_{j\ell}\)</span> and zero elsewhere; the total’s is the sum of the specific gradients at that level; a contrast’s is the within gradient minus the between gradient; <span class="math inline">\(\text{TE}_\ell\)</span> and <span class="math inline">\(\text{PM}_\ell\)</span> follow from the total as in the table above. A mediator’s contrast is <code>NA</code> when both its <span class="math inline">\(a_j\)</span> and its <span class="math inline">\(b_j\)</span> are equated across levels (found as for one mediator); the total contrast is <code>NA</code> only when every mediator’s contrast is, because otherwise it is an estimate.</p>
 </section><section class="level3"><h3 id="caveats">Caveats<a class="anchor" aria-label="anchor" href="#caveats"></a>
 </h3>
 <ul>
@@ -619,7 +633,7 @@ M = a_\ell X + e_M, \qquad Y = b_\ell M + c'_\ell X + e_Y .
 <strong>Identification.</strong> The between slopes need between variance in the treatment and the mediator. The adapter treats an ICC below 0.01 as unidentified (a within-only result) and warns between 0.01 and 0.05; both cutoffs are judgments.</li>
 </ul></section><section class="level3"><h3 id="what-is-not-supported-1">What is not supported<a class="anchor" aria-label="anchor" href="#what-is-not-supported-1"></a>
 </h3>
-<p>Random slopes, latent or non-Gaussian variables, more than one mediator, product terms, standardized effects, three-level and multigroup fits, and manifest cluster means.</p>
+<p>Random slopes, latent or non-Gaussian variables, serial mediators, product terms, standardized effects, three-level and multigroup fits, and manifest cluster means.</p>
 </section></section><section class="level2"><h2 id="covariance-of-the-estimates">Covariance of the estimates<a class="anchor" aria-label="anchor" href="#covariance-of-the-estimates"></a>
 </h2>
 <p>Every effect’s standard error comes from <span class="math inline">\(\hat\Sigma\)</span> (<code>@vcov</code>), whose rows are named by the model coefficients and by path aliases (<code>a</code>, <code>b</code>, <code>c_prime</code>, <code>d1</code>, <code>a1</code>, <code>b2</code>, <code>theta3</code>, …).</p>

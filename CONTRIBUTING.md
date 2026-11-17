@@ -3,7 +3,7 @@
 medfit is the foundation package of the mediationverse: it provides S7
 classes, extraction, fitting and bootstrap infrastructure, and leaves
 effect-size methods to the packages built on it. Read [the architecture
-guide](https://data-wise.github.io/medfit/vignettes/articles/guide-architecture.qmd)
+guide](https://data-wise.github.io/medfit/articles/guide-architecture.html)
 for how the pieces fit together.
 
 ## Branches
@@ -66,7 +66,7 @@ must be in the articles index and the Guides menu of `_pkgdown.yml`;
 the package signals (`medfit_error_*`, `medfit_warning_*`) must be named
 in the docs; `tests/testthat/test-condition-docs.R` checks this, so add
 a row to the [Troubleshooting
-guide](https://data-wise.github.io/medfit/vignettes/articles/guide-troubleshooting.qmd)
+guide](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html)
 with a new condition.
 
 Update `NEWS.md` under the development heading for any user-visible

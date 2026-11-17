@@ -11,7 +11,8 @@ Runs the likelihood-ratio test of a product null (\(a b = 0\)) in
 an external SEM engine and compares it with medfit's own mbco_sem()
 statistic. A general-purpose optimizer handed the nonlinear constraint
 \(a b = 0\) can drop it (OpenMx at a zero start) or stop at the
-wrong branch (lavaan), which reports a statistic above the true minimum.
+wrong branch (lavaan from either start, OpenMx from its default start),
+which reports a statistic above the true minimum.
 compare_lr() flags exactly those cases and nothing else.
 A warning is raised only on observed evidence, never because an LR is zero:
 medfit_warning_engine_constraint_dropped when the engine's returned fit
@@ -32,16 +33,32 @@ a fit with a mean structure is run on the raw data the fit used). Latent variabl
 product terms, fixed or constrained intercepts, weights, factors, other fixed
 or shared parameters, start/bound modifiers and constraints in the model are
 refused by name.
-Known limit (#320): the flip of the fit_sem() defaults in 0.15.0 does not change what the comparison finds. On the
-pinned design (15 seeds by 4 cells, 60 runs per engine), the lavaan run ends above medfit's reference in 18 of 60
-runs and the OpenMx run in 13 of 60, the same counts as under the 0.14.x defaults. Each is reported as
-medfit_warning_engine_statistic_above_max, and no row is mislabeled."><meta property="og:description" content="Bounded FIML fits are refused before an external-engine comparison or refit;
+Known limit (#320): an engine's statistic can land above medfit's reference
+because the null \(a b = 0\) is two lines, \(a = 0\) and
+\(b = 0\), each with its own minimum. A general-purpose optimizer
+settles on one line; when it settles on the line with the larger minimum,
+the engine's statistic is that line's LR, not the product-null LR. medfit
+fits each line as a linear model and keeps the smaller (see mbco_sem()).
+medfit_warning_engine_statistic_above_max says only that a feasible,
+converged engine statistic exceeds the reference; it does not say which line
+the engine reached or whether it reached that line's minimum. A run that
+stopped short of the minimum on either line raises the same warning. Treat
+the warning as undiagnosed until both line minima are computed: if the
+engine's statistic equals the other line's minimum, the engine chose the
+wrong line and medfit's reference stands; otherwise it may be an optimizer
+failure in the engine. On the pinned design (15 seeds by 4 cells, 60 runs
+per engine) the warning fires in 18 of 60 lavaan runs (either start) and 13
+of 60 OpenMx default-start runs; in that design each of those runs was
+checked and equals the other line's minimum, and the smaller of lavaan's two
+runs equals medfit's reference in all 60. The counts are unchanged by the
+0.15.0 flip of the fit_sem() defaults, and no run is mislabeled."><meta property="og:description" content="Bounded FIML fits are refused before an external-engine comparison or refit;
 this function does not extend their supported inference. See fit_sem().
 Runs the likelihood-ratio test of a product null (\(a b = 0\)) in
 an external SEM engine and compares it with medfit's own mbco_sem()
 statistic. A general-purpose optimizer handed the nonlinear constraint
 \(a b = 0\) can drop it (OpenMx at a zero start) or stop at the
-wrong branch (lavaan), which reports a statistic above the true minimum.
+wrong branch (lavaan from either start, OpenMx from its default start),
+which reports a statistic above the true minimum.
 compare_lr() flags exactly those cases and nothing else.
 A warning is raised only on observed evidence, never because an LR is zero:
 medfit_warning_engine_constraint_dropped when the engine's returned fit
@@ -62,10 +79,25 @@ a fit with a mean structure is run on the raw data the fit used). Latent variabl
 product terms, fixed or constrained intercepts, weights, factors, other fixed
 or shared parameters, start/bound modifiers and constraints in the model are
 refused by name.
-Known limit (#320): the flip of the fit_sem() defaults in 0.15.0 does not change what the comparison finds. On the
-pinned design (15 seeds by 4 cells, 60 runs per engine), the lavaan run ends above medfit's reference in 18 of 60
-runs and the OpenMx run in 13 of 60, the same counts as under the 0.14.x defaults. Each is reported as
-medfit_warning_engine_statistic_above_max, and no row is mislabeled."><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body>
+Known limit (#320): an engine's statistic can land above medfit's reference
+because the null \(a b = 0\) is two lines, \(a = 0\) and
+\(b = 0\), each with its own minimum. A general-purpose optimizer
+settles on one line; when it settles on the line with the larger minimum,
+the engine's statistic is that line's LR, not the product-null LR. medfit
+fits each line as a linear model and keeps the smaller (see mbco_sem()).
+medfit_warning_engine_statistic_above_max says only that a feasible,
+converged engine statistic exceeds the reference; it does not say which line
+the engine reached or whether it reached that line's minimum. A run that
+stopped short of the minimum on either line raises the same warning. Treat
+the warning as undiagnosed until both line minima are computed: if the
+engine's statistic equals the other line's minimum, the engine chose the
+wrong line and medfit's reference stands; otherwise it may be an optimizer
+failure in the engine. On the pinned design (15 seeds by 4 cells, 60 runs
+per engine) the warning fires in 18 of 60 lavaan runs (either start) and 13
+of 60 OpenMx default-start runs; in that design each of those runs was
+checked and equals the other line's minimum, and the smaller of lavaan's two
+runs equals medfit's reference in all 60. The counts are unchanged by the
+0.15.0 flip of the fit_sem() defaults, and no run is mislabeled."><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -73,7 +105,7 @@ medfit_warning_engine_statistic_above_max, and no row is mislabeled."><meta prop
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.19.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -195,7 +227,7 @@ medfit_warning_engine_statistic_above_max, and no row is mislabeled."><meta prop
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Compare medfit's Product-Null LR with OpenMx or lavaan</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.18.0/R/compare-lr.R" class="external-link"><code>R/compare-lr.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/compare-lr.R" class="external-link"><code>R/compare-lr.R</code></a></small>
       <div class="d-none name"><code>compare_lr.Rd</code></div>
     </div>
 
@@ -206,7 +238,8 @@ this function does not extend their supported inference. See <code><a href="fit_
 an external SEM engine and compares it with medfit's own <code><a href="mbco_sem.html">mbco_sem()</a></code>
 statistic. A general-purpose optimizer handed the nonlinear constraint
 \(a b = 0\) can drop it (OpenMx at a zero start) or stop at the
-wrong branch (lavaan), which reports a statistic above the true minimum.
+wrong branch (lavaan from either start, OpenMx from its default start),
+which reports a statistic above the true minimum.
 <code>compare_lr()</code> flags exactly those cases and nothing else.</p>
 <p>A warning is raised only on observed evidence, never because an LR is zero:
 <code>medfit_warning_engine_constraint_dropped</code> when the engine's returned fit
@@ -227,10 +260,25 @@ a fit with a mean structure is run on the raw data the fit used). Latent variabl
 product terms, fixed or constrained intercepts, weights, factors, other fixed
 or shared parameters, start/bound modifiers and constraints in the model are
 refused by name.</p>
-<p>Known limit (#320): the flip of the <code><a href="fit_sem.html">fit_sem()</a></code> defaults in 0.15.0 does not change what the comparison finds. On the
-pinned design (15 seeds by 4 cells, 60 runs per engine), the lavaan run ends above medfit's reference in 18 of 60
-runs and the OpenMx run in 13 of 60, the same counts as under the 0.14.x defaults. Each is reported as
-<code>medfit_warning_engine_statistic_above_max</code>, and no row is mislabeled.</p>
+<p>Known limit (#320): an engine's statistic can land above medfit's reference
+because the null \(a b = 0\) is two lines, \(a = 0\) and
+\(b = 0\), each with its own minimum. A general-purpose optimizer
+settles on one line; when it settles on the line with the larger minimum,
+the engine's statistic is that line's LR, not the product-null LR. medfit
+fits each line as a linear model and keeps the smaller (see <code><a href="mbco_sem.html">mbco_sem()</a></code>).
+<code>medfit_warning_engine_statistic_above_max</code> says only that a feasible,
+converged engine statistic exceeds the reference; it does not say which line
+the engine reached or whether it reached that line's minimum. A run that
+stopped short of the minimum on either line raises the same warning. Treat
+the warning as undiagnosed until both line minima are computed: if the
+engine's statistic equals the other line's minimum, the engine chose the
+wrong line and medfit's reference stands; otherwise it may be an optimizer
+failure in the engine. On the pinned design (15 seeds by 4 cells, 60 runs
+per engine) the warning fires in 18 of 60 lavaan runs (either start) and 13
+of 60 OpenMx default-start runs; in that design each of those runs was
+checked and equals the other line's minimum, and the smaller of lavaan's two
+runs equals medfit's reference in all 60. The counts are unchanged by the
+0.15.0 flip of the <code><a href="fit_sem.html">fit_sem()</a></code> defaults, and no run is mislabeled.</p>
     </div>
 
     <div class="section level2">
@@ -290,8 +338,8 @@ LR, convergence, constraint residual and status) and <code>engine</code>.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> medfit LR comparison (lavaan, a*b = 0): agree</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   medfit reference LR 17.5574 (accepted)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  engine version   start      lr converged     residual status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  lavaan   0.7.3 default 17.5574      TRUE 2.428822e-09  agree</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  lavaan   0.7.3    zero 17.5574      TRUE 3.773291e-09  agree</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  lavaan   0.7.3 default 17.5574      TRUE 2.417762e-09  agree</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  lavaan   0.7.3    zero 17.5574      TRUE 3.772165e-09  agree</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

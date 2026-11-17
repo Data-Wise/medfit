@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.19.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -135,7 +135,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Bootstrap Callback for Two-Level Mediation</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.18.0/R/twolevel-statistic.R" class="external-link"><code>R/twolevel-statistic.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/twolevel-statistic.R" class="external-link"><code>R/twolevel-statistic.R</code></a></small>
       <div class="d-none name"><code>twolevel_statistic.Rd</code></div>
     </div>
 
@@ -152,7 +152,9 @@
 <span>    <span class="st">"c_prime_within"</span>, <span class="st">"a_between"</span>, <span class="st">"b_between"</span>, <span class="st">"c_prime_between"</span><span class="op">)</span>,</span>
 <span>  treatment <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  mediator <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  outcome <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  outcome <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  level <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  specific <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -161,7 +163,8 @@
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <a href="TwoLevelMediationData.html">TwoLevelMediationData</a> object, or a two-level <code>lavaan</code> fit.</p></dd>
+<dd><p>A <a href="TwoLevelMediationData.html">TwoLevelMediationData</a> or <a href="TwoLevelParallelMediationData.html">TwoLevelParallelMediationData</a> object, or a two-level <code>lavaan</code>
+fit.</p></dd>
 
 
 <dt id="arg-effect">effect<a class="anchor" aria-label="anchor" href="#arg-effect"></a></dt>
@@ -169,18 +172,29 @@
 between, descriptive), <code>"nde_within"</code>, <code>"nde_between"</code>, <code>"te_within"</code>, <code>"te_between"</code>,
 <code>"pm_within"</code>, <code>"pm_between"</code>, or a path row: <code>"a_within"</code>, <code>"b_within"</code>, <code>"c_prime_within"</code>,
 <code>"a_between"</code>, <code>"b_between"</code>, <code>"c_prime_between"</code>. The proportion mediated is <code>NA</code> where the
-total effect is zero.</p></dd>
+total effect is zero. For several mediators: <code>"nie"</code> (default), <code>"nie_j"</code>, <code>"nde"</code> or <code>"te"</code>.</p></dd>
 
 
 <dt id="arg-treatment-mediator-outcome">treatment, mediator, outcome<a class="anchor" aria-label="anchor" href="#arg-treatment-mediator-outcome"></a></dt>
-<dd><p>Character scalars: variable names. Required for a <code>lavaan</code> fit;
-taken from the object for a <a href="TwoLevelMediationData.html">TwoLevelMediationData</a>.</p></dd>
+<dd><p>Variable names. Required for a <code>lavaan</code> fit; taken from the object
+for a <a href="TwoLevelMediationData.html">TwoLevelMediationData</a> or <a href="TwoLevelParallelMediationData.html">TwoLevelParallelMediationData</a>. <code>mediator</code> is a character vector of
+length two or more for a fit with several mediators, a character scalar otherwise.</p></dd>
+
+
+<dt id="arg-level">level<a class="anchor" aria-label="anchor" href="#arg-level"></a></dt>
+<dd><p>For several mediators only: <code>"within"</code> (default), <code>"between"</code> or <code>"contrast"</code>. For one
+mediator the level is part of <code>effect</code>, and <code>level</code> must be left unset.</p></dd>
+
+
+<dt id="arg-specific">specific<a class="anchor" aria-label="anchor" href="#arg-specific"></a></dt>
+<dd><p>For <code>effect = "nie_j"</code> only: the name of the mediator whose specific indirect effect is
+returned.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A function of one argument returning a number: a named parameter vector for a
-<a href="TwoLevelMediationData.html">TwoLevelMediationData</a>, a data frame for a <code>lavaan</code> fit.</p>
+<a href="TwoLevelMediationData.html">TwoLevelMediationData</a> or <a href="TwoLevelParallelMediationData.html">TwoLevelParallelMediationData</a>, a data frame for a <code>lavaan</code> fit.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -195,8 +209,14 @@ cross-level covariance is part of every draw.</p></li>
 set (the call stored in the fit, with <code>data</code> replaced) and returns the effect. The cluster
 bootstrap gives every drawn cluster a fresh id, so a cluster drawn twice is refitted as two
 clusters.</p></li>
+<li><p><code>x</code> a <a href="TwoLevelParallelMediationData.html">TwoLevelParallelMediationData</a> (several mediators), or a two-level <code>lavaan</code> fit with a <code>mediator</code>
+vector of length two or more: the same two callbacks for the effects that <code><a href="nie.html">nie()</a></code>, <code><a href="nde.html">nde()</a></code> and <code><a href="te.html">te()</a></code>
+define for that class. <code>effect</code> is then one of <code>"nie"</code> (the total indirect effect, the default), <code>"nie_j"</code>
+(the specific indirect effect of the mediator named in <code>specific</code>), <code>"nde"</code> or <code>"te"</code>, and <code>level</code> is
+<code>"within"</code> (default), <code>"between"</code> or <code>"contrast"</code> (within minus between, <code>"nie"</code> and <code>"nie_j"</code> only). The
+callback evaluates the same effect code as those generics, so at the estimate it returns their value.</p></li>
 </ul><p>A refit that errors, does not converge, warns, or leaves the between level unidentified (a treatment
-or mediator ICC below <code>getOption("medfit.between_icc_error", 0.01)</code>, for a between effect or the
+or any mediator ICC below <code>getOption("medfit.between_icc_error", 0.01)</code>, for a between effect or the
 contrast) is a failed replicate: <code><a href="bootstrap_mediation.html">bootstrap_mediation()</a></code> excludes it and reports the count in a
 warning. An inadmissible refit (a negative variance) is kept, as the point estimate keeps it. The
 covariance checks of the point-estimate extraction are not repeated per refit (no standard errors are
@@ -212,10 +232,17 @@ objects. Calls written with a namespace, such as <code><a href="https://rdrr.io/
 <p>The contrast is <code>NA</code> by constraint when both <code>a</code> and <code>b</code> are equated across levels and a between effect is
 <code>NA</code> when the between level is not identified, so asking for either raises a classed error here
 instead of returning a distribution of <code>NA</code>.</p>
+<p><strong>Several mediators.</strong> An invalid <code>level</code>, or <code>level = "contrast"</code> with <code>effect = "nde"</code> or <code>"te"</code>, stops
+with class <code>medfit_error_twolevel_level</code>. An effect not defined for several mediators, <code>effect = "nie_j"</code>
+without <code>specific</code> or with a name that is not one of the mediators, and <code>specific</code> with another effect stop
+with class <code>medfit_error_twolevel_unsupported</code>, as do <code>level</code> and <code>specific</code> given for one mediator. A
+between effect or the contrast of a within-only fit stops with class <code>medfit_between_unidentified</code>, and the
+contrast of a mediator (for <code>"nie_j"</code>) or of every mediator (for <code>"nie"</code>) whose <code>a</code> and <code>b</code> are both equated
+across levels stops with class <code>medfit_error_twolevel_constrained</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="bootstrap_mediation.html">bootstrap_mediation()</a></code>, <a href="TwoLevelMediationData.html">TwoLevelMediationData</a></p></div>
+    <div class="dont-index"><p><code><a href="bootstrap_mediation.html">bootstrap_mediation()</a></code>, <a href="TwoLevelMediationData.html">TwoLevelMediationData</a>, <a href="TwoLevelParallelMediationData.html">TwoLevelParallelMediationData</a></p></div>
     </div>
 
     <div class="section level2">

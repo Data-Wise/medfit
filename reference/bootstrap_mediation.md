@@ -56,8 +56,12 @@ bootstrap_mediation(
   [SerialMediationData](https://data-wise.github.io/medfit/reference/SerialMediationData.md),
   [ParallelMediationData](https://data-wise.github.io/medfit/reference/ParallelMediationData.md),
   [InteractionMediationData](https://data-wise.github.io/medfit/reference/InteractionMediationData.md),
+  [JointMediationData](https://data-wise.github.io/medfit/reference/JointMediationData.md),
+  [TwoLevelMediationData](https://data-wise.github.io/medfit/reference/TwoLevelMediationData.md)
   or
-  [JointMediationData](https://data-wise.github.io/medfit/reference/JointMediationData.md).
+  [TwoLevelParallelMediationData](https://data-wise.github.io/medfit/reference/TwoLevelParallelMediationData.md)
+  (see
+  [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md)).
   `statistic_fn` receives its named `@estimates` vector, which includes
   path aliases (e.g. `a`, `d1`, `b`, `c_prime` for a serial chain; `a1`,
   `b1`, `a2`, `b2` for parallel mediators). For a

@@ -17,7 +17,7 @@ through the mediator(s)."><meta property="og:image" content="https://data-wise.g
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.19.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -139,7 +139,7 @@ through the mediator(s)."><meta property="og:image" content="https://data-wise.g
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Extract Natural Indirect Effect (NIE)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.18.0/R/generics-effects.R" class="external-link"><code>R/generics-effects.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/generics-effects.R" class="external-link"><code>R/generics-effects.R</code></a></small>
       <div class="d-none name"><code>nie.Rd</code></div>
     </div>
 
@@ -171,13 +171,18 @@ estimate (with a warning if the statistic was not an NIE).</p></dd>
 chain-specific (default) or the total indirect effect (see Details). For a
 <code>TwoLevelMediationData</code>, <code>level = c("within", "between", "contrast", "both")</code>
 selects the level (within is the default; the contrast, within minus
-between, is descriptive and exists for <code>nie()</code> only).</p></dd>
+between, is descriptive and exists for <code>nie()</code> only). For a
+<code>TwoLevelParallelMediationData</code>, <code>level</code> as for <code>TwoLevelMediationData</code>
+and <code>type = c("total", "specific")</code> selects the total indirect effect
+(default) or one specific indirect effect per mediator.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A numeric scalar of class <code>mediation_effect</code> carrying a <code>type</code>
-attribute. For intervals use <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> or <code><a href="bootstrap_mediation.html">bootstrap_mediation()</a></code>.</p>
+attribute (a named vector, one value per mediator, for
+<code>TwoLevelParallelMediationData</code> with <code>type = "specific"</code>). For intervals
+use <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> or <code><a href="bootstrap_mediation.html">bootstrap_mediation()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -194,6 +199,12 @@ that skip a mediator, such as X -&gt; M2 -&gt; Y), which equals
     (\theta_2 + \theta_3) \beta_1\).</p></li>
 <li><p><code>JointMediationData</code>: the joint NIE through all the mediators,
 \(\sum_i (\theta_{2i} + \theta_{3i}) \beta^*_{1i}\).</p></li>
+<li><p><code>TwoLevelParallelMediationData</code> (experimental): per level, the
+specific effects \(a_j b_j\) and the total
+\(\sum_j a_j b_j\); the contrast is within minus
+between and descriptive, <code>NA</code> for a mediator whose <code>a</code> and <code>b</code> are both
+equated across levels; the total contrast is <code>NA</code> only when every
+mediator's contrast is.</p></li>
 </ul><p>The "Methods and Formulas" article on the package website gives the full
 formulas.</p>
     </div>

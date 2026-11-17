@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.18.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.19.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -178,7 +178,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.18.0/vignettes/articles/quality-control.qmd" class="external-link"><code>vignettes/articles/quality-control.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/quality-control.qmd" class="external-link"><code>vignettes/articles/quality-control.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -737,6 +737,13 @@
 <td style="text-align: left;">2026-10-26</td>
 <td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
 </tr>
+<tr class="even">
+<td style="text-align: left;">D-14</td>
+<td style="text-align: left;">D18: SLSQP stays a permanent user-selectable option, never the default (#276)</td>
+<td style="text-align: left;">decided</td>
+<td style="text-align: left;">2026-10-21</td>
+<td style="text-align: left;">ADR-native-solver-and-engines-2026-10-23</td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -924,7 +931,7 @@
 </tr>
 </tbody>
 </table>
-<p><strong>A documented limit.</strong> <code><a href="../reference/compare_lr.html">compare_lr()</a></code> with lavaan can put the product-null likelihood ratio above the reference (issue #320): 18 of 60 runs for lavaan and 13 of 60 for OpenMx, on the pinned design and seeds. The 2026-10-26 re-measure reproduced both counts on the <code>v0.14.0</code> tree and on <code>dev</code>, so the flip does not change them, and the limit is documented in <code><a href="../reference/compare_lr.html">?compare_lr</a></code>.</p>
+<p><strong>A documented limit.</strong> <code><a href="../reference/compare_lr.html">compare_lr()</a></code> with lavaan or OpenMx can put the product-null likelihood ratio above the reference (issue #320): 18 of 60 runs for lavaan and 13 of 60 for OpenMx, on the pinned design and seeds. The 2026-10-26 re-measure reproduced both counts on the <code>v0.14.0</code> tree and on <code>dev</code>, so the flip does not change them. On this design each such run was checked and equals the minimum of the other line of the null (<code>a = 0</code> instead of <code>b = 0</code>, or the reverse), where the optimizer settled; medfit’s reference, the smaller of the two, stands. The warning itself does not establish that: outside a checked design, an above-reference run is undiagnosed until both line minima are computed, since an optimizer that stops short on either line raises the same warning. The limit is documented in <code><a href="../reference/compare_lr.html">?compare_lr</a></code>.</p>
 <p><strong>At that local checkpoint.</strong> The two OpenBLAS gate runs (<code>gates (rest)</code> and <code>gates (reliability)</code>) run on pull requests to <code>main</code>; they were deferred to the release pull request. The table above records the local checkpoint, not a later hosted run. The record, with its sources, is <code>planning/specs/RESULT-qc-0.15.0-native-defaults-flip-2026-10-26.md</code>.</p>
 </section><section class="level2"><h2 id="d4-constrained-covariance-verification">D4 constrained covariance verification<a class="anchor" aria-label="anchor" href="#d4-constrained-covariance-verification"></a>
 </h2>

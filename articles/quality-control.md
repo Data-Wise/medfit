@@ -113,6 +113,7 @@ its script does not contain, or when a structure has no gate.
 | D-11 | A partial branch result is an error (PR \#303) | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
 | D-12 | The D1 outcome ledger rides on the D-11 error as \$ledger | decided | 2026-10-24 | ADR-native-solver-and-engines-2026-10-23 |
 | D-13 | semopy as a monthly third oracle for estimates and SEs | decided | 2026-10-26 | ADR-native-solver-and-engines-2026-10-23 |
+| D-14 | D18: SLSQP stays a permanent user-selectable option, never the default (#276) | decided | 2026-10-21 | ADR-native-solver-and-engines-2026-10-23 |
 
 Each ADR opens with a YAML `decisions:` list (`id`, `title`, `status`,
 `date`, optional `supersedes`); `test-adr-front-matter.R` checks it. The
@@ -279,11 +280,18 @@ structural estimates and their standard errors stay where they were.
 
 **A documented limit.**
 [`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md)
-with lavaan can put the product-null likelihood ratio above the
-reference (issue \#320): 18 of 60 runs for lavaan and 13 of 60 for
+with lavaan or OpenMx can put the product-null likelihood ratio above
+the reference (issue \#320): 18 of 60 runs for lavaan and 13 of 60 for
 OpenMx, on the pinned design and seeds. The 2026-10-26 re-measure
 reproduced both counts on the `v0.14.0` tree and on `dev`, so the flip
-does not change them, and the limit is documented in
+does not change them. On this design each such run was checked and
+equals the minimum of the other line of the null (`a = 0` instead of
+`b = 0`, or the reverse), where the optimizer settled; medfit’s
+reference, the smaller of the two, stands. The warning itself does not
+establish that: outside a checked design, an above-reference run is
+undiagnosed until both line minima are computed, since an optimizer that
+stops short on either line raises the same warning. The limit is
+documented in
 [`?compare_lr`](https://data-wise.github.io/medfit/reference/compare_lr.md).
 
 **At that local checkpoint.** The two OpenBLAS gate runs (`gates (rest)`

@@ -1,7 +1,7 @@
 # medfit Reference Card
 
 Quick lookup for users who already know medfit. This card describes
-medfit 0.18.0 (CRAN has 0.3.2; install from GitHub or r-universe, see
+medfit 0.19.0 (CRAN has 0.3.2; install from GitHub or r-universe, see
 the [home page](https://data-wise.github.io/medfit/#install)).
 Explanations are in the
 [articles](https://data-wise.github.io/medfit/articles/getting-started.md);
@@ -68,6 +68,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | Formulas, cluster treatment | `fit_mediation(engine = "lmer", cluster = )` with plain formulas, no `(1 \| id)` |
 | `lavaan` fit | `extract_mediation(lavaan_fit, ...)` |
 | Two-level `lavaan` fit (`level:` blocks, `cluster =`), X, M, Y on level-1 units | `extract_mediation(lavaan_fit, treatment = , mediator = , outcome = )`, a `TwoLevelMediationData`; `nie(x, level = "within" \| "between" \| "contrast" \| "both")` |
+| Two-level `lavaan` fit, two or more parallel mediators | `extract_mediation(lavaan_fit, treatment = , mediator = c("M1", "M2"), outcome = )`, a `TwoLevelParallelMediationData` (experimental); `nie(x, level = , type = "total" \| "specific")` |
 | IPW weights | `fit_mediation(weights = , se_type = "sandwich")` |
 | Choose an engine, estimator and optimizer | [Which engine should I use?](https://data-wise.github.io/medfit/articles/guide-engines.md): `"glm"`, `"regmedint"`, `"lmer"` or `"sem"` (`"native"` is the earlier spelling) |
 | Model syntax and data (observed or latent variables, constraints, `:=`) | `fit_sem(model, data)`, a `SEMFit` |
@@ -98,6 +99,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | Bounded FIML fit, two parallel mediators | `FIMLParallelMediationData` | \\\sum a_j b_j\\ |
 | Bounded FIML fit, two serial mediators | `FIMLSerialMediationData` | \\a \\ d \\ b\\ |
 | Two-level `lavaan` fit, X, M, Y on level-1 units | `TwoLevelMediationData` | \\a_w b_w\\ and \\a_b b_b\\ per level |
+| Two-level `lavaan` fit, parallel mediators (experimental) | `TwoLevelParallelMediationData` | \\\sum_j a\_{jw} b\_{jw}\\ and \\\sum_j a\_{jb} b\_{jb}\\ per level |
 
 ## Effects
 
@@ -140,6 +142,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | `bootstrap_mediation(f, "nonparametric", data = d, cluster = "id")` | Resampled clusters, refit |
 | `bootstrap_mediation(f, "plugin", mediation_data = x)` | Point estimate only |
 | `twolevel_statistic(td_or_fit, "nie_between", ...)` | The `f` for a two-level fit: parametric from the object, cluster refit from the `lavaan` fit |
+| `twolevel_statistic(x, "nie_j", level = "between", specific = "M1")` | The same for parallel mediators: `effect` is `"nie"`, `"nie_j"`, `"nde"` or `"te"` |
 
 Every call returns a `BootstrapResult`: use
 [`print()`](https://rdrr.io/r/base/print.html),
