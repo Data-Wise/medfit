@@ -361,3 +361,270 @@ test_that("T3: the closure equals three runs of the shipped callback on the J = 
   expect_gte(sum(stats::complete.cases(shipped$value)), 12L)
   fc_t3_check(fc_t3_closure(cases), shipped)
 })
+
+# --- T4: coverage aggregator, band call, planted mutants and the X x 10 rescale ---------------------------------------
+
+# Hand-built rows for nie_within (truth .2): group 1 has 16 covering intervals, 2 missing and 2 that miss, so the
+# unconditional coverage is 16 / 20 = .8 (16 / 18 if the missing intervals were dropped); group 2 covers 10 of 10.
+fc_t4_rows <- function() {
+  lo <- c(rep(.1, 16), NA, NA, .25, .05, rep(.1, 10))
+  hi <- c(rep(.3, 16), NA, NA, .35, .15, rep(.3, 10))
+  data.frame(cell_id = rep(c(1L, 2L), c(20, 10)), arm = "p0", est_nie_within = .2, lo_nie_within = lo,
+             hi_nie_within = hi, truth_nie_within = .2, stringsAsFactors = FALSE)
+}
+
+fc_t4_check_coverage <- function(coverage_fun) {
+  cv <- coverage_fun(fc_t4_rows())
+  testthat::expect_equal(
+    cv[, c("cell_id", "estimand", "R", "coverage", "mcse")],
+    data.frame(cell_id = 1:2, estimand = "nie_within", R = c(20L, 10L), coverage = c(.8, 1),
+               mcse = c(sqrt(.8 * .2 / 20), 0), stringsAsFactors = FALSE),
+    ignore_attr = TRUE
+  )
+}
+
+test_that("T4: coverage counts a missing interval as a miss, with R and MCSE sqrt(p (1 - p) / R) per group", {
+  fc_t4_check_coverage(fc_coverage) # nolint: object_usage_linter. (sourced from tests/sim)
+  # per-dataset indicators: TRUE, a missing interval FALSE, never NA
+  ind <- fc_covered(fc_t4_rows())$nie_within # nolint: object_usage_linter.
+  expect_identical(ind, c(rep(TRUE, 16), FALSE, FALSE, FALSE, FALSE, rep(TRUE, 10)))
+  expect_error(fc_coverage(fc_t4_rows(), by = "cell"), "by") # nolint: object_usage_linter.
+})
+
+test_that("T4 planted defect: an aggregator that drops the missing intervals fails the coverage check", {
+  dropping <- function(rows) fc_coverage(rows[!is.na(rows$lo_nie_within), ]) # nolint: object_usage_linter.
+  expect_failure(fc_t4_check_coverage(dropping))
+})
+
+fc_t4_check_band <- function(band_fun) {
+  testthat::expect_identical(
+    band_fun(c(.95, .90, .93, .99, .974), rep(.005, 5)),
+    c("inside", "outside", "ambiguous", "outside", "ambiguous")
+  )
+}
+
+test_that("T4: the band call is inside, outside, or ambiguous within 2 MCSE of an edge", {
+  fc_t4_check_band(fc_band) # nolint: object_usage_linter.
+  expect_identical(fc_band(c(.925, .975), c(0, 0)), c("outside", "outside")) # nolint: object_usage_linter.
+  expect_error(fc_band(.95, c(.01, .01)), "mcse") # nolint: object_usage_linter.
+})
+
+test_that("T4 planted defect: a band call without the MCSE margin fails the band check", {
+  no_margin <- function(coverage, mcse) fc_band(coverage, mcse, k_mcse = 0) # nolint: object_usage_linter.
+  expect_failure(fc_t4_check_band(no_margin))
+})
+
+# 1000 deterministic delta intervals with exactly calibrated quantiles: est = truth + q se, q = qnorm(ppoints(1000)),
+# interval est -/+ 1.96 se, so the baseline covers 950 of 1000 (inside the band by 3.6 MCSE).
+fc_t4_calibrated <- function() {
+  q <- stats::qnorm(stats::ppoints(1000))
+  se <- .05
+  est <- .2 + q * se
+  data.frame(cell_id = 1L, arm = "p0", est_nie_within = est, se_nie_within = se,
+             lo_nie_within = est - 1.96 * se, hi_nie_within = est + 1.96 * se, truth_nie_within = .2)
+}
+
+fc_t4_check_mutants <- function(mutant_fun) {
+  rows <- fc_t4_calibrated()
+  calls <- vapply(c("truth", "narrow"), function(m) {
+    fc_coverage(mutant_fun(rows, m))$band # nolint: object_usage_linter.
+  }, character(1))
+  testthat::expect_identical(unname(calls), c("outside", "outside"))
+}
+
+test_that("T4: both planted mutants move a calibrated coverage of .95 outside the band", {
+  base <- fc_coverage(fc_t4_calibrated()) # nolint: object_usage_linter.
+  expect_identical(base$coverage, .95)
+  expect_identical(base$band, "inside")
+  fc_t4_check_mutants(fc_apply_mutant) # nolint: object_usage_linter.
+})
+
+test_that("T4 planted defect: a 'narrow' mutant that leaves the interval alone fails the mutant check", {
+  lazy <- function(row, mutant) {
+    if (mutant == "narrow") row else fc_apply_mutant(row, mutant) # nolint: object_usage_linter.
+  }
+  expect_failure(fc_t4_check_mutants(lazy))
+})
+
+test_that("T4: truths divide by k under the X rescale; fc_rescale_x() scales X only", {
+  expect_equal(fc_truth(.18, scale_x = 10), fc_truth(.18) / 10) # nolint: object_usage_linter.
+  expect_equal(fc_truth(0, scale_x = 10)[["nie_contrast"]], .02) # nolint: object_usage_linter.
+  d <- data.frame(id = 1:2, X = c(1, -2), M = 3:4, Y = 5:6)
+  expect_identical(fc_rescale_x(d, 10), transform(d, X = c(10, -20))) # nolint: object_usage_linter.
+  expect_error(fc_rescale_x(d, 0), "k") # nolint: object_usage_linter.
+})
+
+# Rescale identity on three seeds of a J = 50 cell: same coverage indicators and status flags, and k est' = est to
+# 1e-3 SE (lavaan's optimizer stops near 1e-4 SE on this cell).
+fc_t4_rescale_rows <- function(truth_fun) {
+  g <- fc_grid() # nolint: object_usage_linter.
+  cell <- g[g$J == 50 & g$n == 5 & g$icc_x == .4 & g$balance == "equal" & g$nie_b == .18, ]
+  rows <- lapply(1:3, function(r) {
+    d <- fc_simulate(cell, r) # nolint: object_usage_linter.
+    o <- fc_analyze(d, "p0", truth = fc_truth(cell$nie_b)) # nolint: object_usage_linter.
+    s <- fc_analyze(fc_rescale_x(d, 10), "p0", truth = truth_fun(cell$nie_b)) # nolint: object_usage_linter.
+    list(o = cbind(cell_id = cell$cell_id, rep = r, o), s = cbind(cell_id = cell$cell_id, rep = r, s))
+  })
+  list(o = do.call(rbind, lapply(rows, `[[`, "o")), s = do.call(rbind, lapply(rows, `[[`, "s")))
+}
+
+fc_t4_check_rescale <- function(rows) {
+  cmp <- fc_rescale_compare(rows$o, rows$s, 10) # nolint: object_usage_linter.
+  testthat::expect_true(all(cmp$indicators_same) && all(cmp$flags_same) && all(cmp$max_gap_se < 1e-3))
+}
+
+test_that("T4: X x 10 leaves every coverage indicator and flag unchanged and scales estimates by 1/10", {
+  skip_on_cran()
+  rows <- fc_t4_rescale_rows(function(nie_b) fc_truth(nie_b, scale_x = 10)) # nolint: object_usage_linter.
+  fc_t4_check_rescale(rows)
+  # planted defect on the same fits: truths left on the original scale flip the indicators
+  rows$s[grep("^truth_", names(rows$s))] <- rows$s[grep("^truth_", names(rows$s))] * 10
+  expect_failure(fc_t4_check_rescale(rows))
+})
+
+test_that("T4: the rescale comparison marks datasets converged and admissible with no adapter error in both runs", {
+  skip_on_cran()
+  rows <- fc_t4_rescale_rows(function(nie_b) fc_truth(nie_b, scale_x = 10)) # nolint: object_usage_linter.
+  expect_identical(fc_rescale_compare(rows$o, rows$s, 10)$clean_both, rep(TRUE, 3)) # nolint: object_usage_linter.
+  rows$s$admissible[2] <- FALSE
+  rows$o$converged[3] <- FALSE
+  cmp <- fc_rescale_compare(rows$o, rows$s, 10) # nolint: object_usage_linter.
+  expect_identical(cmp$clean_both, c(TRUE, FALSE, FALSE))
+})
+
+# --- T4 (second design): baseline-paired mutant criterion and the SE-scaled truth shift ----------------------------
+
+# Paired runs for nie_within (truth .2), 410 datasets in cell 1 and 400 in cell 2. Cell 1: datasets 1 to 5 have no
+# interval in either run, 6 to 8 did not converge, 9 and 10 lose their interval in the mutant run only; these ten are
+# dropped from both, leaving R = 400. Of those, the baseline covers 380 and the mutant 368 (12 of the covered
+# datasets miss), so coverage drops by .03; the paired MCSE is sd(d) / 20 = .0085 (caught at 3 MCSE), while the
+# unpaired sqrt(.95 .05 / 400 + .92 .08 / 400) = .0174 would not catch it. Cell 2: the mutant covers all 400 the
+# baseline covers 380 of, a gain, never a catch.
+fc_t4_paired_runs <- function() {
+  cover <- c(.1, .3)
+  miss <- c(.25, .35)
+  mk <- function(cell, ok) {
+    lo <- ifelse(ok, cover[1], miss[1])
+    hi <- ifelse(ok, cover[2], miss[2])
+    data.frame(cell_id = cell, rep = seq_along(ok), arm = "p0", converged = TRUE, adapter_error = NA_character_,
+               truth_nie_within = .2, est_nie_within = .2, lo_nie_within = lo, hi_nie_within = hi,
+               stringsAsFactors = FALSE)
+  }
+  b1 <- mk(1L, c(rep(TRUE, 10), rep(TRUE, 380), rep(FALSE, 20)))
+  b1[1:5, c("lo_nie_within", "hi_nie_within")] <- NA
+  b1$converged[6:8] <- FALSE
+  m1 <- b1
+  m1[9:10, c("lo_nie_within", "hi_nie_within")] <- NA
+  m1[11:22, c("lo_nie_within", "hi_nie_within")] <- as.list(miss)
+  b2 <- mk(2L, c(rep(TRUE, 380), rep(FALSE, 20)))
+  m2 <- mk(2L, rep(TRUE, 400))
+  list(base = rbind(b1, b2), mut = rbind(m1, m2))
+}
+
+fc_t4_check_paired <- function(catch_fun) {
+  runs <- fc_t4_paired_runs()
+  pc <- catch_fun(runs$base, runs$mut)
+  d <- c(rep(1, 12), rep(0, 388))
+  d2 <- c(rep(-1, 20), rep(0, 380))
+  testthat::expect_equal(
+    pc[, c("cell_id", "estimand", "R", "cov_base", "cov_mut", "drop", "mcse", "caught")],
+    data.frame(cell_id = 1:2, estimand = "nie_within", R = c(400L, 400L), cov_base = c(.95, .95),
+               cov_mut = c(.92, 1), drop = c(.03, -.05), mcse = c(stats::sd(d), stats::sd(d2)) / 20,
+               caught = c(TRUE, FALSE), stringsAsFactors = FALSE),
+    ignore_attr = TRUE
+  )
+}
+
+test_that("T4: a mutant is caught when coverage drops by more than 3 paired MCSE over datasets valid in both runs", {
+  fc_t4_check_paired(fc_paired_catch) # nolint: object_usage_linter.
+  runs <- fc_t4_paired_runs()
+  expect_error(fc_paired_catch(runs$base, runs$mut[-1, ]), "same datasets") # nolint: object_usage_linter.
+})
+
+# Two cells whose median SEs are .1 (one SE missing) and .5: the truth mutant moves their truths by .2 and 1.
+fc_t4_shift_rows <- function() {
+  data.frame(cell_id = rep(1:2, c(4, 2)), rep = c(1:4, 1:2), arm = "p0", truth_nie_within = .2,
+             est_nie_within = .2, se_nie_within = c(.1, .1, .3, NA, .5, .5), lo_nie_within = 0,
+             hi_nie_within = .3, mutant = "", stringsAsFactors = FALSE)
+}
+
+fc_t4_check_shift <- function(mutate_fun) {
+  testthat::expect_equal(mutate_fun(fc_t4_shift_rows())$truth_nie_within, .2 + rep(c(.2, 1), c(4, 2)))
+}
+
+# The narrow mutant cuts each half-width by 50% about the estimate: the rows' interval [0, .3] about .2 becomes
+# [.1, .25], with the estimate and the truth left alone.
+fc_t4_check_narrow <- function(mutate_fun) {
+  cols <- c("est_nie_within", "truth_nie_within", "lo_nie_within", "hi_nie_within")
+  testthat::expect_equal(mutate_fun(fc_t4_shift_rows())[cols],
+                         data.frame(est_nie_within = .2, truth_nie_within = .2, lo_nie_within = rep(.1, 6),
+                                    hi_nie_within = .25))
+}
+
+test_that("T4: the truth mutant shifts each truth by 2 x the cell's median SE; narrow cuts each half-width by 50%", {
+  rows <- fc_t4_shift_rows()
+  sh <- fc_mutant_shift(rows) # nolint: object_usage_linter.
+  expect_equal(sh$shift, c(.2, 1))
+  fc_t4_check_shift(function(r) fc_mutate_runs(r, "truth")) # nolint: object_usage_linter.
+  tm <- fc_mutate_runs(rows, "truth") # nolint: object_usage_linter.
+  expect_identical(tm$mutant, rep("truth", 6))
+  expect_identical(tm[setdiff(names(tm), c("truth_nie_within", "mutant"))],
+                   rows[setdiff(names(rows), c("truth_nie_within", "mutant"))])
+  fc_t4_check_narrow(function(r) fc_mutate_runs(r, "narrow")) # nolint: object_usage_linter.
+  nm <- fc_mutate_runs(rows, "narrow") # nolint: object_usage_linter.
+  ref <- fc_apply_mutant(rows, "narrow", narrow = .5) # nolint: object_usage_linter.
+  expect_equal(nm[names(nm) != "mutant"], ref[names(ref) != "mutant"])
+  expect_identical(nm$mutant, rep("narrow", 6))
+  expect_error(fc_mutate_runs(rows, "wide"), "mutant") # nolint: object_usage_linter.
+})
+
+test_that("T4: both redesigned mutants are caught on calibrated intervals", {
+  rows <- cbind(fc_t4_calibrated(), rep = 1:1000, converged = TRUE, adapter_error = NA_character_)
+  for (m in c("truth", "narrow")) {
+    pc <- fc_paired_catch(rows, fc_mutate_runs(rows, m)) # nolint: object_usage_linter.
+    expect_true(pc$caught, label = m)
+  }
+})
+
+test_that("T4: planted defects in the paired criterion and the shift are caught", {
+  # Unpaired MCSE: sqrt(p_b (1 - p_b) / R + p_m (1 - p_m) / R) ignores the shared seeds and misses the .03 drop.
+  unpaired <- function(base, mut) {
+    pc <- fc_paired_catch(base, mut) # nolint: object_usage_linter.
+    pc$mcse <- sqrt(pc$cov_base * (1 - pc$cov_base) / pc$R + pc$cov_mut * (1 - pc$cov_mut) / pc$R)
+    pc$caught <- pc$drop > 3 * pc$mcse
+    pc
+  }
+  expect_failure(fc_t4_check_paired(unpaired))
+  # Wrong sign: d = I_mut - I_base flags the coverage gain in cell 2 and misses the loss in cell 1.
+  wrong_sign <- function(base, mut) {
+    pc <- fc_paired_catch(base, mut) # nolint: object_usage_linter.
+    pc$drop <- -pc$drop
+    pc$cov_mut <- 2 * pc$cov_base - pc$cov_mut
+    pc$caught <- pc$drop > 3 * pc$mcse
+    pc
+  }
+  expect_failure(fc_t4_check_paired(wrong_sign))
+  # No drop rule: datasets without an interval in the mutant run count as misses there, so R is 403, not 400.
+  no_drop <- function(base, mut) {
+    pc <- fc_paired_catch(base, mut) # nolint: object_usage_linter.
+    pc$R[1] <- sum(!is.na(base$lo_nie_within[base$cell_id == 1]) & base$converged[base$cell_id == 1])
+    pc
+  }
+  expect_failure(fc_t4_check_paired(no_drop))
+  # Shift not scaled: the fixed +.05 of the first attempt.
+  expect_failure(fc_t4_check_shift(function(r) fc_apply_mutant(r, "truth"))) # nolint: object_usage_linter.
+  # Shift from the median SE over all cells (.3), not per cell.
+  expect_failure(fc_t4_check_shift(function(r) fc_mutate_runs(r, "truth", by = "arm"))) # nolint: object_usage_linter.
+  # Wrong sign of the shift.
+  minus <- function(r) {
+    out <- fc_mutate_runs(r, "truth") # nolint: object_usage_linter.
+    out$truth_nie_within <- 2 * r$truth_nie_within - out$truth_nie_within
+    out
+  }
+  expect_failure(fc_t4_check_shift(minus))
+  # Narrow factor left at the second attempt's .8 (20% cut), or at 1 (no cut).
+  expect_failure(fc_t4_check_narrow(function(r) fc_apply_mutant(r, "narrow"))) # nolint: object_usage_linter.
+  narrow_at <- function(f) function(r) fc_mutate_runs(r, "narrow", narrow = f) # nolint: object_usage_linter.
+  expect_failure(fc_t4_check_narrow(narrow_at(.8)))
+  expect_failure(fc_t4_check_narrow(narrow_at(1)))
+})
