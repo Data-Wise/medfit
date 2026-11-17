@@ -63,7 +63,7 @@ mediators, total NIE per level, under the IG5 D2 all-or-nothing ICC rule, on six
 (`planning/PLAN-IG5-twolevel-parallel-2026-11-15.md`: T1 to T4 shipped, T5 docs pending; P2X §5.3's line tying
 several mediators to S5 is stale).
 
-**DGP:** P2X §4.1 (the O8 oracle population; truths `NIE_W = .20`, `NIE_B = .18`, `Delta = -.02`; between
+**DGP:** P2X §4.1 (the O8 oracle population; truths `NIE_W = .20`, `NIE_B = .18`, `Delta = NIE_W - NIE_B = .02` (`.20` in the `NIE_B = 0` cells); between
 variances scaled by `s`). `ICC_X = .7s / (.7s + 1)`, so `s = ICC_X / (.7 (1 - ICC_X))`:
 
 | target ICC_X | s | implied ICC_M |
