@@ -65,7 +65,8 @@ small; 10 cells had no usable probe dataset (every probe fit failed the adapter:
 Unconditional coverage (a failed or within-only fit counts as a miss) ranges from .044 to 1.000 across the 120 cells,
 spread .956. The median cell MCSE is .0122, so 4 MCSE = .049 (4 sqrt(2) MCSE = .069 for a difference of two cells).
 Conditional on an interval existing (115 cells with at least 100 intervals) coverage ranges from .884 to 1.000,
-spread .116, still above 4 MCSE. The largest MCSE of any coverage is .022. Go for the decision table.
+spread .116; the lowest cell (1058, .884, 500 intervals) has MCSE .014 and the highest has MCSE 0, so the spread is
+about 8 MCSE of the difference. The largest MCSE of any unconditional coverage is .022. Go for the decision table.
 
 | Estimand | Delta cov. min / median / max | Conditional min / median / max | MC cov. min / median / max |
 |---|---|---|---|
@@ -80,7 +81,9 @@ The low unconditional minima are failure-driven (unequal n = 5 cells, below), no
 ## Failure rates
 
 Per-cell rates are in `T5-cells.csv` (`lavaan_error`, `nonconverged`, `adapter_error`, `within_only`,
-`inadmissible`, `neg_l2_var`, warnings, `mc_fail_*`). Summary across cells: lavaan error 0; adapter error median .008,
+`inadmissible`, `neg_l2_var`, warnings, `mc_fail_*`). A fit that lavaan reports as not converged is refused by the adapter, so it is counted in `adapter_error`, not in
+`nonconverged` (0 in every cell by construction; the S4 check "identified implies converged" is therefore vacuous on
+those rows). Summary across cells: lavaan error 0; adapter error median .008,
 max .934; within-only median .009, max .572; inadmissible median .044, max .804. 18 cells have adapter error above .2
 and 20 cells within-only above .2. Means by J and balance:
 
@@ -120,9 +123,10 @@ On the coded rule (within-only when an ICC is below .01, the between V6 is not P
 converge; weak warning when identified and an ICC is below .05) there were 0 mismatches over 60,000 datasets.
 
 The shipped `.twolevel_icc()` uses the model-implied ICC; `lavInspect(fit, "icc")` uses the unrestricted (h1) EM
-estimate. The model is saturated, so the two agree on admissible fits, but they differ when a level-2 variance is
-negative: the largest difference is .363. **Correction:** an earlier note in this study said the two sources give the
-same values because the model is saturated; that holds only for admissible fits. Swapping the source would change the
+estimate. They stay close when no level-2 variance is negative (largest difference .018) and diverge when one is:
+the largest difference is .363. **Correction:** an earlier note in this study said the two sources give the same
+values because the model is saturated; that is false on fits with a negative level-2 variance, and only approximate
+otherwise. Swapping the source would change the
 within-only call in a median .003 and a maximum .300 of datasets per cell, almost all in the direction "shipped
 within-only, h1 identified" (max .300; the reverse at most .002). The contract does not say which source applies, so
 S4 does not fire; the choice is a new maintainer decision.
@@ -137,12 +141,15 @@ so P1 in T6 covers 49 cells at the current cutoff.
 
 - T6 delta and MC: measured 13.9 core-h for 60,000 datasets at R = 500 (fit .79 s, MC .05 s per dataset), so about
   28 core-h at R = 1000; 70 to 111 under the x2.5 to x4 range. P1 adds about one more fit per dataset in 49 cells.
-- T7 bootstrap: 9,160 core-h (plan scope) or 5,171 (cut scope), measured; both above the S2 limit.
+- T7 bootstrap: 9,160 core-h (plan scope) or 5,171 (cut scope), measured; both above the S2 limit. Under the x2.5 to
+  x4 range: 22,900 to 36,640 (plan) and 12,930 to 20,680 (cut). The measured plan figure already sits inside the P2X
+  band (3,200 x 2.5 to 4), so the measured figures are the central estimate and the stacked range an upper bound.
 
 ## Bootstrap arm status
 
 The six-cell run (`_agents_workspace/fc-t5/run-boot6.sh`, R = 300, B = 499, 14 cores, order 1024, 1022, 1004, 1002,
-1021, 1001) started 2026-11-17 and was in cell 1024 at the time of writing; projected about 290 core-h, about 20 h
+1021, 1001) waited for the delta/MC run and the timing probe to free their cores, began cell 1024 at about 02:16 on
+2026-11-17 with 14 workers busy, each dataset taking about 25 s (B = 499 at the probe's .048 s per replicate); projected about 290 core-h, about 20 h
 wall. Rows go to `_agents_workspace/fc-t5/rows/boot/`, progress to `logs/boot-progress.txt`, completion to
 `logs/boot-done`. Rerunning the script skips finished cells. Its kept fraction and coverage are reported when it
 finishes; they do not change the S2 verdict, which rests on the timing probes.
