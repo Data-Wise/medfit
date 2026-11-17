@@ -207,11 +207,11 @@ fc_t3_eval <- function(f, d, n) {
   list(value = unname(v), warned = warned)
 }
 
-# One resample per seed: the dataset is replicate `seed` of a J = 20 cell, the clusters are drawn with set.seed(seed)
-# exactly as bootstrap_mediation(cluster = ) draws them, and relabeled by the shipped helper.
-fc_t3_cases <- function(seeds) {
+# One resample per seed: the dataset is replicate `seed` of a cell with `J` clusters (default 20), the clusters are
+# drawn with set.seed(seed) exactly as bootstrap_mediation(cluster = ) draws them, and relabeled by the shipped helper.
+fc_t3_cases <- function(seeds, J = 20) {
   g <- fc_grid() # nolint: object_usage_linter. (sourced from tests/sim)
-  cell <- g[g$J == 20 & g$n == 5 & g$icc_x == .4 & g$balance == "equal" & g$nie_b == .18, ]
+  cell <- g[g$J == J & g$n == 5 & g$icc_x == .4 & g$balance == "equal" & g$nie_b == .18, ]
   lapply(seeds, function(s) {
     d <- fc_simulate(cell, s) # nolint: object_usage_linter.
     fit <- fc_fit(d, "p0")$fit # nolint: object_usage_linter.
@@ -298,4 +298,51 @@ test_that("T3: the closure validates its defect switch and needs the original da
   fit <- fc_fit(fc_planted_negative(), "p1")$fit # nolint: object_usage_linter.
   expect_error(fc_boot_closure(fit, defect = "wider"), "defect") # nolint: object_usage_linter.
   expect_error(fc_boot_closure(fit, defect = "original"), "data") # nolint: object_usage_linter.
+})
+
+# Per effect, what construction gives: "ok", or the class of the refusal. The shipped side builds each
+# twolevel_statistic() callback; the closure side builds the closure once and reads its `refused` attribute.
+fc_t3_class <- function(e) paste(class(e), collapse = "/")
+fc_t3_refusals_shipped <- function(fit) {
+  vapply(fc_boot_effects, function(e) { # nolint: object_usage_linter.
+    r <- tryCatch(
+      twolevel_statistic(fit, e, treatment = "X", mediator = "M", outcome = "Y"), # nolint: object_usage_linter.
+      error = function(err) err
+    )
+    if (inherits(r, "error")) fc_t3_class(r) else "ok"
+  }, character(1))
+}
+fc_t3_refusals_closure <- function(fit, defect = "") {
+  fn <- tryCatch(fc_boot_closure(fit, defect = defect), error = function(err) err) # nolint: object_usage_linter.
+  if (inherits(fn, "error")) return(stats::setNames(rep(fc_t3_class(fn), 3L), fc_boot_effects)) # nolint
+  refused <- attr(fn, "refused")
+  vapply(fc_boot_effects, function(e) { # nolint: object_usage_linter.
+    if (is.null(refused[[e]])) "ok" else fc_t3_class(refused[[e]])
+  }, character(1))
+}
+
+test_that("T3: the closure refuses at build time per effect exactly as the shipped constructor (J = 10, seeds 7, 13)", {
+  skip_on_cran()
+  cases <- fc_t3_cases(c(7, 13), J = 10)
+  shipped <- lapply(cases, function(cs) fc_t3_refusals_shipped(cs$fit))
+  closure <- lapply(cases, function(cs) fc_t3_refusals_closure(cs$fit))
+  # seed 7: the between level is not identified; seed 13: the original fit is unusable, every effect refused
+  expect_identical(shipped[[1]][["nie_within"]], "ok")
+  expect_match(shipped[[1]][c("nie_between", "nie_contrast")], "medfit_between_unidentified")
+  expect_match(shipped[[2]], "medfit_error_twolevel_unusable")
+  expect_identical(closure, shipped)
+  # where an effect builds, its value on the resample is the shipped one, and refused effects come back NA
+  within <- twolevel_statistic(cases[[1]]$fit, "nie_within", treatment = "X", mediator = "M", outcome = "Y")
+  v <- fc_t3_eval(fc_boot_closure(cases[[1]]$fit), cases[[1]]$resample, 3L)$value # nolint: object_usage_linter.
+  expect_identical(v[1], fc_t3_eval(within, cases[[1]]$resample, 1L)$value)
+  expect_true(all(is.na(v[2:3])))
+  expect_failure(expect_identical(lapply(cases, function(cs) fc_t3_refusals_closure(cs$fit, "nobuild")), shipped))
+})
+
+test_that("T3: the closure equals three runs of the shipped callback on the J = 10 seeds that build, exactly", {
+  skip_on_cran()
+  cases <- fc_t3_cases(setdiff(1:20, c(7, 13)), J = 10)
+  shipped <- fc_t3_shipped(cases)
+  expect_gte(sum(stats::complete.cases(shipped$value)), 12L)
+  fc_t3_check(fc_t3_closure(cases), shipped)
 })

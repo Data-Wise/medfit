@@ -286,14 +286,33 @@ fc_apply_mutant <- function(row, mutant) {
 # errors or warns is left to the caller, as bootstrap_mediation()'s cluster loop does. `defect` plants the T3
 # mutants: "swap" (NIE_B returned as NIE_W), "sign" (contrast between minus within), "original" (refit on `data`, the
 # original sample, whatever the resample) and "gate_all" (the ICC gate also blanks NIE_W).
+# The shipped constructor's refusals are carried over at build time, per effect: the same extraction of the original
+# fit and the same `.twolevel_stat_check()`. When every effect is refused the builder signals that condition (same
+# class); otherwise the refused effects are listed in the `refused` attribute (effect = condition) and returned as NA.
+# A fifth mutant, "nobuild", skips these build-time checks.
 fc_boot_effects <- c("nie_within", "nie_between", "nie_contrast")
 
 fc_boot_closure <- function(fit, treatment = "X", mediator = "M", outcome = "Y", data = NULL, defect = "",
                             env = parent.frame()) {
   # forced here, as the shipped refit does: the frame that called the closure builder resolves the stored call's names
   force(env)
-  checkmate::assert_choice(defect, c("", "swap", "sign", "original", "gate_all"), .var.name = "defect")
+  checkmate::assert_choice(defect, c("", "swap", "sign", "original", "gate_all", "nobuild"), .var.name = "defect")
   if (defect == "original") checkmate::assert_data_frame(data, .var.name = "data")
+  med <- asNamespace("medfit")
+  refused <- list()
+  if (defect != "nobuild") {
+    # as twolevel_statistic() does for a lavaan fit: read the fit once, then check each effect
+    td <- tryCatch(
+      suppressWarnings(medfit::extract_mediation(fit, treatment = treatment, mediator = mediator, outcome = outcome)),
+      error = function(e) e
+    )
+    if (inherits(td, "error")) stop(td)
+    for (e in fc_boot_effects) {
+      cnd <- tryCatch(med$.twolevel_stat_check(td, e), error = function(err) err)
+      if (inherits(cnd, "error")) refused[[e]] <- cnd
+    }
+    if (length(refused) == length(fc_boot_effects)) stop(refused[[1L]])
+  }
   call <- fit@call
   if (is.null(call)) stop("the lavaan fit has no stored call to refit", call. = FALSE)
   if (!is.character(call$model)) {
@@ -308,11 +327,10 @@ fc_boot_closure <- function(fit, treatment = "X", mediator = "M", outcome = "Y",
   call$check.post <- FALSE
   rm(fit)
   # the shipped callback's own internals, so the key rows, ICC and effect arithmetic cannot drift from it
-  med <- asNamespace("medfit")
   value <- med$.twolevel_stat_value
   na3 <- stats::setNames(rep(NA_real_, 3L), fc_boot_effects)
 
-  function(d) {
+  fn <- function(d) {
     refit_call <- call
     refit_call$data <- if (defect == "original") data else d
     # re-evaluates the fit's own lavaan call (the harness model and options), not arbitrary input
@@ -330,8 +348,11 @@ fc_boot_closure <- function(fit, treatment = "X", mediator = "M", outcome = "Y",
       out[gated] <- NA_real_
     }
     out[!is.finite(out)] <- NA_real_
+    out[names(refused)] <- NA_real_
     out
   }
+  attr(fn, "refused") <- refused
+  fn
 }
 
 # One row per dataset and arm for a grid row and replicate.
