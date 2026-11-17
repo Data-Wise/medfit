@@ -176,7 +176,7 @@ B = 2000), cluster-bootstrap percentile (`method = "nonparametric", cluster = "i
 | T1 | Harness: DGP (equal and unequal n), `s` from target ICC, driver writing one row per dataset and arm | M1 | implied ICC_X, ICC_M match section 4 to 1e-3; the O8 likelihood oracle agrees with lavaan on 3 seeds |
 | T2 | Floor mechanics: which level-2 variances `bounds = "pos.var"` and the syntax floor bind; whether a fit at the bound raises a lavaan warning (which would fail every bootstrap refit) | T1 | a planted negative-variance dataset ends at `eps` under P1; warning behavior recorded |
 | T3 | Three-effect cluster-bootstrap closure (one refit, three statistics) | T1 | identical to three runs of the shipped `twolevel_statistic()` callback on 20 seeds (exact equality) |
-| T4 | Harness QA: planted mutants (truth +.05; delta CI narrowed 20%) and metamorphic rescale (X x 10) | T1, T3 | both mutants move J = 100 coverage outside the band; rescale leaves coverage indicators unchanged |
+| T4 | Harness QA: planted mutants (truth shifted by 2 x the cell's median baseline SE; delta CI narrowed 20%), computed from the baseline rows, and metamorphic rescale (X x 10) | T1, T3 | each mutant is caught in every J = 100 (cell, estimand): coverage drops below the baseline's by more than 3 paired MCSEs, sd(I_base - I_mut) / sqrt(R_common) over datasets valid in both runs; rescale leaves coverage indicators identical on datasets converged and admissible in both scalings (boundary flips and the estimate gap reported separately) |
 | T5 | Pilot (P2X §8 scope): delta and MC on all 120 cells at R = 500; bootstrap in 6 cells; P1 in 4 cells | T2 to T4 | go/no-go memo against the stop rules; projected bootstrap cost |
 | T6 | Main delta and MC arms, R = 1000, plus P1 on its subset | T5 go, M2 | every cell has R rows; failure rates add up; MCSE reported |
 | T7 | Bootstrap arm at the authorized scope | T5 go, M2 | kept fraction per cell; reruns of 2 cells reproduce |
@@ -184,7 +184,7 @@ B = 2000), cluster-bootstrap percentile (`method = "nonparametric", cluster = "i
 
 ## 11. Stop rules
 
-- **S1** A planted mutant passes, or the closure differs from the shipped callback (T3, T4): stop, fix the harness.
+- **S1** A planted mutant passes (T4: it is not caught by the baseline-paired criterion in some (cell, estimand)), or the closure differs from the shipped callback (T3, T4): stop, fix the harness.
 - **S2** Projected bootstrap cost above 5,000 core-hours without a cluster allocation (P2X §8 go rule 3): run only
   the delta/MC and P1 arms and report the bootstrap arm as not run.
 - **S3** Delta coverage of `NIE_B` varies across pilot cells by less than 4 MCSE (P2X §8 go rule 4): write a short

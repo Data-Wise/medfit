@@ -2,17 +2,115 @@
 
 Plan: `planning/PLAN-few-clusters-design-study-2026-11-16.md`, task T4. Date 2026-11-16.
 Environment: R 4.6.2, lavaan 0.7.3, medfit 0.18.0.9000 installed from worktree SHA `50823235` into a scratch library.
-Harness: `tests/sim/twolevel-few-clusters-lib.R` (`fc_coverage()`, `fc_band()`, `fc_rescale_x()`,
-`fc_rescale_compare()`, `fc_truth(scale_x = )`); driver `tests/sim/twolevel-few-clusters.R` (new `SCALE_X`).
-Tests: `tests/testthat/test-twolevel-few-clusters-harness.R` ("T4: ...").
+Harness: `tests/sim/twolevel-few-clusters-lib.R` (`fc_paired_catch()`, `fc_mutant_shift()`, `fc_mutate_runs()`,
+`fc_rescale_compare()` with `clean_both`; first attempt: `fc_coverage()`, `fc_band()`); driver
+`tests/sim/twolevel-few-clusters.R`. Tests: `tests/testthat/test-twolevel-few-clusters-harness.R` ("T4: ...").
 
 ## Verdict
+
+**Stop rule S1 triggered by the narrow mutant.** Under the baseline-paired criterion the truth mutant is caught in all
+120 (cell, estimand) pairs; the narrow mutant is caught in 107 of 120. The 13 it leaves uncaught are all between-level
+or contrast estimands in five over-covering cells (table below). The rescale criterion holds: coverage indicators are
+identical on all 1077 datasets converged and admissible in both scalings. Nothing was weakened.
+
+## Second design: baseline-paired criterion (current)
+
+The first attempt (below) asked each mutant to move coverage outside the band (0.925, 0.975). It was replaced because
+a fixed band answers the wrong question: a +.05 shift is small against between-level SEs of .07 to .21, and
+over-covering null baselines (.98 to 1.00) land inside the band after narrowing. The user chose "compare against
+baseline".
+
+- **Criterion.** A mutant is caught in a (cell, estimand) when its coverage drops below the baseline's by more than
+  3 paired MCSEs. The runs share seeds, so with d_i = I_base,i - I_mut,i over the same datasets,
+  MCSE = sd(d_i) / sqrt(R_common). A dataset that did not converge, raised an adapter error, or has an NA interval in
+  either run is dropped from both. A mutant that leaves any (cell, estimand) uncaught is S1.
+- **Truth mutant.** Each estimand's truth shifts by 2 x its median SE in that cell, from the baseline run
+  (`fc_mutant_shift()`). Shifts: nie_within .029 to .065, c_prime_within .050 to .109, nie_between .073 to 1.27,
+  nie_contrast .079 to 1.28, c_prime_between .21 to 1.76. **Narrow mutant.** Intervals narrowed 20% about the
+  estimate, as before.
+- **No new runs.** Both mutants are post-processing of result rows. Check first: `fc_apply_mutant(base.csv, m)`
+  equals the recorded `truth.csv` and `narrow.csv` row for row (max numeric gap 2.8e-17 and 6.8e-12; every other
+  column identical, `fit_time` excluded). Both new mutants are therefore computed from `base.csv` with
+  `fc_mutate_runs()`; no refit is needed, because neither mutant changes the data or the fit.
+- Script: `_agents_workspace/fc-t4/analyze2.R`; outputs `paired-catch.csv`, `shift.csv`, `rescale-compare2.csv`
+  (git-ignored).
+
+### Results (24 J = 100 cells, arm p0, R = 500 before drops; R_common 317 to 500)
+
+| Mutant | caught | uncaught |
+|---|---|---|
+| truth (2 x median SE) | 120 / 120 | 0 (smallest drop / MCSE 15.6) |
+| narrow (20%) | 107 / 120 | 13 |
+
+Uncaught under the narrow mutant:
+
+| Cell | n | ICC_X | sizes | nie_b | Estimand | R | base | narrow | drop | paired MCSE |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1005 | 5 | .05 | equal | .18 | nie_between | 343 | 0.988 | 0.980 | 0.0087 | 0.0050 |
+| 1005 | 5 | .05 | equal | .18 | nie_contrast | 343 | 0.991 | 0.988 | 0.0029 | 0.0029 |
+| 1005 | 5 | .05 | equal | .18 | c_prime_between | 343 | 0.997 | 0.988 | 0.0087 | 0.0050 |
+| 1035 | 5 | .05 | unequal | .18 | nie_between | 317 | 0.972 | 0.962 | 0.0095 | 0.0054 |
+| 1035 | 5 | .05 | unequal | .18 | nie_contrast | 317 | 0.968 | 0.968 | 0 | 0 |
+| 1035 | 5 | .05 | unequal | .18 | c_prime_between | 317 | 0.997 | 0.987 | 0.0095 | 0.0054 |
+| 1065 | 5 | .05 | equal | 0 | nie_between | 329 | 1.000 | 1.000 | 0 | 0 |
+| 1065 | 5 | .05 | equal | 0 | nie_contrast | 329 | 1.000 | 1.000 | 0 | 0 |
+| 1065 | 5 | .05 | equal | 0 | c_prime_between | 329 | 1.000 | 0.994 | 0.0061 | 0.0043 |
+| 1070 | 20 | .05 | equal | 0 | nie_between | 496 | 1.000 | 0.988 | 0.0121 | 0.0049 |
+| 1095 | 5 | .05 | unequal | 0 | nie_between | 338 | 1.000 | 0.994 | 0.0059 | 0.0042 |
+| 1095 | 5 | .05 | unequal | 0 | nie_contrast | 338 | 1.000 | 0.997 | 0.0030 | 0.0030 |
+| 1095 | 5 | .05 | unequal | 0 | c_prime_between | 338 | 0.997 | 0.982 | 0.0148 | 0.0066 |
+
+Coverage here is over the R_common datasets kept, so it differs from the unconditional per-cell table below.
+
+Why these pass. A narrowed interval can only lose coverage, so d_i is 0 or 1 and, with m discordant datasets,
+drop / MCSE = sqrt(m (R - 1) / (R - m)); the mutant is caught only when m >= 9. In these cells the between-level
+and contrast intervals are wide against the distance to the truth (the ICC_X = .05 cells with n = 5, and the null
+nie_b = 0 cells, over-cover at .97 to 1.00 on the kept datasets), so narrowing by 20% moves 0 to 5 truths out of an
+interval. The criterion is doing what it says: in these cells a 20% narrowing has no detectable effect on coverage
+at R of about 330, so the harness cannot show that it would catch such a defect there. Resolving it (more reps for
+these cells, a larger narrowing, or scoping the narrow mutant to cells where it has power) is a design decision for
+the orchestrator; the criterion was not changed.
+
+### Metamorphic rescale (X x 10), stated criterion
+
+Criterion: coverage indicators identical on the datasets converged and admissible in both scalings with no adapter
+error (`clean_both`); boundary-cell flips and the estimate gap are reported separately.
+
+- **Criterion holds.** 1077 of 1200 datasets (24 cells x reps 1 to 50) are `clean_both`; indicators differ on 0.
+- Off the clean set (123 datasets: cells 1005 26, 1035 34, 1065 31, 1095 28, 1070 2, 1075 1, 1100 1): 24 flag flips
+  and 17 indicator flips, all in the four n = 5, ICC_X = .05 cells (1005, 1035, 1065, 1095), as in the first attempt.
+- Estimate gap |10 est' - est| / se on the clean set: median 1.3e-4, 99th percentile 2.4e-3, max 0.027 (cell 1035);
+  62 above 1e-3. The identity holds to optimizer precision, not to 1e-3 SE, at J = 100.
+
+### Tests and planted defects
+
+`tests/testthat/test-twolevel-few-clusters-harness.R`: 29 tests, 190 expectations, 0 failed, 0 errors, 0 skipped
+(`NOT_CRAN=true`); lintr clean on the lib and the test file. New tests: the paired criterion on a hand-built
+R = 400 case (drop .03, paired MCSE .0085: caught; the unpaired MCSE .0174 would miss it; a coverage gain never
+caught), the drop rule (ten datasets dropped from both runs), the SE-scaled shift (medians .1 and .5, shifts .2 and
+1.0), `clean_both`, and both mutants caught on calibrated intervals. Planted defects, each caught by `expect_failure()`
+in the test file and again by editing the lib, running the file and restoring it:
+
+| Defect (planted in the lib) | Failing test |
+|---|---|
+| unpaired MCSE sqrt(p_b q_b / R + p_m q_m / R) | paired criterion |
+| wrong sign, d = I_mut - I_base | paired criterion; mutants on calibrated intervals |
+| shift not scaled (fixed .05) | SE-scaled shift |
+| no drop rule (all rows kept) | paired criterion |
+
+In-file defects also cover a global (not per-cell) median SE and a negative shift.
+
+## First attempt: fixed +.05 truth shift and the band criterion (replaced)
+
+Kept as recorded. It was replaced by the paired criterion above for the reasons given there.
+
+### Verdict (first attempt)
 
 **Stop rule S1 triggered.** Both mutants move every within-level cell (nie_within, c_prime_within) out of the band,
 but at J = 100 several between-level and contrast cells stay inside (0.925, 0.975) under a mutant. Nothing was
 weakened. The cause is design power plus a conservative baseline, not a harness defect (see "Why the mutants pass").
 
-## Commands
+### Commands
 
 ```sh
 export R_LIBS=<scratch lib> CELLS=1005,1010,...,1120 ARMS=p0 CORES=6
@@ -34,7 +132,7 @@ true between NIE .18 and 0). Arm p0. R = 500 per cell.
 
 The CSVs stay in `_agents_workspace/fc-t4/` (git-ignored).
 
-## Definitions
+### Definitions
 
 - Coverage is unconditional: a row with an NA interval (adapter error, non-converged fit) counts as a miss.
   MCSE = sqrt(p (1 - p) / R).
@@ -47,7 +145,7 @@ The CSVs stay in `_agents_workspace/fc-t4/` (git-ignored).
 Baseline health (12000 rows): 0 lavaan errors, 121 adapter errors, 88 non-converged, 1060 inadmissible,
 570 between-unidentified, 691 rows with an NA interval.
 
-## Band calls (count of the 24 cells)
+### Band calls (count of the 24 cells)
 
 | Estimand | base amb/in/out | truth amb/in/out | narrow amb/in/out |
 |---|---|---|---|
@@ -80,7 +178,7 @@ Those called `inside` outright (not `ambiguous`):
 
 Predicted truth coverage is Phi(1.96 - d) - Phi(-1.96 - d) with d = .05 / median SE.
 
-## Why the mutants pass
+### Why the mutants pass
 
 1. **The truth shift is small against the between-level SE.** With a median between SE of .07 to .21, a .05 shift
    lowers nominal coverage only to .89 to .94; at R = 500 (MCSE about .01) that cannot leave the band reliably.
@@ -92,7 +190,7 @@ Predicted truth coverage is Phi(1.96 - d) - Phi(-1.96 - d) with d = .05 / median
 3. **Some baselines are already far outside.** In n = 5, ICC_X = .05 cells (1005, 1035, 1065, 1095) base coverage of
    the between estimands is about .68, so a mutant "outside" there carries no information.
 
-## Metamorphic rescale (X x 10)
+### Metamorphic rescale (X x 10)
 
 Derivation: X = u + e, so X k scales both level components and leaves every ICC unchanged. At each level a and c'
 become a / k and c' / k; b is unchanged. So every estimand (nie_within, nie_between, nie_contrast, c_prime_within,
@@ -121,7 +219,7 @@ The rescale identity therefore holds wherever the fit is interior; flips come fr
 optimizer), not from the harness truths, which scale exactly (`fc_truth(scale_x = )`,
 tested with a planted unscaled-truth defect).
 
-## Per-cell coverage (R = 500; coverage (MCSE) band)
+### Per-cell coverage (R = 500; coverage (MCSE) band)
 
 | cell | n | ICC_X | sizes | nie_b | estimand | R | base | truth | narrow |
 |---|---|---|---|---|---|---|---|---|---|
