@@ -432,8 +432,9 @@ fc_band <- function(coverage, mcse, band = c(.925, .975), k_mcse = 2) {
 }
 
 # Rescale comparison (T4): `orig` and `resc` hold the same datasets (cell_id, rep, arm) analyzed with X and with X
-# times k. Returns per dataset whether every coverage indicator and every status flag agrees, and the largest gap
-# |k est' - est| / se over estimands (NA where either side has no estimate).
+# times k. Returns per dataset whether every coverage indicator and every status flag agrees, the largest gap
+# |k est' - est| / se over estimands (NA where either side has no estimate), and `clean_both`: converged and
+# admissible in both runs with no adapter error, the set on which the indicators must agree.
 fc_rescale_compare <- function(orig, resc, k) {
   checkmate::assert_data_frame(orig, min.rows = 1, .var.name = "orig")
   checkmate::assert_data_frame(resc, nrows = nrow(orig), .var.name = "resc")
@@ -454,5 +455,89 @@ fc_rescale_compare <- function(orig, resc, k) {
   out$indicators_same <- Reduce(`&`, lapply(names(ci), function(e) ci[[e]] == cr[[e]]))
   out$flags_same <- Reduce(`&`, lapply(flags, function(f) same(orig[[f]], resc[[f]])))
   out$max_gap_se <- apply(gap, 1L, function(g) if (all(is.na(g))) NA_real_ else max(g, na.rm = TRUE))
+  clean <- function(r) !is.na(r$converged) & r$converged & !is.na(r$admissible) & r$admissible & is.na(r$adapter_error)
+  out$clean_both <- clean(orig) & clean(resc)
+  out
+}
+
+# SE-scaled truth shift (T4, second design): per group and estimand, `k_se` times the median SE of the baseline run.
+fc_mutant_shift <- function(rows, k_se = 2, by = c("cell_id", "arm")) {
+  checkmate::assert_data_frame(rows, min.rows = 1, .var.name = "rows")
+  checkmate::assert_number(k_se, lower = 0, finite = TRUE, .var.name = "k_se")
+  checkmate::assert_subset(by, names(rows), .var.name = "by")
+  est <- intersect(fc_estimands, sub("^truth_", "", grep("^truth_", names(rows), value = TRUE)))
+  groups <- split(seq_len(nrow(rows)), rows[by], drop = TRUE)
+  out <- do.call(rbind, lapply(groups, function(i) {
+    key <- rows[i[1L], by, drop = FALSE]
+    do.call(rbind, lapply(est, function(e) {
+      m <- stats::median(rows[[paste0("se_", e)]][i], na.rm = TRUE)
+      cbind(key, estimand = e, median_se = m, shift = k_se * m, stringsAsFactors = FALSE)
+    }))
+  }))
+  rownames(out) <- NULL
+  out
+}
+
+# Mutated copy of a baseline run (T4, second design): "truth" adds fc_mutant_shift() to each truth in its group,
+# "narrow" narrows every interval by 20% about the estimate (fc_apply_mutant()). Post-processing only: no refit.
+fc_mutate_runs <- function(rows, mutant, k_se = 2, by = c("cell_id", "arm")) {
+  checkmate::assert_choice(mutant, c("truth", "narrow"), .var.name = "mutant")
+  if (mutant == "narrow") {
+    out <- fc_apply_mutant(rows, "narrow")
+  } else {
+    sh <- fc_mutant_shift(rows, k_se = k_se, by = by)
+    gkey <- do.call(paste, rows[by])
+    skey <- do.call(paste, sh[by])
+    out <- rows
+    for (e in unique(sh$estimand)) {
+      s <- sh[sh$estimand == e, ]
+      col <- paste0("truth_", e)
+      out[[col]] <- out[[col]] + s$shift[match(gkey, skey[sh$estimand == e])]
+    }
+  }
+  out$mutant <- mutant
+  out
+}
+
+# Baseline-paired mutant criterion (T4, second design). `base` and `mut` hold the same datasets (cell_id, rep, arm)
+# from runs with shared seeds. Per group and estimand, a dataset is kept only when it converged, has no adapter error
+# and has an interval in both runs. With d = I_base - I_mut over the R kept datasets, drop = mean(d) and the paired
+# MCSE = sd(d) / sqrt(R); the mutant is caught when drop > k MCSE.
+fc_paired_catch <- function(base, mut, by = c("cell_id", "arm"), k = 3) {
+  checkmate::assert_data_frame(base, min.rows = 1, .var.name = "base")
+  checkmate::assert_data_frame(mut, .var.name = "mut")
+  checkmate::assert_subset(by, names(base), .var.name = "by")
+  checkmate::assert_number(k, lower = 0, finite = TRUE, .var.name = "k")
+  key <- unique(c(by, "cell_id", "rep", "arm"))
+  key <- intersect(key, names(base))
+  kb <- do.call(paste, base[key])
+  km <- do.call(paste, mut[key])
+  if (nrow(mut) != nrow(base) || anyDuplicated(kb) || !setequal(kb, km)) {
+    stop("base and mut do not hold the same datasets", call. = FALSE)
+  }
+  mut <- mut[match(kb, km), , drop = FALSE]
+  ok_run <- function(r) {
+    conv <- if ("converged" %in% names(r)) !is.na(r$converged) & r$converged else rep(TRUE, nrow(r))
+    err <- if ("adapter_error" %in% names(r)) is.na(r$adapter_error) else rep(TRUE, nrow(r))
+    conv & err
+  }
+  ok <- ok_run(base) & ok_run(mut)
+  cb <- fc_covered(base)
+  cm <- fc_covered(mut)
+  groups <- split(seq_len(nrow(base)), base[by], drop = TRUE)
+  out <- do.call(rbind, lapply(groups, function(i) {
+    key_row <- base[i[1L], by, drop = FALSE]
+    do.call(rbind, lapply(names(cb), function(e) {
+      has <- function(r) !is.na(r[[paste0("lo_", e)]][i]) & !is.na(r[[paste0("hi_", e)]][i])
+      keep <- i[ok[i] & has(base) & has(mut)]
+      d <- as.numeric(cb[[e]][keep]) - as.numeric(cm[[e]][keep])
+      r <- length(keep)
+      mcse <- if (r > 1L) stats::sd(d) / sqrt(r) else NA_real_
+      drop <- if (r > 0L) mean(d) else NA_real_
+      cbind(key_row, estimand = e, R = r, cov_base = mean(cb[[e]][keep]), cov_mut = mean(cm[[e]][keep]),
+            drop = drop, mcse = mcse, caught = !is.na(mcse) & drop > k * mcse, stringsAsFactors = FALSE)
+    }))
+  }))
+  rownames(out) <- NULL
   out
 }

@@ -481,3 +481,134 @@ test_that("T4: X x 10 leaves every coverage indicator and flag unchanged and sca
   rows$s[grep("^truth_", names(rows$s))] <- rows$s[grep("^truth_", names(rows$s))] * 10
   expect_failure(fc_t4_check_rescale(rows))
 })
+
+test_that("T4: the rescale comparison marks datasets converged and admissible with no adapter error in both runs", {
+  skip_on_cran()
+  rows <- fc_t4_rescale_rows(function(nie_b) fc_truth(nie_b, scale_x = 10)) # nolint: object_usage_linter.
+  expect_identical(fc_rescale_compare(rows$o, rows$s, 10)$clean_both, rep(TRUE, 3)) # nolint: object_usage_linter.
+  rows$s$admissible[2] <- FALSE
+  rows$o$converged[3] <- FALSE
+  cmp <- fc_rescale_compare(rows$o, rows$s, 10) # nolint: object_usage_linter.
+  expect_identical(cmp$clean_both, c(TRUE, FALSE, FALSE))
+})
+
+# --- T4 (second design): baseline-paired mutant criterion and the SE-scaled truth shift ----------------------------
+
+# Paired runs for nie_within (truth .2), 410 datasets in cell 1 and 400 in cell 2. Cell 1: datasets 1 to 5 have no
+# interval in either run, 6 to 8 did not converge, 9 and 10 lose their interval in the mutant run only; these ten are
+# dropped from both, leaving R = 400. Of those, the baseline covers 380 and the mutant 368 (12 of the covered
+# datasets miss), so coverage drops by .03; the paired MCSE is sd(d) / 20 = .0085 (caught at 3 MCSE), while the
+# unpaired sqrt(.95 .05 / 400 + .92 .08 / 400) = .0174 would not catch it. Cell 2: the mutant covers all 400 the
+# baseline covers 380 of, a gain, never a catch.
+fc_t4_paired_runs <- function() {
+  cover <- c(.1, .3)
+  miss <- c(.25, .35)
+  mk <- function(cell, ok) {
+    lo <- ifelse(ok, cover[1], miss[1])
+    hi <- ifelse(ok, cover[2], miss[2])
+    data.frame(cell_id = cell, rep = seq_along(ok), arm = "p0", converged = TRUE, adapter_error = NA_character_,
+               truth_nie_within = .2, est_nie_within = .2, lo_nie_within = lo, hi_nie_within = hi,
+               stringsAsFactors = FALSE)
+  }
+  b1 <- mk(1L, c(rep(TRUE, 10), rep(TRUE, 380), rep(FALSE, 20)))
+  b1[1:5, c("lo_nie_within", "hi_nie_within")] <- NA
+  b1$converged[6:8] <- FALSE
+  m1 <- b1
+  m1[9:10, c("lo_nie_within", "hi_nie_within")] <- NA
+  m1[11:22, c("lo_nie_within", "hi_nie_within")] <- as.list(miss)
+  b2 <- mk(2L, c(rep(TRUE, 380), rep(FALSE, 20)))
+  m2 <- mk(2L, rep(TRUE, 400))
+  list(base = rbind(b1, b2), mut = rbind(m1, m2))
+}
+
+fc_t4_check_paired <- function(catch_fun) {
+  runs <- fc_t4_paired_runs()
+  pc <- catch_fun(runs$base, runs$mut)
+  d <- c(rep(1, 12), rep(0, 388))
+  d2 <- c(rep(-1, 20), rep(0, 380))
+  testthat::expect_equal(
+    pc[, c("cell_id", "estimand", "R", "cov_base", "cov_mut", "drop", "mcse", "caught")],
+    data.frame(cell_id = 1:2, estimand = "nie_within", R = c(400L, 400L), cov_base = c(.95, .95),
+               cov_mut = c(.92, 1), drop = c(.03, -.05), mcse = c(stats::sd(d), stats::sd(d2)) / 20,
+               caught = c(TRUE, FALSE), stringsAsFactors = FALSE),
+    ignore_attr = TRUE
+  )
+}
+
+test_that("T4: a mutant is caught when coverage drops by more than 3 paired MCSE over datasets valid in both runs", {
+  fc_t4_check_paired(fc_paired_catch) # nolint: object_usage_linter.
+  runs <- fc_t4_paired_runs()
+  expect_error(fc_paired_catch(runs$base, runs$mut[-1, ]), "same datasets") # nolint: object_usage_linter.
+})
+
+# Two cells whose median SEs are .1 (one SE missing) and .5: the truth mutant moves their truths by .2 and 1.
+fc_t4_shift_rows <- function() {
+  data.frame(cell_id = rep(1:2, c(4, 2)), rep = c(1:4, 1:2), arm = "p0", truth_nie_within = .2,
+             est_nie_within = .2, se_nie_within = c(.1, .1, .3, NA, .5, .5), lo_nie_within = 0,
+             hi_nie_within = .3, mutant = "", stringsAsFactors = FALSE)
+}
+
+fc_t4_check_shift <- function(mutate_fun) {
+  testthat::expect_equal(mutate_fun(fc_t4_shift_rows())$truth_nie_within, .2 + rep(c(.2, 1), c(4, 2)))
+}
+
+test_that("T4: the truth mutant shifts each truth by 2 x the cell's median SE; narrow is the 20% narrowing", {
+  rows <- fc_t4_shift_rows()
+  sh <- fc_mutant_shift(rows) # nolint: object_usage_linter.
+  expect_equal(sh$shift, c(.2, 1))
+  fc_t4_check_shift(function(r) fc_mutate_runs(r, "truth")) # nolint: object_usage_linter.
+  tm <- fc_mutate_runs(rows, "truth") # nolint: object_usage_linter.
+  expect_identical(tm$mutant, rep("truth", 6))
+  expect_identical(tm[setdiff(names(tm), c("truth_nie_within", "mutant"))],
+                   rows[setdiff(names(rows), c("truth_nie_within", "mutant"))])
+  nm <- fc_mutate_runs(rows, "narrow") # nolint: object_usage_linter.
+  ref <- fc_apply_mutant(rows, "narrow") # nolint: object_usage_linter.
+  expect_equal(nm[names(nm) != "mutant"], ref[names(ref) != "mutant"])
+  expect_error(fc_mutate_runs(rows, "wide"), "mutant") # nolint: object_usage_linter.
+})
+
+test_that("T4: both redesigned mutants are caught on calibrated intervals", {
+  rows <- cbind(fc_t4_calibrated(), rep = 1:1000, converged = TRUE, adapter_error = NA_character_)
+  for (m in c("truth", "narrow")) {
+    pc <- fc_paired_catch(rows, fc_mutate_runs(rows, m)) # nolint: object_usage_linter.
+    expect_true(pc$caught, label = m)
+  }
+})
+
+test_that("T4: planted defects in the paired criterion and the shift are caught", {
+  # Unpaired MCSE: sqrt(p_b (1 - p_b) / R + p_m (1 - p_m) / R) ignores the shared seeds and misses the .03 drop.
+  unpaired <- function(base, mut) {
+    pc <- fc_paired_catch(base, mut) # nolint: object_usage_linter.
+    pc$mcse <- sqrt(pc$cov_base * (1 - pc$cov_base) / pc$R + pc$cov_mut * (1 - pc$cov_mut) / pc$R)
+    pc$caught <- pc$drop > 3 * pc$mcse
+    pc
+  }
+  expect_failure(fc_t4_check_paired(unpaired))
+  # Wrong sign: d = I_mut - I_base flags the coverage gain in cell 2 and misses the loss in cell 1.
+  wrong_sign <- function(base, mut) {
+    pc <- fc_paired_catch(base, mut) # nolint: object_usage_linter.
+    pc$drop <- -pc$drop
+    pc$cov_mut <- 2 * pc$cov_base - pc$cov_mut
+    pc$caught <- pc$drop > 3 * pc$mcse
+    pc
+  }
+  expect_failure(fc_t4_check_paired(wrong_sign))
+  # No drop rule: datasets without an interval in the mutant run count as misses there, so R is 403, not 400.
+  no_drop <- function(base, mut) {
+    pc <- fc_paired_catch(base, mut) # nolint: object_usage_linter.
+    pc$R[1] <- sum(!is.na(base$lo_nie_within[base$cell_id == 1]) & base$converged[base$cell_id == 1])
+    pc
+  }
+  expect_failure(fc_t4_check_paired(no_drop))
+  # Shift not scaled: the fixed +.05 of the first attempt.
+  expect_failure(fc_t4_check_shift(function(r) fc_apply_mutant(r, "truth"))) # nolint: object_usage_linter.
+  # Shift from the median SE over all cells (.3), not per cell.
+  expect_failure(fc_t4_check_shift(function(r) fc_mutate_runs(r, "truth", by = "arm"))) # nolint: object_usage_linter.
+  # Wrong sign of the shift.
+  minus <- function(r) {
+    out <- fc_mutate_runs(r, "truth") # nolint: object_usage_linter.
+    out$truth_nie_within <- 2 * r$truth_nie_within - out$truth_nie_within
+    out
+  }
+  expect_failure(fc_t4_check_shift(minus))
+})
