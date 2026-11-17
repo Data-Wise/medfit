@@ -11,8 +11,9 @@
 #   CORES   parallel::mclapply cores (default 1)
 #   OUT     output CSV (default a file in tempdir(); per-dataset rows stay outside git, section 7)
 #   MUTANT  "" (default), "truth" (every truth + .05) or "narrow" (every delta interval 20% narrower): T4's first
-#           attempt. The current T4 mutants (truth shifted by 2 x the median baseline SE) are built from a baseline
-#           run's rows with fc_mutate_runs() and judged with fc_paired_catch(); they need no MUTANT run
+#           attempt. The current T4 mutants (truth shifted by 2 x the median baseline SE; every delta interval's
+#           half-widths cut 50%) are built from a baseline run's rows with fc_mutate_runs() and judged with
+#           fc_paired_catch(); they need no MUTANT run
 #   SCALE_X k (default 1): analyze each dataset with X times k and every truth divided by k (T4 metamorphic rescale;
 #           the same seeds, so rows pair with an unscaled run by cell_id, rep and arm)
 #

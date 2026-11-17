@@ -278,10 +278,12 @@ fc_analyze <- function(data, arm, eps = 1e-3, truth, ci_level = .95) {
   row
 }
 
-# Planted mutants (T4 uses them; the scaffold is here): "truth" adds .05 to every truth, "narrow" shrinks every
-# delta interval by 20% about its estimate. An empty name leaves the row alone; any other name is an error.
-fc_apply_mutant <- function(row, mutant) {
+# Planted mutants (T4 uses them; the scaffold is here): "truth" adds .05 to every truth, "narrow" multiplies each
+# half-width of every delta interval by `narrow` about its estimate (.8, a 20% cut, by default: T4's first and second
+# attempts; fc_mutate_runs() passes the current .5). An empty name leaves the row alone; any other name is an error.
+fc_apply_mutant <- function(row, mutant, narrow = .8) {
   checkmate::assert_string(mutant, .var.name = "mutant")
+  checkmate::assert_number(narrow, lower = 0, upper = 1, .var.name = "narrow")
   if (!nzchar(mutant)) return(row)
   if (!mutant %in% c("truth", "narrow")) stop("unknown mutant '", mutant, "'", call. = FALSE)
   for (col in grep("^truth_", names(row), value = TRUE)) {
@@ -290,8 +292,8 @@ fc_apply_mutant <- function(row, mutant) {
       row[[col]] <- row[[col]] + .05
     } else {
       est <- row[[paste0("est_", e)]]
-      row[[paste0("lo_", e)]] <- est - .8 * (est - row[[paste0("lo_", e)]])
-      row[[paste0("hi_", e)]] <- est + .8 * (row[[paste0("hi_", e)]] - est)
+      row[[paste0("lo_", e)]] <- est - narrow * (est - row[[paste0("lo_", e)]])
+      row[[paste0("hi_", e)]] <- est + narrow * (row[[paste0("hi_", e)]] - est)
     }
   }
   row
@@ -478,12 +480,13 @@ fc_mutant_shift <- function(rows, k_se = 2, by = c("cell_id", "arm")) {
   out
 }
 
-# Mutated copy of a baseline run (T4, second design): "truth" adds fc_mutant_shift() to each truth in its group,
-# "narrow" narrows every interval by 20% about the estimate (fc_apply_mutant()). Post-processing only: no refit.
-fc_mutate_runs <- function(rows, mutant, k_se = 2, by = c("cell_id", "arm")) {
+# Mutated copy of a baseline run (T4, baseline-paired design): "truth" adds fc_mutant_shift() to each truth in its
+# group, "narrow" multiplies each half-width by `narrow` about the estimate (fc_apply_mutant()); .5, a 50% cut, is the
+# current T4 mutant (the second attempt's .8 was replaced). Post-processing only: no refit.
+fc_mutate_runs <- function(rows, mutant, k_se = 2, narrow = .5, by = c("cell_id", "arm")) {
   checkmate::assert_choice(mutant, c("truth", "narrow"), .var.name = "mutant")
   if (mutant == "narrow") {
-    out <- fc_apply_mutant(rows, "narrow")
+    out <- fc_apply_mutant(rows, "narrow", narrow = narrow)
   } else {
     sh <- fc_mutant_shift(rows, k_se = k_se, by = by)
     gkey <- do.call(paste, rows[by])

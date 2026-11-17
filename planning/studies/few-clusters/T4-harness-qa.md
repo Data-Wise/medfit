@@ -8,12 +8,68 @@ Harness: `tests/sim/twolevel-few-clusters-lib.R` (`fc_paired_catch()`, `fc_mutan
 
 ## Verdict
 
-**Stop rule S1 triggered by the narrow mutant.** Under the baseline-paired criterion the truth mutant is caught in all
-120 (cell, estimand) pairs; the narrow mutant is caught in 107 of 120. The 13 it leaves uncaught are all between-level
-or contrast estimands in five over-covering cells (table below). The rescale criterion holds: coverage indicators are
-identical on all 1077 datasets converged and admissible in both scalings. Nothing was weakened.
+**PASS.** With the narrow mutant at 50% (each half-width of the delta interval multiplied by .5 about the
+estimate), both mutants are caught in all 120 (cell, estimand) pairs under the baseline-paired criterion: truth
+smallest drop / MCSE 15.6, narrow 3.52. The rescale criterion holds: coverage indicators are identical on all 1077
+datasets converged and admissible in both scalings. Nothing was weakened: the criterion, the threshold (3 paired
+MCSEs) and the truth mutant are those of the second attempt; only the narrowing factor changed, by the user's choice.
 
-## Second design: baseline-paired criterion (current)
+## Current design: narrow mutant at 50% (baseline-paired criterion)
+
+The second attempt (below) narrowed intervals by 20% and left 13 of 120 (cell, estimand) pairs uncaught, all
+between-level or contrast estimands in five over-covering ICC_X = .05 cells (1005, 1035, 1065, 1070, 1095). A
+narrowed interval can only lose coverage, so a catch needs at least 9 datasets whose truth leaves the interval
+(drop / MCSE = sqrt(m (R - 1) / (R - m)) > 3); a 20% cut moved 0 to 5 truths there. The user chose "narrow by 50%".
+
+- **Narrow mutant.** `fc_mutate_runs(rows, "narrow")` multiplies each half-width by `narrow = .5` about the
+  estimate (`fc_apply_mutant(row, "narrow", narrow = .5)`); estimates and truths are untouched. The driver's
+  `MUTANT=narrow` run and `fc_apply_mutant()`'s default stay at .8, so the recorded `narrow.csv` still reproduces.
+- **Unchanged.** The criterion, the drop rule, the truth mutant and the rescale criterion, as stated in the second
+  attempt below. Computed from `base.csv` with no new runs (`_agents_workspace/fc-t4/analyze3.R`; outputs
+  `paired-catch.csv`, and `paired-catch-narrow20.csv` for the 20% result, both git-ignored):
+
+```r
+source("tests/sim/twolevel-few-clusters-lib.R")
+base <- read.csv("base.csv", stringsAsFactors = FALSE)
+for (m in c("truth", "narrow")) print(fc_paired_catch(base, fc_mutate_runs(base, m)))   # narrow = .5
+fc_paired_catch(base, fc_mutate_runs(base, "narrow", narrow = .8))                      # second attempt: 107 / 120
+```
+
+### Results (24 J = 100 cells, arm p0, R = 500 before drops; R_common 317 to 500)
+
+| Mutant | caught | smallest drop / MCSE | median drop / MCSE |
+|---|---|---|---|
+| truth (2 x median SE) | 120 / 120 | 15.6 | 19.4 |
+| narrow (50%) | 120 / 120 | 3.52 | 13.5 |
+
+The five weakest narrow pairs (threshold 3):
+
+| Cell | Estimand | R | base | narrow | drop | paired MCSE | drop / MCSE |
+|---|---|---|---|---|---|---|---|
+| 1065 | nie_between | 329 | 1.000 | 0.964 | 0.0365 | 0.0104 | 3.52 |
+| 1095 | nie_between | 338 | 1.000 | 0.962 | 0.0385 | 0.0105 | 3.67 |
+| 1065 | nie_contrast | 329 | 1.000 | 0.960 | 0.0395 | 0.0108 | 3.67 |
+| 1095 | nie_contrast | 338 | 1.000 | 0.956 | 0.0444 | 0.0112 | 3.96 |
+| 1035 | nie_contrast | 317 | 0.968 | 0.918 | 0.0505 | 0.0123 | 4.10 |
+
+The margin is thin in the same cells that failed at 20%: 1065 nie_between rests on 12 discordant datasets of 329.
+A 50% cut is a coarse defect; the harness shows it catches a halved interval everywhere, not a 20% one in these
+cells.
+
+### Tests and planted defects (narrow 50%)
+
+`tests/testthat/test-twolevel-few-clusters-harness.R`: 29 tests, 195 expectations, 0 failed, 0 errors, 0 skipped
+(`NOT_CRAN=true`). The narrow test now checks the 50% cut on an asymmetric interval ([0, .3] about .2 becomes
+[.1, .25], estimate and truth unchanged), and that `fc_mutate_runs()` equals `fc_apply_mutant(narrow = .5)`.
+Planted defects, caught by `expect_failure()` in the file: factor left at .8 (`fc_apply_mutant()`'s default and
+`fc_mutate_runs(narrow = .8)`) and at 1 (no cut). In the lib, setting `fc_mutate_runs()`'s default to .8 and then
+to 1 fails the narrow test each time; the lib was restored (byte-identical, `cmp`).
+
+## Second attempt: baseline-paired criterion with the narrow mutant at 20% (replaced)
+
+Replaced only in the narrowing factor: 13 pairs were uncaught (table below) because a 20% cut moves too few
+truths out of over-covering intervals; the user chose 50% (current design, above). The criterion, the truth
+mutant, the rescale result and the tests below are still current. Its verdict was S1 (FAIL).
 
 The first attempt (below) asked each mutant to move coverage outside the band (0.925, 0.975). It was replaced because
 a fixed band answers the wrong question: a +.05 shift is small against between-level SEs of .07 to .21, and
@@ -45,7 +101,7 @@ for (m in c("truth", "narrow")) print(fc_paired_catch(base, fc_mutate_runs(base,
 cmp <- fc_rescale_compare(base[base$rep <= 50, ], resc, 10) # rescale reps 1 to 50 pair with base reps 1 to 50
 ```
 
-### Results (24 J = 100 cells, arm p0, R = 500 before drops; R_common 317 to 500)
+### Results, narrow at 20% (24 J = 100 cells, arm p0, R = 500 before drops; R_common 317 to 500)
 
 | Mutant | caught | uncaught |
 |---|---|---|

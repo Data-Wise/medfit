@@ -552,7 +552,16 @@ fc_t4_check_shift <- function(mutate_fun) {
   testthat::expect_equal(mutate_fun(fc_t4_shift_rows())$truth_nie_within, .2 + rep(c(.2, 1), c(4, 2)))
 }
 
-test_that("T4: the truth mutant shifts each truth by 2 x the cell's median SE; narrow is the 20% narrowing", {
+# The narrow mutant cuts each half-width by 50% about the estimate: the rows' interval [0, .3] about .2 becomes
+# [.1, .25], with the estimate and the truth left alone.
+fc_t4_check_narrow <- function(mutate_fun) {
+  cols <- c("est_nie_within", "truth_nie_within", "lo_nie_within", "hi_nie_within")
+  testthat::expect_equal(mutate_fun(fc_t4_shift_rows())[cols],
+                         data.frame(est_nie_within = .2, truth_nie_within = .2, lo_nie_within = rep(.1, 6),
+                                    hi_nie_within = .25))
+}
+
+test_that("T4: the truth mutant shifts each truth by 2 x the cell's median SE; narrow cuts each half-width by 50%", {
   rows <- fc_t4_shift_rows()
   sh <- fc_mutant_shift(rows) # nolint: object_usage_linter.
   expect_equal(sh$shift, c(.2, 1))
@@ -561,9 +570,11 @@ test_that("T4: the truth mutant shifts each truth by 2 x the cell's median SE; n
   expect_identical(tm$mutant, rep("truth", 6))
   expect_identical(tm[setdiff(names(tm), c("truth_nie_within", "mutant"))],
                    rows[setdiff(names(rows), c("truth_nie_within", "mutant"))])
+  fc_t4_check_narrow(function(r) fc_mutate_runs(r, "narrow")) # nolint: object_usage_linter.
   nm <- fc_mutate_runs(rows, "narrow") # nolint: object_usage_linter.
-  ref <- fc_apply_mutant(rows, "narrow") # nolint: object_usage_linter.
+  ref <- fc_apply_mutant(rows, "narrow", narrow = .5) # nolint: object_usage_linter.
   expect_equal(nm[names(nm) != "mutant"], ref[names(ref) != "mutant"])
+  expect_identical(nm$mutant, rep("narrow", 6))
   expect_error(fc_mutate_runs(rows, "wide"), "mutant") # nolint: object_usage_linter.
 })
 
@@ -611,4 +622,9 @@ test_that("T4: planted defects in the paired criterion and the shift are caught"
     out
   }
   expect_failure(fc_t4_check_shift(minus))
+  # Narrow factor left at the second attempt's .8 (20% cut), or at 1 (no cut).
+  expect_failure(fc_t4_check_narrow(function(r) fc_apply_mutant(r, "narrow"))) # nolint: object_usage_linter.
+  narrow_at <- function(f) function(r) fc_mutate_runs(r, "narrow", narrow = f) # nolint: object_usage_linter.
+  expect_failure(fc_t4_check_narrow(narrow_at(.8)))
+  expect_failure(fc_t4_check_narrow(narrow_at(1)))
 })
