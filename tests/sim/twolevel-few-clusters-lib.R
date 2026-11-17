@@ -434,7 +434,7 @@ fc_band <- function(coverage, mcse, band = c(.925, .975), k_mcse = 2) {
 # Rescale comparison (T4): `orig` and `resc` hold the same datasets (cell_id, rep, arm) analyzed with X and with X
 # times k. Returns per dataset whether every coverage indicator and every status flag agrees, the largest gap
 # |k est' - est| / se over estimands (NA where either side has no estimate), and `clean_both`: converged and
-# admissible in both runs with no adapter error, the set on which the indicators must agree.
+# admissible in both runs, the set on which the indicators must agree.
 fc_rescale_compare <- function(orig, resc, k) {
   checkmate::assert_data_frame(orig, min.rows = 1, .var.name = "orig")
   checkmate::assert_data_frame(resc, nrows = nrow(orig), .var.name = "resc")
@@ -455,7 +455,7 @@ fc_rescale_compare <- function(orig, resc, k) {
   out$indicators_same <- Reduce(`&`, lapply(names(ci), function(e) ci[[e]] == cr[[e]]))
   out$flags_same <- Reduce(`&`, lapply(flags, function(f) same(orig[[f]], resc[[f]])))
   out$max_gap_se <- apply(gap, 1L, function(g) if (all(is.na(g))) NA_real_ else max(g, na.rm = TRUE))
-  clean <- function(r) !is.na(r$converged) & r$converged & !is.na(r$admissible) & r$admissible & is.na(r$adapter_error)
+  clean <- function(r) !is.na(r$converged) & r$converged & !is.na(r$admissible) & r$admissible
   out$clean_both <- clean(orig) & clean(resc)
   out
 }

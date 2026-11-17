@@ -23,7 +23,9 @@ baseline".
 - **Criterion.** A mutant is caught in a (cell, estimand) when its coverage drops below the baseline's by more than
   3 paired MCSEs. The runs share seeds, so with d_i = I_base,i - I_mut,i over the same datasets,
   MCSE = sd(d_i) / sqrt(R_common). A dataset that did not converge, raised an adapter error, or has an NA interval in
-  either run is dropped from both. A mutant that leaves any (cell, estimand) uncaught is S1.
+  either run is dropped from both. A mutant that leaves any (cell, estimand) uncaught is S1. Reading of "flagged"
+  used here: non-converged or adapter error. Inadmissible and between-unidentified fits stay in (their intervals
+  exist); dropping them too could only shrink R_common, so it could not turn an uncaught pair into a caught one.
 - **Truth mutant.** Each estimand's truth shifts by 2 x its median SE in that cell, from the baseline run
   (`fc_mutant_shift()`). Shifts: nie_within .029 to .065, c_prime_within .050 to .109, nie_between .073 to 1.27,
   nie_contrast .079 to 1.28, c_prime_between .21 to 1.76. **Narrow mutant.** Intervals narrowed 20% about the
@@ -33,7 +35,15 @@ baseline".
   column identical, `fit_time` excluded). Both new mutants are therefore computed from `base.csv` with
   `fc_mutate_runs()`; no refit is needed, because neither mutant changes the data or the fit.
 - Script: `_agents_workspace/fc-t4/analyze2.R`; outputs `paired-catch.csv`, `shift.csv`, `rescale-compare2.csv`
-  (git-ignored).
+  (git-ignored). The calls, from the repository root:
+
+```r
+source("tests/sim/twolevel-few-clusters-lib.R")
+base <- read.csv("base.csv", stringsAsFactors = FALSE)       # the REPS=500 baseline run (Commands, below)
+resc <- read.csv("rescale.csv", stringsAsFactors = FALSE)    # the REPS=50 SCALE_X=10 run
+for (m in c("truth", "narrow")) print(fc_paired_catch(base, fc_mutate_runs(base, m)))
+cmp <- fc_rescale_compare(base[base$rep <= 50, ], resc, 10) # rescale reps 1 to 50 pair with base reps 1 to 50
+```
 
 ### Results (24 J = 100 cells, arm p0, R = 500 before drops; R_common 317 to 500)
 
@@ -73,8 +83,8 @@ the orchestrator; the criterion was not changed.
 
 ### Metamorphic rescale (X x 10), stated criterion
 
-Criterion: coverage indicators identical on the datasets converged and admissible in both scalings with no adapter
-error (`clean_both`); boundary-cell flips and the estimate gap are reported separately.
+Criterion: coverage indicators identical on the datasets converged and admissible in both scalings (`clean_both`);
+boundary-cell flips and the estimate gap are reported separately.
 
 - **Criterion holds.** 1077 of 1200 datasets (24 cells x reps 1 to 50) are `clean_both`; indicators differ on 0.
 - Off the clean set (123 datasets: cells 1005 26, 1035 34, 1065 31, 1095 28, 1070 2, 1075 1, 1100 1): 24 flag flips
