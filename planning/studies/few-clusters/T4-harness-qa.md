@@ -69,7 +69,8 @@ to 1 fails the narrow test each time; the lib was restored (byte-identical, `cmp
 
 Replaced only in the narrowing factor: 13 pairs were uncaught (table below) because a 20% cut moves too few
 truths out of over-covering intervals; the user chose 50% (current design, above). The criterion, the truth
-mutant, the rescale result and the tests below are still current. Its verdict was S1 (FAIL).
+mutant and the rescale result below are still current; the test counts below are as of the second attempt (the
+current counts are in the section above). Its verdict was S1 (FAIL).
 
 The first attempt (below) asked each mutant to move coverage outside the band (0.925, 0.975). It was replaced because
 a fixed band answers the wrong question: a +.05 shift is small against between-level SEs of .07 to .21, and
@@ -90,14 +91,17 @@ baseline".
   equals the recorded `truth.csv` and `narrow.csv` row for row (max numeric gap 2.8e-17 and 6.8e-12; every other
   column identical, `fit_time` excluded). Both new mutants are therefore computed from `base.csv` with
   `fc_mutate_runs()`; no refit is needed, because neither mutant changes the data or the fit.
-- Script: `_agents_workspace/fc-t4/analyze2.R`; outputs `paired-catch.csv`, `shift.csv`, `rescale-compare2.csv`
+- Script: `_agents_workspace/fc-t4/analyze2.R`; outputs `paired-catch-narrow20.csv` (renamed from
+  `paired-catch.csv`), `shift.csv`, `rescale-compare2.csv`. Since `fc_mutate_runs()` now defaults to
+  `narrow = .5`, rerunning analyze2.R gives the 50% numbers; the 20% result needs `narrow = .8`, as below
   (git-ignored). The calls, from the repository root:
 
 ```r
 source("tests/sim/twolevel-few-clusters-lib.R")
 base <- read.csv("base.csv", stringsAsFactors = FALSE)       # the REPS=500 baseline run (Commands, below)
 resc <- read.csv("rescale.csv", stringsAsFactors = FALSE)    # the REPS=50 SCALE_X=10 run
-for (m in c("truth", "narrow")) print(fc_paired_catch(base, fc_mutate_runs(base, m)))
+print(fc_paired_catch(base, fc_mutate_runs(base, "truth")))
+print(fc_paired_catch(base, fc_mutate_runs(base, "narrow", narrow = .8))) # the 20% cut of this attempt
 cmp <- fc_rescale_compare(base[base$rep <= 50, ], resc, 10) # rescale reps 1 to 50 pair with base reps 1 to 50
 ```
 
