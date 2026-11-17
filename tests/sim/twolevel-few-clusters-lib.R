@@ -1,6 +1,7 @@
-# Few-clusters design study (planning/PLAN-few-clusters-design-study-2026-11-16.md, tasks T1 and T2): the data
-# generator, the cell grid, the seeds, the two lavaan arms (P0 default, P1 syntax floor) and the row builder used by
-# tests/sim/twolevel-few-clusters.R. Checked by tests/testthat/test-twolevel-few-clusters-harness.R.
+# Few-clusters design study (planning/PLAN-few-clusters-design-study-2026-11-16.md, tasks T1 to T3): the data
+# generator, the cell grid, the seeds, the two lavaan arms (P0 default, P1 syntax floor), the row builder used by
+# tests/sim/twolevel-few-clusters.R and the three-effect cluster-bootstrap closure (T3). Checked by the harness
+# tests in tests/testthat/test-twolevel-few-clusters-harness.R.
 #
 # Population (P2X section 4.1, the O8 oracle population): z_ij = u_j + e_ij, z = (X, M, Y), mean 0,
 #   within  M = .5 X, Y = .4 M + .2 X, residual variances 1, .8, .9;
@@ -275,6 +276,60 @@ fc_apply_mutant <- function(row, mutant) {
     }
   }
   row
+}
+
+# Three-effect cluster-bootstrap closure (task T3): one refit per resample, the three statistics of
+# fc_boot_effects. It reproduces three runs of the shipped `twolevel_statistic(fit, effect)` refit callback
+# (R/twolevel-statistic.R): the same refit call (the stored lavaan call with `data`, `se`, `test` and `check.post`
+# replaced, and a non-literal `model` replaced by the fit's parameter table without estimates and starts), the same
+# key rows, effect arithmetic and ICC gate, which applies to the between effect and the contrast only. A refit that
+# errors or warns is left to the caller, as bootstrap_mediation()'s cluster loop does. `defect` plants the T3
+# mutants: "swap" (NIE_B returned as NIE_W), "sign" (contrast between minus within), "original" (refit on `data`, the
+# original sample, whatever the resample) and "gate_all" (the ICC gate also blanks NIE_W).
+fc_boot_effects <- c("nie_within", "nie_between", "nie_contrast")
+
+fc_boot_closure <- function(fit, treatment = "X", mediator = "M", outcome = "Y", data = NULL, defect = "",
+                            env = parent.frame()) {
+  checkmate::assert_choice(defect, c("", "swap", "sign", "original", "gate_all"), .var.name = "defect")
+  if (defect == "original") checkmate::assert_data_frame(data, .var.name = "data")
+  call <- fit@call
+  if (is.null(call)) stop("the lavaan fit has no stored call to refit", call. = FALSE)
+  if (!is.character(call$model)) {
+    model <- lavaan::parTable(fit)
+    model$est <- NULL
+    model$se <- NULL
+    model$start <- NULL
+    call$model <- model
+  }
+  call$se <- "none"
+  call$test <- "none"
+  call$check.post <- FALSE
+  rm(fit)
+  # the shipped callback's own internals, so the key rows, ICC and effect arithmetic cannot drift from it
+  med <- asNamespace("medfit")
+  value <- med$.twolevel_stat_value
+  na3 <- stats::setNames(rep(NA_real_, 3L), fc_boot_effects)
+
+  function(d) {
+    refit_call <- call
+    refit_call$data <- if (defect == "original") data else d
+    # re-evaluates the fit's own lavaan call (the harness model and options), not arbitrary input
+    refit <- eval(refit_call, env)
+    if (!med$.twolevel_converged(refit)) return(na3)
+    key <- med$.twolevel_key_rows(lavaan::parTable(refit), treatment, mediator, outcome)
+    p <- stats::setNames(key$est, key$path)
+    out <- vapply(fc_boot_effects, function(e) value(e, p), numeric(1))
+    if (defect == "swap") out[["nie_within"]] <- out[["nie_between"]]
+    if (defect == "sign") out[["nie_contrast"]] <- -out[["nie_contrast"]]
+    icc <- med$.twolevel_icc(refit)
+    icc_floor <- med$.twolevel_option("icc_error")
+    if (!all(c(treatment, mediator) %in% names(icc)) || any(icc[c(treatment, mediator)] < icc_floor)) {
+      gated <- if (defect == "gate_all") fc_boot_effects else c("nie_between", "nie_contrast")
+      out[gated] <- NA_real_
+    }
+    out[!is.finite(out)] <- NA_real_
+    out
+  }
 }
 
 # One row per dataset and arm for a grid row and replicate.
