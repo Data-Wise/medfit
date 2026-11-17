@@ -108,7 +108,8 @@ lm/glm route sets them to zero (see [Serial mediation](model-serial.html)).
   supported before relying on it.
 - **A two-level fit returns `TwoLevelMediationData`.** A fit with two `level:` blocks
   (X, M and Y on level-1 units) extracts to the within and between paths; see
-  [Two-level mediation](model-twolevel.html) for the estimand and its limits.
+  [Two-level mediation](model-twolevel.html) for the estimand and its limits. With two or
+  more parallel mediators it returns `TwoLevelParallelMediationData` (experimental).
   Fits with more than two levels (condition class `medfit_error_lavaan_multilevel`) or
   with `group =` (class `medfit_error_lavaan_multigroup`) are refused. Before the
   guard, extraction returned the within-level (or first-group) paths with the total

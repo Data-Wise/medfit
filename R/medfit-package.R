@@ -8,12 +8,21 @@
 #' @details
 #' Key functions:
 #' \itemize{
+#'   \item \code{\link{med}}, \code{\link{quick}}: Fit and extract in one step
 #'   \item \code{\link{fit_mediation}}: Fit mediation models
+#'   \item \code{\link{fit_sem}}, \code{\link{sem_control}}: Fit model syntax with
+#'     the sem engine and set its optimizer
 #'   \item \code{\link{extract_mediation}}: Extract from fitted models
 #'   \item \code{\link{bootstrap_mediation}}: Bootstrap inference
 #'   \item \code{\link{nie}}, \code{\link{nde}}, \code{\link{te}},
 #'     \code{\link{pm}}, \code{\link{decompose}}: Effects
 #'   \item \code{\link{joint_effects}}: Joint effects at a parameter vector
+#'   \item \code{\link{paths}}: Path coefficients
+#'   \item \code{\link{mbco_sem}}, \code{\link{compare_lr}}: The MBCO
+#'     likelihood-ratio test of an indirect effect; the product-null LR compared
+#'     with lavaan or OpenMx
+#'   \item \code{\link{twolevel_statistic}}: Bootstrap callback for two-level
+#'     fits (experimental)
 #' }
 #'
 #' Key classes:
@@ -25,6 +34,12 @@
 #'   \item \code{\link{ParallelMediationData}}: Parallel mediators
 #'   \item \code{\link{JointMediationData}}: Joint natural effects of several
 #'     mediators with treatment-by-mediator products
+#'   \item \code{\link{ClusterMediationData}}: Treatment assigned to clusters
+#'     (2-1-1)
+#'   \item \code{\link{TwoLevelMediationData}},
+#'     \code{\link{TwoLevelParallelMediationData}}: Two-level \code{lavaan}
+#'     fits (1-1-1), one or several parallel mediators (experimental)
+#'   \item \code{\link{SEMFit}}: A sem engine fit
 #'   \item \code{\link{BootstrapResult}}: Bootstrap results
 #' }
 #'
