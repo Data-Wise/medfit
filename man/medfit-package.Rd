@@ -30,6 +30,12 @@ treatment-by-mediator interaction (four-way decomposition)
 \item \code{\link{ParallelMediationData}}: Parallel mediators
 \item \code{\link{JointMediationData}}: Joint natural effects of several
 mediators with treatment-by-mediator products
+\item \code{\link{ClusterMediationData}}: Treatment assigned to clusters
+(2-1-1)
+\item \code{\link{TwoLevelMediationData}},
+\code{\link{TwoLevelParallelMediationData}}: Two-level \code{lavaan}
+fits (1-1-1), one or several parallel mediators (experimental)
+\item \code{\link{SEMFit}}: A sem engine fit
 \item \code{\link{BootstrapResult}}: Bootstrap results
 }
 }
