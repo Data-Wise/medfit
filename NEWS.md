@@ -1,6 +1,33 @@
-# medfit 0.18.0.9000
+# medfit 0.19.0
 
-* Development version. No change in results since 0.18.0.
+## Release summary
+
+* **Two-level parallel mediation (experimental).** `extract_mediation()` on a two-level `lavaan` fit with two or more
+  mediators returns the new `TwoLevelParallelMediationData`: per-mediator and total indirect effects at the within
+  and the between level, with delta-method standard errors over the joint covariance of the paths, and
+  `twolevel_statistic()` for `bootstrap_mediation()` (#458 to #465).
+* Additions only: no existing call changes its result. A two-level fit with one mediator still returns
+  `TwoLevelMediationData`, unchanged.
+* Internal: the harness for a planned few-clusters design study lives in `tests/sim/` and is not shipped; no study
+  results are part of this release.
+* GitHub-only release; CRAN stays on hold (#83).
+
+## Known limits
+
+* The two-level API (`TwoLevelMediationData`, `TwoLevelParallelMediationData`, `twolevel_statistic()`,
+  `nie(level = )`) is experimental and may change without the usual deprecation period
+  ([Two-level mediation](https://data-wise.github.io/medfit/articles/model-twolevel.html)).
+* The within-minus-between contrast is descriptive, not a test
+  ([The contrast is descriptive](https://data-wise.github.io/medfit/articles/model-twolevel.html#the-contrast-is-descriptive)).
+* When the treatment or a mediator has an ICC below 0.01, the object is within-only and the between level is not
+  reported
+  ([When the between level is not identified](https://data-wise.github.io/medfit/articles/model-twolevel.html#when-the-between-level-is-not-identified)).
+* Two-level mediators must be parallel: a mediator regressed on another mediator (serial) is refused
+  ([Limits](https://data-wise.github.io/medfit/articles/model-twolevel.html#limits)).
+* No native two-level fitting (S4) and no latent mediators in the two-level adapter (S5); both are NO-GO as written
+  ([#394](https://github.com/data-wise/medfit/issues/394)). Two-level models are fitted in `lavaan` and extracted.
+* Bounded FIML is numerically verified, not statistically admitted
+  ([FIML page](https://data-wise.github.io/medfit/articles/model-fiml.html)).
 
 ## Added
 

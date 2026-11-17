@@ -12,7 +12,7 @@ execute:
   echo: true
 ---
 
-CRAN has medfit 0.3.2; this site documents 0.18.0.9000, the development version after 0.18.0 (GitHub and r-universe).
+CRAN has medfit 0.3.2; this site documents 0.19.0 (GitHub and r-universe).
 This page lists what a 0.3.2 user needs to know before upgrading: numbers that
 change, calls that now stop with an error, and what is new. The full record is
 [NEWS](https://data-wise.github.io/medfit/news/index.html).
@@ -116,6 +116,7 @@ reuses one of medfit's alias names for a different path (0.5.0).
 | 0.16.0 | bounded FIML for `fit_sem(missing = "fiml", fixed_x = FALSE)` (three-variable Gaussian random-X mediation; `extract_mediation()` returns `FIMLMediationData`); a single nonzero-product equality searches both sign branches; corrected observed-information and sandwich standard errors under active nonlinear constraints ([guide](sem-guide.html#bounded-fiml)) |
 | 0.17.0 | `extract_mediation()` on a two-level `lavaan` fit (`level:` blocks) returns the new `TwoLevelMediationData`: the a, b and c' paths at the within and the between level, with `nie(level = )`, `tidy()`, `confint()` and `summary()`, and `twolevel_statistic()` builds the callback for `bootstrap_mediation()` (parametric, or a cluster bootstrap that refits the `lavaan` fit) ([page](model-twolevel.html)). Before 0.17.0 this call stopped with `medfit_error_lavaan_multilevel`, and earlier it returned the within level only with the total sample size. Three-level and multigroup fits are still refused. Also, bounded FIML now fits one or two covariates, two parallel mediators and two serial mediators (the saturated graph or the pure chain) with up to two covariates; these refuse in 0.16.0 and are new, not a change to an existing result ([page](model-fiml.html)) |
 | 0.18.0 | `fit_mediation(engine = "sem")` names the native SEM fitter; `engine = "native"` still works, with identical results and no warning; `sem_control()` collects its optimizer settings for `fit_sem()` and `mbco_sem()` (a plain `control` list keeps its meaning); `TwoLevelMediationData` gains an optional `source_version`; the sem engine articles moved (`native-guide` is now `sem-guide`), and old links redirect ([guide](guide-engines.html)). Additions only: no result changes |
+| 0.19.0 | `extract_mediation()` on a two-level `lavaan` fit with two or more mediators returns the new, experimental `TwoLevelParallelMediationData`: per-mediator and total effects at each level with delta-method standard errors, and `twolevel_statistic()` builds the bootstrap callback for it ([page](model-twolevel.html#several-parallel-mediators)). A mediator regressed on another mediator (serial) is refused. Additions only: a fit with one mediator still returns `TwoLevelMediationData`, and no result changes |
 
 ## Dependencies
 
