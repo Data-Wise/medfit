@@ -16,6 +16,10 @@
 #           fc_paired_catch(); they need no MUTANT run
 #   SCALE_X k (default 1): analyze each dataset with X times k and every truth divided by k (T4 metamorphic rescale;
 #           the same seeds, so rows pair with an unscaled run by cell_id, rep and arm)
+#   MC_B    MC (parametric) draws per dataset (default 0, no MC arm; T5 uses 2000): `mc_*` columns, percentile
+#           intervals for NIE_W, NIE_B and the contrast from the stream after the dataset's (fc_streams())
+#   BOOT_B  cluster-bootstrap replicates per dataset (default 0, no bootstrap arm; T5 uses 499 in the six P2X
+#           cells): `bt_*` columns, one refit per replicate for the three effects (fc_cluster_boot())
 #
 # Uses the installed medfit: install it from the source at a recorded SHA into a scratch library first (section 9),
 # e.g. R CMD INSTALL -l <lib> . then R_LIBS=<lib> CELLS=1001 REPS=2 Rscript tests/sim/twolevel-few-clusters.R
@@ -41,6 +45,9 @@ eps <- as.numeric(Sys.getenv("EPS", "1e-3"))
 cores <- as.integer(Sys.getenv("CORES", "1"))
 mutant <- Sys.getenv("MUTANT", "")
 scale_x <- as.numeric(Sys.getenv("SCALE_X", "1"))
+mc_b <- as.integer(Sys.getenv("MC_B", "0"))
+boot_b <- as.integer(Sys.getenv("BOOT_B", "0"))
+if (is.na(mc_b) || mc_b < 0L || is.na(boot_b) || boot_b < 0L) stop("MC_B and BOOT_B must be counts", call. = FALSE)
 if (!is.finite(scale_x) || scale_x <= 0) stop("SCALE_X must be a positive number", call. = FALSE)
 invisible(fc_apply_mutant(data.frame(truth_x = 0, est_x = 0, lo_x = 0, hi_x = 0), mutant)) # unknown names error
 out <- Sys.getenv("OUT", file.path(tempdir(), sprintf("twolevel-few-clusters-%s.csv", format(Sys.Date()))))
@@ -49,7 +56,8 @@ jobs <- expand.grid(rep = seq_len(reps), cell_id = cell_ids, KEEP.OUT.ATTRS = FA
 run_job <- function(k) {
   cell <- grid[grid$cell_id == jobs$cell_id[k], ]
   rows <- lapply(arms, function(a) {
-    fc_row(cell, jobs$rep[k], a, eps = eps, mutant = mutant, scale_x = scale_x) # nolint: object_usage_linter.
+    fc_row(cell, jobs$rep[k], a, eps = eps, mutant = mutant, scale_x = scale_x, # nolint: object_usage_linter.
+           mc_b = mc_b, boot_b = boot_b)
   })
   do.call(rbind, rows)
 }

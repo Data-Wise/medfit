@@ -628,3 +628,157 @@ test_that("T4: planted defects in the paired criterion and the shift are caught"
   expect_failure(fc_t4_check_narrow(narrow_at(.8)))
   expect_failure(fc_t4_check_narrow(narrow_at(1)))
 })
+
+# T5 (pilot): the Monte Carlo arm, the three-effect cluster bootstrap and the RNG streams they draw from. Each arm is
+# compared with the shipped bootstrap_mediation() under the same RNG state; each check has a planted defect.
+fc_t5_case <- function(cell_id = 1022, rep = 1) {
+  g <- fc_grid() # nolint: object_usage_linter. (sourced from tests/sim)
+  cell <- g[g$cell_id == cell_id, ]
+  d <- fc_simulate(cell, rep) # nolint: object_usage_linter.
+  fit <- fc_fit(d, "p0")$fit # nolint: object_usage_linter.
+  obj <- suppressWarnings(extract_mediation(fit, treatment = "X", mediator = "M", outcome = "Y"))
+  list(cell = cell, rep = rep, data = d, fit = fit, obj = obj)
+}
+
+# The shipped parametric (MC) bootstrap per effect, each effect started from the same RNG state.
+fc_t5_shipped_mc <- function(obj, stream, n_boot) {
+  vapply(fc_boot_effects, function(e) { # nolint: object_usage_linter.
+    stat <- twolevel_statistic(obj, e) # nolint: object_usage_linter.
+    r <- fc_with_stream(stream, bootstrap_mediation( # nolint: object_usage_linter.
+      stat, method = "parametric", mediation_data = obj, n_boot = n_boot
+    ))
+    c(r@ci_lower, r@ci_upper)
+  }, numeric(2))
+}
+
+fc_t5_check_mc <- function(mc_fun, cs, n_boot = 200L) {
+  st <- fc_streams(fc_seed(cs$cell$cell_id, cs$rep)) # nolint: object_usage_linter.
+  got <- mc_fun(cs$obj, n_boot = n_boot, stream = st$mc)
+  want <- fc_t5_shipped_mc(cs$obj, st$mc, n_boot)
+  testthat::expect_identical(unname(rbind(got$lo, got$hi)), unname(want))
+}
+
+fc_t5_check_streams <- function(streams_fun) {
+  withr::local_seed(99)
+  rng <- function() get(".Random.seed", envir = globalenv())
+  before <- rng()
+  seed <- fc_seed(1022, 1) # nolint: object_usage_linter. (sourced from tests/sim)
+  st <- streams_fun(seed)
+  data_state <- fc_with_seed(seed, "L'Ecuyer-CMRG", rng()) # nolint: object_usage_linter.
+  testthat::expect_identical(
+    list(session = rng(), distinct = length(unique(list(data_state, st$mc, st$boot))), mc = st$mc, boot = st$boot),
+    list(session = before, distinct = 3L, mc = parallel::nextRNGStream(data_state),
+         boot = parallel::nextRNGStream(parallel::nextRNGStream(data_state)))
+  )
+}
+
+test_that("T5: the RNG streams differ from the dataset seed and from each other, and leave the session RNG alone", {
+  fc_t5_check_streams(fc_streams) # nolint: object_usage_linter.
+  # planted defect: the MC arm drawing from the dataset's own stream
+  same <- function(seed) {
+    s <- fc_with_seed(seed, "L'Ecuyer-CMRG", get(".Random.seed", envir = globalenv())) # nolint: object_usage_linter.
+    list(mc = s, boot = parallel::nextRNGStream(s))
+  }
+  expect_failure(fc_t5_check_streams(same))
+})
+
+test_that("T5: the MC arm equals the shipped parametric bootstrap per effect from the same stream", {
+  cs <- fc_t5_case()
+  expect_true(cs$obj@between_identified)
+  fc_t5_check_mc(fc_mc, cs) # nolint: object_usage_linter.
+  # planted defect: the stream not reset between effects (the second and third effects draw on)
+  drift <- function(obj, n_boot, stream) {
+    out <- fc_with_stream(stream, {
+      v <- lapply(fc_boot_effects, function(e) { # nolint: object_usage_linter.
+        bootstrap_mediation(twolevel_statistic(obj, e), method = "parametric", mediation_data = obj, n_boot = n_boot)
+      })
+      v
+    })
+    list(lo = vapply(out, function(r) r@ci_lower, numeric(1)), hi = vapply(out, function(r) r@ci_upper, numeric(1)),
+         err = rep(NA_character_, 3L))
+  }
+  expect_failure(fc_t5_check_mc(drift, cs))
+})
+
+test_that("T5: the MC arm records a refused effect instead of stopping", {
+  withr::local_options(medfit.between_icc_error = .9)
+  cs <- fc_t5_case()
+  obj <- cs$obj
+  expect_false(obj@between_identified)
+  st <- fc_streams(fc_seed(1022, 1)) # nolint: object_usage_linter.
+  got <- fc_mc(obj, n_boot = 50L, stream = st$mc) # nolint: object_usage_linter.
+  expect_true(is.finite(got$lo[["nie_within"]]))
+  expect_true(all(is.na(got$lo[c("nie_between", "nie_contrast")])))
+  expect_match(got$err[["nie_between"]], "needs the between level")
+  expect_true(is.na(got$err[["nie_within"]]))
+})
+
+# The shipped cluster bootstrap per effect under set.seed(seed): interval, kept count and the kept estimates.
+fc_t5_shipped_boot <- function(cs, n_boot, seed) {
+  lapply(fc_boot_effects, function(e) { # nolint: object_usage_linter.
+    fn <- twolevel_statistic(cs$fit, e, treatment = "X", mediator = "M", outcome = "Y") # nolint: object_usage_linter.
+    r <- tryCatch(suppressWarnings(bootstrap_mediation(fn, method = "nonparametric", data = cs$data, cluster = "id",
+                                                       n_boot = n_boot, seed = seed)),
+                  error = function(err) err)
+    if (inherits(r, "error")) return(list(ci = c(NA_real_, NA_real_), kept = NA_integer_, est = NULL))
+    list(ci = c(r@ci_lower, r@ci_upper), kept = r@n_boot, est = r@boot_estimates)
+  })
+}
+
+fc_t5_check_boot <- function(boot_fun, cs, n_boot = 20L, seed = 7L) {
+  got <- withr::with_seed(seed, boot_fun(cs$fit, cs$data, n_boot = n_boot))
+  want <- fc_t5_shipped_boot(cs, n_boot, seed)
+  mine <- lapply(fc_boot_effects, function(e) { # nolint: object_usage_linter.
+    list(ci = c(got$lo[[e]], got$hi[[e]]), kept = got$kept[[e]], est = got$est[[e]])
+  })
+  testthat::expect_identical(mine, want)
+}
+
+test_that("T5: the three-effect cluster bootstrap equals three shipped cluster bootstraps under the same seed", {
+  skip_on_cran()
+  cs <- fc_t5_case()
+  fc_t5_check_boot(fc_cluster_boot, cs) # nolint: object_usage_linter.
+  # planted defect: the clusters drawn without replacement
+  no_repl <- fc_cluster_boot # nolint: object_usage_linter.
+  environment(no_repl) <- list2env(
+    list(sample = function(x, size, replace = FALSE, prob = NULL) base::sample(x, size, replace = FALSE)),
+    parent = environment(fc_cluster_boot) # nolint: object_usage_linter.
+  )
+  expect_failure(fc_t5_check_boot(no_repl, cs))
+})
+
+test_that("T5: fewer than 10 kept replicates gives an NA interval with a reason, where the shipped one stops", {
+  skip_on_cran()
+  cs <- fc_t5_case()
+  got <- withr::with_seed(7L, fc_cluster_boot(cs$fit, cs$data, n_boot = 5L)) # nolint: object_usage_linter.
+  expect_true(all(is.na(c(got$lo, got$hi))))
+  expect_true(all(grepl("fewer than 10", got$err)))
+  fn <- twolevel_statistic(cs$fit, "nie_within", treatment = "X", mediator = "M", outcome = "Y")
+  expect_error(suppressWarnings(bootstrap_mediation(fn, method = "nonparametric", data = cs$data, cluster = "id",
+                                                    n_boot = 5L, seed = 7L)), "Too many bootstrap samples failed")
+  # planted defect: a threshold of 5 keeps the five replicates and reports an interval
+  boot5 <- function() fc_cluster_boot(cs$fit, cs$data, n_boot = 5L, min_kept = 5L) # nolint: object_usage_linter.
+  five <- withr::with_seed(7L, boot5())
+  expect_failure(expect_true(all(is.na(five$lo))))
+})
+
+test_that("T5: the row builder adds the ICC columns and, when asked, the MC and bootstrap columns", {
+  skip_on_cran()
+  cell <- fc_grid()[fc_grid()$cell_id == 1022, ] # nolint: object_usage_linter.
+  base <- fc_row(cell, 1, "p0") # nolint: object_usage_linter.
+  expect_false(any(grepl("^(mc|bt)_", names(base))))
+  expect_equal(base$icc_x_shipped, base$icc_x_lav, tolerance = 1e-3)
+  expect_equal(base$icc_m_shipped, base$icc_m_lav, tolerance = 1e-3)
+  r <- fc_row(cell, 1, "p0", mc_b = 50L, boot_b = 12L) # nolint: object_usage_linter.
+  expect_identical(r[names(base)][setdiff(names(base), "fit_time")], base[setdiff(names(base), "fit_time")])
+  for (e in fc_boot_effects) { # nolint: object_usage_linter.
+    expect_true(all(c(paste0("mc_lo_", e), paste0("mc_hi_", e), paste0("bt_lo_", e), paste0("bt_kept_", e),
+                      paste0("bt_err_", e)) %in% names(r)))
+  }
+  cs <- fc_t5_case()
+  st <- fc_streams(fc_seed(1022, 1)) # nolint: object_usage_linter.
+  mc <- fc_mc(cs$obj, n_boot = 50L, stream = st$mc) # nolint: object_usage_linter.
+  expect_identical(r$mc_lo_nie_between, mc$lo[["nie_between"]])
+  bt <- fc_with_stream(st$boot, fc_cluster_boot(cs$fit, cs$data, n_boot = 12L)) # nolint: object_usage_linter.
+  expect_identical(r$bt_hi_nie_contrast, bt$hi[["nie_contrast"]])
+})
