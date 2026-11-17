@@ -11,11 +11,13 @@
 # medfit Package Development Roadmap
 
 > Current checkpoint (2026-11-15 MST): **0.18.0 is released** on GitHub at
-> `v0.18.0` / main `6d226fb1` (0.17.0 at `6b9a943c`, 2026-11-12); `dev` is
-> 0.18.0.9000. 0.17.0 shipped the lavaan two-level adapter and FIML for covariates,
-> parallel and serial mediators (numerically verified, not statistically admitted);
-> 0.18.0 the sem engine name, `sem_control()` and two-level provenance. See the
-> [Current board](#current-board) reconciliation of 2026-11-15.
+> `v0.18.0` / main `6d226fb1` (0.17.0 at `6b9a943c`, 2026-11-12). 0.17.0 shipped the
+> lavaan two-level adapter and FIML for covariates, parallel and serial mediators
+> (numerically verified, not statistically admitted); 0.18.0 the sem engine name,
+> `sem_control()` and two-level provenance. **2026-11-17: IG5 (two-level parallel
+> mediators, experimental) is merged into dev (#458-#465) and the 0.19.0 release is in
+> progress** ([checklist](PLAN-0.19.0-release-checklist-2026-11-16.md)). See the
+> [Current board](#current-board) reconciliations of 2026-11-15 and 2026-11-17.
 > This file's [Current board](#current-board) owns medfit priorities; older phase
 > schedules and the extensions plan are historical design references.
 > Future feature versions/dates are unassigned. CRAN remains held; hosted
@@ -1869,6 +1871,14 @@ Integration is successful when:
 ---
 
 ## Current board
+
+**Reconciliation 2026-11-17 (supersedes the 2026-11-15 line that IG1 to IG7 and any 0.19.0 scope are
+unauthorized).** IG5, parallel mediators in the lavaan two-level adapter (`TwoLevelParallelMediationData`,
+experimental), is **merged-dev** (#458 to #465). The few-clusters design-study plan (#464) and harness (#467 to
+#469) are merged-dev, internal and not shipped; the study has no results. The **0.19.0 release is in progress**,
+authorized 2026-11-17 ([checklist](PLAN-0.19.0-release-checklist-2026-11-16.md), decisions
+[R19-1 to R19-5](DECISIONS-0.19.0-release-grill-2026-11-16.md)). Not in 0.19.0: IG6 and IG7, solver work D-14 and
+D-6, serial two-level mediators, FIML statistical admission, CRAN. Open: issue #394 (S4 and S5, NO-GO as written).
 
 **Reconciliation 2026-11-15 (supersedes the release rows below).** 0.17.0 (tag `v0.17.0` at `6b9a943c`,
 2026-11-12) and 0.18.0 (tag `v0.18.0` at `6d226fb1`, 2026-11-14) are released, GitHub-only; CRAN stays on hold

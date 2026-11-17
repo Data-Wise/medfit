@@ -1,7 +1,6 @@
 # medfit 0.19.0 release checklist (written, not executed)
 
-Status: DRAFT checklist, 2026-11-16. **Nothing here is authorized.** The release, the tag, the `main` merge and the GitHub
-release are out of scope until the user says so in words. CRAN stays on hold (#83). Modeled on
+Status: **authorized 2026-11-17** (P1); R1 executed on `feature/release-0.19.0` (from `dev` `16776113`). Drafted 2026-11-16. CRAN stays on hold (#83). Modeled on
 `PLAN-0.17.0-release-checklist-2026-11-11.md`. Scope and rationale: `planning/specs/BRAINSTORM-release-0.19.0-2026-11-16.md`.
 Version: minor bump from 0.18.0.9000 to 0.19.0, done in release prep and never in a feature PR.
 
@@ -27,20 +26,20 @@ Version: minor bump from 0.18.0.9000 to 0.19.0, done in release prep and never i
 
 | # | Precondition | Evidence to record |
 |---|---|---|
-| P1 | The user authorizes the release in words | the message, quoted |
+| P1 | **DONE 2026-11-17**: the user authorizes the release in words | "finish the release" (2026-11-17) |
 | P2 | **DONE 2026-11-16**: #465 (IG5 T5 docs) merged into `dev` | `7445af62` on `origin/dev` |
 | P3 | **Grill held 2026-11-16**: decisions R19-1 to R19-5 in `planning/DECISIONS-0.19.0-release-grill-2026-11-16.md`; the file must be merged into `dev` | the merged decisions file |
-| P4 | `dev` has no open feature PR the release should include. A few-clusters harness PR may be open; the release does not wait for it (R19-2) | `gh pr list` output |
-| P5 | Roadmap board reconciled: IG5 is listed as merged-dev and the 0.19.0 release appears in `planning/medfit-roadmap.md` | a merged planning PR |
-| P6 | Risk tier confirmed low: `git diff origin/main..origin/dev` touches no `tests/sim/risk-files.txt` entry and no `gates.csv` or `structures.csv` (checked 2026-11-16: none); rerun at the candidate head | the diff output |
-| P7 | No open Dependabot or workflow PR that would land mid-release | PR state |
+| P4 | `dev` has no open feature PR the release should include. A few-clusters harness PR may be open; the release does not wait for it (R19-2) | **DONE 2026-11-17**: `gh pr list --base dev` shows only #470 (`chore(rforge)`, `.rforge.yaml` only; not part of the release). Few-clusters harness #467-#469 already merged |
+| P5 | Roadmap board reconciled: IG5 is listed as merged-dev and the 0.19.0 release appears in `planning/medfit-roadmap.md` | **DONE in the release-prep PR**: roadmap header checkpoint and a "Reconciliation 2026-11-17" board entry |
+| P6 | Risk tier confirmed low: `git diff origin/main..origin/dev` touches no `tests/sim/risk-files.txt` entry and no `gates.csv` or `structures.csv` (checked 2026-11-16: none); rerun at the candidate head | **DONE 2026-11-17** at `16776113` (`origin/main..origin/dev`: 69 files, +5,616/-148): `comm -12` with `risk-files.txt` empty; no `gates.csv`/`structures.csv`; `tests/sim/twolevel-few-clusters*.R` changed, not risk files |
+| P7 | No open Dependabot or workflow PR that would land mid-release | **DONE 2026-11-17**: Dependabot PR list `[]`; #470 touches no workflow |
 
 ## Steps and gates (each with evidence and its stop condition)
 
 | Step | Action | Evidence | Stop if |
 |---|---|---|---|
-| R1 | Bump the version and `Date:` in `DESCRIPTION`. Collapse NEWS `# medfit 0.18.0.9000` into `# medfit 0.19.0` and add the "Known limits" block (R19-5). Update `inst/CITATION`, `.STATUS`, the `CLAUDE.md` status lines and README. Then grep the repo for `0.18.0.9000` and for stale "latest 0.18.0" claims | the grep output and the diff | any stale reference remains outside history, or a limit from R19-5 is missing |
-| R2 | Local candidate: full suite on an isolated install of the exact head (`NOT_CRAN=true`), lint, spelling (`inst/WORDLIST`), URL check. If few-clusters harness work is on `dev` at the candidate, its `tests/sim/` files are in `.Rbuildignore` and its testthat test is skipped on CRAN (R19-2) | counts of files, tests, failures and skips; the lint count; the spelling and URL output; `R CMD build` tarball listing for the harness files | a failure not reproduced on the `main` baseline (read the failing assertion first), or a harness file in the tarball |
+| R1 | Bump the version and `Date:` in `DESCRIPTION`. Collapse NEWS `# medfit 0.18.0.9000` into `# medfit 0.19.0` and add the "Known limits" block (R19-5). Update `inst/CITATION`, `.STATUS`, the `CLAUDE.md` status lines and README. Then grep the repo for `0.18.0.9000` and for stale "latest 0.18.0" claims | **DONE 2026-11-17**: DESCRIPTION 0.19.0/2026-11-17; NEWS `# medfit 0.19.0` with Release summary and six linked Known limits; README, getting-started, guide-changes, refcard, cookbook, `.STATUS`, `CLAUDE.md`; CITATION reads `meta$Version` (no edit). `0.18.0.9000` left only in history; stale dev/latest claims 0 hits. Docs tests 139 tests/1,126 expectations, 0 failed; spelling clean; four articles render (grep output in `_agents_workspace/release/`) | any stale reference remains outside history, or a limit from R19-5 is missing |
+| R2 | Local candidate: full suite on an isolated install of the exact head (`NOT_CRAN=true`), lint, spelling (`inst/WORDLIST`), URL check. If few-clusters harness work is on `dev` at the candidate, its `tests/sim/` files are in `.Rbuildignore` and its testthat test is skipped on CRAN (R19-2) | counts of files, tests, failures and skips; the lint count; the spelling and URL output; `R CMD build` tarball listing for the harness files; R19-2 prep done in R1: `skip_on_cran()` added to `test-twolevel-few-clusters-harness.R` (0 tests run with `NOT_CRAN` unset), `tests/sim/` harness files covered by `^tests/sim/` in `.Rbuildignore` | a failure not reproduced on the `main` baseline (read the failing assertion first), or a harness file in the tarball |
 | N1 | Numeric neutrality (R19-4): install 0.18.0 and the candidate in separate libraries; run `tidy()`, `confint()` and `nie()` on `mediation_demo` for `MediationData`, `SerialMediationData`, `ParallelMediationData` and single-mediator `TwoLevelMediationData`; compare | the max absolute difference per class and function | any difference above 1e-10 |
 | E1 | Experimental claims: NEWS, the Rd page of `TwoLevelParallelMediationData` and the two-level model page say "experimental". The class is not pinned in `test-api-freeze.R`. A single-mediator two-level fit still returns `TwoLevelMediationData` | a docs grep and a test or transcript for each | a missing label, a freeze pin, or a changed return class |
 | R3 | Built-package `R CMD check`, strict flavors: `--run-donttest`, `_R_CHECK_DEPENDS_ONLY_`, `_R_CHECK_SUGGESTS_ONLY_`, `_R_CHECK_CRAN_INCOMING_*` | the check log, with every note and warning explained | any ERROR or WARNING, or an unexplained NOTE |
