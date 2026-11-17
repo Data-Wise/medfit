@@ -46,3 +46,9 @@ site:
     - vignettes/articles/quality-control.qmd
     - vignettes/articles/whats-new-0-11.qmd
     - vignettes/articles/syntax-crosswalk.qmd
+
+docs:
+  site:
+    # rforge docs:check --site: qc-monthly.yaml pushes a CSV history to this branch; it never carries site files.
+    nonpublishing-branches:
+      - qc-results
