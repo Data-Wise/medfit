@@ -7,6 +7,8 @@
 # at `eps` with no warning, and `bounds = "pos.var"` adds no bound to a two-level fit. Each check has a planted defect.
 
 skip_if_not_installed("lavaan")
+# internal study harness: never run on CRAN, even if tests/sim were shipped (0.19.0 release decision R19-2)
+skip_on_cran()
 fc_lib <- test_path("..", "sim", "twolevel-few-clusters-lib.R")
 skip_if_not(file.exists(fc_lib), "tests/sim is not shipped with the installed tests")
 source(fc_lib, local = TRUE)
