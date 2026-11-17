@@ -336,6 +336,16 @@ test_that("T3: the closure refuses at build time per effect exactly as the shipp
   v <- fc_t3_eval(fc_boot_closure(cases[[1]]$fit), cases[[1]]$resample, 3L)$value # nolint: object_usage_linter.
   expect_identical(v[1], fc_t3_eval(within, cases[[1]]$resample, 1L)$value)
   expect_true(all(is.na(v[2:3])))
+  # built at the default floor, evaluated with the refit ICC gate off: the resample's between effects are finite,
+  # so only the build-time mask makes them NA
+  masked <- fc_boot_closure(cases[[1]]$fit)
+  raw <- fc_boot_closure(cases[[1]]$fit, defect = "nobuild")
+  withr::with_options(list(medfit.between_icc_error = -Inf), {
+    v_off <- fc_t3_eval(masked, cases[[1]]$resample, 3L)$value # nolint: object_usage_linter.
+    v_raw <- fc_t3_eval(raw, cases[[1]]$resample, 3L)$value # nolint: object_usage_linter.
+  })
+  expect_true(is.finite(v_raw[2]))
+  expect_true(all(is.na(v_off[2:3])))
   expect_failure(expect_identical(lapply(cases, function(cs) fc_t3_refusals_closure(cs$fit, "nobuild")), shipped))
 })
 
