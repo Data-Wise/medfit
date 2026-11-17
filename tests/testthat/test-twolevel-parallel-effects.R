@@ -214,7 +214,10 @@ test_that("permuting the mediators leaves totals unchanged and permutes the spec
 
 # --- O7: k = 1 neutrality ---
 
-test_that("k = 1 TwoLevelMediationData results are bit-identical to the pre-T3 snapshot", {
+# The snapshot was written on one platform; lavaan estimates differ across BLAS and
+# compilers in the last bits (about 1e-15), so the comparison allows 1e-10. Printed
+# output (summ, prt) is still compared exactly, since expect_equal() compares strings exactly.
+test_that("k = 1 TwoLevelMediationData results match the pre-T3 snapshot", {
   snap <- readRDS(test_path("fixtures", "twolevel-k1-snapshot.rds"))
   now <- function(name) {
     suppressWarnings({
@@ -239,7 +242,7 @@ test_that("k = 1 TwoLevelMediationData results are bit-identical to the pre-T3 s
     })
   }
   for (name in names(snap)) {
-    expect_identical(now(name), snap[[name]], label = name)
+    expect_equal(now(name), snap[[name]], tolerance = 1e-10, label = name)
   }
 })
 
