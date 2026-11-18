@@ -146,9 +146,10 @@ nie(med_data)
 **More:** [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) | [Reference card](https://data-wise.github.io/medfit/articles/refcard.html) | [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html) | [What changed since CRAN 0.3.2](https://data-wise.github.io/medfit/articles/guide-changes.html) | [Methods](https://data-wise.github.io/medfit/articles/methods.html)
 
 <details>
-<summary><strong>What's new in 0.19.0</strong></summary>
+<summary><strong>What's new in 0.19.0.9000</strong></summary>
 
-* **Two-level parallel mediation (experimental):** `extract_mediation()` on a two-level `lavaan` fit with two or more mediators returns `TwoLevelParallelMediationData`, with per-mediator and total effects at each level, delta-method SEs and `twolevel_statistic()` for the bootstrap. One-mediator results are unchanged. See the [model page](https://data-wise.github.io/medfit/articles/model-twolevel.html#several-parallel-mediators).
+* **Development version:** no user-visible changes yet since 0.19.0 (released 2026-11-17), whose highlights follow.
+* **Two-level parallel mediation (0.19.0, experimental):** `extract_mediation()` on a two-level `lavaan` fit with two or more mediators returns `TwoLevelParallelMediationData`, with per-mediator and total effects at each level, delta-method SEs and `twolevel_statistic()` for the bootstrap. One-mediator results are unchanged. See the [model page](https://data-wise.github.io/medfit/articles/model-twolevel.html#several-parallel-mediators).
 * **The sem engine (0.18.0):** `fit_mediation(engine = "sem")` names medfit's own SEM fitter; `engine = "native"` still works, with identical results. `sem_control()` collects its optimizer settings. See [Which engine should I use?](https://data-wise.github.io/medfit/articles/guide-engines.html).
 * **Renamed pages (0.18.0):** the sem engine articles moved (`native-guide` is now `sem-guide`, and so on); old links redirect.
 * **Bounded FIML expansion (0.17.0):** one or two covariates, two parallel and two serial mediators (numerically verified, not statistically admitted). See the [model page](https://data-wise.github.io/medfit/articles/model-fiml.html).
