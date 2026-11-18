@@ -111,7 +111,10 @@ the Bounded FIML section. The argument is appended to preserve existing position
 \item{cluster}{\strong{Experimental.} \code{NULL} (default) or a string: the name of the cluster column
 of \code{data}, for a two-level model written with \verb{level:} blocks (\code{level: 1} or \code{level: within}; \code{level: 2},
 \code{level: between} or the cluster variable's name). Two-level only: \code{cluster} without \verb{level:} blocks, and
-\verb{level:} blocks without \code{cluster}, are errors. The two-level fitter is not implemented yet: a model that passes
+\verb{level:} blocks without \code{cluster}, are errors (\code{medfit_error_twolevel_cluster}, which also covers more than two
+levels, fewer than two clusters and a missing or incomplete cluster column); misordered \verb{level:} blocks are
+\code{medfit_error_twolevel_syntax}; a within variable constant in every cluster, or a cluster-level variable in a
+\code{level: 1} row, is \code{medfit_error_twolevel_varset}. The two-level fitter is not implemented yet: a model that passes
 the two-level checks stops with the classed error \code{medfit_error_twolevel_not_implemented}. Unset \code{fixed_x}
 means \code{FALSE} on this route; an explicit \code{fixed_x = TRUE}, \code{meanstructure = FALSE}, \code{weights},
 \code{se_type = "sandwich"}, \code{missing = "fiml"}, \code{information = "expected"}, latent variables, product terms and

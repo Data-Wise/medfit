@@ -91,7 +91,10 @@
 #' @param cluster **Experimental.** `NULL` (default) or a string: the name of the cluster column
 #'   of `data`, for a two-level model written with `level:` blocks (`level: 1` or `level: within`; `level: 2`,
 #'   `level: between` or the cluster variable's name). Two-level only: `cluster` without `level:` blocks, and
-#'   `level:` blocks without `cluster`, are errors. The two-level fitter is not implemented yet: a model that passes
+#'   `level:` blocks without `cluster`, are errors (`medfit_error_twolevel_cluster`, which also covers more than two
+#'   levels, fewer than two clusters and a missing or incomplete cluster column); misordered `level:` blocks are
+#'   `medfit_error_twolevel_syntax`; a within variable constant in every cluster, or a cluster-level variable in a
+#'   `level: 1` row, is `medfit_error_twolevel_varset`. The two-level fitter is not implemented yet: a model that passes
 #'   the two-level checks stops with the classed error `medfit_error_twolevel_not_implemented`. Unset `fixed_x`
 #'   means `FALSE` on this route; an explicit `fixed_x = TRUE`, `meanstructure = FALSE`, `weights`,
 #'   `se_type = "sandwich"`, `missing = "fiml"`, `information = "expected"`, latent variables, product terms and
