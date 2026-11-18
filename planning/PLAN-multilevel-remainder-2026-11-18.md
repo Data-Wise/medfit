@@ -48,7 +48,7 @@ T6/U4 as its only remaining gate.
 
 ## Progress
 
-- [ ] U1
+- [x] U1
 - [ ] U3
 - [ ] U2 (decision)
 - [ ] S4-dec
