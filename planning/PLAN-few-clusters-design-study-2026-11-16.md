@@ -208,3 +208,14 @@ B = 2000), cluster-bootstrap percentile (`method = "nonparametric", cluster = "i
 - **M7** P1 trigger cutoff (inadmissible rate above 10%) and `eps`.
 - **M8** Decision-table cutoffs (failure 5% and 20%, kept/B .9), fixed before T6.
 - **M9** Whether the gaps plan's Q8/D-11 wording should be corrected to section 2's reading.
+
+### Decisions recorded 2026-11-17 (before T6)
+
+- **M2** stays open. T6 proceeds under scope S2: the delta and MC arms on all 120 cells plus P1 on its subset, no
+  cluster-bootstrap arm. T7 stays no-go until M2 is decided.
+- **M7** P1 runs where P0's inadmissible rate in the T5 pilot rows (`inadmissible` in
+  `studies/few-clusters/T5-cells.csv`) exceeds 10%: 49 of 120 cells, listed in `studies/few-clusters/T6-p1-cells.csv`
+  and reproduced by `tests/sim/twolevel-few-clusters-t6-p1.R`. `eps` stays at 1e-3, as in T2 and the driver default.
+- **M8** Decision-table cutoffs fixed before T6: failure rate 5% and 20%; kept/B below .9 (P2X section 4.5). They are
+  design choices, not values from the literature.
+- Unequal-cluster n = 5 cells stay in the grid; their non-convergence is reported as a finding, not dropped.
