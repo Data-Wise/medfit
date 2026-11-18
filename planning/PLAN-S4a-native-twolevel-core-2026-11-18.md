@@ -1,7 +1,7 @@
 # S4a: native two-level ML core, implementation plan (2026-11-18)
 
-**Status:** DRAFT, awaiting maintainer approval. **No code until approved** (stop point "Before any S4 code" of
-`planning/PLAN-multilevel-remainder-2026-11-18.md`).
+**Status:** APPROVED 2026-11-18 (five slices; reliability cell `n/a: S4b`; unset `fixed_x` resolves silently to `FALSE`).
+S4a.1 in progress.
 **Branch:** `feature/twolevel-native-s4a` (from `origin/dev` at `22688951`). **Risk tier:** high (every slice edits files in
 `tests/sim/risk-files.txt`). **Label:** experimental (the experimental-API exemption: Rd pages and NEWS say so). **Not released**
 until T6/U4 and S4b are done.
@@ -55,6 +55,8 @@ forwarding; `extract_mediation(<SEMFit>)` returning `TwoLevelMediationData` with
 | `missing = "fiml"` | `medfit_error_twolevel_missing` | S7 |
 | nonlinear constraints and zero-product branches | `medfit_error_twolevel_nonlinear` | per-level branch handling is IG3, after S4 |
 | a W variable constant within every cluster; a Z variable in a `level: 1` row | `medfit_error_twolevel_varset` | sketch item 1 |
+| a within-only variable (named only in `level: 1` rows) | `medfit_error_twolevel_varset` | the O8 oracle and the sketch assume every W variable has a between part; lavaan's within-only set is later work |
+| a valid two-level model before S4a.4 | `medfit_error_twolevel_not_implemented` | S4a.1 to S4a.3 have no fitter; the guards end in this stop so no single-level fit runs on pooled rows |
 | explicit `fixed_x = TRUE`; `meanstructure = FALSE` | see above | U2; between means |
 | `information = "expected"` | `medfit_error_twolevel_information` | no expected-information oracle in S4a |
 
@@ -119,7 +121,7 @@ the "not implemented" error is replaced), `.STATUS`. Every error message the pag
 
 ## Progress
 
-- [ ] Plan approved
+- [x] Plan approved (2026-11-18)
 - [ ] S4a.1
 - [ ] S4a.2
 - [ ] S4a.3
