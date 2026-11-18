@@ -6,6 +6,7 @@
 #   REPS     replicates per cell [1000]; reads W/rows/cell-<id>-R<REPS>.csv
 #   OUT_DIR  where the tables go [planning/studies/few-clusters]
 #   P1       the P1 cell list [planning/studies/few-clusters/T6-p1-cells.csv]
+#   CELLS    comma-separated cell ids to aggregate [all 120; a subset only for a smoke check, never committed]
 # Writes OUT_DIR/T6-cells.csv (one row per cell, arm, interval and estimand), OUT_DIR/T6-parametrization.csv (P0
 # against P1 on the P1 cells) and OUT_DIR/T6-manifest-sha256.txt (hashes of every row file, the scripts and the
 # installed SHA; the rows stay outside git, plan section 7).
@@ -20,7 +21,13 @@ p1_file <- Sys.getenv("P1", "planning/studies/few-clusters/T6-p1-cells.csv")
 if (is.na(reps) || reps < 1L) stop("REPS must be a positive count", call. = FALSE)
 
 cells <- fc_grid()$cell_id
-p1_cells <- as.integer(utils::read.csv(p1_file)$cell_id)
+cells_env <- Sys.getenv("CELLS", "")
+if (nzchar(cells_env)) {
+  sub_cells <- as.integer(strsplit(cells_env, ",", fixed = TRUE)[[1]])
+  if (anyNA(sub_cells) || !all(sub_cells %in% cells)) stop("unknown cell id in CELLS", call. = FALSE)
+  cells <- sub_cells
+}
+p1_cells <- intersect(as.integer(utils::read.csv(p1_file)$cell_id), cells)
 files <- file.path(w, "rows", sprintf("cell-%d-R%d.csv", cells, reps))
 absent <- cells[!file.exists(files)]
 if (length(absent)) stop(length(absent), " cells have no row file, first ", absent[1], call. = FALSE)

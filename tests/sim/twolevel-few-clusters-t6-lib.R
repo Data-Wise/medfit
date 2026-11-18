@@ -1,8 +1,8 @@
 # Few-clusters design study, task T6 (planning/PLAN-few-clusters-design-study-2026-11-16.md): the P1 cell selection,
 # the row and failure-category checks, and the per-cell summaries of the main delta and MC run. Sourced after
 # tests/sim/twolevel-few-clusters-lib.R (fc_grid(), fc_estimands, fc_boot_effects, fc_covered()); used by
-# tests/sim/twolevel-few-clusters-t6-p1.R and tests/sim/twolevel-few-clusters-t6-aggregate.R, and checked in
-# tests/testthat/test-twolevel-few-clusters-harness.R.
+# tests/sim/twolevel-few-clusters-t6-p1.R and tests/sim/twolevel-few-clusters-t6-aggregate.R, and checked in the
+# few-clusters harness tests.
 #
 # Every check here stops: an aggregation that is short of R rows, or whose failure categories do not add up to R,
 # is an error, never a warning (task T6 verification).
@@ -153,7 +153,7 @@ fc_t6_summary <- function(rows, min_cond = 100L) {
     base$fit_s_median <- stats::median(r$fit_time)
     base$mc_s_median <- if ("mc_time" %in% names(r)) stats::median(r$mc_time, na.rm = TRUE) else NA_real_
     do.call(rbind, lapply(intervals, function(iv) {
-      ests <- if (iv == "delta") fc_estimands else fc_boot_effects
+      ests <- if (iv == "delta") fc_estimands else fc_boot_effects # nolint: object_usage_linter.
       do.call(rbind, lapply(ests, function(e) {
         truth <- r[[paste0("truth_", e)]]
         ci <- fc_t6_interval(r, e, iv)
@@ -184,7 +184,8 @@ fc_t6_summary <- function(rows, min_cond = 100L) {
     }))
   })
   out <- do.call(rbind, out)
-  out <- out[order(out$cell_id, out$arm, out$interval, match(out$estimand, fc_estimands)), , drop = FALSE]
+  est_order <- match(out$estimand, fc_estimands) # nolint: object_usage_linter.
+  out <- out[order(out$cell_id, out$arm, out$interval, est_order), , drop = FALSE]
   rownames(out) <- NULL
   out
 }
@@ -205,7 +206,7 @@ fc_t6_parametrization <- function(rows, p1_cells) {
     r1 <- r1[match(r0$rep, r1$rep), , drop = FALSE]
     if (nrow(r0) != nrow(r1) || anyNA(r1$rep)) stop("cell ", cid, ": P0 and P1 rows do not pair", call. = FALSE)
     do.call(rbind, lapply(intervals, function(iv) {
-      ests <- if (iv == "delta") fc_estimands else fc_boot_effects
+      ests <- if (iv == "delta") fc_estimands else fc_boot_effects # nolint: object_usage_linter.
       do.call(rbind, lapply(ests, function(e) {
         hit <- function(r) {
           ci <- fc_t6_interval(r, e, iv)
