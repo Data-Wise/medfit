@@ -50,7 +50,7 @@ T6/U4 as its only remaining gate.
 
 - [x] U1
 - [ ] U3
-- [ ] U2 (decision)
-- [ ] S4-dec
+- [x] U2 (decision, 2026-11-18): S4 ships `fixed_x = FALSE` only; `fixed_x = TRUE` on a two-level model is a classed error; the fixed-moment oracle is later work, not an S4 blocker
+- [x] S4-dec (2026-11-18): native `level:` accepts integers, `within`/`between`, and the cluster variable's name (lavaan parity)
 - [ ] S4a
 - [ ] S4b (gated)
