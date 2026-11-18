@@ -114,7 +114,9 @@ default, so a wrapper that forwards \code{m_star} unconditionally will trigger i
 on two-way fits; forward it only when its own caller supplied one.}
 
 \item{cluster}{Character string: name of the cluster variable in \code{data}.
-Required with \code{engine = "lmer"}, an error with the other engines.}
+Required with \code{engine = "lmer"}; with \code{engine = "sem"} it is passed to
+\code{\link[=fit_sem]{fit_sem()}} for a two-level model (experimental, see its \code{cluster}
+argument); an error with the other engines.}
 
 \item{model}{Character string: model syntax for \code{engine = "sem"} (required
 there, an error with any other engine). \code{treatment} and \code{mediator} name

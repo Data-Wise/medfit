@@ -51,7 +51,9 @@
 #'       `se_type = "sandwich"`, or extra arguments.
 #'   }
 #' @param cluster Character string: name of the cluster variable in `data`.
-#'   Required with `engine = "lmer"`, an error with the other engines.
+#'   Required with `engine = "lmer"`; with `engine = "sem"` it is passed to
+#'   [fit_sem()] for a two-level model (experimental, see its `cluster`
+#'   argument); an error with the other engines.
 #' @param model Character string: model syntax for `engine = "sem"` (required
 #'   there, an error with any other engine). `treatment` and `mediator` name
 #'   variables in the syntax; a latent mediator need not be a column of `data`.
