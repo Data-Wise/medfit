@@ -904,7 +904,8 @@ test_that("T6: MCSEs match a hand calculation, and the cell summary carries them
   # 30 of 120 intervals moved off the truth: coverage .75 at most, counted by hand
   rows[[paste0("lo_", e)]][1:30] <- rows[[paste0("truth_", e)]][1:30] + .5
   rows[[paste0("hi_", e)]][1:30] <- rows[[paste0("truth_", e)]][1:30] + .6
-  hit <- rows[[paste0("lo_", e)]] <= rows[[paste0("truth_", e)]] & rows[[paste0("truth_", e)]] <= rows[[paste0("hi_", e)]]
+  truth <- rows[[paste0("truth_", e)]]
+  hit <- rows[[paste0("lo_", e)]] <= truth & truth <= rows[[paste0("hi_", e)]]
   p <- mean(hit)
   s <- fc_t6_summary(rows) # nolint: object_usage_linter.
   r <- s[s$estimand == e & s$interval == "delta", ]
