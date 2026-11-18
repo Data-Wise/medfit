@@ -13,7 +13,7 @@ the snapshot of the harness the runs used). The per-dataset rows stay outside gi
 | Arm | Planned (P2X §8) | Run |
 |---|---|---|
 | Delta and MC (MC B = 1000) | all 120 cells, R = 500 | done: 60,000 datasets, 0 lavaan errors |
-| Cluster bootstrap | 6 cells (1001, 1002, 1004, 1021, 1022, 1024), R = 300, B = 499 | running (below) |
+| Cluster bootstrap | 6 cells (1001, 1002, 1004, 1021, 1022, 1024), R = 300, B = 499 | 3 of 6 done (1024, 1022, 1004); stopped by a machine restart (below) |
 | Timing probe for S2 | not in P2X | 13 cells at 4 datasets x B = 50, the other 107 at 2 x B = 25 |
 | P1 (floor arm) | 4 cells | not run (below) |
 
@@ -148,11 +148,29 @@ so P1 in T6 covers 49 cells at the current cutoff.
 ## Bootstrap arm status
 
 The six-cell run (`_agents_workspace/fc-t5/run-boot6.sh`, R = 300, B = 499, 14 cores, order 1024, 1022, 1004, 1002,
-1021, 1001) waited for the delta/MC run and the timing probe to free their cores, began cell 1024 at about 02:16 on
-2026-11-17 with 14 workers busy, each dataset taking about 25 s (B = 499 at the probe's .048 s per replicate); projected about 290 core-h, about 20 h
-wall. Rows go to `_agents_workspace/fc-t5/rows/boot/`, progress to `logs/boot-progress.txt`, completion to
-`logs/boot-done`. Rerunning the script skips finished cells. Its kept fraction and coverage are reported when it
-finishes; they do not change the S2 verdict, which rests on the timing probes.
+1021, 1001) began cell 1024 at about 02:16 on 2026-11-17. Cells 1024, 1022 and 1004 finished (wall 485 s, 2,008 s and
+10,562 s, `logs/boot-progress.txt`). A machine restart at about 12:31 stopped it during cell 1002, which wrote no rows;
+1002, 1021 and 1001 are not run. Rerunning the script resumes at 1002. The results below cover the three finished
+cells (n = 5, equal clusters). Kept is the mean number of the 499 refits a replicate kept for that effect; coverage is
+over the replicates with a percentile interval, with its MCSE; widths are medians, with the delta interval for the
+same replicates beside them.
+
+| Cell | J | ICC | Effect | Kept / 499 (min) | Intervals | Coverage (MCSE) | Width: boot / delta |
+|---|---|---|---|---|---|---|---|
+| 1024 | 50 | .40 | NIE_W | 498.9 (496) | 300 | .943 (.013) | 0.173 / 0.179 |
+| 1024 | 50 | .40 | NIE_B | 498.8 (489) | 300 | .943 (.013) | 0.575 / 0.493 |
+| 1022 | 20 | .40 | NIE_W | 490.1 (373) | 300 | .900 (.017) | 0.284 / 0.289 |
+| 1022 | 20 | .40 | NIE_B | 475.3 (193) | 298 | .997 (.003) | 2.141 / 0.913 |
+| 1004 | 50 | .05 | NIE_W | 456.2 (346) | 278 | .950 (.013) | 0.176 / 0.177 |
+| 1004 | 50 | .05 | NIE_B | 310.8 (125) | 168 | 1.000 (.000) | 19.91 / 4.068 |
+
+The contrast matches NIE_B in kept refits and nearly in coverage (.943, .983, 1.000). In cell 1004, 110 replicates
+were within-only (no between interval, by design) and 22 had an adapter error.
+
+Reading: at J = 50 and ICC .40 the bootstrap is near nominal for both levels. Where the between level is weak
+(J = 20, or ICC .05) refits are dropped and the between interval is over-wide: coverage near 1 there comes from
+width (2 to 5 times the delta interval), not accuracy, and NIE_W under-covers at J = 20 (.900). These three cells do
+not change the S2 verdict, which rests on the timing probes; they support the plan's T7 no-go until M2 is decided.
 
 ## Open for the maintainer
 
