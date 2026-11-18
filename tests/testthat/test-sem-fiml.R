@@ -17,7 +17,9 @@ fiml_fit <- function(data = fiml_data(), model = fiml_model, ...) {
 }
 
 test_that("FIML opt-in is appended, exact and explicit about random X", {
-  expect_identical(tail(names(formals(fit_sem)), 1L), "missing")
+  # appended after the pre-FIML formals; later additions (S4a `cluster`) come after it, pinned in test-api-freeze.R
+  nms <- names(formals(fit_sem))
+  expect_identical(nms[match("sampling_weights", nms) + 1L], "missing")
   for (bad in list("f", "unknown", NA_character_, character(), c("fiml", "listwise"))) {
     expect_error(fit_sem(fiml_model, fiml_data(), missing = bad), "missing")
   }

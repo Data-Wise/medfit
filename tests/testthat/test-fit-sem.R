@@ -200,7 +200,9 @@ test_that("every native-route guard names its cause", {
   expect_error(call_native(model = mod, weights = rep(1, 99)), "weights")
   expect_error(call_native(model = mod, weights = rep(-1, 100)), "weights")
   expect_error(call_native(model = mod, se_type = "kr"), "only used with engine = \"lmer\"")
-  expect_error(call_native(model = mod, cluster = "C"), "`cluster` is only used with engine = \"lmer\"")
+  # `cluster` goes to fit_sem() (two-level, experimental): a model without `level:` blocks is refused there
+  expect_error(call_native(model = mod, cluster = "C"), "`cluster` is given but the model has no `level:` blocks",
+               class = "medfit_error_twolevel_cluster")
   expect_error(call_native(model = mod, family_y = stats::binomial()), "Gaussian")
   expect_error(call_native(model = mod, engine_args = list(bogus = 1)), "unknown `engine_args`.*bogus")
   expect_error(call_native(model = mod, zzz = 1), "unused arguments for engine = \"native\": zzz")

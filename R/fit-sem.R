@@ -88,6 +88,18 @@
 #' @param missing Exact missing-data method: `listwise` (default) or bounded Gaussian
 #'   `fiml` (no abbreviations). FIML requires explicit `fixed_x = FALSE`; see
 #'   the Bounded FIML section. The argument is appended to preserve existing positional calls.
+#' @param cluster **Experimental.** `NULL` (default) or a string: the name of the cluster column
+#'   of `data`, for a two-level model written with `level:` blocks (`level: 1` or `level: within`; `level: 2`,
+#'   `level: between` or the cluster variable's name). Two-level only: `cluster` without `level:` blocks, and
+#'   `level:` blocks without `cluster`, are errors (`medfit_error_twolevel_cluster`, which also covers more than two
+#'   levels, fewer than two clusters and a missing or incomplete cluster column); misordered `level:` blocks are
+#'   `medfit_error_twolevel_syntax`; a within variable constant in every cluster, or a cluster-level variable in a
+#'   `level: 1` row, is `medfit_error_twolevel_varset`. The two-level fitter is not implemented yet: a model that passes
+#'   the two-level checks stops with the classed error `medfit_error_twolevel_not_implemented`. Unset `fixed_x`
+#'   means `FALSE` on this route; an explicit `fixed_x = TRUE`, `meanstructure = FALSE`, `weights`,
+#'   `se_type = "sandwich"`, `missing = "fiml"`, `information = "expected"`, latent variables, product terms and
+#'   nonlinear constraints are refused with classed errors (`medfit_error_twolevel_*`). Appended last to preserve
+#'   positional calls.
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
 #'   [fit_mediation()] uses; the old name still works with a warning.
 #'
@@ -359,7 +371,7 @@
 fit_sem <- function(model, data, information = c("observed", "expected"), n_starts = NULL,
                     control = list(), weights = NULL, se_type = c("model", "sandwich"),
                     meanstructure = TRUE, fixed_x = TRUE, sampling_weights = lifecycle::deprecated(),
-                    missing = c("listwise", "fiml")) {
+                    missing = c("listwise", "fiml"), cluster = NULL) {
   # 0.15.0 (E-14): missing() is only reliable before either argument is reassigned.
   fx_unset <- base::missing(fixed_x)
   missing_unset <- base::missing(missing)
@@ -392,6 +404,14 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     .var.name = "fixed_x"
   )
   se_type <- match.arg(se_type)
+  checkmate::assert_string(cluster, min.chars = 1L, null.ok = TRUE, .var.name = "cluster")
+  # Two-level route (S4a, experimental): before the FIML, weights and defaults dispatch, so none of them runs on a
+  # model with `level:` blocks. It ends in a classed error until the two-level fitter exists.
+  if (!is.null(cluster) || .sem_has_level_lines(model)) {
+    .sem_twolevel_guard(paste(model, collapse = "\n"), data, cluster, information = information, weights = weights,
+                        se_type = se_type, missing = missing, fixed_x = fixed_x, fx_unset = fx_unset,
+                        meanstructure = meanstructure, ms_unset = ms_unset)
+  }
   if (missing == "fiml") {
     fit <- .sem_fiml_syntax(paste(model, collapse = "\n"), data, information, n_starts, control, weights, se_type,
                             meanstructure, fixed_x, fx_unset, match.call(), optimizer = resolved_control$optimizer)
@@ -410,6 +430,90 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
                          control = control, weights = weights, se_type = se_type, meanstructure = meanstructure,
                          fixed_x = fixed_x)
   .sem_record_protocol(.sem_as_semfit(fit, model, match.call()), resolved_control$protocol)
+}
+
+# Whether the syntax has a `level:` line; statements are split as the parser splits them, so comments and `;` count.
+.sem_has_level_lines <- function(model) {
+  stmts <- .sem_statements(unlist(strsplit(paste(model, collapse = "\n"), "\n", fixed = TRUE)))
+  any(grepl("^level\\s*:(?!=)", stmts, perl = TRUE))
+}
+
+# The two-level guards (plan S4a, Refused table), in order: `level:` names and order, `cluster` and its column, the
+# refused features, the `fixed_x` / `meanstructure` / `information` settings, then the W and Z variable sets (which
+# read the data, so the features that would name non-columns, latent variables and products, are refused first).
+# Unset `fixed_x` resolves to FALSE and unset `meanstructure` to TRUE silently (U2): no 0.15.0 default ever applied
+# to a two-level model, so `.native_defaults_resolve()` is not consulted. Every valid model ends in
+# `medfit_error_twolevel_not_implemented`.
+.sem_twolevel_guard <- function(model, data, cluster, information, weights, se_type, missing, fixed_x, fx_unset,
+                                meanstructure, ms_unset) {
+  parsed <- .sem_resolve_levels(.sem_parse(model), cluster)
+  abort <- function(msg, what) .twolevel_abort(msg, paste0("medfit_error_twolevel_", what))
+  has_levels <- length(parsed$levels$tokens) > 0L
+  if (!has_levels) {
+    abort("`cluster` is given but the model has no `level:` blocks; write `level: 1` and `level: 2` blocks", "cluster")
+  }
+  if (is.null(cluster)) {
+    abort("the model uses `level:` blocks but `cluster` is not given; name the cluster variable with `cluster =`",
+          "cluster")
+  }
+  if (!cluster %in% names(data)) {
+    abort(sprintf("`cluster`: '%s' is not a column of `data`", cluster), "cluster")
+  }
+  if (anyNA(data[[cluster]])) {
+    abort(sprintf("the cluster variable '%s' has missing values; drop those rows first", cluster), "cluster")
+  }
+  if (length(unique(data[[cluster]])) < 2L) {
+    abort(sprintf("the cluster variable '%s' has fewer than 2 clusters; a two-level model needs at least 2 clusters",
+                  cluster), "cluster")
+  }
+  p <- parsed$parameters
+  if (any(p$op == "=~")) {
+    abort("latent variables (`=~`) are not supported in a two-level model", "latent")
+  }
+  if (any(grepl(":", p$rhs, fixed = TRUE))) {
+    abort("a product term (`x:m`) is not supported in a two-level model", "product")
+  }
+  if (!is.null(weights)) {
+    abort("`weights` are not supported in a two-level model", "weights")
+  }
+  if (se_type == "sandwich") {
+    abort("se_type = \"sandwich\" is not supported in a two-level model", "weights")
+  }
+  if (missing == "fiml") {
+    abort("missing = \"fiml\" is not supported in a two-level model; incomplete rows are dropped (listwise)",
+          "missing")
+  }
+  if (.sem_has_nonlinear_constraint(parsed$constraints)) {
+    abort("nonlinear constraints (including a product of labels set to zero) are not supported in a two-level model",
+          "nonlinear")
+  }
+  if (!fx_unset && !isFALSE(fixed_x)) {
+    abort(paste0("a two-level model takes `fixed_x = FALSE` only (the default there); ",
+                 "fixed exogenous moments are not supported"), "fixed_x")
+  }
+  if (!ms_unset && isFALSE(meanstructure)) {
+    abort("a two-level model needs the mean structure (the between-level means); `meanstructure = FALSE` is refused",
+          "meanstructure")
+  }
+  if (information == "expected") {
+    abort("information = \"expected\" is not supported in a two-level model; use \"observed\"", "information")
+  }
+  .sem_twolevel_sets(parsed, data, cluster)
+  .sem_twolevel_not_implemented()
+}
+
+# Whether any `==`, `<` or `>` constraint is nonlinear in the labels, after defined parameters are substituted (a
+# zero-product branch, `a*b == 0`, is one).
+.sem_has_nonlinear_constraint <- function(constraints) {
+  defs <- constraints[constraints$op == ":=", , drop = FALSE]
+  defs <- .sem_defs(stats::setNames(defs$rhs, defs$lhs))
+  for (i in which(constraints$op %in% c("==", "<", ">"))) {
+    tree <- .sem_expr_subst(.sem_expr_parse(paste0("(", constraints$lhs[i], ") - (", constraints$rhs[i], ")")), defs)
+    if (!.sem_tree_linear(tree)) {
+      return(TRUE)
+    }
+  }
+  FALSE
 }
 
 # the resolved search protocol goes in diagnostics, after the fit (and the FIML ledger binding) are built
@@ -466,9 +570,6 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   if (se_type == "kr") {
     stop("se_type = \"kr\" (Kenward-Roger) is only used with engine = \"lmer\".", call. = FALSE)
   }
-  if (!is.null(cluster)) {
-    stop("`cluster` is only used with engine = \"lmer\".", call. = FALSE)
-  }
   if (given$family) {
     stop("engine = \"native\" fits Gaussian models; `family_y` and `family_m` are not used.", call. = FALSE)
   }
@@ -493,7 +594,9 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   fit <- do.call(
     fit_sem,
     c(list(model = syntax, data = data, weights = weights, se_type = se_type),
-      engine_args[intersect(names(engine_args), fit_args)])
+      engine_args[intersect(names(engine_args), fit_args)],
+      # `cluster` (two-level, experimental) only when given, so fit_sem() sees it as absent otherwise
+      if (!is.null(cluster)) list(cluster = cluster))
   )
   extract_call <- c(
     list(object = fit, treatment = treatment, mediator = mediator),

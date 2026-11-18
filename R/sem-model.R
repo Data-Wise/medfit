@@ -435,3 +435,84 @@
   }
   invisible(p)
 }
+
+# --- Native two-level (S4a, experimental) ---
+
+# The stop every valid two-level model ends in until the two-level fitter exists (S4a.1 to S4a.3), so that no
+# single-level fit runs on the pooled rows of a model with `level:` blocks.
+.sem_twolevel_not_implemented <- function() {
+  .twolevel_abort(
+    paste0("native two-level estimation is not implemented yet (S4a, experimental); ",
+           "fit the model with lavaan and use the two-level adapter"),
+    "medfit_error_twolevel_not_implemented"
+  )
+}
+
+# Within (W) and between-only (Z) variables of a two-level model (sketch item 1), on the complete-case rows of the
+# model's variables and the cluster column. W: the variables named in `level: 1` rows (each must also be named in a
+# `level: 2` row, so every W variable has a between part); Z: the variables named only in `level: 2` rows. Constancy
+# is read on clusters with at least two complete rows, by exact equality: a Z variable is a cluster attribute, so its
+# copies within a cluster are the same stored value, and a W variable that never varies within a cluster has no
+# within part to estimate. Size-1 clusters carry no within-cluster information and are skipped.
+.sem_twolevel_sets <- function(parsed, data, cluster) {
+  p <- parsed$parameters
+  vars_of <- function(lev) {
+    rows <- p[p$level == lev, , drop = FALSE]
+    unique(c(rows$lhs, rows$rhs[nzchar(rows$rhs)]))
+  }
+  lev1 <- vars_of(1L)
+  lev2 <- vars_of(2L)
+  within_only <- setdiff(lev1, lev2)
+  if (length(within_only)) {
+    .twolevel_abort(sprintf(
+      paste0("'%s' is named only in `level: 1` rows; every level-1 variable also needs a `level: 2` row ",
+             "(within-only variables are not supported yet)"),
+      within_only[1L]
+    ), "medfit_error_twolevel_varset")
+  }
+  within <- lev1
+  between <- setdiff(lev2, lev1)
+  vars <- c(within, between)
+  absent <- setdiff(vars, names(data))
+  if (length(absent)) {
+    .twolevel_abort(paste0("model variables are not columns of `data`: ", paste(absent, collapse = ", ")),
+                    "medfit_error_twolevel_varset")
+  }
+  rows <- stats::complete.cases(data[, c(vars, cluster), drop = FALSE])
+  cl <- data[[cluster]][rows]
+  if (length(unique(cl)) < 2L) {
+    .twolevel_abort("the complete-case rows hold fewer than 2 clusters; a two-level model needs at least 2 clusters",
+                    "medfit_error_twolevel_cluster")
+  }
+  multi <- cl %in% names(which(table(cl) >= 2L))
+  if (!any(multi)) {
+    .twolevel_abort(
+      "every cluster has one complete row, so no variable can be split into within and between parts",
+      "medfit_error_twolevel_varset"
+    )
+  }
+  varies <- function(v) {
+    x <- data[[v]][rows][multi]
+    g <- cl[multi]
+    any(vapply(split(x, g), function(xj) length(xj) && any(xj != xj[1L]), TRUE))
+  }
+  for (v in between) {
+    if (varies(v)) {
+      .twolevel_abort(sprintf(
+        paste0("'%s' is named only in `level: 2` rows but varies within a cluster; ",
+               "a between-only variable must be constant within each cluster"),
+        v
+      ), "medfit_error_twolevel_varset")
+    }
+  }
+  for (v in within) {
+    if (!varies(v)) {
+      .twolevel_abort(sprintf(
+        paste0("'%s' is constant within every cluster but is named in a `level: 1` row; ",
+               "a cluster-level variable belongs only in `level: 2` rows"),
+        v
+      ), "medfit_error_twolevel_varset")
+    }
+  }
+  list(within = within, between = between)
+}

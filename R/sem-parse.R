@@ -300,6 +300,60 @@
   .sem_split_cmp(inner, st)
 }
 
+# `level:` names (S4-dec, lavaan parity): `1` and `within` are level 1; `2`, `between` and the cluster variable's
+# name are level 2. The parser keeps the raw token and gives any other name the provisional code 2, since only the
+# cluster name can be valid there; `.sem_resolve_levels()` checks every token once `cluster` is known.
+.sem_level_malformed <- paste0(
+  "malformed level line; expected 'level: 1', 'level: 2', 'level: within', 'level: between' ",
+  "or 'level: <cluster variable>'"
+)
+
+.sem_level_code <- function(token) {
+  if (grepl("^[0-9]+$", token)) {
+    return(as.integer(token))
+  }
+  if (identical(token, "within")) 1L else 2L
+}
+
+# Check the `level:` tokens of a parsed model against `cluster` (NULL when not given) and the level-order rules. A
+# model without `level:` lines is returned unchanged. The integer codes the parser gave are exact for every valid
+# token, so a valid model's table is returned as parsed.
+.sem_resolve_levels <- function(parsed, cluster) {
+  lv <- parsed$levels
+  if (is.null(lv) || !length(lv$tokens)) {
+    return(parsed)
+  }
+  valid <- c("within", "between", cluster)
+  for (i in seq_along(lv$tokens)) {
+    tok <- lv$tokens[i]
+    if (grepl("^[0-9]+$", tok) && as.integer(tok) >= 1L || tok %in% valid) {
+      next
+    }
+    .sem_syntax_error(.sem_level_malformed, lv$stmts[i])
+  }
+  codes <- vapply(lv$tokens, .sem_level_code, 1L, USE.NAMES = FALSE)
+  if (any(codes > 2L)) {
+    .twolevel_abort(
+      "the model has more than two levels; the sem engine fits two-level models only (`level: 1` and `level: 2`)",
+      "medfit_error_twolevel_cluster"
+    )
+  }
+  syntax <- "medfit_error_twolevel_syntax"
+  if (isTRUE(lv$orphan)) {
+    .twolevel_abort(paste0("a model with `level:` blocks has statements before the first `level:` line; ",
+                           "put every row in a block"), syntax)
+  }
+  dup <- codes[duplicated(codes)]
+  if (length(dup)) {
+    .twolevel_abort(sprintf("level %d appears more than once; write each level's rows in one `level:` block", dup[1L]),
+                    syntax)
+  }
+  if (!1L %in% codes) {
+    .twolevel_abort("the model has `level: 2` rows but no `level: 1` block; a two-level model needs both", syntax)
+  }
+  parsed
+}
+
 # One statement to a list: kind "level", "relation", "defined" or "constraint".
 .sem_statement <- function(st) {
   if (grepl("[`\"']", st)) {
@@ -320,10 +374,11 @@
     .sem_syntax_error(paste0("'", gsub("\\s", "", blk), "' blocks are not supported"), st)
   }
   if (grepl("^level\\s*:(?!=)", st, perl = TRUE)) {
-    if (!grepl("^level\\s*:\\s*[0-9]+$", st)) {
-      .sem_syntax_error("malformed level line; expected 'level: <integer>'", st)
+    token <- sub("^level\\s*:\\s*", "", st)
+    if (!grepl("^[0-9]+$", token) && !grepl(.sem_name_re, token)) {
+      .sem_syntax_error(.sem_level_malformed, st)
     }
-    return(list(kind = "level", level = as.integer(sub("^level\\s*:\\s*", "", st))))
+    return(list(kind = "level", token = token, level = .sem_level_code(token), stmt = st))
   }
   if (grepl("^CONSTRAINT\\s*\\(", st)) {
     return(c(list(kind = "constraint"), .sem_directive(st)))
@@ -418,11 +473,19 @@
   level <- 1L
   rows <- list()
   cons <- list()
+  # `level:` lines in order, and whether any statement came before the first one; `.sem_resolve_levels()` checks
+  # both once `cluster` is known
+  levels <- list(tokens = character(), stmts = character(), orphan = FALSE)
   for (st in stmts) {
     p <- .sem_statement(st)
+    if (p$kind != "level" && !length(levels$tokens)) {
+      levels$orphan <- TRUE
+    }
     switch(p$kind,
       level = {
         level <- p$level
+        levels$tokens <- c(levels$tokens, p$token)
+        levels$stmts <- c(levels$stmts, p$stmt)
       },
       relation = {
         rows <- c(rows, lapply(p$rows, function(r) c(r, list(level = level))))
@@ -528,5 +591,9 @@
   # (no data needed), which reads them from this attribute.
   out <- .sem_fold_bounds(parameters, constraints)
   attr(out$parameters, "all_constraints") <- constraints
+  # A single-level parse keeps its two-element shape (pinned by test-api-freeze and test-sem-parse).
+  if (length(levels$tokens)) {
+    out$levels <- levels
+  }
   out
 }

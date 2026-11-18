@@ -239,7 +239,8 @@ test_that("every row of the spec 7 syntax table has a pinned error", {
     "Y ~ a*X\nd := log(-1)" = "did not evaluate to one finite real number",
     "Y ~ a*X\nsqrt(-1) < a" = "did not evaluate to one finite real number",
     "y z ~ X" = "invalid left side",
-    "level: x\nY ~ X" = "malformed level line",
+    "level: 1.5\nY ~ X" = "malformed level line",
+    "level: x y\nY ~ X" = "malformed level line",
     "level:\nY ~ X" = "malformed level line",
     "Y ~ a*X\nab := a\nxy := ab + zz" = "unknown parameter label 'zz'"
   )

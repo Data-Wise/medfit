@@ -57,6 +57,15 @@
   out
 }
 
+# Defensive: `fit_sem()` sends every model with `level:` lines through `.sem_twolevel_guard()`, which ends in the same
+# stop; this one keeps the single-level fitter off such a model however it is reached.
+.sem_single_level_only <- function(parsed) {
+  if (length(parsed$levels$tokens) || any(parsed$parameters$level != 1L)) {
+    .sem_twolevel_not_implemented()
+  }
+  invisible()
+}
+
 .sem_fit_pipeline <- function(model, data, information, n_starts, control, weights, se_type, parsed,
                               meanstructure, fixed_x, factors) {
   checkmate::assert_data_frame(data, min.rows = 1L, .var.name = "data")
@@ -70,6 +79,8 @@
       hint <- .sem_factor_label_hint(conditionMessage(e), data)
       stop(if (is.null(hint)) conditionMessage(e) else hint, call. = FALSE)
     })
+    # before factor expansion and the zero-product branch fits, which would otherwise run on pooled rows
+    .sem_single_level_only(parsed)
     # factors become dummies before completion sees the table; branch fits re-enter with `parsed` and the
     # expanded data, so this runs once
     expanded <- .sem_expand_factors(parsed$parameters, data, fixed_x, factors)
@@ -93,9 +104,7 @@
       return(out)
     }
   }
-  if (any(parsed$parameters$level != 1L)) {
-    stop("two-level estimation is not implemented: the model uses `level:` blocks", call. = FALSE)
-  }
+  .sem_single_level_only(parsed)
   certificate <- .sem_literal_zero_certificate(parsed$parameters, parsed$constraints)
   if (!is.null(certificate)) {
     # a contradiction proved by syntax: nothing to optimize, and no fit exists (D2)
