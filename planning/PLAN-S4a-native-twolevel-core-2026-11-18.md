@@ -56,6 +56,7 @@ forwarding; `extract_mediation(<SEMFit>)` returning `TwoLevelMediationData` with
 | nonlinear constraints and zero-product branches | `medfit_error_twolevel_nonlinear` | per-level branch handling is IG3, after S4 |
 | a W variable constant within every cluster; a Z variable in a `level: 1` row | `medfit_error_twolevel_varset` | sketch item 1 |
 | a within-only variable (named only in `level: 1` rows) | `medfit_error_twolevel_varset` | the O8 oracle and the sketch assume every W variable has a between part; lavaan's within-only set is later work |
+| statements before the first `level:` line; a duplicate level; level 2 without level 1 | `medfit_error_twolevel_syntax` | order guards in `.sem_resolve_levels()` |
 | a valid two-level model before S4a.4 | `medfit_error_twolevel_not_implemented` | S4a.1 to S4a.3 have no fitter; the guards end in this stop so no single-level fit runs on pooled rows |
 | explicit `fixed_x = TRUE`; `meanstructure = FALSE` | see above | U2; between means |
 | `information = "expected"` | `medfit_error_twolevel_information` | no expected-information oracle in S4a |
