@@ -13,7 +13,7 @@ the snapshot of the harness the runs used). The per-dataset rows stay outside gi
 | Arm | Planned (P2X §8) | Run |
 |---|---|---|
 | Delta and MC (MC B = 1000) | all 120 cells, R = 500 | done: 60,000 datasets, 0 lavaan errors |
-| Cluster bootstrap | 6 cells (1001, 1002, 1004, 1021, 1022, 1024), R = 300, B = 499 | 5 of 6 done (1024, 1022, 1004, 1002, 1021); 1001 running (below) |
+| Cluster bootstrap | 6 cells (1001, 1002, 1004, 1021, 1022, 1024), R = 300, B = 499 | 5 of 6 done (1024, 1022, 1004, 1002, 1021); 1001 on Hopper (below) |
 | Timing probe for S2 | not in P2X | 13 cells at 4 datasets x B = 50, the other 107 at 2 x B = 25 |
 | P1 (floor arm) | 4 cells | not run (below) |
 
@@ -151,7 +151,9 @@ The six-cell run (`_agents_workspace/fc-t5/run-boot6.sh`, R = 300, B = 499, 14 c
 1021, 1001) began cell 1024 at about 02:16 on 2026-11-17. Cells 1024, 1022 and 1004 finished (wall 485 s, 2,008 s and
 10,562 s, `logs/boot-progress.txt`). A machine restart at about 12:31 stopped it during cell 1002, which wrote no rows.
 The rerun resumed at 1002: cells 1002 and 1021 finished (wall 25,764 s and 12,852 s; 1021 ended 2026-11-18 07:13), and
-1001 (J = 10, ICC .05) has been running since. The results below cover the five finished cells (n = 5, equal clusters). Kept is the mean number of the 499 refits a replicate kept for that effect; coverage is
+1001 (J = 10, ICC .05) ran locally until 2026-11-18, when it was stopped with no rows written and moved to Hopper:
+array 4360586, 30 tasks of 10 replicates (`REP_START`), same seeds `cell_id * 1e5 + rep`, B = 499, lavaan 0.7.3, medfit
+from `f3e5e967` (the T6 install). The R version differs (4.4.0 on Hopper, 4.6.2 locally). The results below cover the five finished cells (n = 5, equal clusters). Kept is the mean number of the 499 refits a replicate kept for that effect; coverage is
 over the replicates with a percentile interval, with its MCSE; widths are medians, with the delta interval for the
 same replicates beside them.
 
