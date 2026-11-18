@@ -784,3 +784,209 @@ test_that("T5: the row builder adds the ICC columns and, when asked, the MC and 
   bt <- fc_with_stream(st$boot, fc_cluster_boot(cs$fit, cs$data, n_boot = 12L)) # nolint: object_usage_linter.
   expect_identical(r$bt_hi_nie_contrast, bt$hi[["nie_contrast"]])
 })
+
+# T6: the main delta and MC run (R = 1000) and P1 on its subset. The aggregation helpers live in
+# tests/sim/twolevel-few-clusters-t6-lib.R; these checks run on synthetic rows, so they need no lavaan fit.
+fc_t6_lib <- test_path("..", "sim", "twolevel-few-clusters-t6-lib.R")
+source(fc_t6_lib, local = TRUE)
+fc_t6_dir <- test_path("..", "..", "planning", "studies", "few-clusters")
+
+# Synthetic per-dataset rows in the driver's layout: every fit clean, delta and MC intervals est -/+ 1.96 se.
+fc_t6_rows <- function(cells = c(1001L, 1002L), reps = 4L, arms = c("p0"), seed = 1L) {
+  g <- fc_grid() # nolint: object_usage_linter.
+  jobs <- expand.grid(rep = seq_len(reps), arm = arms, cell_id = cells, stringsAsFactors = FALSE,
+                      KEEP.OUT.ATTRS = FALSE)
+  rows <- cbind(g[match(jobs$cell_id, g$cell_id), ], jobs[c("rep", "arm")])
+  rownames(rows) <- NULL
+  k <- nrow(rows)
+  rows$lavaan_error <- NA_character_
+  rows$adapter_error <- NA_character_
+  rows$converged <- TRUE
+  rows$between_identified <- TRUE
+  rows$admissible <- TRUE
+  rows$neg_l2_var <- FALSE
+  rows$at_bound <- ifelse(rows$arm == "p1", FALSE, NA)
+  rows$fit_time <- .5
+  rows$mc_time <- .05
+  withr::with_seed(seed, {
+    for (e in fc_estimands) { # nolint: object_usage_linter.
+      truth <- vapply(rows$nie_b, function(b) fc_truth(b)[[e]], numeric(1)) # nolint: object_usage_linter.
+      se <- rep(.1, k)
+      est <- truth + stats::rnorm(k, sd = .1)
+      rows[[paste0("truth_", e)]] <- truth
+      rows[[paste0("est_", e)]] <- est
+      rows[[paste0("se_", e)]] <- se
+      rows[[paste0("lo_", e)]] <- est - 1.96 * se
+      rows[[paste0("hi_", e)]] <- est + 1.96 * se
+    }
+  })
+  for (e in fc_boot_effects) { # nolint: object_usage_linter.
+    rows[[paste0("mc_lo_", e)]] <- rows[[paste0("lo_", e)]]
+    rows[[paste0("mc_hi_", e)]] <- rows[[paste0("hi_", e)]]
+    rows[[paste0("mc_err_", e)]] <- NA_character_
+  }
+  rows
+}
+
+test_that("T6: the P1 subset is the T5 cells with an inadmissible rate above 10%, 49 cells, as committed", {
+  t5 <- file.path(fc_t6_dir, "T5-cells.csv")
+  p1 <- file.path(fc_t6_dir, "T6-p1-cells.csv")
+  skip_if_not(file.exists(t5) && file.exists(p1), "planning/ is not shipped with the installed tests")
+  cells <- utils::read.csv(t5, stringsAsFactors = FALSE)
+  got <- fc_t6_p1_cells(cells) # nolint: object_usage_linter.
+  expect_identical(nrow(got), 49L)
+  expect_true(all(got$t5_inadmissible > .10))
+  expect_true(all(cells$inadmissible[!cells$cell_id %in% got$cell_id] <= .10))
+  committed <- utils::read.csv(p1, stringsAsFactors = FALSE)
+  expect_identical(as.integer(committed$cell_id), as.integer(got$cell_id))
+  expect_equal(committed$t5_inadmissible, got$t5_inadmissible)
+  # planted defects: a cutoff that admits the .098 cell, and the negative-variance rate in place of the
+  # inadmissible rate, each change the set
+  expect_false(identical(fc_t6_p1_cells(cells, cutoff = .097)$cell_id, got$cell_id)) # nolint: object_usage_linter.
+  wrong_col <- transform(cells, inadmissible = neg_l2_var)
+  expect_false(identical(fc_t6_p1_cells(wrong_col)$cell_id, got$cell_id)) # nolint: object_usage_linter.
+})
+
+test_that("T6: the row check passes a complete run and errors on a short, duplicated or stray cell", {
+  rows <- rbind(fc_t6_rows(c(1001L, 1002L), 4L, "p0"), fc_t6_rows(1001L, 4L, "p1"))
+  cells <- c(1001L, 1002L)
+  expect_invisible(fc_t6_check_rows(rows, reps = 4L, cells = cells, p1_cells = 1001L)) # nolint: object_usage_linter.
+  # planted short cell: one P1 dataset missing
+  short <- rows[!(rows$cell_id == 1001L & rows$arm == "p1" & rows$rep == 3L), ]
+  expect_error(fc_t6_check_rows(short, 4L, cells, 1001L), "1001/p1.*3 rows") # nolint: object_usage_linter.
+  # a duplicated replicate with the count still short of nothing: rep 2 twice, rep 4 missing
+  dup <- rows
+  dup$rep[dup$cell_id == 1002L & dup$rep == 4L] <- 2L
+  expect_error(fc_t6_check_rows(dup, 4L, cells, 1001L), "1002/p0.*replicates") # nolint: object_usage_linter.
+  # P1 rows in a cell outside the subset, and a missing cell
+  stray <- rbind(rows, fc_t6_rows(1002L, 4L, "p1"))
+  expect_error(fc_t6_check_rows(stray, 4L, cells, 1001L), "1002/p1") # nolint: object_usage_linter.
+  expect_error(fc_t6_check_rows(rows, 4L, c(cells, 1003L), 1001L), "1003/p0") # nolint: object_usage_linter.
+})
+
+test_that("T6: the row check holds each cell to the launch's replicate range REP_START to REP_START + R - 1", {
+  rows <- rbind(fc_t6_rows(c(1001L, 1002L), 4L, "p0"), fc_t6_rows(1001L, 4L, "p1"))
+  cells <- c(1001L, 1002L)
+  late <- rows
+  late$rep <- late$rep + 500L
+  expect_invisible(fc_t6_check_rows(late, 4L, cells, 1001L, rep_start = 501L)) # nolint: object_usage_linter.
+  # planted wrong ranges: replicates 1 to 4 against a launch at 501, 501 to 504 against the default start, and a
+  # range shifted by one
+  expect_error(fc_t6_check_rows(rows, 4L, cells, 1001L, rep_start = 501L), "replicates 501 to 504") # nolint
+  expect_error(fc_t6_check_rows(late, 4L, cells, 1001L), "replicates 1 to 4") # nolint: object_usage_linter.
+  expect_error(fc_t6_check_rows(late, 4L, cells, 1001L, rep_start = 502L), "replicates 502 to 505") # nolint
+  # the seed formula cell_id * 1e5 + rep needs the last replicate below 1e5
+  expect_error(fc_t6_check_rows(late, 4L, cells, 1001L, rep_start = 99998L), "1e5") # nolint: object_usage_linter.
+})
+
+test_that("T6: the aggregation refuses rows from mixed builds or another lavaan than the launch's", {
+  rows <- fc_t6_rows(1001L, 4L, "p0")
+  rows$medfit_version <- "0.18.0.9000"
+  rows$lavaan_version <- "0.6.19"
+  expect_invisible(fc_t6_check_versions(rows, medfit = "0.18.0.9000", lavaan = "0.6.19")) # nolint
+  # planted defects: a row file from another medfit, one from another lavaan, a lavaan other than the one recorded at
+  # launch, and a row file without the version columns
+  mixed_m <- rows
+  mixed_m$medfit_version[2] <- "0.7.0"
+  expect_error(fc_t6_check_versions(mixed_m, "0.18.0.9000", "0.6.19"), "medfit_version.*2 values") # nolint
+  mixed_l <- rows
+  mixed_l$lavaan_version[3] <- "0.6.17"
+  expect_error(fc_t6_check_versions(mixed_l, "0.18.0.9000", "0.6.19"), "lavaan_version.*2 values") # nolint
+  expect_error(fc_t6_check_versions(rows, "0.18.0.9000", "0.6.17"), "lavaan_version.*0.6.19.*0.6.17") # nolint
+  expect_error(fc_t6_check_versions(rows, "0.17.0", "0.6.19"), "medfit_version.*0.18.0.9000.*0.17.0") # nolint
+  expect_error(fc_t6_check_versions(rows[setdiff(names(rows), "lavaan_version")], "0.18.0.9000", "0.6.19"), # nolint
+               "lavaan_version")
+})
+
+test_that("T6: the launch manifest is read as text and a missing one or a missing key is an error", {
+  f <- withr::local_tempfile()
+  writeLines(c("sha=abc123", "rep_start=501", "mc_b=2000", "eps=1e-3", "medfit_version=0.18.0.9000",
+               "lavaan_version=1.0"), f)
+  man <- fc_t6_read_manifest(f) # nolint: object_usage_linter.
+  expect_identical(man$rep_start, "501")
+  expect_identical(man$lavaan_version, "1.0")
+  expect_error(fc_t6_read_manifest(paste0(f, "-absent")), "no launch manifest") # nolint: object_usage_linter.
+  writeLines(c("sha=abc123", "rep_start=501", "mc_b=2000", "eps=1e-3"), f)
+  expect_error(fc_t6_read_manifest(f), "lacks medfit_version, lavaan_version") # nolint: object_usage_linter.
+})
+
+test_that("T6: failure categories partition the rows and the aggregation errors when they do not sum to R", {
+  rows <- fc_t6_rows(1001L, 6L, "p0")
+  rows$lavaan_error[1] <- "boom"
+  rows[1, c("converged", "between_identified", "admissible")] <- NA
+  rows$converged[2] <- FALSE
+  rows$adapter_error[2] <- "lavaan did not converge"
+  rows[2, c("between_identified", "admissible")] <- NA
+  rows$adapter_error[3] <- "other refusal"
+  rows[3, c("between_identified", "admissible")] <- NA
+  rows$between_identified[4] <- FALSE
+  rows$admissible[5] <- FALSE
+  cnt <- fc_t6_status_counts(rows, reps = 6L) # nolint: object_usage_linter.
+  expect_identical(unlist(cnt[1, fc_t6_status_levels]), stats::setNames(rep(1L, 6), fc_t6_status_levels)) # nolint
+  # planted mis-summed cells: a row in no category (identified status lost) and a row in two (an adapter error on
+  # an identified fit)
+  gap <- rows
+  gap$between_identified[6] <- NA
+  expect_error(fc_t6_status_counts(gap, 6L), "1001/p0.*sum to 5") # nolint: object_usage_linter.
+  both <- rows
+  both$adapter_error[6] <- "late refusal"
+  expect_error(fc_t6_status_counts(both, 6L), "1001/p0.*sum to 7") # nolint: object_usage_linter.
+  # the top-level aggregation stops (not warns) on both
+  expect_error(fc_t6_aggregate(gap, reps = 6L, cells = 1001L, p1_cells = integer(0)), "sum to") # nolint
+  expect_error(fc_t6_aggregate(rows[-6, ], reps = 6L, cells = 1001L, p1_cells = integer(0)), "5 rows") # nolint
+})
+
+test_that("T6: MCSEs match a hand calculation, and the cell summary carries them", {
+  expect_equal(fc_t6_mcse_prop(.95, 1000), 0.0068920243760451, tolerance = 1e-12) # nolint: object_usage_linter.
+  # sd(c(1, 2, 3, 6)) = sqrt(14 / 3); divided by sqrt(4)
+  expect_equal(fc_t6_mcse_mean(c(1, 2, 3, 6)), sqrt(14 / 3) / 2, tolerance = 1e-12) # nolint: object_usage_linter.
+  expect_equal(fc_t6_mcse_mean(c(1, NA, 2, 3, 6)), sqrt(14 / 3) / 2, tolerance = 1e-12) # nolint
+  # planted defects: the variance over R instead of its square root, and n - 1 in the mean's denominator
+  expect_failure(expect_equal(sqrt(.95 * .05) / 1000, 0.0068920243760451, tolerance = 1e-12))
+  expect_failure(expect_equal(stats::sd(c(1, 2, 3, 6)) / sqrt(3), sqrt(14 / 3) / 2, tolerance = 1e-12))
+
+  rows <- fc_t6_rows(1001L, 120L, "p0")
+  e <- "nie_within"
+  # 30 of 120 intervals moved off the truth: coverage .75 at most, counted by hand
+  rows[[paste0("lo_", e)]][1:30] <- rows[[paste0("truth_", e)]][1:30] + .5
+  rows[[paste0("hi_", e)]][1:30] <- rows[[paste0("truth_", e)]][1:30] + .6
+  truth <- rows[[paste0("truth_", e)]]
+  hit <- rows[[paste0("lo_", e)]] <= truth & truth <= rows[[paste0("hi_", e)]]
+  p <- mean(hit)
+  s <- fc_t6_summary(rows) # nolint: object_usage_linter.
+  r <- s[s$estimand == e & s$interval == "delta", ]
+  expect_identical(nrow(r), 1L)
+  expect_identical(r$R, 120L)
+  expect_equal(r$coverage, p)
+  expect_equal(r$coverage_mcse, sqrt(p * (1 - p) / 120))
+  # the 30 planted misses plus any clean interval that misses high by chance, counted by hand
+  miss_high <- mean(rows[[paste0("lo_", e)]] > rows[[paste0("truth_", e)]])
+  expect_gte(miss_high, 30 / 120)
+  expect_equal(r$miss_high, miss_high)
+  err <- rows[[paste0("est_", e)]] - rows[[paste0("truth_", e)]]
+  expect_equal(r$bias, mean(err))
+  expect_equal(r$bias_mcse, stats::sd(err) / sqrt(120))
+  expect_equal(r$ccov, p)
+  expect_equal(r$ccov_mcse, sqrt(p * (1 - p) / 120))
+  # conditional coverage needs 100 intervals: 99 gives NA
+  s99 <- fc_t6_summary(rows[1:99, ]) # nolint: object_usage_linter.
+  expect_true(is.na(s99$ccov[s99$estimand == e & s99$interval == "delta"]))
+  # the MC rows exist for the three effects only
+  expect_setequal(s$estimand[s$interval == "mc"], fc_boot_effects) # nolint: object_usage_linter.
+})
+
+test_that("T6: the P0/P1 comparison pairs datasets and reports the at-bound sensitivity coverage", {
+  p0 <- fc_t6_rows(1001L, 10L, "p0")
+  p1 <- fc_t6_rows(1001L, 10L, "p1")
+  e <- "nie_between"
+  p1[[paste0("lo_", e)]][1:2] <- p1[[paste0("truth_", e)]][1:2] + 1
+  p1$at_bound[3:4] <- TRUE
+  cmp <- fc_t6_parametrization(rbind(p0, p1), p1_cells = 1001L) # nolint: object_usage_linter.
+  r <- cmp[cmp$estimand == e & cmp$interval == "delta", ]
+  ind0 <- fc_covered(p0)[[e]] # nolint: object_usage_linter.
+  ind1 <- fc_covered(p1)[[e]] # nolint: object_usage_linter.
+  expect_equal(r$coverage_diff, mean(ind1) - mean(ind0))
+  expect_equal(r$coverage_diff_mcse, stats::sd(ind1 - ind0) / sqrt(10))
+  expect_equal(r$at_bound_p1, .2)
+  expect_equal(r$sens_coverage_p1, mean(ind1 & !p1$at_bound))
+})

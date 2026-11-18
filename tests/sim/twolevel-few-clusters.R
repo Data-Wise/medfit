@@ -6,6 +6,7 @@
 #   CELLS   required: comma-separated cell ids from fc_grid() (1001 to 1120) or "all"; no default, so the full
 #           campaign never starts by accident
 #   REPS    replicates per cell (default 1000); seeds cell_id * 1e5 + rep
+#   REP_START first replicate (default 1): replicates REP_START to REP_START + REPS - 1, the last below 1e5
 #   ARMS    "p0", "p1" or "p0,p1" (default "p0"); P0 lavaan defaults, P1 the syntax floor at EPS
 #   EPS     P1 floor (default 1e-3; decision M7 is open)
 #   CORES   parallel::mclapply cores (default 1)
@@ -39,6 +40,13 @@ grid <- fc_grid()
 cell_ids <- if (cells_env == "all") grid$cell_id else as.integer(strsplit(cells_env, ",", fixed = TRUE)[[1]])
 if (anyNA(cell_ids) || !all(cell_ids %in% grid$cell_id)) stop("unknown cell id in CELLS", call. = FALSE)
 reps <- as.integer(Sys.getenv("REPS", "1000"))
+rep_start <- as.integer(Sys.getenv("REP_START", "1"))
+if (is.na(reps) || reps < 1L || is.na(rep_start) || rep_start < 1L) {
+  stop("REPS and REP_START must be positive counts", call. = FALSE)
+}
+if (rep_start + reps - 1 >= 1e5) {
+  stop("REP_START + REPS - 1 must stay below 1e5 (seed cell_id * 1e5 + rep)", call. = FALSE)
+}
 arms <- strsplit(Sys.getenv("ARMS", "p0"), ",", fixed = TRUE)[[1]]
 if (!length(arms) || !all(arms %in% c("p0", "p1"))) stop("ARMS must be p0, p1 or p0,p1", call. = FALSE)
 eps <- as.numeric(Sys.getenv("EPS", "1e-3"))
@@ -52,7 +60,7 @@ if (!is.finite(scale_x) || scale_x <= 0) stop("SCALE_X must be a positive number
 invisible(fc_apply_mutant(data.frame(truth_x = 0, est_x = 0, lo_x = 0, hi_x = 0), mutant)) # unknown names error
 out <- Sys.getenv("OUT", file.path(tempdir(), sprintf("twolevel-few-clusters-%s.csv", format(Sys.Date()))))
 
-jobs <- expand.grid(rep = seq_len(reps), cell_id = cell_ids, KEEP.OUT.ATTRS = FALSE)
+jobs <- expand.grid(rep = seq(rep_start, length.out = reps), cell_id = cell_ids, KEEP.OUT.ATTRS = FALSE)
 run_job <- function(k) {
   cell <- grid[grid$cell_id == jobs$cell_id[k], ]
   rows <- lapply(arms, function(a) {
@@ -73,5 +81,5 @@ res <- do.call(rbind, res)
 res$medfit_version <- format(utils::packageVersion("medfit"))
 res$lavaan_version <- format(utils::packageVersion("lavaan"))
 utils::write.csv(res, out, row.names = FALSE)
-cat(sprintf("%d rows (%d cells x %d reps x %d arms) in %.1f s -> %s\n", nrow(res), length(cell_ids), reps,
-            length(arms), proc.time()[["elapsed"]] - t0, out))
+cat(sprintf("%d rows (%d cells x %d reps from %d x %d arms) in %.1f s -> %s\n", nrow(res), length(cell_ids), reps,
+            rep_start, length(arms), proc.time()[["elapsed"]] - t0, out))
