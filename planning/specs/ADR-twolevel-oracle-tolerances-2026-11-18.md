@@ -6,7 +6,7 @@ decisions:
   - {id: TL-4, title: "Hand-built O8 log-likelihood: absolute logLik without Z, nested-fit differences with Z, both to 1e-6", status: decided, date: 2026-11-18}
   - {id: TL-5, title: "OpenMx is a third oracle under the same rules; a disagreement beyond them stops the work", status: decided, date: 2026-11-18}
   - {id: TL-6, title: "Frozen SLSQP fixtures are pinned at 1e-6 across platforms", status: decided, date: 2026-11-18}
-  - {id: TL-7, title: "A tolerance is valid only if the zeroed cross-level vcov block fails it", status: decided, date: 2026-11-18}
+  - {id: TL-7, title: "Each tolerance is valid only if its matching planted defect fails it; the zeroed cross-level vcov block validates the SE bound", status: decided, date: 2026-11-18}
 ---
 
 # ADR: tolerances for the two-level oracles
@@ -57,22 +57,31 @@ between-level moment). Native two-level defaults to `fixed_x = FALSE` until a fi
   multivariate normal density to 1e-10 (exact arithmetic identity).
 - With Z: the objective matches lavaan only up to a parameter-free constant, so the absolute value is not compared. The
   difference in log-likelihood between nested fits is compared, and must agree with lavaan's difference to 1e-6 absolute (the
-  same 1e-6 as the absolute bound above: the constant cancels, so only optimizer error remains). No Z fixture exists yet; this is
+  same 1e-6 as the absolute bound above: the constant cancels, so only optimizer error remains). The bound is absolute, not
+  relative as for `tl_check_loglik()`, because a difference between nested fits can be near zero, where a relative bound means
+  nothing. No Z fixture exists yet; this is
   the tolerance it will use.
 
 **TL-5. OpenMx as third oracle (U3).** OpenMx estimates and SEs are judged by TL-1 and TL-2 exactly as lavaan's are (OpenMx
-standing in for lavaan, with the matching `fixed.x = FALSE` specification). A disagreement among O8, lavaan and OpenMx beyond
+standing in for lavaan, with exogenous variances and means free, which is how `fixed.x = FALSE` is expressed in a RAM
+model). A disagreement among O8, lavaan and OpenMx beyond
 these tolerances is a stop: it goes to the maintainer as a finding, and the tolerance is not widened to absorb it.
 
 **TL-6. Frozen SLSQP fixtures.** Optimizer outputs frozen as fixtures are pinned at 1e-6. CI Linux and macOS differ at about
 1e-9 (BLAS and floating-point order), so a tighter pin fails across platforms for no statistical reason; bit identity is checked
 locally only.
 
-**TL-7. Planted-defect rule.** A tolerance is valid only if a planted defect of the size in section 0.5 fails it. The reference
-defect is the zeroed cross-level vcov block: the SE of `a_w - a_b` is 0.1898 with the joint block and 0.1792 with it zeroed
-(5.6%), which the 1e-3 relative SE bound (TL-2) catches by a factor of about 50. The fixture's `Cov(a_w, a_b)` = -0.00195 is
-asserted directly as nonzero in `@vcov`. The contrast `a_w b_w - a_b b_b` (0.48%) and the bootstrap are sanity checks only, not
-the reference defect. Any proposed tolerance that the reference defect passes is rejected.
+**TL-7. Planted-defect rule.** A tolerance is valid only if a planted defect of the size in section 0.5 fails it, and each
+tolerance is validated by the defect that moves what it checks:
+
+| Tolerance | Validating defect |
+|---|---|
+| SE and vcov (TL-2, the SE side of TL-5) | the zeroed cross-level vcov block: the SE of `a_w - a_b` is 0.1898 joint vs 0.1792 zeroed (5.6%), caught by the 1e-3 relative bound by a factor of about 50; the fixture's `Cov(a_w, a_b)` = -0.00195 is asserted directly as nonzero in `@vcov` |
+| Estimates (TL-1, the estimate side of TL-5) | the section 0.5 estimate defects: level swap, group-1/level-1 mis-keying on unlabeled models, the `.l2` suffix mismatch |
+| Log-likelihood (TL-4) | the O8 (d) term errors: a missing `(n_j - 1) log|Sigma_W|`, a wrong `n_j`, a within row for Z, a dropped `p_w log n_j` |
+
+The zeroed block changes no estimate and no log-likelihood, so it does not test TL-1 or TL-4. The contrast `a_w b_w - a_b b_b`
+(0.48%) and the bootstrap are sanity checks only. A proposed tolerance that its validating defect passes is rejected.
 
 ## Consequences
 
