@@ -139,7 +139,7 @@ Designed as a foundation package for probmed, RMediation, and medrobust."><meta 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>medfit: Infrastructure for Mediation Model Fitting and Extraction</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.19.0/R/medfit-package.R" class="external-link"><code>R/medfit-package.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/R/medfit-package.R" class="external-link"><code>R/medfit-package.R</code></a></small>
       <div class="d-none name"><code>medfit-package.Rd</code></div>
     </div>
 
@@ -152,12 +152,21 @@ Designed as a foundation package for probmed, RMediation, and medrobust.</p>
 
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Key functions:</p><ul><li><p><code><a href="fit_mediation.html">fit_mediation</a></code>: Fit mediation models</p></li>
+    <p>Key functions:</p><ul><li><p><code><a href="med.html">med</a></code>, <code><a href="quick.html">quick</a></code>: Fit and extract in one step</p></li>
+<li><p><code><a href="fit_mediation.html">fit_mediation</a></code>: Fit mediation models</p></li>
+<li><p><code><a href="fit_sem.html">fit_sem</a></code>, <code><a href="sem_control.html">sem_control</a></code>: Fit model syntax with
+the sem engine and set its optimizer</p></li>
 <li><p><code><a href="extract_mediation.html">extract_mediation</a></code>: Extract from fitted models</p></li>
 <li><p><code><a href="bootstrap_mediation.html">bootstrap_mediation</a></code>: Bootstrap inference</p></li>
 <li><p><code><a href="nie.html">nie</a></code>, <code><a href="nde.html">nde</a></code>, <code><a href="te.html">te</a></code>,
 <code><a href="pm.html">pm</a></code>, <code><a href="decompose.html">decompose</a></code>: Effects</p></li>
 <li><p><code><a href="joint_effects.html">joint_effects</a></code>: Joint effects at a parameter vector</p></li>
+<li><p><code><a href="paths.html">paths</a></code>: Path coefficients</p></li>
+<li><p><code><a href="mbco_sem.html">mbco_sem</a></code>, <code><a href="compare_lr.html">compare_lr</a></code>: The MBCO
+likelihood-ratio test of an indirect effect; the product-null LR compared
+with lavaan or OpenMx</p></li>
+<li><p><code><a href="twolevel_statistic.html">twolevel_statistic</a></code>: Bootstrap callback for two-level
+fits (experimental)</p></li>
 </ul><p>Key classes:</p><ul><li><p><code><a href="MediationData.html">MediationData</a></code>: Simple mediation</p></li>
 <li><p><code><a href="InteractionMediationData.html">InteractionMediationData</a></code>: Simple mediation with a
 treatment-by-mediator interaction (four-way decomposition)</p></li>
@@ -165,6 +174,12 @@ treatment-by-mediator interaction (four-way decomposition)</p></li>
 <li><p><code><a href="ParallelMediationData.html">ParallelMediationData</a></code>: Parallel mediators</p></li>
 <li><p><code><a href="JointMediationData.html">JointMediationData</a></code>: Joint natural effects of several
 mediators with treatment-by-mediator products</p></li>
+<li><p><code><a href="ClusterMediationData.html">ClusterMediationData</a></code>: Treatment assigned to clusters
+(2-1-1)</p></li>
+<li><p><code><a href="TwoLevelMediationData.html">TwoLevelMediationData</a></code>,
+<code><a href="TwoLevelParallelMediationData.html">TwoLevelParallelMediationData</a></code>: Two-level <code>lavaan</code>
+fits (1-1-1), one or several parallel mediators (experimental)</p></li>
+<li><p><code><a href="SEMFit.html">SEMFit</a></code>: A sem engine fit</p></li>
 <li><p><code><a href="BootstrapResult.html">BootstrapResult</a></code>: Bootstrap results</p></li>
 </ul></div>
     <div class="section level2">

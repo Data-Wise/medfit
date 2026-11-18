@@ -178,7 +178,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.19.0/vignettes/articles/model-lavaan.qmd" class="external-link"><code>vignettes/articles/model-lavaan.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/model-lavaan.qmd" class="external-link"><code>vignettes/articles/model-lavaan.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -301,7 +301,7 @@
 <li>
 <strong>Four-way effects</strong> (a treatment-by-mediator product) need the mean structure and a specific syntax; see <a href="extraction.html">Model Extraction</a> for what is supported before relying on it.</li>
 <li>
-<strong>A two-level fit returns <code>TwoLevelMediationData</code>.</strong> A fit with two <code>level:</code> blocks (X, M and Y on level-1 units) extracts to the within and between paths; see <a href="model-twolevel.html">Two-level mediation</a> for the estimand and its limits. Fits with more than two levels (condition class <code>medfit_error_lavaan_multilevel</code>) or with <code>group =</code> (class <code>medfit_error_lavaan_multigroup</code>) are refused. Before the guard, extraction returned the within-level (or first-group) paths with the total sample size, which is a wrong answer. A single-level fit that only sets <code>cluster =</code> for robust standard errors still extracts (<a href="https://github.com/Data-Wise/medfit/issues/394" class="external-link">issue #394</a>).</li>
+<strong>A two-level fit returns <code>TwoLevelMediationData</code>.</strong> A fit with two <code>level:</code> blocks (X, M and Y on level-1 units) extracts to the within and between paths; see <a href="model-twolevel.html">Two-level mediation</a> for the estimand and its limits. With two or more parallel mediators it returns <code>TwoLevelParallelMediationData</code> (experimental). Fits with more than two levels (condition class <code>medfit_error_lavaan_multilevel</code>) or with <code>group =</code> (class <code>medfit_error_lavaan_multigroup</code>) are refused. Before the guard, extraction returned the within-level (or first-group) paths with the total sample size, which is a wrong answer. A single-level fit that only sets <code>cluster =</code> for robust standard errors still extracts (<a href="https://github.com/Data-Wise/medfit/issues/394" class="external-link">issue #394</a>).</li>
 <li>To write a model as syntax <strong>without</strong> lavaan, with latent mediators and constraints, use the <a href="model-sem.html">sem engine</a>.</li>
 </ul>
 <div class="next-action">

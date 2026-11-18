@@ -326,6 +326,7 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")  # minimum of two likelihood-ratio tes
 | `JointMediationData` | Joint natural effects of several mediators with products |
 | `ClusterMediationData` | Treatment assigned to clusters (2-1-1): own-mediator and spillover parts |
 | `TwoLevelMediationData` | A two-level `lavaan` fit with X, M and Y on level-1 units (1-1-1): the indirect effect at the within and the between level (0.17.0, experimental) |
+| `TwoLevelParallelMediationData` | The same two-level fit with two or more parallel mediators: per-mediator and total effects at each level (0.19.0, experimental) |
 | `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | Bounded FIML fits (`fit_sem(missing = "fiml")`): X to M to Y, two parallel mediators, two serial mediators (see above) |
 | `SEMFit` | A sem engine fit; [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) turns it into the classes above |
 | `BootstrapResult` | Point estimates, intervals and the bootstrap distribution |

@@ -93,7 +93,7 @@ The own and spillover split is a large-cluster approximation.
 | **latent cluster mean** | the cluster’s own level of a variable, treated as an unobserved quantity measured with error by the units, as in lavaan’s two-level model |
 | **ICC** | intraclass correlation: the between variance over the total, per variable (`@icc`) |
 | **contrast** | the within NIE minus the between NIE, `nie(x, level = "contrast")`; descriptive, not a test |
-| **within-only** | a `TwoLevelMediationData` whose between level is not identified: between values are `NA` |
+| **within-only** | a `TwoLevelMediationData` or `TwoLevelParallelMediationData` whose between level is not identified: between values are `NA` |
 
 See [Two-level
 mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md).

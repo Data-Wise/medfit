@@ -16,8 +16,9 @@ structures from fitted models. It works with:
 Extraction returns the S7 class that matches the structure:
 `MediationData`, `InteractionMediationData`, `SerialMediationData`,
 `ParallelMediationData`, `JointMediationData`, `ClusterMediationData`,
-or, for a two-level `lavaan` fit, `TwoLevelMediationData` (see
-[Two-level
+or, for a two-level `lavaan` fit, `TwoLevelMediationData`
+(`TwoLevelParallelMediationData` with two or more parallel mediators;
+see [Two-level
 mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md)).
 The shared interface includes
 [`nie()`](https://data-wise.github.io/medfit/reference/nie.md),

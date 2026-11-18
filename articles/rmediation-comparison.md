@@ -108,8 +108,9 @@ first column.
 “Unsupported” means the call fails today with a message that names the
 missing method, not that it never will; check RMediation’s own `NEWS.md`
 before relying on a row. medfit’s `ClusterMediationData`,
-`TwoLevelMediationData`, `JointMediationData` and the FIML classes are
-not in the table: they were not exercised here.
+`TwoLevelMediationData`, `TwoLevelParallelMediationData`,
+`JointMediationData` and the FIML classes are not in the table: they
+were not exercised here.
 
 ## What RMediation adds, and what it does not
 

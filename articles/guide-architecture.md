@@ -71,6 +71,7 @@ then converts.
 | `JointMediationData` | several mediators with X by M products | `lm` |
 | `ClusterMediationData` | cluster-level treatment (2-1-1) | `lmer`, `fit_mediation(engine = "lmer")` |
 | `TwoLevelMediationData` | X, M and Y on level-1 units (1-1-1), within and between effects | two-level `lavaan` fit |
+| `TwoLevelParallelMediationData` | the same with two or more parallel mediators (experimental) | two-level `lavaan` fit |
 | `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | bounded full-information ML for missing data | sem engine with `missing = "fiml"` |
 | `SEMFit` | a native structural equation fit (the input to extraction) | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) |
 | `BootstrapResult` | an interval and its draws | [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md) |

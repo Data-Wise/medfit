@@ -94,9 +94,9 @@ column.
 “Unsupported” means the call fails today with a message that names the
 missing method, not that it never will; check the `NEWS.md` of probmed
 before relying on a row. medfit’s `ClusterMediationData`,
-`TwoLevelMediationData`, `JointMediationData` and the FIML classes are
-not in the table: they have no probmed workflow and were not exercised
-here.
+`TwoLevelMediationData`, `TwoLevelParallelMediationData`,
+`JointMediationData` and the FIML classes are not in the table: they
+have no probmed workflow and were not exercised here.
 
 ## What probmed adds, and what it does not
 

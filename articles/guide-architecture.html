@@ -179,7 +179,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.19.0/vignettes/articles/guide-architecture.qmd" class="external-link"><code>vignettes/articles/guide-architecture.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/guide-architecture.qmd" class="external-link"><code>vignettes/articles/guide-architecture.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -296,6 +296,11 @@
 <td>two-level <code>lavaan</code> fit</td>
 </tr>
 <tr class="even">
+<td><code>TwoLevelParallelMediationData</code></td>
+<td>the same with two or more parallel mediators (experimental)</td>
+<td>two-level <code>lavaan</code> fit</td>
+</tr>
+<tr class="odd">
 <td>
 <code>FIMLMediationData</code>, <code>FIMLParallelMediationData</code>, <code>FIMLSerialMediationData</code>
 </td>
@@ -303,12 +308,12 @@
 <td>sem engine with <code>missing = "fiml"</code>
 </td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>SEMFit</code></td>
 <td>a native structural equation fit (the input to extraction)</td>
 <td><code><a href="../reference/fit_sem.html">fit_sem()</a></code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>BootstrapResult</code></td>
 <td>an interval and its draws</td>
 <td><code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code></td>
