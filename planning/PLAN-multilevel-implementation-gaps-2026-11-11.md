@@ -20,6 +20,7 @@ owns priority. Standing decisions stay: Q3 (fixed slopes, `sigma_ab = 0`), Q4 (t
 ## Unblock conditions for IG1 (S4)
 
 - **U1** The plan's tolerances (plan 0.5) are fixed in writing.
+  Done 2026-11-18: `planning/specs/ADR-twolevel-oracle-tolerances-2026-11-18.md` (TL-1 to TL-7).
 - **U2** The native fixed-moment convention has an oracle (plan 0.8, S1-Q2).
 - **U3** Oracles agree: the hand-built O8 likelihood, lavaan, and OpenMx.
 - **U4** A reliability grid with small-J, low-ICC and unbalanced cells, plus a level-2 variance parametrization experiment (floor versus unconstrained), with Q8 and D-11 unchanged.
