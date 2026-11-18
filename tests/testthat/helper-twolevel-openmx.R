@@ -125,13 +125,26 @@ tl_mx_to_hand <- function(mx) {
 }
 
 # One expectation each, so a planted defect can be run through it with expect_failure().
-# Estimates: |diff| <= max(0.01 * SE, 1e-4), SE from lavaan.
+# Estimates (ADR TL-1, TL-5): |diff| <= max(0.01 * SE, 1e-4), SE from lavaan.
 tl_mx_check_est <- function(mx_est, lav) {
   excess <- abs(mx_est - lav$est) - pmax(0.01 * lav$se, 1e-4)
   testthat::expect_lte(max(excess), 0, label = paste("worst estimate:", names(excess)[which.max(excess)]))
 }
-# SEs: 1e-3 relative (lavaan fixed.x = FALSE, observed information, against OpenMx's Hessian).
+# SEs (ADR TL-2, TL-5): 1e-3 relative (lavaan fixed.x = FALSE, observed information, against
+# OpenMx's Hessian).
 tl_mx_check_se <- function(mx_se, lav) {
   rel <- abs(mx_se - lav$se) / lav$se
   testthat::expect_lte(max(rel), 1e-3, label = paste("worst SE:", names(rel)[which.max(rel)]))
+}
+
+# SE of the cross-level contrast a_w - a_b from a covariance matrix whose rows and columns
+# carry the labels a_w and a_b (OpenMx's output$vcov and lavaan's vcov() both do). Unlike the
+# marginal SEs it reads Cov(a_w, a_b), so it is the check the zeroed cross-level block fails
+# (ADR TL-7).
+tl_mx_contrast_se <- function(v) {
+  sqrt(v["a_w", "a_w"] + v["a_b", "a_b"] - 2 * v["a_w", "a_b"])
+}
+# Contrast SE (ADR TL-2, TL-5): 1e-3 relative against lavaan's.
+tl_mx_check_contrast_se <- function(mx_se, lav_se) {
+  testthat::expect_lte(abs(mx_se - lav_se) / lav_se, 1e-3, label = "SE(a_w - a_b) relative difference")
 }
