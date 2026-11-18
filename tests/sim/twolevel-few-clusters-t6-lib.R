@@ -75,10 +75,14 @@ fc_t6_status_counts <- function(rows, reps) {
   out
 }
 
-# Every cell has exactly replicates 1..R under P0, and under P1 exactly in the P1 cells; no other (cell, arm) group.
-fc_t6_check_rows <- function(rows, reps, cells, p1_cells) {
+# Every cell has exactly the launch's replicates rep_start to rep_start + R - 1 under P0, and under P1 exactly in the
+# P1 cells; no other (cell, arm) group. The seed `cell_id * 1e5 + rep` needs the last replicate below 1e5.
+fc_t6_check_rows <- function(rows, reps, cells, p1_cells, rep_start = 1L) {
   checkmate::assert_data_frame(rows, min.rows = 1, .var.name = "rows")
   checkmate::assert_count(reps, positive = TRUE, .var.name = "reps")
+  checkmate::assert_count(rep_start, positive = TRUE, .var.name = "rep_start")
+  last <- rep_start + reps - 1
+  if (last >= 1e5) stop(sprintf("replicates %d to %d reach 1e5, past the seed formula", rep_start, last), call. = FALSE)
   checkmate::assert_integerish(cells, any.missing = FALSE, min.len = 1, .var.name = "cells")
   checkmate::assert_integerish(p1_cells, any.missing = FALSE, .var.name = "p1_cells")
   checkmate::assert_subset(p1_cells, cells, .var.name = "p1_cells")
@@ -91,8 +95,45 @@ fc_t6_check_rows <- function(rows, reps, cells, p1_cells) {
   for (g in want) {
     r <- rows$rep[key == g]
     if (length(r) != reps) stop(sprintf("%s has %d rows, not R = %d", g, length(r), reps), call. = FALSE)
-    if (!setequal(r, seq_len(reps)) || anyDuplicated(r)) {
-      stop(sprintf("%s does not hold replicates 1 to %d exactly once", g, reps), call. = FALSE)
+    if (!setequal(r, seq(rep_start, last)) || anyDuplicated(r)) {
+      stop(sprintf("%s does not hold replicates %d to %d exactly once", g, rep_start, last), call. = FALSE)
+    }
+  }
+  invisible(TRUE)
+}
+
+# The launch manifest the runner writes once per work directory and R (W/manifest-R<REPS>.txt, key=value lines), read
+# as text so that a version such as "1.0" stays a string.
+fc_t6_manifest_keys <- c("sha", "rep_start", "mc_b", "eps", "medfit_version", "lavaan_version")
+fc_t6_read_manifest <- function(path) {
+  checkmate::assert_string(path, .var.name = "path")
+  if (!file.exists(path)) {
+    stop("no launch manifest at ", path, "; the runner writes it on its first launch", call. = FALSE)
+  }
+  lines <- readLines(path, warn = FALSE)
+  lines <- lines[grepl("=", lines, fixed = TRUE)]
+  vals <- sub("^[^=]*=", "", lines)
+  names(vals) <- sub("=.*$", "", lines)
+  absent <- setdiff(fc_t6_manifest_keys, names(vals))
+  if (length(absent)) stop("launch manifest ", path, " lacks ", paste(absent, collapse = ", "), call. = FALSE)
+  as.list(vals)
+}
+
+# Every row comes from one medfit and one lavaan, the versions recorded at launch (plan section 9 pins lavaan); only
+# then may the aggregation drop the two columns.
+fc_t6_check_versions <- function(rows, medfit, lavaan) {
+  checkmate::assert_data_frame(rows, min.rows = 1, .var.name = "rows")
+  checkmate::assert_string(medfit, .var.name = "medfit")
+  checkmate::assert_string(lavaan, .var.name = "lavaan")
+  for (col in c("medfit_version", "lavaan_version")) {
+    if (!col %in% names(rows)) stop("rows have no ", col, " column", call. = FALSE)
+    v <- unique(as.character(rows[[col]]))
+    if (length(v) != 1L) {
+      stop(sprintf("%s holds %d values across cells: %s", col, length(v), paste(v, collapse = ", ")), call. = FALSE)
+    }
+    want <- if (col == "medfit_version") medfit else lavaan
+    if (!identical(v, want)) {
+      stop(sprintf("%s is %s, not %s as recorded at launch", col, v, want), call. = FALSE)
     }
   }
   invisible(TRUE)
@@ -240,8 +281,8 @@ fc_t6_parametrization <- function(rows, p1_cells) {
 }
 
 # Top-level aggregation: the row check, the failure-category check, then the two tables. Errors, never warnings.
-fc_t6_aggregate <- function(rows, reps, cells, p1_cells) {
-  fc_t6_check_rows(rows, reps = reps, cells = cells, p1_cells = p1_cells)
+fc_t6_aggregate <- function(rows, reps, cells, p1_cells, rep_start = 1L) {
+  fc_t6_check_rows(rows, reps = reps, cells = cells, p1_cells = p1_cells, rep_start = rep_start)
   counts <- fc_t6_status_counts(rows, reps = reps)
   list(
     counts = counts,

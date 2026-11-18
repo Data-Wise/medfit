@@ -864,6 +864,52 @@ test_that("T6: the row check passes a complete run and errors on a short, duplic
   expect_error(fc_t6_check_rows(rows, 4L, c(cells, 1003L), 1001L), "1003/p0") # nolint: object_usage_linter.
 })
 
+test_that("T6: the row check holds each cell to the launch's replicate range REP_START to REP_START + R - 1", {
+  rows <- rbind(fc_t6_rows(c(1001L, 1002L), 4L, "p0"), fc_t6_rows(1001L, 4L, "p1"))
+  cells <- c(1001L, 1002L)
+  late <- rows
+  late$rep <- late$rep + 500L
+  expect_invisible(fc_t6_check_rows(late, 4L, cells, 1001L, rep_start = 501L)) # nolint: object_usage_linter.
+  # planted wrong ranges: replicates 1 to 4 against a launch at 501, 501 to 504 against the default start, and a
+  # range shifted by one
+  expect_error(fc_t6_check_rows(rows, 4L, cells, 1001L, rep_start = 501L), "replicates 501 to 504") # nolint
+  expect_error(fc_t6_check_rows(late, 4L, cells, 1001L), "replicates 1 to 4") # nolint: object_usage_linter.
+  expect_error(fc_t6_check_rows(late, 4L, cells, 1001L, rep_start = 502L), "replicates 502 to 505") # nolint
+  # the seed formula cell_id * 1e5 + rep needs the last replicate below 1e5
+  expect_error(fc_t6_check_rows(late, 4L, cells, 1001L, rep_start = 99998L), "1e5") # nolint: object_usage_linter.
+})
+
+test_that("T6: the aggregation refuses rows from mixed builds or another lavaan than the launch's", {
+  rows <- fc_t6_rows(1001L, 4L, "p0")
+  rows$medfit_version <- "0.18.0.9000"
+  rows$lavaan_version <- "0.6.19"
+  expect_invisible(fc_t6_check_versions(rows, medfit = "0.18.0.9000", lavaan = "0.6.19")) # nolint
+  # planted defects: a row file from another medfit, one from another lavaan, a lavaan other than the one recorded at
+  # launch, and a row file without the version columns
+  mixed_m <- rows
+  mixed_m$medfit_version[2] <- "0.7.0"
+  expect_error(fc_t6_check_versions(mixed_m, "0.18.0.9000", "0.6.19"), "medfit_version.*2 values") # nolint
+  mixed_l <- rows
+  mixed_l$lavaan_version[3] <- "0.6.17"
+  expect_error(fc_t6_check_versions(mixed_l, "0.18.0.9000", "0.6.19"), "lavaan_version.*2 values") # nolint
+  expect_error(fc_t6_check_versions(rows, "0.18.0.9000", "0.6.17"), "lavaan_version.*0.6.19.*0.6.17") # nolint
+  expect_error(fc_t6_check_versions(rows, "0.17.0", "0.6.19"), "medfit_version.*0.18.0.9000.*0.17.0") # nolint
+  expect_error(fc_t6_check_versions(rows[setdiff(names(rows), "lavaan_version")], "0.18.0.9000", "0.6.19"), # nolint
+               "lavaan_version")
+})
+
+test_that("T6: the launch manifest is read as text and a missing one or a missing key is an error", {
+  f <- withr::local_tempfile()
+  writeLines(c("sha=abc123", "rep_start=501", "mc_b=2000", "eps=1e-3", "medfit_version=0.18.0.9000",
+               "lavaan_version=1.0"), f)
+  man <- fc_t6_read_manifest(f) # nolint: object_usage_linter.
+  expect_identical(man$rep_start, "501")
+  expect_identical(man$lavaan_version, "1.0")
+  expect_error(fc_t6_read_manifest(paste0(f, "-absent")), "no launch manifest") # nolint: object_usage_linter.
+  writeLines(c("sha=abc123", "rep_start=501", "mc_b=2000", "eps=1e-3"), f)
+  expect_error(fc_t6_read_manifest(f), "lacks medfit_version, lavaan_version") # nolint: object_usage_linter.
+})
+
 test_that("T6: failure categories partition the rows and the aggregation errors when they do not sum to R", {
   rows <- fc_t6_rows(1001L, 6L, "p0")
   rows$lavaan_error[1] <- "boom"

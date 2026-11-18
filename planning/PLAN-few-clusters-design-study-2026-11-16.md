@@ -219,3 +219,10 @@ B = 2000), cluster-bootstrap percentile (`method = "nonparametric", cluster = "i
 - **M8** Decision-table cutoffs fixed before T6: failure rate 5% and 20%; kept/B below .9 (P2X section 4.5). They are
   design choices, not values from the literature.
 - Unequal-cluster n = 5 cells stay in the grid; their non-convergence is reported as a finding, not dropped.
+- Replicates (2026-11-17, after the T6 QA): T6 runs replicates 501 to 1500 (R = 1000, seeds still
+  `cell_id * 1e5 + rep`), the runner's default `REP_START = 501`. The T5 pilot ran replicates 1 to 500 of the same
+  cells and chose the P1 cells from them; reusing them would make T6 half the pilot data and select P1 on the rows it
+  then reports (section 9: the main study runs on fresh seeds).
+- Cell 1106 (T5 P0 inadmissible rate .102, within one MCSE of about .013 of the .10 cutoff) stays in P1 and is
+  provisional: T8 reports it as borderline.
+- MC B is 2000, as in section 6 and the T5 runner; the T5 memo's "MC B = 1000" is a typo, to be fixed in T8.
