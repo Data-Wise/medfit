@@ -181,6 +181,12 @@ test_that("a within-only variable is refused", {
   expect_error(tl_fit(m), "'Q'.*only in `level: 1` rows", class = "medfit_error_twolevel_varset")
 })
 
+test_that("a model with only `level: 1` rows is refused as within-only, naming the missing `level: 2` row", {
+  m <- "level: 1\nM ~ X\nY ~ M + X"
+  expect_error(tl_fit(m), "only in `level: 1` rows; every level-1 variable also needs a `level: 2` row",
+               class = "medfit_error_twolevel_varset")
+})
+
 test_that("size-1 clusters are skipped by the constancy check; all of size 1 is refused", {
   dat <- tl_guard_data()
   m <- "level: 1\nM ~ X\nY ~ M + X\nlevel: 2\nM ~ X + Zc\nY ~ M + X + Zc"
