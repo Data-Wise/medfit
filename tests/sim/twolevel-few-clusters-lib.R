@@ -209,16 +209,20 @@ fc_adapter_classes <- c(
   between_weak = "medfit_warning_between_weak"
 )
 
-# One row for a dataset and arm: fit status, level-2 variances, adapter warning flags, and per estimand the delta
-# estimate, SE, interval and truth (NA when the adapter returns a within-only object or the fit fails).
-fc_analyze <- function(data, arm, eps = 1e-3, truth, ci_level = .95) {
+# One row for a dataset and arm: fit status, level-2 variances, the sample ICCs of X and M (the adapter's own
+# `.twolevel_icc()` and lavaan's `lavInspect(fit, "icc")`, so the S4 gate check can be recomputed), adapter warning
+# flags, and per estimand the delta estimate, SE, interval and truth (NA when the adapter returns a within-only object
+# or the fit fails). `mc_b` > 0 adds the MC arm (fc_mc(), `mc_*` columns) on `streams$mc`; `boot_b` > 0 adds the
+# three-effect cluster bootstrap (fc_cluster_boot(), `bt_*` columns) on `streams$boot` (task T5).
+fc_analyze <- function(data, arm, eps = 1e-3, truth, ci_level = .95, mc_b = 0L, boot_b = 0L, streams = NULL) {
   f <- fc_fit(data, arm, eps)
   row <- data.frame(
     arm = arm, eps = if (arm == "p1") eps else NA_real_, lavaan_error = f$error,
     n_lavaan_warn = length(f$lavaan_warnings), lavaan_warn = paste(unique(f$lavaan_warnings), collapse = " | "),
     fit_time = f$time, converged = NA, between_identified = NA, admissible = NA,
     l2_var_x = NA_real_, l2_var_m = NA_real_, l2_var_y = NA_real_, neg_l2_var = NA, at_bound = NA,
-    adapter_error = NA_character_, other_warn = "", tidy_warn = "", stringsAsFactors = FALSE
+    adapter_error = NA_character_, other_warn = "", tidy_warn = "", icc_x_shipped = NA_real_,
+    icc_m_shipped = NA_real_, icc_x_lav = NA_real_, icc_m_lav = NA_real_, stringsAsFactors = FALSE
   )
   for (k in names(fc_adapter_classes)) row[[paste0("warn_", k)]] <- FALSE
   for (e in fc_estimands) {
@@ -228,7 +232,10 @@ fc_analyze <- function(data, arm, eps = 1e-3, truth, ci_level = .95) {
     row[[paste0("hi_", e)]] <- NA_real_
     row[[paste0("truth_", e)]] <- truth[[e]]
   }
-  if (!is.na(f$error)) return(row)
+  if (mc_b > 0L || boot_b > 0L) checkmate::assert_list(streams, .var.name = "streams")
+  if (mc_b > 0L) row <- fc_arm_columns(row, "mc", c("lo", "hi", "err"))
+  if (boot_b > 0L) row <- fc_arm_columns(row, "bt", c("lo", "hi", "kept", "err"))
+  if (!is.na(f$error)) return(fc_arm_reason(row, "lavaan error"))
   row$converged <- isTRUE(lavaan::lavInspect(f$fit, "converged"))
   v <- fc_l2_var(f$fit)
   row$l2_var_x <- v[["X"]]
@@ -236,6 +243,12 @@ fc_analyze <- function(data, arm, eps = 1e-3, truth, ci_level = .95) {
   row$l2_var_y <- v[["Y"]]
   row$neg_l2_var <- any(v < 0)
   row$at_bound <- if (arm == "p1") any(v - eps <= 10 * eps) else NA
+  icc <- asNamespace("medfit")$.twolevel_icc(f$fit)
+  row$icc_x_shipped <- icc[["X"]]
+  row$icc_m_shipped <- icc[["M"]]
+  icc_lav <- tryCatch(lavaan::lavInspect(f$fit, "icc"), error = function(e) c(X = NA_real_, M = NA_real_))
+  row$icc_x_lav <- unname(icc_lav["X"])
+  row$icc_m_lav <- unname(icc_lav["M"])
 
   adapter_warn <- character(0)
   other <- character(0)
@@ -254,7 +267,7 @@ fc_analyze <- function(data, arm, eps = 1e-3, truth, ci_level = .95) {
   row$other_warn <- paste(unique(other), collapse = " | ")
   if (inherits(obj, "error")) {
     row$adapter_error <- conditionMessage(obj)
-    return(row)
+    return(fc_arm_reason(row, "adapter error"))
   }
   row$between_identified <- obj@between_identified
   row$admissible <- obj@admissible
@@ -275,6 +288,37 @@ fc_analyze <- function(data, arm, eps = 1e-3, truth, ci_level = .95) {
     row[[paste0("lo_", e)]] <- td$conf_low[i]
     row[[paste0("hi_", e)]] <- td$conf_high[i]
   }
+  if (mc_b > 0L) {
+    t0 <- proc.time()[["elapsed"]]
+    mc <- fc_mc(obj, n_boot = mc_b, stream = streams$mc, ci_level = ci_level)
+    row$mc_time <- proc.time()[["elapsed"]] - t0
+    for (e in fc_boot_effects) for (k in c("lo", "hi", "err")) row[[paste0("mc_", k, "_", e)]] <- mc[[k]][[e]]
+  }
+  if (boot_b > 0L) {
+    t0 <- proc.time()[["elapsed"]]
+    bt <- fc_with_stream(streams$boot, fc_cluster_boot(f$fit, data, n_boot = boot_b, ci_level = ci_level))
+    row$bt_time <- proc.time()[["elapsed"]] - t0
+    row$bt_n_failed <- bt$n_failed
+    for (e in fc_boot_effects) for (k in c("lo", "hi", "kept", "err")) row[[paste0("bt_", k, "_", e)]] <- bt[[k]][[e]]
+  }
+  row
+}
+
+# MC and bootstrap columns of a row, NA until the arm runs (T5); `time` and the failed count are per row.
+fc_arm_columns <- function(row, prefix, keys) {
+  row[[paste0(prefix, "_time")]] <- NA_real_
+  if (prefix == "bt") row$bt_n_failed <- NA_integer_
+  for (e in fc_boot_effects) {
+    for (k in keys) {
+      row[[paste0(prefix, "_", k, "_", e)]] <- switch(k, err = NA_character_, kept = NA_integer_, NA_real_)
+    }
+  }
+  row
+}
+
+# When the fit or the adapter fails, the arms that were asked for record why they did not run.
+fc_arm_reason <- function(row, reason) {
+  for (col in grep("^(mc|bt)_err_", names(row), value = TRUE)) row[[col]] <- reason
   row
 }
 
@@ -376,11 +420,115 @@ fc_boot_closure <- function(fit, treatment = "X", mediator = "M", outcome = "Y",
   fn
 }
 
+# RNG streams for the MC and bootstrap arms (T5): the L'Ecuyer-CMRG streams after the dataset's own (seed
+# `cell_id * 1e5 + rep`), so the arms never reuse the draws that built the data; the session RNG is left alone.
+fc_streams <- function(seed) {
+  data_state <- fc_with_seed(seed, "L'Ecuyer-CMRG", get(".Random.seed", envir = globalenv()))
+  mc <- parallel::nextRNGStream(data_state)
+  list(mc = mc, boot = parallel::nextRNGStream(mc))
+}
+
+# Evaluate `code` with the RNG at `stream` (a .Random.seed vector); the session's seed and kind are restored after.
+fc_with_stream <- function(stream, code) {
+  old_kind <- RNGkind()
+  on.exit(if (!identical(RNGkind(), old_kind)) RNGkind(old_kind[1], old_kind[2], old_kind[3]), add = TRUE)
+  withr::with_preserve_seed({
+    assign(".Random.seed", stream, envir = globalenv()) # nolint: object_name_linter.
+    code
+  })
+}
+
+# MC arm (T5): the shipped parametric bootstrap (draws from N(estimates, vcov), percentile interval) once per effect,
+# each effect started from `stream`, so the three share their draws. A refused effect (a within-only object) or a
+# failed draw (a vcov that is not positive definite) is recorded in `err`, not raised.
+fc_mc <- function(obj, n_boot = 2000L, stream, ci_level = .95) {
+  na3 <- stats::setNames(rep(NA_real_, 3L), fc_boot_effects)
+  out <- list(lo = na3, hi = na3, err = stats::setNames(rep(NA_character_, 3L), fc_boot_effects))
+  for (e in fc_boot_effects) {
+    r <- tryCatch(
+      fc_with_stream(stream, medfit::bootstrap_mediation(
+        medfit::twolevel_statistic(obj, e), method = "parametric", mediation_data = obj, n_boot = n_boot,
+        ci_level = ci_level
+      )),
+      error = function(err) err
+    )
+    if (inherits(r, "error")) {
+      out$err[[e]] <- conditionMessage(r)
+    } else {
+      out$lo[[e]] <- r@ci_lower
+      out$hi[[e]] <- r@ci_upper
+    }
+  }
+  out
+}
+
+# Three-effect cluster bootstrap (T5): the loop of the shipped `bootstrap_mediation(cluster = )` (R/bootstrap.R,
+# .bootstrap_nonparametric_cluster) around the T3 closure, one refit per resample for all three effects. The clusters
+# are drawn from the current RNG as the shipped loop draws them, relabeled by the shipped helper; an error makes the
+# replicate NA, and so does a warning (other than `medfit_few_clusters`) or a "singular" message. Per effect the kept
+# estimates give the percentile interval; with fewer than `min_kept` (10, the shipped rule) the interval is NA and
+# `err` says why, where the shipped function stops. A closure that cannot be built (every effect refused) or a
+# refused effect is recorded in `err`.
+fc_cluster_boot <- function(fit, data, n_boot, ci_level = .95, cluster = "id", min_kept = 10L) {
+  na3 <- stats::setNames(rep(NA_real_, 3L), fc_boot_effects)
+  out <- list(lo = na3, hi = na3, kept = stats::setNames(rep(0L, 3L), fc_boot_effects),
+              err = stats::setNames(rep(NA_character_, 3L), fc_boot_effects),
+              est = stats::setNames(vector("list", 3L), fc_boot_effects), n_failed = NA_integer_)
+  fn <- tryCatch(fc_boot_closure(fit), error = function(e) e)
+  if (inherits(fn, "error")) {
+    out$err[] <- conditionMessage(fn)
+    out$kept[] <- NA_integer_
+    return(out)
+  }
+  values <- unique(data[[cluster]])
+  draws <- lapply(seq_len(n_boot), function(i) sample(values, length(values), replace = TRUE))
+  relabel <- asNamespace("medfit")$.relabel_clusters
+  est <- vapply(draws, function(ids) {
+    flagged <- FALSE
+    v <- withCallingHandlers(
+      tryCatch(fn(relabel(data, cluster, ids)), error = function(e) na3),
+      warning = function(w) {
+        if (!inherits(w, "medfit_few_clusters")) flagged <<- TRUE
+        invokeRestart("muffleWarning")
+      },
+      message = function(m) {
+        if (grepl("singular", conditionMessage(m), fixed = TRUE)) flagged <<- TRUE
+        invokeRestart("muffleMessage")
+      }
+    )
+    if (flagged) na3 else v
+  }, numeric(3))
+  est <- matrix(est, nrow = 3L, dimnames = list(fc_boot_effects, NULL))
+  out$n_failed <- sum(colSums(is.na(est)) == 3L)
+  refused <- names(attr(fn, "refused"))
+  alpha <- 1 - ci_level
+  for (e in fc_boot_effects) {
+    if (e %in% refused) {
+      out$err[[e]] <- conditionMessage(attr(fn, "refused")[[e]])
+      out$kept[[e]] <- NA_integer_
+      next
+    }
+    kept <- est[e, !is.na(est[e, ])]
+    out$kept[[e]] <- length(kept)
+    out$est[[e]] <- kept
+    if (length(kept) < min_kept) {
+      out$err[[e]] <- sprintf("fewer than %d kept replicates (%d of %d)", min_kept, length(kept), n_boot)
+      next
+    }
+    ci <- stats::quantile(kept, probs = c(alpha / 2, 1 - alpha / 2), names = FALSE)
+    out$lo[[e]] <- ci[1]
+    out$hi[[e]] <- ci[2]
+  }
+  out
+}
+
 # One row per dataset and arm for a grid row and replicate; `scale_x` analyzes the same dataset with X times k and
 # the truths divided by k (T4).
-fc_row <- function(cell, rep, arm, eps = 1e-3, mutant = "", scale_x = 1) {
+fc_row <- function(cell, rep, arm, eps = 1e-3, mutant = "", scale_x = 1, mc_b = 0L, boot_b = 0L) {
   d <- fc_rescale_x(fc_simulate(cell, rep), scale_x)
-  out <- fc_analyze(d, arm, eps = eps, truth = fc_truth(cell$nie_b, scale_x))
+  streams <- if (mc_b > 0L || boot_b > 0L) fc_streams(fc_seed(cell$cell_id, rep)) else NULL
+  out <- fc_analyze(d, arm, eps = eps, truth = fc_truth(cell$nie_b, scale_x), mc_b = mc_b, boot_b = boot_b,
+                    streams = streams)
   out <- fc_apply_mutant(out, mutant)
   cbind(cell, rep = as.integer(rep), seed = fc_seed(cell$cell_id, rep), n_obs = nrow(d), out, mutant = mutant,
         scale_x = scale_x, stringsAsFactors = FALSE)
