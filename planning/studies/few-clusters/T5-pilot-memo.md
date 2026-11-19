@@ -13,7 +13,7 @@ the snapshot of the harness the runs used). The per-dataset rows stay outside gi
 | Arm | Planned (P2X §8) | Run |
 |---|---|---|
 | Delta and MC (MC B = 1000) | all 120 cells, R = 500 | done: 60,000 datasets, 0 lavaan errors |
-| Cluster bootstrap | 6 cells (1001, 1002, 1004, 1021, 1022, 1024), R = 300, B = 499 | 5 of 6 done (1024, 1022, 1004, 1002, 1021); 1001 on Hopper (below) |
+| Cluster bootstrap | 6 cells (1001, 1002, 1004, 1021, 1022, 1024), R = 300, B = 499 | 6 of 6 done (1024, 1022, 1004, 1002, 1021 locally; 1001 on Hopper, below) |
 | Timing probe for S2 | not in P2X | 13 cells at 4 datasets x B = 50, the other 107 at 2 x B = 25 |
 | P1 (floor arm) | 4 cells | not run (below) |
 
@@ -153,7 +153,10 @@ The six-cell run (`_agents_workspace/fc-t5/run-boot6.sh`, R = 300, B = 499, 14 c
 The rerun resumed at 1002: cells 1002 and 1021 finished (wall 25,764 s and 12,852 s; 1021 ended 2026-11-18 07:13), and
 1001 (J = 10, ICC .05) ran locally until 2026-11-18, when it was stopped with no rows written and moved to Hopper:
 array 4360586, 30 tasks of 10 replicates (`REP_START`), same seeds `cell_id * 1e5 + rep`, B = 499, lavaan 0.7.3, medfit
-from `f3e5e967` (the T6 install). The R version differs (4.4.0 on Hopper, 4.6.2 locally). The results below cover the five finished cells (n = 5, equal clusters). Kept is the mean number of the 499 refits a replicate kept for that effect; coverage is
+from `f3e5e967` (the T6 install). The R version differs (4.4.0 on Hopper, 4.6.2 locally). All 30 tasks completed (the
+last ended about 01:13 MST on 2026-11-19; 1 h 41 min to 2 h 51 min per task on 10 cores); the 30 chunks combine to
+`rows/boot/cell-1001.csv`, 300 rows, replicates 1 to 300 once each, sha256 `b9ac250f5433382e09d672558a72603afda5b7615d08d0d571b83fbff7e5312f`.
+The results below cover all six cells (n = 5, equal clusters). Kept is the mean number of the 499 refits a replicate kept for that effect; coverage is
 over the replicates with a percentile interval, with its MCSE; widths are medians, with the delta interval for the
 same replicates beside them.
 
@@ -169,16 +172,19 @@ same replicates beside them.
 | 1002 | 20 | .05 | NIE_B | 264.1 (81) | 102 | .980 (.014) | 16.87 / 10.97 |
 | 1021 | 10 | .40 | NIE_W | 456.0 (317) | 289 | .907 (.017) | 0.393 / 0.407 |
 | 1021 | 10 | .40 | NIE_B | 382.8 (110) | 277 | 1.000 (.000) | 7.293 / 1.886 |
+| 1001 | 10 | .05 | NIE_W | 413.2 (257) | 248 | .907 (.018) | 0.383 / 0.411 |
+| 1001 | 10 | .05 | NIE_B | 239.3 (61) | 79 | .987 (.013) | 11.17 / 9.316 |
 
-The contrast matches NIE_B in kept refits and nearly in coverage (.943, .983, 1.000, .980, 1.000 in table order).
+The contrast matches NIE_B in kept refits and nearly in coverage (.943, .983, 1.000, .980, 1.000, .987 in table order).
 Replicates without a between interval: in 1004, 110 within-only (by design) and 22 adapter errors; in 1002, 159 and 39;
-in 1021, 12 and 11. Mean failed refits per replicate: 74.2 in 1002, 43.0 in 1021.
+in 1021, 12 and 11; in 1001, 169 and 52. Mean failed refits per replicate: 74.2 in 1002, 43.0 in 1021, 85.8 in 1001.
 
 Reading: at J = 50 and ICC .40 the bootstrap is near nominal for both levels. Where the between level is weak
 (J = 20 or 10, or ICC .05) refits are dropped and the between interval is over-wide: coverage near 1 there comes
-from width (1.5 to 5 times the delta interval), not accuracy. NIE_W under-covers at J = 20 and 10 (.900, .927, .907).
-At J = 20 and ICC .05 (1002) only 102 of 300 replicates give a between interval, so its .980 is a selected subset.
-These five cells do not change the S2 verdict, which rests on the timing probes; they support the plan's T7 no-go
+from width (1.5 to 5 times the delta interval), not accuracy. NIE_W under-covers at J = 20 and 10 (.900, .927, .907, .907).
+At ICC .05 and J = 20 (1002) only 102 of 300 replicates give a between interval, and at J = 10 (1001) only 79, so
+their .980 and .987 are selected subsets; in 1001 the bootstrap interval is about 1.2 times the delta interval.
+These six cells do not change the S2 verdict, which rests on the timing probes; they support the plan's T7 no-go
 until M2 is decided.
 
 ## Open for the maintainer
