@@ -23,3 +23,4 @@ bounded random-X FIML with serial mediators and one covariate,syntax,fiml-ext,mo
 bounded random-X FIML with the pure chain of serial mediators and one covariate,syntax,fiml-ext,model-sem
 bounded random-X FIML with serial mediators and two covariates,syntax,fiml-ext,model-sem
 bounded random-X FIML with the pure chain of serial mediators and two covariates,syntax,fiml-ext,model-sem
+two-level observed (1-1-1),syntax,twolevel-parity,model-twolevel

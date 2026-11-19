@@ -148,6 +148,7 @@ verdict_gate <- function(gate, d, s) {
                      "warn_above", "mislabel", "pass"),
     fiml = c("cell", "check", "value", "limit", "pass"),
     "fiml-ext" = c("cell", "check", "value", "limit", "pass"),
+    "twolevel-parity" = c("cell", "check", "value", "limit", "pass"),
     restoration = c("check", "kind", "value", "limit", "pass", "detail"),
     "native-defaults" = c("cell", "combo", "quantity", "native", "oracle", "diff", "tol", "status", "reason"),
     semopy = c("param", "status", "est_gap", "se_rel", "sl_est_gap", "sl_se_rel", "reason")
@@ -495,6 +496,24 @@ verdict_gate <- function(gate, d, s) {
         chk("successful checks", all(d$pass %in% TRUE), "no failed or missing checks")
       )
     },
+    # S4a.4: native two-level parity against lavaan (TL-1, TL-2, TL-4, df, the a_w - a_b contrast SE); the cells and
+    # limits are frozen here, so a results file cannot drop a cell or widen a limit
+    "twolevel-parity" = {
+      fx <- c("bal40", "unb40", "bal100", "unb100")
+      plain <- c("estimates", "se", "loglik", "df", "contrast")
+      expected <- c(as.vector(outer(fx, plain, paste, sep = ":")),
+                    as.vector(outer(paste0(fx, "-z"), plain[-5L], paste, sep = ":")))
+      keys <- paste(d$cell, d$check, sep = ":")
+      limits <- c(estimates = 1, se = 1e-3, loglik = 1e-6, df = 0, contrast = 1e-3)
+      rbind(
+        rows_chk(d, s),
+        chk("complete cells", identical(sort(keys), sort(expected)), "eight cells, four or five checks, no duplicates"),
+        chk("numerical checks", all(is.finite(d$value) & d$value >= 0 & d$value <= d$limit),
+            "every recorded discrepancy satisfies its frozen limit"),
+        chk("frozen limits", all(d$limit == limits[d$check]), "limits cannot be widened in results"),
+        chk("successful checks", all(d$pass %in% TRUE), "no failed or missing checks")
+      )
+    },
     restoration = {
       # restoration-bound T5/T6 (G12): every check of the script is a row; the numeric verdicts are re-derived from the
       # recorded numbers, so a row that claims pass over a bad number cannot pass. tol_est is k, tol_se the margin.
@@ -653,6 +672,7 @@ mutate <- function(gate, kind, d) {
       d$pass[1:3] <- FALSE
     }
     if (gate %in% c("fiml", "fiml-ext")) d$value[1L] <- 1
+    if (gate == "twolevel-parity") d$value[1L] <- 2 # the estimates limit is 1
     if (gate == "restoration") {
       # the recorded numbers say fail while the pass column still says TRUE
       d$value[grepl("^separation", d$check)] <- 100
@@ -690,7 +710,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "compare-lr") d$verdict[1] <- "error"
     if (gate == "native-defaults") d$status[1] <- "fail"
     if (gate == "semopy") d$status[1] <- "error"
-    if (gate %in% c("restoration", "fiml", "fiml-ext")) d$pass[1] <- FALSE
+    if (gate %in% c("restoration", "fiml", "fiml-ext", "twolevel-parity")) d$pass[1] <- FALSE
   }
   if (kind == "all_flagged" && gate == "nonlinear-profile") d$note[d$fixture %in% "var-1e6-1e-6"] <- "flagged"
   if (kind == "floor_disproved_silent" && gate == "nonlinear-profile") {
@@ -730,7 +750,7 @@ mutate <- function(gate, kind, d) {
     new_gate <- gate %in% c(
       names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x",
       "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep", "compare-lr", "restoration",
-      "native-defaults", "semopy", "fiml", "fiml-ext"
+      "native-defaults", "semopy", "fiml", "fiml-ext", "twolevel-parity"
     )
     # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
@@ -937,6 +957,7 @@ scripts <- c(
   "compare-lr" = "tests/sim/compare-lr-gate.R",
   fiml = "tests/sim/sem-fiml-gate.R",
   "fiml-ext" = "tests/sim/sem-fiml-ext-gate.R",
+  "twolevel-parity" = "tests/sim/sem-twolevel-parity-gate.R",
   restoration = "tests/sim/sem-restoration-gate.R",
   "native-defaults" = "tests/sim/native-defaults-oracle.R",
   semopy = "tests/sim/semopy-oracle-gate.R"

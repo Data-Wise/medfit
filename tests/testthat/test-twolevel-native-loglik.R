@@ -221,11 +221,9 @@ test_that("the single-level .sem_eval() path is unchanged by the two-level dispa
   expect_identical(.sem_eval(th, ram_m, smp_m, TRUE), orig(th, ram_m, smp_m, TRUE))
 })
 
-test_that("fit_sem() still stops on a valid two-level model (no fitter before S4a.4)", {
-  expect_error(fit_sem(tl_lavaan_model, tl_data_unbalanced(), cluster = "cluster"),
-               class = "medfit_error_twolevel_not_implemented")
-  expect_error(fit_sem(tln_model_z(), tln_data_z(), cluster = "cluster"),
-               class = "medfit_error_twolevel_not_implemented")
+test_that("fit_sem() fits a valid two-level model (S4a.4), with and without Z", {
+  expect_true(S7::S7_inherits(fit_sem(tl_lavaan_model, tl_data_unbalanced(), cluster = "cluster"), SEMFit))
+  expect_true(S7::S7_inherits(fit_sem(tln_model_z(), tln_data_z(), cluster = "cluster"), SEMFit))
 })
 
 test_that("clusters of size 1 and 2 (with Z): .sem_eval() equals the stacked density to 1e-10", {

@@ -10,11 +10,12 @@
 # replays them after the ledger is built, a failure keeps its class and carries them in the ledger and the message.
 .sem_fit_syntax <- function(model, data, information = c("observed", "expected"), n_starts = 5L,
                             control = list(), weights = NULL, se_type = c("model", "sandwich"), parsed = NULL,
-                            meanstructure = NULL, fixed_x = FALSE, factors = NULL, covariance_transport = FALSE) {
+                            meanstructure = NULL, fixed_x = FALSE, factors = NULL, covariance_transport = FALSE,
+                            cluster = NULL) {
   context <- .sem_outcome_context(model, parsed, data, information, weights, meanstructure, fixed_x,
                                   n_starts, control, se_type, factors)
   captured <- .sem_capture_outcome(.sem_fit_pipeline(model, data, information, n_starts, control, weights,
-                                                     se_type, parsed, meanstructure, fixed_x, factors))
+                                                     se_type, parsed, meanstructure, fixed_x, factors, cluster))
   out <- captured$value
   err <- captured$error
   if (inherits(err, "medfit_covariance_untyped")) {
@@ -57,8 +58,8 @@
   out
 }
 
-# Defensive: `fit_sem()` sends every model with `level:` lines through `.sem_twolevel_guard()`, which ends in the same
-# stop; this one keeps the single-level fitter off such a model however it is reached.
+# Defensive: `fit_sem()` sends every model with `level:` lines through `.sem_twolevel_guard()` and the two-level fit;
+# this stop keeps the single-level fitter off such a model when it is reached without `cluster`.
 .sem_single_level_only <- function(parsed) {
   if (length(parsed$levels$tokens) || any(parsed$parameters$level != 1L)) {
     .sem_twolevel_not_implemented()
@@ -67,10 +68,14 @@
 }
 
 .sem_fit_pipeline <- function(model, data, information, n_starts, control, weights, se_type, parsed,
-                              meanstructure, fixed_x, factors) {
+                              meanstructure, fixed_x, factors, cluster = NULL) {
   checkmate::assert_data_frame(data, min.rows = 1L, .var.name = "data")
   information <- match.arg(information, c("observed", "expected"))
   se_type <- match.arg(se_type, c("model", "sandwich"))
+  if (!is.null(cluster)) {
+    # `fit_sem()` sends a two-level model here only after `.sem_twolevel_guard()` has refused every unsupported input
+    return(.sem_fit_twolevel(data, information, n_starts, control, parsed, cluster))
+  }
   if (!is.null(weights)) {
     weights <- .sem_check_weights(weights, nrow(data))
   }
@@ -247,6 +252,95 @@
     # likelihood is unavailable.
     if (!(isTRUE(fit$converged) && length(fit$f) == 1L && is.finite(fit$f))) {
       stop(vc)
+    }
+    stop(.sem_covariance_error(conditionMessage(vc), out,
+                               post_fit = list(schema_version = 1L, stage = "covariance",
+                                               condition = .sem_condition_record(vc))))
+  }
+  out$vcov <- vc
+  out$defined <- .sem_defined(parsed$constraints, fit$theta, vc)
+  out
+}
+
+# The native two-level fit (S4a.4, experimental): the likelihood of `.sem_eval_ml2()` minimized by the single-level
+# solver and acceptance gate, the joint covariance of both levels' parameters from the observed information (so the
+# cross-level block is carried), and the same output list as a single-level fit. Rows with a missing model variable
+# are dropped (listwise); the guard has already refused a missing cluster id. Level-2 variances have no floor (S4b
+# decides): an inadmissible solution is the classed error `medfit_error_twolevel_inadmissible`, which carries the
+# accepted fit as evidence (`fit`) and the reasons (`improper`).
+.sem_fit_twolevel <- function(data, information, n_starts, control, parsed, cluster) {
+  sets <- .sem_twolevel_sets(parsed, data, cluster)
+  tl <- .sem_twolevel_ram(parsed, sets)
+  vars <- c(sets$within, sets$between)
+  nonnum <- vars[!vapply(data[vars], is.numeric, TRUE)]
+  if (length(nonnum)) {
+    stop("model variables must be numeric: ", paste(nonnum, collapse = ", "), call. = FALSE)
+  }
+  keep <- stats::complete.cases(data[, vars, drop = FALSE])
+  n_dropped <- sum(!keep)
+  if (n_dropped > 0L) {
+    message(sprintf("%d of %d rows dropped for missing values in the model variables (listwise deletion).",
+                    n_dropped, nrow(data)))
+  }
+  x <- data[keep, c(vars, cluster), drop = FALSE]
+  smp <- .sem_sample_ml2(x, sets, cluster)
+  # one table over both levels, each row keyed to theta through its level's index (`k1`, `k2`)
+  ks <- list(tl$k1, tl$k2)
+  table <- do.call(rbind, lapply(1:2, function(l) {
+    tab <- tl$levels[[l]]$table
+    tab$level <- rep(l, nrow(tab))
+    tab
+  }))
+  par_map <- unlist(lapply(1:2, function(l) ks[[l]][tl$levels[[l]]$par_map]))
+  per_theta <- function(field) {
+    out <- rep(NA_real_, tl$q)
+    for (l in 2:1) {
+      v <- tl$levels[[l]][[field]]
+      out[ks[[l]][!is.na(v)]] <- v[!is.na(v)]
+    }
+    out
+  }
+  cons <- .sem_constraint_rows(parsed$constraints, tl)
+  eq_rank <- .sem_eq_rank(cons$eq)
+  p_w <- length(sets$within)
+  p_b <- p_w + length(sets$between)
+  moments <- p_w * (p_w + 1L) / 2L + p_b * (p_b + 1L) / 2L + p_b
+  df <- as.integer(moments - (tl$q - eq_rank))
+  if (df < 0L) {
+    stop(sprintf("the model has more free parameters (%d) than observed moments (%d): df = %d",
+                 tl$q - eq_rank, as.integer(moments), df), call. = FALSE)
+  }
+  start <- .sem_default_start(tl, smp)
+  given <- per_theta("start")
+  start[!is.na(given)] <- given[!is.na(given)]
+  lb <- per_theta("lower")
+  ub <- per_theta("upper")
+  lb[is.na(lb)] <- -Inf
+  ub[is.na(ub)] <- Inf
+  fit <- .sem_optimize(tl, smp, unname(start), lb, ub, n_starts = n_starts, control = control, constraints = cons)
+  if (length(fit$improper)) {
+    rlang::abort(
+      paste0("the two-level solution is inadmissible: ", paste(fit$improper, collapse = "; "),
+             ". Level-2 variances are fitted without a floor (experimental); the fit is kept in the condition ",
+             "(`fit`) as evidence"),
+      class = "medfit_error_twolevel_inadmissible", call = NULL, fit = fit, improper = fit$improper
+    )
+  }
+  lb <- fit$effective_lower
+  fit$effective_lower <- NULL
+  vc <- tryCatch(.sem_vcov(fit$theta, tl, smp, information, cons, lb, ub, "model"), error = function(e) e)
+  act <- .sem_active_set(fit$theta, tl, smp, lb, ub, if (is.null(cons)) .sem_no_cons(tl$q) else cons)
+  out <- c(fit, list(
+    constraints = parsed$constraints, active_constraints = act$text[act$active_row], information = information,
+    ram = tl, table = table, par_map = par_map, se_type = "model", weights = NULL, n_starts = n_starts,
+    control = control, partable = .sem_to_partable(table), data = x[, vars, drop = FALSE], n_obs = smp$n,
+    n_dropped = n_dropped, df = df, eq_rank = eq_rank, branch = character(), fixed_x = character(), factors = NULL,
+    cluster = cluster
+  ))
+  if (inherits(vc, "error")) {
+    if (!inherits(vc, "medfit_sem_covariance_diagnostic")) {
+      stop(structure(class = c("medfit_covariance_untyped", "error", "condition"),
+                     list(message = conditionMessage(vc), call = NULL, original = vc)))
     }
     stop(.sem_covariance_error(conditionMessage(vc), out,
                                post_fit = list(schema_version = 1L, stage = "covariance",

@@ -426,6 +426,9 @@
 # for a (co)variance, with a latent variable's sd taken as the mean observed sd.
 # Under a rescaling of the observed variables the floor scales like the parameter.
 .sem_step_floor <- function(ram, smp) {
+  if (isTRUE(ram$twolevel)) {
+    return(.sem_ml2_per_level(ram, smp, .sem_step_floor, 1))
+  }
   sd_all <- rep(mean(sqrt(diag(smp$s))), ram$nv)
   sd_all[ram$obs_idx] <- sqrt(diag(smp$s))
   rc <- function(pos) cbind((pos - 1L) %% ram$nv + 1L, (pos - 1L) %/% ram$nv + 1L)
@@ -517,6 +520,37 @@
     )
   }
   total
+}
+
+# Per-level stand-ins for the single-level sample (S4a.4), for the scale rules that read `smp$s` and `smp$xbar` in a
+# RAM's `obs` order (`.sem_step_floor()`, `.sem_default_start()`): level 1 gets the pooled within covariance
+# SSW / (N - J); level 2 the covariance and the mean of the cluster vectors (ybar_j, z_j). These set units and starts
+# only; the likelihood never reads them.
+.sem_ml2_level_moments <- function(tl, smp) {
+  b <- c(smp$within, smp$between)
+  ssw <- Reduce(`+`, lapply(smp$sizes, `[[`, "ssw"))
+  sw <- ssw / (smp$n - smp$j)
+  dimnames(sw) <- list(smp$within, smp$within)
+  cm <- do.call(rbind, lapply(smp$sizes, `[[`, "c"))
+  colnames(cm) <- b
+  sb <- if (nrow(cm) > 1L) stats::cov(cm) else diag(1, length(b))
+  dimnames(sb) <- list(b, b)
+  o1 <- tl$ram1$obs
+  o2 <- tl$ram2$obs
+  list(
+    list(s = sw[o1, o1, drop = FALSE], xbar = numeric(length(o1)), n = smp$n),
+    list(s = sb[o2, o2, drop = FALSE], xbar = unname(colMeans(cm)[o2]), n = smp$j)
+  )
+}
+
+# Apply a single-level rule (`fun(ram, smp)`, a vector over that RAM's parameters) to each level of a two-level RAM
+# and gather the results into theta; for a label shared across levels the level-1 value wins.
+.sem_ml2_per_level <- function(tl, smp, fun, init) {
+  mom <- .sem_ml2_level_moments(tl, smp)
+  out <- rep(init, tl$q)
+  out[tl$k2] <- fun(tl$ram2, mom[[2]])
+  out[tl$k1] <- fun(tl$ram1, mom[[1]])
+  out
 }
 
 # Implied two-level moments for theta: Sigma_W from the level-1 RAM; Sigma_B and mu_B from the level-2 RAM.

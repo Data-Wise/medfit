@@ -36,6 +36,10 @@ exclusions: list(
     "tests/testthat/test-twolevel-native-loglik.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-native-gradient.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-native-gradient-qa.R" = list(object_usage_linter = Inf),
+    # S4a.4 fit tests and parity gate use the tl_*, tln_*, tl_mx_* and sem_mutate helpers of tests/testthat/helper-*.R
+    "tests/testthat/test-twolevel-native-fit.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-native-fit-qa.R" = list(object_usage_linter = Inf),
+    "tests/sim/sem-twolevel-parity-gate.R" = list(object_usage_linter = Inf),
     "tests/testthat/helper-fiml-golden.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g1-covariate.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g1-two-covariates.R" = list(object_usage_linter = Inf),

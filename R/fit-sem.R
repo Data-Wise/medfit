@@ -94,8 +94,11 @@
 #'   `level:` blocks without `cluster`, are errors (`medfit_error_twolevel_cluster`, which also covers more than two
 #'   levels, fewer than two clusters and a missing or incomplete cluster column); misordered `level:` blocks are
 #'   `medfit_error_twolevel_syntax`; a within variable constant in every cluster, or a cluster-level variable in a
-#'   `level: 1` row, is `medfit_error_twolevel_varset`. The two-level fitter is not implemented yet: a model that passes
-#'   the two-level checks stops with the classed error `medfit_error_twolevel_not_implemented`. Unset `fixed_x`
+#'   `level: 1` row, is `medfit_error_twolevel_varset`. A model that passes the two-level checks is fitted by maximum
+#'   likelihood (experimental); an inadmissible solution (a negative variance or a non-positive-definite implied
+#'   covariance at either level) stops with `medfit_error_twolevel_inadmissible`, which keeps the fit. Extracting
+#'   mediation effects from a native two-level fit is not implemented yet and stops with
+#'   `medfit_error_twolevel_not_implemented`. Unset `fixed_x`
 #'   means `FALSE` on this route; an explicit `fixed_x = TRUE`, `meanstructure = FALSE`, `weights`,
 #'   `se_type = "sandwich"`, `missing = "fiml"`, `information = "expected"`, latent variables, product terms and
 #'   nonlinear constraints are refused with classed errors (`medfit_error_twolevel_*`). Appended last to preserve
@@ -406,11 +409,16 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   se_type <- match.arg(se_type)
   checkmate::assert_string(cluster, min.chars = 1L, null.ok = TRUE, .var.name = "cluster")
   # Two-level route (S4a, experimental): before the FIML, weights and defaults dispatch, so none of them runs on a
-  # model with `level:` blocks. It ends in a classed error until the two-level fitter exists.
+  # model with `level:` blocks. A model that passes the guards is fitted by `.sem_fit_twolevel()` (S4a.4).
   if (!is.null(cluster) || .sem_has_level_lines(model)) {
-    .sem_twolevel_guard(paste(model, collapse = "\n"), data, cluster, information = information, weights = weights,
-                        se_type = se_type, missing = missing, fixed_x = fixed_x, fx_unset = fx_unset,
-                        meanstructure = meanstructure, ms_unset = ms_unset)
+    model <- paste(model, collapse = "\n")
+    parsed <- .sem_twolevel_guard(model, data, cluster, information = information, weights = weights,
+                                  se_type = se_type, missing = missing, fixed_x = fixed_x, fx_unset = fx_unset,
+                                  meanstructure = meanstructure, ms_unset = ms_unset)
+    fit <- .sem_fit_syntax(model, data, information, n_starts = if (is.null(n_starts)) 5L else n_starts,
+                           control = control, parsed = parsed, meanstructure = TRUE, fixed_x = FALSE,
+                           cluster = cluster)
+    return(.sem_record_protocol(.sem_as_semfit(fit, model, match.call()), resolved_control$protocol))
   }
   if (missing == "fiml") {
     fit <- .sem_fiml_syntax(paste(model, collapse = "\n"), data, information, n_starts, control, weights, se_type,
@@ -442,8 +450,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
 # refused features, the `fixed_x` / `meanstructure` / `information` settings, then the W and Z variable sets (which
 # read the data, so the features that would name non-columns, latent variables and products, are refused first).
 # Unset `fixed_x` resolves to FALSE and unset `meanstructure` to TRUE silently (U2): no 0.15.0 default ever applied
-# to a two-level model, so `.native_defaults_resolve()` is not consulted. Every valid model ends in
-# `medfit_error_twolevel_not_implemented`.
+# to a two-level model, so `.native_defaults_resolve()` is not consulted. Returns the parsed model for the fit.
 .sem_twolevel_guard <- function(model, data, cluster, information, weights, se_type, missing, fixed_x, fx_unset,
                                 meanstructure, ms_unset) {
   parsed <- .sem_resolve_levels(.sem_parse(model), cluster)
@@ -499,7 +506,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     abort("information = \"expected\" is not supported in a two-level model; use \"observed\"", "information")
   }
   .sem_twolevel_sets(parsed, data, cluster)
-  .sem_twolevel_not_implemented()
+  parsed
 }
 
 # Whether any `==`, `<` or `>` constraint is nonlinear in the labels, after defined parameters are substituted (a
@@ -534,6 +541,8 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     lhs = tab$lhs, op = tab$op, rhs = tab$rhs, label = tab$label, free = free,
     est = unname(est), se = unname(se), fixed_x = tab$fixed_x, stringsAsFactors = FALSE
   )
+  # a two-level fit keeps each row's level (S4a.4)
+  if (!is.null(tab$level) && isTRUE(fit$ram$twolevel)) table$level <- tab$level
   SEMFit(
     theta = fit$theta, vcov = fit$vcov, table = table, defined = fit$defined, f = fit$f,
     n_obs = fit$n_obs, n_dropped = fit$n_dropped, df = fit$df, information = fit$information,

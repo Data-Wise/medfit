@@ -163,6 +163,11 @@ S7::method(logLik, SEMFit) <- function(object, ...) { # nolint: object_name_lint
          call. = FALSE)
   }
   ram <- object@internals$ram
+  if (isTRUE(ram$twolevel)) {
+    # the two-level objective is f = -2 log L / N itself (`.sem_eval_ml2()`), with the means in theta
+    return(structure(-0.5 * object@n_obs * object@f, df = .sem_n_free(object), nobs = object@n_obs,
+                     class = "logLik"))
+  }
   smp <- .sem_sample(object@data, ram)
   ll <- -0.5 * smp$n * (object@f + smp$logdet + smp$p + smp$p * log(2 * pi))
   # With `fixed_x` the likelihood is conditional on the fixed block: drop that block's marginal normal term, which
