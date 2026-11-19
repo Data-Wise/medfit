@@ -1,3 +1,7 @@
+# IG2 and IG3 scope notes on feature/ig2-ig3-scope — 2026-11-19 MST
+
+# Planning only: planning/specs/SCOPE-IG2-cluster-robust-se-2026-11-19.md (cluster sandwich for the native two-level fit; per-cluster scores do not exist yet) and SCOPE-IG3-twolevel-tests-2026-11-19.md (per-level product null via linear branch refits, equal indirect effects via a nonlinear row; mbco_sem() on a native two-level fit fails today because the refit drops cluster). S4a ticked in the remainder plan. No R/ changes; not pushed.
+
 # S4a.5 native two-level route documented on feature/twolevel-native-s4a5 — 2026-11-19 MST
 
 # Docs for the experimental native two-level route (dev 0.19.0.9000, unreleased): ?fit_sem `cluster`, the "Two-level models (experimental)" section of ?"medfit-syntax" with the refusal table, the sem engine section of model-twolevel.qmd (fit_sem(cluster = ), extract_mediation(), glance() fields, the inadmissible error, the lavaan comparison), NEWS, and test-twolevel-native-docs.R (every quoted fragment triggered, table parsed, planted defect). The few-clusters warning is engine-neutral. Not pushed; no PR. CRAN hold.

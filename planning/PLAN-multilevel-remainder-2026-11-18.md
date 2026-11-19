@@ -19,8 +19,8 @@ per task, merge only on the maintainer's word.
 | S4-dec | S4 decisions before code: parser `level:` names (0.6), U2 scope | maintainer | n/a | decisions in the ADR |
 | S4a | Native two-level ML core: W/Z sets, per-size sufficient statistics, likelihood, gradient, SLSQP, joint vcov, per-level admissibility | sim-independent; **stop before code** | **high** (risk files) | feature branch, experimental label, seven-item checklist |
 | S4b | Reliability cell, level-2 variance parametrization (floor vs unconstrained) | **gated on T6/U4** | high | gate rows, `structures.csv` |
-| IG2 | Cluster-robust SEs (S6) | after S4 | high | scope note only now |
-| IG3 | Two-level tests (product null per level, equal indirect effects) | after S4; boundary law | high | scope note only now |
+| IG2 | Cluster-robust SEs (S6) | after S4 | high | scope note: [SCOPE-IG2-cluster-robust-se-2026-11-19.md](specs/SCOPE-IG2-cluster-robust-se-2026-11-19.md) |
+| IG3 | Two-level tests (product null per level, equal indirect effects) | after S4; boundary law | high | scope note: [SCOPE-IG3-twolevel-tests-2026-11-19.md](specs/SCOPE-IG3-twolevel-tests-2026-11-19.md) |
 | IG5s | Serial mediators at two levels | maintainer scope decision | n/a | decision only |
 | IG4 | Random-slope estimand | NO-GO | n/a | reopens only if Q3 is reopened |
 | IG6 | Latent mediators, shared loadings (S5) | NO-GO | n/a | reopens after U5 (Jak et al.; Heywood evidence) |
@@ -52,5 +52,5 @@ T6/U4 as its only remaining gate.
 - [x] U3 (2026-11-18): three-way oracle (hand-built O8, lavaan, OpenMx) merged in #483 (`10a7250e`)
 - [x] U2 (decision, 2026-11-18): S4 ships `fixed_x = FALSE` only; `fixed_x = TRUE` on a two-level model is a classed error; the fixed-moment oracle is later work, not an S4 blocker
 - [x] S4-dec (2026-11-18): native `level:` accepts integers, `within`/`between`, and the cluster variable's name (lavaan parity)
-- [ ] S4a
+- [x] S4a (2026-11-19): S4a.1 to S4a.5 merged; S4a.1 #486, S4a.2 #489, S4a.3 #491, S4a.4 #492, S4a.5 in #493 (`707f53a7`)
 - [ ] S4b (gated)

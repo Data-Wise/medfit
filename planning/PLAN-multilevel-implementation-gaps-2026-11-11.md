@@ -10,8 +10,8 @@ owns priority. Standing decisions stay: Q3 (fixed slopes, `sigma_ab = 0`), Q4 (t
 | ID | Gap | Cost | State | Blocked by |
 |---|---|---|---|---|
 | IG1 | Native two-level ML, observed, fixed slopes (S4) | L | NO-GO as written | U1 to U4 below |
-| IG2 | Cluster-robust SEs and few-cluster adjustments (S6) | M after S4 | not started | IG1 |
-| IG3 | Two-level tests: product null per level, equal indirect effects across levels (optional, separate from the descriptive contrast) | M to L after S4 | not started | IG1; boundary-aware reference law |
+| IG2 | Cluster-robust SEs and few-cluster adjustments (S6) | M after S4 | not started (code); scope note: [specs/SCOPE-IG2-cluster-robust-se-2026-11-19.md](specs/SCOPE-IG2-cluster-robust-se-2026-11-19.md) | IG1 |
+| IG3 | Two-level tests: product null per level, equal indirect effects across levels (optional, separate from the descriptive contrast) | M to L after S4 | not started (code); scope note: [specs/SCOPE-IG3-twolevel-tests-2026-11-19.md](specs/SCOPE-IG3-twolevel-tests-2026-11-19.md) | IG1; boundary-aware reference law |
 | IG4 | 1-1-1 random-slope estimand, `E[ab] = ab + cov(a_j, b_j)` | L, new class | needs a decision to reopen Q3 | maintainer |
 | IG5 | More than one mediator in a two-level model (the adapter refuses it) | M | done for parallel mediators (experimental `TwoLevelParallelMediationData`, PRs #460 to #463 and the T5 docs; plan `planning/PLAN-IG5-twolevel-parallel-2026-11-15.md`); serial mediators still refused | none |
 | IG6 | Latent mediators with shared loadings (S5) | L on top of S4 | NO-GO | identification review (U5) |
