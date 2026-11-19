@@ -94,9 +94,24 @@ test_that("QA: a negative level-2 variance is the classed inadmissible error, wi
   expect_false(is.null(err$ledger))
   expect_identical(err$ledger$condition$class[1], "medfit_error_twolevel_inadmissible")
   # the kept fit is the unconstrained ML solution: its level-2 variances equal lavaan's (TL-1, no floor applied)
-  theta <- stats::setNames(err$fit$theta, err$fit$ram$par_names %||% names(err$fit$theta))
+  theta <- err$fit$theta
+  if (is.null(names(theta))) names(theta) <- err$fit$ram$par_names
   nat <- theta[paste0(lav_l2$lhs, "~~", lav_l2$rhs, ".l2")]
   expect_false(anyNA(nat))
   expect_lte(max(abs(nat - lav_l2$est) - pmax(0.01 * lav_l2$se, 1e-4)), 0)
   tln_check_rel(-0.5 * nrow(d) * err$fit$f, as.numeric(lavaan::logLik(lav)), 1e-6)
+})
+
+test_that("QA: a defined contrast a_w - a_b has lavaan's := estimate and delta-method SE (TL-1, TL-2)", {
+  d <- tl_simulate(rep(2:9, length.out = 40), seed = 42)
+  m <- paste0(tl_lavaan_model, "d_ab := a_w - a_b\n")
+  fit <- fit_sem(m, d, cluster = "cluster")
+  lav <- tln_fit_lavaan(m, d)
+  pe <- lavaan::parameterEstimates(lav)
+  ref <- pe[pe$op == ":=" & pe$lhs == "d_ab", ]
+  nat <- fit@defined[fit@defined$name == "d_ab", ]
+  expect_identical(nrow(ref), 1L)
+  expect_identical(nrow(nat), 1L)
+  expect_lte(abs(nat$est - ref$est) / max(0.01 * ref$se, 1e-4), 1)
+  expect_lt(abs(nat$se - ref$se) / ref$se, 1e-3)
 })
