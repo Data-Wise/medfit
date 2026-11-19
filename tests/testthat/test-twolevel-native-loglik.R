@@ -141,6 +141,7 @@ test_that("theta level: theta maps to the hand moments and .sem_eval() equals th
 })
 
 test_that("planted defect: n_j replaced by the mean size fails TL-4 on unbalanced sizes", {
+  fx_skip_covr()
   skip_if_not_installed("lavaan")
   d <- tl_data_unbalanced()
   s <- tln_setup(tl_lavaan_model, d)
@@ -156,6 +157,7 @@ test_that("planted defect: n_j replaced by the mean size fails TL-4 on unbalance
 })
 
 test_that("planted defect: dropping p_w log n_j fails TL-4 when sizes differ from 1", {
+  fx_skip_covr()
   skip_if_not_installed("lavaan")
   d <- tl_data_unbalanced()
   s <- tln_setup(tl_lavaan_model, d)
@@ -167,6 +169,7 @@ test_that("planted defect: dropping p_w log n_j fails TL-4 when sizes differ fro
 })
 
 test_that("planted defect: dropping (n_j - 1) log|Sigma_W| fails TL-4 when log|Sigma_W| is away from 0", {
+  fx_skip_covr()
   skip_if_not_installed("lavaan")
   d <- tl_data_unbalanced()
   s <- tln_setup(tl_lavaan_model, d)
@@ -178,6 +181,7 @@ test_that("planted defect: dropping (n_j - 1) log|Sigma_W| fails TL-4 when log|S
 })
 
 test_that("planted defect: dropping the Sigma_B,WZ block fails the stacked oracle and the TL-4 difference", {
+  fx_skip_covr()
   skip_if_not_installed("lavaan")
   d <- tln_data_z()
   s <- tln_setup(tln_model_z(), d)
@@ -200,6 +204,7 @@ test_that("planted defect: dropping the Sigma_B,WZ block fails the stacked oracl
 })
 
 test_that("the single-level .sem_eval() path is unchanged by the two-level dispatch", {
+  fx_skip_covr()
   mod <- sem_model_observed()
   d <- sem_sim(mod, 300, seed = 3)
   smp <- .sem_sample(d, mod$ram)

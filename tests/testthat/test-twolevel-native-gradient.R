@@ -134,6 +134,7 @@ tlg_max_rel <- function(cs) {
 }
 
 test_that("planted defect: a sign error in the Sigma_W / n_j chain term fails the 1e-6 tolerance", {
+  fx_skip_covr()
   for (fx_name in c("balanced", "unbalanced")) {
     cs <- tlg_setup_draws(fx_name)
     local({
@@ -148,6 +149,7 @@ test_that("planted defect: a sign error in the Sigma_W / n_j chain term fails th
 })
 
 test_that("planted defect: the balanced-form gradient (mean size) on unbalanced data fails the 1e-6 tolerance", {
+  fx_skip_covr()
   mutant <- sem_mutate(.sem_ml2_grad_moments, "n <- s$n", "n <- smp$n/smp$j")
   cs <- tlg_setup_draws("unbalanced")
   expect_gt(length(cs$s$smp$sizes), 1L)
