@@ -213,6 +213,7 @@
 #' | `meanstructure = FALSE` | "`meanstructure = FALSE` is refused" |
 #' | `information = "expected"` | "information = ... is not supported in a two-level model; use" |
 #' | An inadmissible solution | "the two-level solution is inadmissible" |
+#' | `mbco_sem()` or `compare_lr()` on the fit | "is not available for a native two-level fit yet" |
 #'
 #' `extract_mediation()` on the fit returns a `TwoLevelMediationData`, the same class as the lavaan two-level adapter
 #' gives, with `@source` `"native"`. `glance()` reports `df`, the total log likelihood, `nobs`, `n_clusters` and the

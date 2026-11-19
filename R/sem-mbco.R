@@ -7,6 +7,22 @@
 # A product of k labeled paths (a serial indirect effect a*d*b) is the same test with k refits, one per path;
 # the statistic stays the smallest diffLL and the reference stays chi-square(1).
 
+# A native two-level fit (fit_sem(cluster = )) cannot be refit under a null here yet: the
+# refit goes through the single-level path. Refuse up front with a classed error instead of
+# letting the refit fail with the single-level guard's message.
+.sem_twolevel_refuse <- function(x, operation) {
+  if (S7::S7_inherits(x, SEMFit) && isTRUE(x@internals$ram$twolevel)) {
+    .twolevel_abort(
+      paste0(
+        operation, " is not available for a native two-level fit yet; ",
+        "use extract_mediation() for the per-level effects and their delta-method intervals"
+      ),
+      "medfit_error_twolevel_unsupported"
+    )
+  }
+  invisible(NULL)
+}
+
 #' Minimum-of-k Likelihood-Ratio Test for an Indirect Effect (MBCO)
 #'
 #' @description
@@ -131,6 +147,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     stop("`object` must be a SEMFit from fit_sem().", call. = FALSE)
   }
   .sem_fiml_refuse(object, "mbco_sem()")
+  .sem_twolevel_refuse(object, "mbco_sem()")
   fit <- object
   .sem_check_modeltest(list(fit), "mbco_sem()")
   two_form <- is.null(paths) && !missing(b)
