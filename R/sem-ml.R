@@ -524,8 +524,12 @@
   if (deriv) {
     stop("internal error: the two-level gradient is not implemented yet (S4a.3)", call. = FALSE)
   }
-  mom <- tryCatch(.sem_twolevel_implied(tl, theta), error = function(e) NULL)
-  if (is.null(mom)) return(NULL)
+  # as in the single-level worker, only a singular I - A makes the point unusable; any other error propagates
+  for (lv in list(list(tl$ram1, theta[tl$k1]), list(tl$ram2, theta[tl$k2]))) {
+    b <- tryCatch(solve(lv[[1]]$eye - .sem_ram_mats(lv[[1]], lv[[2]])$a), error = function(e) NULL)
+    if (is.null(b)) return(NULL)
+  }
+  mom <- .sem_twolevel_implied(tl, theta)
   ll <- .sem_loglik_ml2(smp, mom$sigma_w, mom$sigma_b, mom$mu_b)
   if (is.null(ll)) return(NULL)
   list(f = -2 * ll / smp$n, loglik = ll)
