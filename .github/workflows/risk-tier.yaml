@@ -15,7 +15,8 @@ jobs:
   risk-tier:
     # Pinned to ubuntu-24.04: setup-r hung at apt-get update on ubuntu-26.04 (mirror timeouts, PR #376 2026-11-11).
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    # 25, not 10: setup-r's apt downloads from the Ubuntu mirror stalled past 10 minutes three times on PR #487 (2026-11-18).
+    timeout-minutes: 25
     env:
       PR_BODY: ${{ github.event.pull_request.body }}
       HEAD_REF: ${{ github.head_ref }}
