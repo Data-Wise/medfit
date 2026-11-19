@@ -144,6 +144,8 @@ the "not implemented" error is replaced), `.STATUS`. Every error message the pag
   `R/extract-lavaan-twolevel.R` (refactor so both sources share one assembly: `.twolevel_assemble()`,
   `.twolevel_check_within()`, a lazy `icc` argument on `.twolevel_identification()`, `.twolevel_icc()` delegating to the
   shared `.sem_twolevel_icc()`; the warnings and their order are unchanged).
+- **S4a.5: `tests/testthat/test-sem-twolevel-guards.R`.** Its S4a.4 pins ("stops at extraction until S4a.5") now expect a
+  `TwoLevelMediationData` with the few-clusters warning; the `fit_sem()` roxygen no longer says extraction is missing.
 - **S4a.5: parallel (k >= 2) native extraction** goes through the shared assembly but has no native test yet.
 - **S4a.5: `glance()`** on a two-level fit gives `chisq` and `p_value` as `NA` with a note (the engine fits no saturated
   two-level model); `df` is the model df, matching lavaan's.
