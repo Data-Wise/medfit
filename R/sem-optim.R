@@ -150,6 +150,11 @@
 .sem_polish_centered_maxit <- 8L
 .sem_polish_centered <- function(theta, ram, smp, lb, ub) {
   ctr <- .sem_center_map(ram, smp)
+  # two-level (S4a.4): the means are free parameters of the between level with no path-intercept tie to undo, so the
+  # Newton steps run in theta itself (identity map); SLSQP alone stops about 1e-6 short there
+  if (is.null(ctr) && isTRUE(ram$twolevel)) {
+    ctr <- list(t = diag(ram$q), c = matrix(0, ram$q, ram$q), c0 = numeric(ram$q))
+  }
   if (is.null(ctr)) {
     return(theta)
   }
