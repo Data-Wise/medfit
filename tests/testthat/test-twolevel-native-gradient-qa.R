@@ -82,6 +82,7 @@ for (fx_name in names(tlq_fixtures())) {
 
 test_that("planted defect: a shared label that keeps only its level-2 term fails the lavaan check", {
   skip_if_not_installed("lavaan")
+  fx_skip_covr()
   cs <- tlq_case("shared_label")
   k <- match("a_w", cs$s$tl$par_names)
   expect_true(k %in% cs$s$tl$k1 && k %in% cs$s$tl$k2)
@@ -97,6 +98,7 @@ test_that("planted defect: a shared label that keeps only its level-2 term fails
 
 test_that("planted defect: a dropped level-2 mean chain fails the lavaan check", {
   skip_if_not_installed("lavaan")
+  fx_skip_covr()
   cs <- tlq_case("level2_means")
   local({
     local_mocked_bindings(.sem_eval_ml2 = sem_mutate(
