@@ -59,7 +59,10 @@ for (nm in names(fixtures)) {
     cell <- paste0(nm, if (with_z) "-z" else "")
     model <- if (with_z) tln_model_z() else tl_lavaan_model
     d <- if (with_z) tln_add_z(fixtures[[nm]]) else fixtures[[nm]]
-    fit <- tryCatch(suppressWarnings(fit_sem(model, d, cluster = "cluster")), error = function(e) NULL)
+    fit <- tryCatch(
+      suppressWarnings(fit_sem(model, d, cluster = "cluster", fixed_x = FALSE, meanstructure = TRUE)),
+      error = function(e) NULL
+    )
     checks <- if (with_z) setdiff(names(limits), "contrast") else names(limits)
     if (is.null(fit)) {
       for (ch in checks) add(cell, ch, NA_real_)

@@ -96,7 +96,9 @@
 #'   `medfit_error_twolevel_syntax`; a within variable constant in every cluster, or a cluster-level variable in a
 #'   `level: 1` row, is `medfit_error_twolevel_varset`. A model that passes the two-level checks is fitted by maximum
 #'   likelihood (experimental); an inadmissible solution (a negative variance or a non-positive-definite implied
-#'   covariance at either level) stops with `medfit_error_twolevel_inadmissible`, which keeps the fit. Unset `fixed_x`
+#'   covariance at either level) stops with `medfit_error_twolevel_inadmissible`, which keeps the fit. Extracting
+#'   mediation effects from a native two-level fit is not implemented yet and stops with
+#'   `medfit_error_twolevel_not_implemented`. Unset `fixed_x`
 #'   means `FALSE` on this route; an explicit `fixed_x = TRUE`, `meanstructure = FALSE`, `weights`,
 #'   `se_type = "sandwich"`, `missing = "fiml"`, `information = "expected"`, latent variables, product terms and
 #'   nonlinear constraints are refused with classed errors (`medfit_error_twolevel_*`). Appended last to preserve
