@@ -205,6 +205,7 @@
 # the implied covariance is not usable (singular I - A, non-finite, or not
 # positive definite), which the wrappers turn into the sentinel.
 .sem_eval <- function(theta, ram, smp, deriv) {
+  if (isTRUE(ram$twolevel)) return(.sem_eval_ml2(theta, ram, smp, deriv))
   m <- .sem_ram_mats(ram, theta)
   b <- tryCatch(solve(ram$eye - m$a), error = function(e) NULL)
   if (is.null(b)) return(NULL)
@@ -426,4 +427,106 @@
   # an intercept moves in the units of its variable
   fl[rev(ram$k_m)] <- rev(sd_all[ram$pos_m])
   fl
+}
+
+# --- Native two-level likelihood (S4a.2, experimental) ---
+#
+# Cluster j has n_j rows y_ji over the within set W (p_w variables) and one value z_j over the between-only set Z
+# (p_z variables). With y_ji = mu_W + u_Wj + e_ji, z_j = mu_Z + u_Zj, (u_W, u_Z) ~ N(0, Sigma_B) over W then Z and
+# e_ji ~ N(0, Sigma_W), the within contrasts of a cluster are independent of its mean vector c_j = (ybar_j, z_j),
+# which is N(mu_B, V_j) with V_j = Sigma_B + diag(Sigma_W / n_j, 0). The cluster log-likelihood (sketch item 2, O8) is
+#   -1/2 [ (n_j p_w + p_z) log 2 pi + (n_j - 1) log|Sigma_W| + p_w log n_j + tr(Sigma_W^-1 SSW_j)
+#          + log|V_j| + (c_j - mu_B)' V_j^-1 (c_j - mu_B) ],
+# with SSW_j the within cross-products about ybar_j. Clusters of one size share V_j, so the statistics are grouped by
+# size: the count, the pooled SSW and the matrix of cluster vectors c_j.
+
+# Per-size sufficient statistics from the complete rows of the model variables and the cluster column (the rows
+# `.sem_twolevel_sets()` reads). `sizes` is one entry per cluster size: `n`, `count`, `ssw` (p_w x p_w, pooled over
+# the clusters of that size) and `c` (count x (p_w + p_z), the cluster vectors, columns W then Z).
+.sem_sample_ml2 <- function(data, sets, cluster) {
+  checkmate::assert_data_frame(data, min.rows = 1, .var.name = "data")
+  w <- sets$within
+  z <- sets$between
+  rows <- stats::complete.cases(data[, c(w, z, cluster), drop = FALSE])
+  y <- as.matrix(data[rows, w, drop = FALSE])
+  zm <- as.matrix(data[rows, z, drop = FALSE])
+  g <- data[[cluster]][rows]
+  idx <- split(seq_len(nrow(y)), factor(g))
+  n_j <- lengths(idx, use.names = FALSE)
+  per <- lapply(idx, function(i) {
+    yj <- y[i, , drop = FALSE]
+    ybar <- colMeans(yj)
+    list(c = c(ybar, zm[i[1L], ]), ssw = crossprod(sweep(yj, 2L, ybar)))
+  })
+  sizes <- lapply(sort(unique(n_j)), function(n) {
+    sel <- per[n_j == n]
+    list(n = n, count = length(sel), ssw = Reduce(`+`, lapply(sel, `[[`, "ssw")),
+         c = do.call(rbind, lapply(sel, `[[`, "c")))
+  })
+  list(within = w, between = z, p_w = length(w), p_z = length(z), n = nrow(y), j = length(idx), sizes = sizes)
+}
+
+# The per-cluster log-determinant terms of the within part: (n - 1) log|Sigma_W| + p_w log n.
+.sem_ml2_det_terms <- function(n, p_w, ld_w) {
+  (n - 1) * ld_w + p_w * log(n)
+}
+
+# Covariance of the cluster vector (ybar_j, z_j) for clusters of size n: Sigma_B with Sigma_W / n added on the W
+# block (`w_idx`); the W-Z block of Sigma_B stays in.
+.sem_ml2_between_cov <- function(sigma_b, sigma_w, n, w_idx) {
+  sigma_b[w_idx, w_idx] <- sigma_b[w_idx, w_idx] + sigma_w / n
+  sigma_b
+}
+
+# Two-level log-likelihood at given moments: `sigma_w` over W, `sigma_b` and `mu_b` over W then Z (in the order of
+# `smp$within`, `smp$between`, or named by variable). NULL when Sigma_W or some V_n is not positive definite.
+.sem_loglik_ml2 <- function(smp, sigma_w, sigma_b, mu_b) {
+  w <- smp$within
+  b <- c(w, smp$between)
+  if (!is.null(dimnames(sigma_w))) sigma_w <- sigma_w[w, w, drop = FALSE]
+  if (!is.null(dimnames(sigma_b))) sigma_b <- sigma_b[b, b, drop = FALSE]
+  if (!is.null(names(mu_b))) mu_b <- mu_b[b]
+  mu_b <- unname(mu_b)
+  if (!all(is.finite(sigma_w)) || !all(is.finite(sigma_b)) || !.sem_sigma_pd(sigma_w)) return(NULL)
+  ch_w <- chol(sigma_w)
+  ld_w <- 2 * sum(log(diag(ch_w)))
+  sw_inv <- chol2inv(ch_w)
+  w_idx <- seq_len(smp$p_w)
+  total <- 0
+  for (s in smp$sizes) {
+    v <- .sem_ml2_between_cov(sigma_b, sigma_w, s$n, w_idx)
+    v <- (v + t(v)) / 2
+    if (!.sem_sigma_pd(v)) return(NULL)
+    ch_v <- chol(v)
+    dev <- sweep(s$c, 2L, mu_b)
+    total <- total - 0.5 * (
+      s$count * ((s$n * smp$p_w + smp$p_z) * log(2 * pi) + .sem_ml2_det_terms(s$n, smp$p_w, ld_w) +
+                   2 * sum(log(diag(ch_v)))) +
+        sum(sw_inv * s$ssw) + sum(chol2inv(ch_v) * crossprod(dev))
+    )
+  }
+  total
+}
+
+# Implied two-level moments for theta: Sigma_W from the level-1 RAM; Sigma_B and mu_B from the level-2 RAM.
+.sem_twolevel_implied <- function(tl, theta) {
+  t1 <- theta[tl$k1]
+  t2 <- theta[tl$k2]
+  b <- c(tl$within, tl$between)
+  list(sigma_w = .sem_implied(tl$ram1, t1)[tl$within, tl$within, drop = FALSE],
+       sigma_b = .sem_implied(tl$ram2, t2)[b, b, drop = FALSE],
+       mu_b = .sem_implied_mean(tl$ram2, t2)[b])
+}
+
+# Two-level worker of `.sem_eval()`: the log-likelihood and the objective f = -2 log L / N (N level-1 rows). NULL for
+# an unusable point, as in the single-level worker. The analytic gradient arrives with S4a.3.
+.sem_eval_ml2 <- function(theta, tl, smp, deriv) {
+  if (deriv) {
+    stop("internal error: the two-level gradient is not implemented yet (S4a.3)", call. = FALSE)
+  }
+  mom <- tryCatch(.sem_twolevel_implied(tl, theta), error = function(e) NULL)
+  if (is.null(mom)) return(NULL)
+  ll <- .sem_loglik_ml2(smp, mom$sigma_w, mom$sigma_b, mom$mu_b)
+  if (is.null(ll)) return(NULL)
+  list(f = -2 * ll / smp$n, loglik = ll)
 }
