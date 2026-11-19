@@ -35,6 +35,7 @@ exclusions: list(
     "tests/testthat/helper-twolevel-native.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-native-loglik.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-native-gradient.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-native-gradient-qa.R" = list(object_usage_linter = Inf),
     "tests/testthat/helper-fiml-golden.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g1-covariate.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g1-two-covariates.R" = list(object_usage_linter = Inf),
