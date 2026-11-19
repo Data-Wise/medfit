@@ -114,8 +114,9 @@ of \code{data}, for a two-level model written with \verb{level:} blocks (\code{l
 \verb{level:} blocks without \code{cluster}, are errors (\code{medfit_error_twolevel_cluster}, which also covers more than two
 levels, fewer than two clusters and a missing or incomplete cluster column); misordered \verb{level:} blocks are
 \code{medfit_error_twolevel_syntax}; a within variable constant in every cluster, or a cluster-level variable in a
-\code{level: 1} row, is \code{medfit_error_twolevel_varset}. The two-level fitter is not implemented yet: a model that passes
-the two-level checks stops with the classed error \code{medfit_error_twolevel_not_implemented}. Unset \code{fixed_x}
+\code{level: 1} row, is \code{medfit_error_twolevel_varset}. A model that passes the two-level checks is fitted by maximum
+likelihood (experimental); an inadmissible solution (a negative variance or a non-positive-definite implied
+covariance at either level) stops with \code{medfit_error_twolevel_inadmissible}, which keeps the fit. Unset \code{fixed_x}
 means \code{FALSE} on this route; an explicit \code{fixed_x = TRUE}, \code{meanstructure = FALSE}, \code{weights},
 \code{se_type = "sandwich"}, \code{missing = "fiml"}, \code{information = "expected"}, latent variables, product terms and
 nonlinear constraints are refused with classed errors (\verb{medfit_error_twolevel_*}). Appended last to preserve
