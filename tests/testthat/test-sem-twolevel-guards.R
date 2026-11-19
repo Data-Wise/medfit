@@ -146,7 +146,7 @@ test_that("unset fixed_x resolves silently on both routes; explicit TRUE errors 
                class = "medfit_error_twolevel_cluster")
   # the other engines keep refusing `cluster`
   expect_error(fit_mediation(Y ~ X + M, M ~ X, dat, "X", "M", cluster = "cluster"),
-               "`cluster` is only used with engine = \"lmer\"")
+               "`cluster` is only used with engine = \"lmer\" or engine = \"sem\"", fixed = TRUE)
 })
 
 test_that("W and Z sets match a hand classification", {
