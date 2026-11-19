@@ -173,3 +173,16 @@ test_that("glance() on a two-level fit reports df, the total logLik, N, J and th
   single <- glance(fit_sem("M ~ X\nY ~ M + X", d))
   expect_false(any(c("n_clusters", "cluster_size_min", "cluster_size_max") %in% names(single)))
 })
+
+test_that("cluster counts and sizes are taken after listwise deletion", {
+  d <- tl_simulate(rep(2:9, length.out = 40), seed = 42)
+  d$Y[1L] <- NA
+  d$M[d$cluster == d$cluster[3L]] <- NA # removes a whole cluster
+  fit <- suppressMessages(tlx_fit(tl_lavaan_model, d))
+  nat <- tlx_native(fit)
+  g <- glance(fit)
+  expect_identical(sum(nat@cluster_sizes), nat@n_obs)
+  expect_identical(g$nobs, nat@n_obs)
+  expect_identical(g$n_clusters, length(unique(d$cluster[stats::complete.cases(d[c("X", "M", "Y")])])))
+  expect_identical(nat@n_clusters, g$n_clusters)
+})
