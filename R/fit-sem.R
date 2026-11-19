@@ -96,9 +96,8 @@
 #'   `medfit_error_twolevel_syntax`; a within variable constant in every cluster, or a cluster-level variable in a
 #'   `level: 1` row, is `medfit_error_twolevel_varset`. A model that passes the two-level checks is fitted by maximum
 #'   likelihood (experimental); an inadmissible solution (a negative variance or a non-positive-definite implied
-#'   covariance at either level) stops with `medfit_error_twolevel_inadmissible`, which keeps the fit. Extracting
-#'   mediation effects from a native two-level fit is not implemented yet and stops with
-#'   `medfit_error_twolevel_not_implemented`. Unset `fixed_x`
+#'   covariance at either level) stops with `medfit_error_twolevel_inadmissible`, which keeps the fit and its outcome
+#'   ledger. `extract_mediation()` on a native two-level fit returns a `TwoLevelMediationData`. Unset `fixed_x`
 #'   means `FALSE` on this route; an explicit `fixed_x = TRUE`, `meanstructure = FALSE`, `weights`,
 #'   `se_type = "sandwich"`, `missing = "fiml"`, `information = "expected"`, latent variables, product terms and
 #'   nonlinear constraints are refused with classed errors (`medfit_error_twolevel_*`). Appended last to preserve
@@ -543,14 +542,17 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   )
   # a two-level fit keeps each row's level (S4a.4)
   if (!is.null(tab$level) && isTRUE(fit$ram$twolevel)) table$level <- tab$level
+  internals <- fit[c("ram", "par_map", "constraints", "partable", "weights", "eq_rank", "n_starts", "control",
+                     "branch", "fixed_x", "factors", "search_evidence")]
+  # a two-level fit keeps the cluster column's name and the cluster of every kept row (S4a.5: extraction, glance())
+  if (isTRUE(fit$ram$twolevel)) internals[c("cluster", "cluster_ids")] <- fit[c("cluster", "cluster_ids")]
   SEMFit(
     theta = fit$theta, vcov = fit$vcov, table = table, defined = fit$defined, f = fit$f,
     n_obs = fit$n_obs, n_dropped = fit$n_dropped, df = fit$df, information = fit$information,
     converged = fit$converged, data = fit$data, model = model,
     diagnostics = fit[c("status", "decrement", "retries", "active_bounds", "active_constraints", "improper",
                         "sign_check", "se_type", "optimum", "ledger")],
-    internals = fit[c("ram", "par_map", "constraints", "partable", "weights", "eq_rank", "n_starts", "control",
-                      "branch", "fixed_x", "factors", "search_evidence")],
+    internals = internals,
     call = call
   )
 }

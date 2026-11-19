@@ -129,13 +129,18 @@ test_that("unset fixed_x resolves silently on both routes; explicit TRUE errors 
     fit_mediation(data = dat, treatment = "X", mediator = "M", engine = "sem", model = tl_lavaan_model,
                   cluster = "cluster", ...)
   }
-  # fit_mediation() fits, then stops at extraction until S4a.5 (TwoLevelMediationData from a native fit)
-  expect_no_warning(expect_error(med(), "extracting mediation effects", class = tl_not_impl))
-  expect_no_warning(expect_error(med(engine_args = list(fixed_x = FALSE)), class = tl_not_impl))
+  # since S4a.5 fit_mediation() returns a TwoLevelMediationData; the only warning is the few-clusters one (40 < 50),
+  # never a default-change warning about fixed_x
+  few <- "medfit_warning_twolevel_few_clusters"
+  expect_warning(out <- med(), class = few)
+  expect_true(S7::S7_inherits(out, TwoLevelMediationData))
+  expect_warning(out <- med(engine_args = list(fixed_x = FALSE)), class = few)
+  expect_true(S7::S7_inherits(out, TwoLevelMediationData))
   expect_error(med(engine_args = list(fixed_x = TRUE)), class = "medfit_error_twolevel_fixed_x")
   expect_error(med(engine_args = list(meanstructure = FALSE)), class = "medfit_error_twolevel_meanstructure")
-  expect_error(fit_mediation(data = dat, treatment = "X", mediator = "M", engine = "native",
-                             model = tl_lavaan_model, cluster = "cluster"), class = tl_not_impl)
+  expect_warning(out <- fit_mediation(data = dat, treatment = "X", mediator = "M", engine = "native",
+                                      model = tl_lavaan_model, cluster = "cluster"), class = few)
+  expect_true(S7::S7_inherits(out, TwoLevelMediationData))
   expect_error(fit_mediation(data = dat, treatment = "X", mediator = "M", engine = "sem",
                              model = "M ~ X\nY ~ M + X", cluster = "cluster"),
                class = "medfit_error_twolevel_cluster")

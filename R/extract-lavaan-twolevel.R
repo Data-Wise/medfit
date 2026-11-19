@@ -181,17 +181,7 @@
 # at the between level has ICC 0. A non-finite or negative ratio (a Heywood case) is 0.
 .twolevel_icc <- function(fit) {
   implied <- lavaan::lavInspect(fit, "implied")
-  w <- implied[[1L]]$cov
-  b <- implied[[2L]]$cov
-  vars <- union(rownames(w), rownames(b))
-  icc <- vapply(vars, function(v) {
-    sw <- if (v %in% rownames(w)) w[v, v] else 0
-    sb <- if (v %in% rownames(b)) b[v, v] else 0
-    value <- sb / (sb + sw)
-    if (is.finite(value)) min(max(value, 0), 1) else 0
-  }, numeric(1))
-  names(icc) <- vars
-  icc
+  .sem_twolevel_icc(implied[[1L]]$cov, implied[[2L]]$cov)
 }
 
 # TRUE when the symmetric matrix is positive definite after dropping fixed (zero) rows and rows repeated by
@@ -218,8 +208,8 @@
 # definite, the fit did not converge. The treatment and mediator ICCs drive the decision; the outcome ICC is
 # only reported (a near-zero outcome ICC shows up as a Heywood case and as `admissible`). `post.check` alone
 # is not used: a between SD of 0.05 passes it with a between SE far above 0.7.
-.twolevel_identification <- function(fit, treatment, mediator, outcome, converged, V6) {
-  icc <- .twolevel_icc(fit)
+# `icc` defaults to the lavaan fit's; the native route (`fit = NULL`) passes the ICCs of its own implied moments.
+.twolevel_identification <- function(fit, treatment, mediator, outcome, converged, V6, icc = .twolevel_icc(fit)) {
   icc_error <- .twolevel_option("icc_error")
   icc_warn <- .twolevel_option("icc_warn")
   icc_x <- icc[[treatment]]
@@ -386,8 +376,37 @@
   V <- .twolevel_read_vcov(object)
   V6 <- if (is.null(V)) NULL else .twolevel_subvcov(V, key)
   converged <- .twolevel_converged(object)
+  .twolevel_check_within(key, V6, converged)
+  ident <- .twolevel_identification(object, treatment, mediator, outcome, converged, V6)
+  opts <- lavaan::lavInspect(object, "options")
+  version <- .twolevel_fit_version(object)
+  .twolevel_assemble(
+    pt, key, V6, ident, converged = converged, admissible = .twolevel_admissible(object),
+    n_obs = as.integer(lavaan::lavInspect(object, "nobs"))[1L],
+    n_clusters = as.integer(lavaan::lavInspect(object, "nclusters"))[1L],
+    cluster_sizes = as.integer(lavaan::lavInspect(object, "cluster.size")),
+    treatment = treatment, mediator = mediator, outcome = outcome,
+    provenance = list(
+      cluster = as.character(lavaan::lavInspect(object, "cluster"))[1L],
+      source = "lavaan",
+      fixed_x = isTRUE(opts$fixed.x),
+      information = as.character(opts$information)[1L],
+      h1_information = as.character(opts$h1.information)[1L],
+      se_type = as.character(opts$se)[1L],
+      estimator = as.character(opts$estimator)[1L],
+      missing = as.character(opts$missing)[1L],
+      lavaan_version = version,
+      call = paste(deparse(object@call), collapse = " "),
+      between_parameterization = "latent",
+      data = NULL,
+      source_package = "lavaan",
+      source_version = version
+    )
+  )
+}
 
-  # The within block must be usable whatever happens at the between level.
+# The within block must be usable whatever happens at the between level.
+.twolevel_check_within <- function(key, V6, converged) {
   within <- which(key$level == "within")
   if (is.null(V6) || !.twolevel_is_pd(V6[within, within, drop = FALSE]) ||
         !all(is.finite(key$est[within]))) {
@@ -398,14 +417,17 @@
       "medfit_error_twolevel_unusable"
     )
   }
+  invisible(NULL)
+}
 
-  # --- Between identification, admissibility, design size ---
-  ident <- .twolevel_identification(object, treatment, mediator, outcome, converged, V6)
+# The object from what a two-level route read (the lavaan adapter, or the sem engine since S4a.5): the parameter
+# table `pt` (for the `==` rows), the keyed rows and their joint covariance `V6` (by free index), the identification
+# `ident`, the design, and `provenance` (the cluster name and every property from `source` to `source_version`).
+.twolevel_assemble <- function(pt, key, V6, ident, converged, admissible, n_obs, n_clusters, cluster_sizes,
+                               treatment, mediator, outcome, provenance) {
+  within <- which(key$level == "within")
   identified <- ident$identified
-  admissible <- .twolevel_admissible(object)
-  n_clusters <- as.integer(lavaan::lavInspect(object, "nclusters"))[1L]
-  cluster_sizes <- as.integer(lavaan::lavInspect(object, "cluster.size"))
-  n_obs <- as.integer(lavaan::lavInspect(object, "nobs"))[1L]
+  source_name <- if (identical(provenance$source, "lavaan")) "The lavaan fit" else "The fit"
 
   if (n_clusters < .twolevel_option("min_clusters")) {
     .twolevel_warn(
@@ -417,7 +439,7 @@
   }
   if (!admissible) {
     .twolevel_warn(
-      "The lavaan fit is not admissible (post.check is FALSE, for example a negative variance).",
+      paste0(source_name, " is not admissible (post.check is FALSE, for example a negative variance)."),
       "medfit_warning_twolevel_inadmissible"
     )
   }
@@ -449,37 +471,22 @@
     free = key$free, est = ifelse(shown, key$est, NA_real_), se = ifelse(shown, unname(se), NA_real_),
     stringsAsFactors = FALSE
   )
-  opts <- lavaan::lavInspect(object, "options")
   paths <- stats::setNames(key$est, key$path)
   between_val <- function(nm) if (identified) unname(paths[[nm]]) else NA_real_
-  version <- .twolevel_fit_version(object)
 
-  shared <- list(
+  shared <- c(list(
     c_prime_within = unname(paths[["c_prime_within"]]), c_prime_between = between_val("c_prime_between"),
     estimates = est,
     vcov = V6[rows, rows, drop = FALSE],
     parameter_table = table,
     treatment = treatment, outcome = outcome,
-    cluster = as.character(lavaan::lavInspect(object, "cluster"))[1L],
+    cluster = provenance$cluster,
     n_obs = n_obs, n_clusters = n_clusters, cluster_sizes = cluster_sizes,
     icc = ident$icc,
     between_identified = identified, admissible = admissible, converged = converged,
     cross_level_equal = equal,
-    fixed_paths = key$path[key$free == 0L & key$path %in% names(est)],
-    source = "lavaan",
-    fixed_x = isTRUE(opts$fixed.x),
-    information = as.character(opts$information)[1L],
-    h1_information = as.character(opts$h1.information)[1L],
-    se_type = as.character(opts$se)[1L],
-    estimator = as.character(opts$estimator)[1L],
-    missing = as.character(opts$missing)[1L],
-    lavaan_version = version,
-    call = paste(deparse(object@call), collapse = " "),
-    between_parameterization = "latent",
-    data = NULL,
-    source_package = "lavaan",
-    source_version = version
-  )
+    fixed_paths = key$path[key$free == 0L & key$path %in% names(est)]
+  ), provenance[setdiff(names(provenance), "cluster")])
   if (length(mediator) == 1L) {
     return(do.call(TwoLevelMediationData, c(list(
       a_within = unname(paths[["a_within"]]), b_within = unname(paths[["b_within"]]),

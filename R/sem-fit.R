@@ -318,6 +318,8 @@
   lb[is.na(lb)] <- -Inf
   ub[is.na(ub)] <- Inf
   fit <- .sem_optimize(tl, smp, unname(start), lb, ub, n_starts = n_starts, control = control, constraints = cons)
+  # per-level admissibility for the outcome ledger (S4a.5); an inadmissible fit carries it in the condition's `fit`
+  fit$admissibility <- .sem_admissibility_ml2(fit$theta, tl)
   if (length(fit$improper)) {
     rlang::abort(
       paste0("the two-level solution is inadmissible: ", paste(fit$improper, collapse = "; "),
@@ -335,7 +337,7 @@
     ram = tl, table = table, par_map = par_map, se_type = "model", weights = NULL, n_starts = n_starts,
     control = control, partable = .sem_to_partable(table), data = x[, vars, drop = FALSE], n_obs = smp$n,
     n_dropped = n_dropped, df = df, eq_rank = eq_rank, branch = character(), fixed_x = character(), factors = NULL,
-    cluster = cluster
+    cluster = cluster, cluster_ids = x[[cluster]]
   ))
   if (inherits(vc, "error")) {
     if (!inherits(vc, "medfit_sem_covariance_diagnostic")) {

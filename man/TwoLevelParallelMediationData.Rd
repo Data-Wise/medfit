@@ -64,7 +64,7 @@ path vectors.}
 
 \item{data}{Data frame or \code{NULL}: always \code{NULL} for the lavaan adapter.}
 
-\item{source_package}{Character scalar: \code{"lavaan"}.}
+\item{source_package}{Character scalar: \code{"lavaan"}, or \code{"medfit"} for a native two-level fit.}
 
 \item{source_version}{Character: \code{character(0)} (the default) or one non-empty string, the version of the
 package that made the fit.}
