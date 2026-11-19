@@ -97,7 +97,11 @@
 #'   `level: 1` row, is `medfit_error_twolevel_varset`. A model that passes the two-level checks is fitted by maximum
 #'   likelihood (experimental); an inadmissible solution (a negative variance or a non-positive-definite implied
 #'   covariance at either level) stops with `medfit_error_twolevel_inadmissible`, which keeps the fit and its outcome
-#'   ledger. `extract_mediation()` on a native two-level fit returns a `TwoLevelMediationData`. Unset `fixed_x`
+#'   ledger. `extract_mediation()` on a native two-level fit returns a `TwoLevelMediationData` (`@source` is
+#'   `"native"`), with the warnings of the lavaan two-level adapter. `glance()` adds `n_clusters`,
+#'   `cluster_size_min` and `cluster_size_max` (counted after listwise deletion); its `chisq` and `p_value` are `NA`
+#'   with a note, because the engine fits no saturated two-level model. See the "Two-level models" section of
+#'   [medfit-syntax]. Unset `fixed_x`
 #'   means `FALSE` on this route; an explicit `fixed_x = TRUE`, `meanstructure = FALSE`, `weights`,
 #'   `se_type = "sandwich"`, `missing = "fiml"`, `information = "expected"`, latent variables, product terms and
 #'   nonlinear constraints are refused with classed errors (`medfit_error_twolevel_*`). Appended last to preserve

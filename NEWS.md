@@ -1,6 +1,30 @@
 # medfit 0.19.0.9000
 
-* Development version. No user-visible changes since 0.19.0.
+## New features
+
+* **Native two-level fitting (experimental).** `fit_sem(model, data, cluster = )` fits a two-level (1-1-1) model
+  written in `level:` blocks with medfit's own sem engine, and `extract_mediation()` on the fit returns a
+  `TwoLevelMediationData` (`@source` is `"native"`), the same class as the lavaan two-level adapter, so `nie()`,
+  `tidy()`, `decompose()` and the bootstrap work unchanged. `fit_mediation(engine = "sem", model = , cluster = )`
+  returns the same object. Estimates and standard errors match lavaan fitted with `fixed.x = FALSE`,
+  `information = "observed"` and `h1.information = "structured"`. The sem engine of 0.19.0 could not fit a model with
+  `level:` blocks, and earlier development builds stopped one with class `medfit_error_twolevel_not_implemented`;
+  it is now fitted. The route is experimental and may change
+  without the deprecation period. Refused inputs (latent variables, products, `weights`, the sandwich covariance,
+  FIML, nonlinear constraints, `fixed_x = TRUE`, `meanstructure = FALSE`, expected information, within-only
+  variables) each stop with a `medfit_error_twolevel_*` class; the "Two-level models" section of
+  `?"medfit-syntax"` lists the messages.
+* `glance()` on a two-level fit adds `n_clusters`, `cluster_size_min` and `cluster_size_max`; `chisq` and `p_value`
+  are `NA` with a note, because the engine fits no saturated two-level model.
+* Level-2 variances are fitted without a floor. An inadmissible two-level solution (a negative variance or a
+  non-positive-definite implied covariance at either level) stops with class `medfit_error_twolevel_inadmissible`;
+  the condition carries the fit and its outcome ledger, with the verdict per level. The lavaan route keeps its
+  warning, `medfit_warning_twolevel_inadmissible`.
+
+## Minor changes
+
+* The few-clusters warning (`medfit_warning_twolevel_few_clusters`) now ends "they are still returned." instead of
+  "the adapter still returns them.", because it is raised on both two-level routes.
 
 # medfit 0.19.0
 
