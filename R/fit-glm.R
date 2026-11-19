@@ -263,7 +263,7 @@ fit_mediation <- function(formula_y,
     ))
   }
   if (!is.null(model)) {
-    stop("`model` is only used with engine = \"native\".", call. = FALSE)
+    stop("`model` is only used with engine = \"sem\".", call. = FALSE)
   }
   # --- Input Validation (using checkmate for fail-fast defensive programming) ---
   checkmate::assert_formula(formula_y, .var.name = "formula_y")

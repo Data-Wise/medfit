@@ -120,7 +120,7 @@
     list(
       param_table = function(standardized = FALSE) {
         if (standardized) {
-          stop("standardized estimates are not supported by engine = \"native\" in this version", call. = FALSE)
+          stop("standardized estimates are not supported by the sem engine in this version", call. = FALSE)
         }
         ptab
       },
