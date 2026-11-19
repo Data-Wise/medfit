@@ -31,6 +31,9 @@ exclusions: list(
     # U3 three-oracle helpers (tl_mx_*) use the O8 tl_* helpers of helper-twolevel-likelihood.R
     "tests/testthat/helper-twolevel-openmx.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-three-oracle.R" = list(object_usage_linter = Inf),
+    # S4a.2 native two-level likelihood tests use the O8 tl_* helpers of helper-twolevel-likelihood.R
+    "tests/testthat/helper-twolevel-native.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-native-loglik.R" = list(object_usage_linter = Inf),
     "tests/testthat/helper-fiml-golden.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g1-covariate.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g1-two-covariates.R" = list(object_usage_linter = Inf),

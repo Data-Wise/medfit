@@ -123,7 +123,7 @@ the "not implemented" error is replaced), `.STATUS`. Every error message the pag
 ## Progress
 
 - [x] Plan approved (2026-11-18)
-- [ ] S4a.1
+- [x] S4a.1
 - [ ] S4a.2
 - [ ] S4a.3
 - [ ] S4a.4

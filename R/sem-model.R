@@ -516,3 +516,28 @@
   }
   list(within = within, between = between)
 }
+
+# Theta map of a two-level model (S4a.2): one RAM per level from that level's rows, completed as a single-level model
+# is (`.sem_complete()`), with no means at level 1 and the means at level 2 (Sigma_W over W; Sigma_B and mu_B over W
+# then Z). The two parameter vectors are concatenated into one theta: level-1 names as in a single-level model,
+# unlabeled level-2 names with lavaan's `.l2` suffix, and a label written at both levels is one theta entry (the label
+# rule of `.sem_ram()`). `k1` and `k2` index each level's parameters in theta.
+.sem_twolevel_ram <- function(parsed, sets) {
+  p <- parsed$parameters
+  lev <- lapply(1:2, function(l) {
+    .sem_to_ram(.sem_complete(p[p$level == l, , drop = FALSE], meanstructure = l == 2L, fixed_x = FALSE))
+  })
+  if (!setequal(lev[[1]]$ram$obs, sets$within) || !setequal(lev[[2]]$ram$obs, c(sets$within, sets$between))) {
+    stop("internal error: the level RAMs do not cover the W and Z sets", call. = FALSE)
+  }
+  n1 <- lev[[1]]$ram$par_names
+  n2 <- lev[[2]]$ram$par_names
+  labels2 <- unique(lev[[2]]$table$label[nzchar(lev[[2]]$table$label)])
+  n2 <- ifelse(n2 %in% labels2, n2, paste0(n2, ".l2"))
+  par_names <- unique(c(n1, n2))
+  list(
+    twolevel = TRUE, q = length(par_names), par_names = par_names,
+    ram1 = lev[[1]]$ram, ram2 = lev[[2]]$ram, k1 = match(n1, par_names), k2 = match(n2, par_names),
+    within = sets$within, between = sets$between, levels = lev
+  )
+}
