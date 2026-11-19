@@ -359,10 +359,10 @@ small between-level variance of the mediator and the outcome:
 ```{r}
 #| label: native-inadmissible
 d_neg <- withr::with_seed(1, {
-  J_neg <- 30
-  cl <- sort(rep(seq_len(J_neg), 3))
-  xb <- rnorm(J_neg)
-  mb <- 0.5 * xb + rnorm(J_neg, sd = 0.3)
+  n_neg <- 30
+  cl <- sort(rep(seq_len(n_neg), 3))
+  xb <- rnorm(n_neg)
+  mb <- 0.5 * xb + rnorm(n_neg, sd = 0.3)
   yb <- 0.3 * mb + 0.2 * xb
   x <- xb[cl] + rnorm(length(cl))
   m <- mb[cl] + 0.4 * x + rnorm(length(cl))
