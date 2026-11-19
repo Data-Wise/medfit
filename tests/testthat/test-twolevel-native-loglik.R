@@ -222,3 +222,20 @@ test_that("fit_sem() still stops on a valid two-level model (no fitter before S4
   expect_error(fit_sem(tln_model_z(), tln_data_z(), cluster = "cluster"),
                class = "medfit_error_twolevel_not_implemented")
 })
+
+test_that("clusters of size 1 and 2 (with Z): .sem_eval() equals the stacked density to 1e-10", {
+  # QA addition: sizes 1 and 2 make (n_j - 1) log|Sigma_W| and p_w log n_j vanish or shrink, and a size-1 cluster has
+  # no within cross-products; the other fixtures start at size 3
+  d <- tln_add_z(tl_simulate(rep(c(1, 2, 3, 7), 8), seed = 23))
+  sz <- tln_setup(tln_model_z(), d)
+  expect_identical(sort(vapply(sz$smp$sizes, `[[`, 1, "n")), c(1, 2, 3, 7))
+  th <- stats::setNames(rep(0, sz$tl$q), sz$tl$par_names)
+  th[grepl("~~", names(th))] <- 0.7
+  th[c("X~~Z.l2", "M~X.l2", "M~Z.l2", "Y~M.l2", "Y~X.l2", "M~X", "Y~M", "Y~X")] <-
+    c(0.35, 0.4, -0.3, 0.5, 0.2, 0.45, 0.35, -0.15)
+  th[grepl("~1", names(th))] <- c(0.5, -0.4, 1.2, 0.3)
+  mz <- .sem_twolevel_implied(sz$tl, th)
+  expect_gt(abs(mz$sigma_b["X", "Z"]), 0.05)
+  ev <- .sem_eval(th, sz$tl, sz$smp, deriv = FALSE)
+  tln_check_rel(ev$loglik, tln_stacked(d, tl_w, "Z", mz$sigma_w[tl_w, tl_w], mz$sigma_b, mz$mu_b), 1e-10)
+})
