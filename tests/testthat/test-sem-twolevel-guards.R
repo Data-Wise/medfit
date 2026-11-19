@@ -1,6 +1,6 @@
 # S4a.1 (planning/PLAN-S4a-native-twolevel-core-2026-11-18.md): the native two-level route parses `level:` names,
 # refuses every input of the plan's Refused table with a classed error, classifies the within (W) and between-only (Z)
-# variables, and, with no fitter yet, ends in `medfit_error_twolevel_not_implemented`. Each refusal is triggered from
+# variables; a model that passes is fitted (S4a.4, a `SEMFit`). Each refusal is triggered from
 # a valid base model that changes in one place only, and the message is matched as well as the class, so a planted
 # defect in one guard cannot pass through another guard of the same class.
 
@@ -13,15 +13,17 @@ tl_guard_data <- function() {
 }
 
 tl_not_impl <- "medfit_error_twolevel_not_implemented"
+# A model the guards allow is fitted (S4a.4); the numbers are checked in test-twolevel-native-fit.R.
+tl_expect_fit <- function(fit) expect_true(S7::S7_inherits(fit, SEMFit) && isTRUE(fit@internals$ram$twolevel))
 
 # Runs `fit_sem()` with the valid base unless overridden.
 tl_fit <- function(model = tl_lavaan_model, data = tl_guard_data(), cluster = "cluster", ...) {
   fit_sem(model, data, cluster = cluster, ...)
 }
 
-test_that("the valid base model reaches the not-implemented stop without a warning", {
-  expect_no_warning(expect_error(tl_fit(), "not implemented yet", class = tl_not_impl))
-  expect_no_warning(expect_error(tl_fit(data = tl_data_unbalanced()), class = tl_not_impl))
+test_that("the valid base model is fitted without a warning", {
+  expect_no_warning(tl_expect_fit(tl_fit()))
+  expect_no_warning(tl_expect_fit(tl_fit(data = tl_data_unbalanced())))
 })
 
 test_that("level names parse to the same parameter table as the integers", {
@@ -30,7 +32,7 @@ test_that("level names parse to the same parameter table as the integers", {
     m <- sub("level: 2", paste("level:", spell[2]), sub("level: 1", paste("level:", spell[1]), tl_lavaan_model))
     parsed <- .sem_resolve_levels(.sem_parse(m), "cluster")
     expect_identical(parsed$parameters, num$parameters, info = paste(spell, collapse = "/"))
-    expect_no_warning(expect_error(tl_fit(m), class = tl_not_impl))
+    expect_no_warning(tl_expect_fit(tl_fit(m)))
   }
   # rows under `level: within` are level 1 (labels a_w, b_w, cp_w), rows under `level: between` level 2
   renamed <- sub("level: 2", "level: between", sub("level: 1", "level: within", tl_lavaan_model))
@@ -109,25 +111,26 @@ test_that("each refused feature raises its own class", {
   expect_error(tl_fit(information = "expected"), "expected", class = "medfit_error_twolevel_information")
 })
 
-test_that("what the guards allow still reaches the not-implemented stop", {
-  expect_error(tl_fit(fixed_x = FALSE), class = tl_not_impl)
-  expect_error(tl_fit(meanstructure = TRUE), class = tl_not_impl)
-  expect_error(tl_fit(information = "observed"), class = tl_not_impl)
+test_that("what the guards allow is fitted", {
+  tl_expect_fit(tl_fit(fixed_x = FALSE))
+  tl_expect_fit(tl_fit(meanstructure = TRUE))
+  tl_expect_fit(tl_fit(information = "observed"))
   # a defined product is not a constraint; a linear cross-level equality is a linear constraint
-  expect_error(tl_fit(paste(tl_lavaan_model, "ab_w := a_w*b_w\na_w == a_b", sep = "\n")), class = tl_not_impl)
+  tl_expect_fit(tl_fit(paste(tl_lavaan_model, "ab_w := a_w*b_w\na_w == a_b", sep = "\n")))
   # the same label at both levels is a linear equality, not a refusal
   shared <- gsub("a_[wb]\\*", "a*", tl_lavaan_model)
-  expect_error(tl_fit(shared), class = tl_not_impl)
+  tl_expect_fit(tl_fit(shared))
 })
 
 test_that("unset fixed_x resolves silently on both routes; explicit TRUE errors on both", {
   dat <- tl_guard_data()
-  expect_no_warning(expect_error(fit_sem(tl_lavaan_model, dat, cluster = "cluster"), class = tl_not_impl))
+  expect_no_warning(tl_expect_fit(fit_sem(tl_lavaan_model, dat, cluster = "cluster")))
   med <- function(...) {
     fit_mediation(data = dat, treatment = "X", mediator = "M", engine = "sem", model = tl_lavaan_model,
                   cluster = "cluster", ...)
   }
-  expect_no_warning(expect_error(med(), class = tl_not_impl))
+  # fit_mediation() fits, then stops at extraction until S4a.5 (TwoLevelMediationData from a native fit)
+  expect_no_warning(expect_error(med(), "extracting mediation effects", class = tl_not_impl))
   expect_no_warning(expect_error(med(engine_args = list(fixed_x = FALSE)), class = tl_not_impl))
   expect_error(med(engine_args = list(fixed_x = TRUE)), class = "medfit_error_twolevel_fixed_x")
   expect_error(med(engine_args = list(meanstructure = FALSE)), class = "medfit_error_twolevel_meanstructure")
@@ -147,7 +150,7 @@ test_that("W and Z sets match a hand classification", {
   sets <- .sem_twolevel_sets(.sem_resolve_levels(.sem_parse(m), "cluster"), dat, "cluster")
   expect_setequal(sets$within, c("X", "M", "Y"))
   expect_identical(sets$between, "Zc")
-  expect_error(tl_fit(m), class = tl_not_impl)
+  tl_expect_fit(tl_fit(m))
   base <- .sem_twolevel_sets(.sem_resolve_levels(.sem_parse(tl_lavaan_model), "cluster"), dat, "cluster")
   expect_setequal(base$within, c("X", "M", "Y"))
   expect_identical(base$between, character(0))
@@ -196,7 +199,7 @@ test_that("size-1 clusters are skipped by the constancy check; all of size 1 is 
   mixed <- rbind(dat, extra)
   sets <- .sem_twolevel_sets(.sem_resolve_levels(.sem_parse(m), "cluster"), mixed, "cluster")
   expect_identical(sets$between, "Zc")
-  expect_error(tl_fit(m, mixed), class = tl_not_impl)
+  tl_expect_fit(tl_fit(m, mixed))
   single <- dat
   single$cluster <- seq_len(nrow(single))
   expect_error(tl_fit(m, single), "every cluster has one complete row", class = "medfit_error_twolevel_varset")
@@ -208,7 +211,7 @@ test_that("the constancy check reads complete cases only", {
   na_row <- dat
   na_row$Zc[2] <- na_row$Zc[2] + 1
   na_row$Y[2] <- NA # the row that breaks constancy is not a complete case
-  expect_error(tl_fit(m, na_row), class = tl_not_impl)
+  tl_expect_fit(tl_fit(m, na_row))
 })
 
 test_that("the single-level fitter never runs on a model with level lines", {

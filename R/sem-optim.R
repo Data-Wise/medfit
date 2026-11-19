@@ -90,6 +90,11 @@
 # A start is valid when its implied covariance is positive definite, never by
 # the objective value (the sentinel is finite and large values can be valid).
 .sem_start_valid <- function(theta, ram) {
+  if (isTRUE(ram$twolevel)) {
+    mom <- tryCatch(.sem_twolevel_implied(ram, theta), error = function(e) NULL)
+    return(!is.null(mom) && all(is.finite(mom$sigma_w)) && all(is.finite(mom$sigma_b)) &&
+             .sem_sigma_pd(mom$sigma_w) && .sem_sigma_pd(mom$sigma_b))
+  }
   sigma <- tryCatch(.sem_implied(ram, theta), error = function(e) NULL)
   !is.null(sigma) && all(is.finite(sigma)) && .sem_sigma_pd(sigma)
 }
@@ -281,6 +286,9 @@
 # Improper solutions: negative variances and non-positive-definite latent
 # covariance blocks. Reported, never silently bounded.
 .sem_improper <- function(theta, ram) {
+  if (isTRUE(ram$twolevel)) {
+    return(.sem_improper_ml2(theta, ram))
+  }
   msgs <- character()
   var_k <- ram$k_s[ram$s_weight == 1]
   neg <- unique(var_k[theta[var_k] < 0])
@@ -292,6 +300,31 @@
     blk <- .sem_ram_mats(ram, theta)$s[match(latent, ram$vars), match(latent, ram$vars), drop = FALSE]
     if (min(eigen(blk, symmetric = TRUE, only.values = TRUE)$values) < -1e-8) {
       msgs <- c(msgs, "latent covariance matrix is not positive definite")
+    }
+  }
+  msgs
+}
+
+# Two-level admissibility (S4a.4): a negative variance at either level, or an implied Sigma_W or Sigma_B that is not
+# positive definite. Level-2 variances are fitted with no floor (S4b decides floor vs unconstrained), so the fit route
+# turns any message here into `medfit_error_twolevel_inadmissible`.
+.sem_improper_ml2 <- function(theta, tl) {
+  msgs <- character()
+  rams <- list(tl$ram1, tl$ram2)
+  ks <- list(tl$k1, tl$k2)
+  for (l in 1:2) {
+    ram <- rams[[l]]
+    var_k <- ks[[l]][ram$k_s[ram$s_weight == 1]]
+    neg <- unique(var_k[theta[var_k] < 0])
+    if (length(neg)) {
+      msgs <- c(msgs, sprintf("negative level-%d variance: %s", l, paste(tl$par_names[neg], collapse = ", ")))
+    }
+  }
+  mom <- .sem_twolevel_implied(tl, theta)
+  for (nm in c("sigma_w", "sigma_b")) {
+    if (min(eigen(mom[[nm]], symmetric = TRUE, only.values = TRUE)$values) <= 0) {
+      msgs <- c(msgs, sprintf("the implied %s is not positive definite",
+                              if (nm == "sigma_w") "within covariance Sigma_W" else "between covariance Sigma_B"))
     }
   }
   msgs
@@ -545,7 +578,8 @@
     ), call. = FALSE)
   }
   improper <- .sem_improper(fit$theta, ram)
-  if (length(improper)) {
+  # a two-level fit does not warn: its caller refuses an inadmissible solution with a classed error (S4a.4)
+  if (length(improper) && !isTRUE(ram$twolevel)) {
     warning("improper solution: ", paste(improper, collapse = "; "), call. = FALSE)
   }
   for (w in fit$sign_warnings) warning(w, call. = FALSE)
@@ -564,6 +598,9 @@
 # mean observed variance), covariances zero. Equivariant: rescaling the data
 # rescales the start exactly as it rescales the parameters.
 .sem_default_start <- function(ram, smp) {
+  if (isTRUE(ram$twolevel)) {
+    return(stats::setNames(.sem_ml2_per_level(ram, smp, .sem_default_start, 0), ram$par_names))
+  }
   u <- .sem_step_floor(ram, smp)
   start <- numeric(ram$q)
   start[ram$k_a] <- 0.1 * u[ram$k_a]

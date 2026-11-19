@@ -197,6 +197,9 @@
 S7::method(extract_mediation, SEMFit) <- function(object, treatment, mediator, ...) {
   args <- list(...)
   if (.sem_fiml_is(object)) return(.sem_fiml_extract(object, treatment, mediator, args))
+  if (isTRUE(object@internals$ram$twolevel)) {
+    .sem_twolevel_not_implemented("extracting mediation effects from a native two-level fit")
+  }
   # a factor was expanded to dummies, so the effects have no single column to read (D9)
   as_factor <- intersect(c(treatment, mediator), names(object@internals$factors))
   if (length(as_factor)) {

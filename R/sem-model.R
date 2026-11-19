@@ -438,11 +438,12 @@
 
 # --- Native two-level (S4a, experimental) ---
 
-# The stop every valid two-level model ends in until the two-level fitter exists (S4a.1 to S4a.3), so that no
-# single-level fit runs on the pooled rows of a model with `level:` blocks.
-.sem_twolevel_not_implemented <- function() {
+# The stop for a two-level step that does not exist yet: the single-level fitter reached with `level:` lines but no
+# `cluster` (`.sem_single_level_only()`), and mediation effects from a native two-level fit until S4a.5, so that no
+# single-level code runs on the pooled rows or on the two-level parameter vector.
+.sem_twolevel_not_implemented <- function(what = "native two-level estimation") {
   .twolevel_abort(
-    paste0("native two-level estimation is not implemented yet (S4a, experimental); ",
+    paste0(what, " is not implemented yet (S4a, experimental); ",
            "fit the model with lavaan and use the two-level adapter"),
     "medfit_error_twolevel_not_implemented"
   )
@@ -536,7 +537,7 @@
   n2 <- ifelse(n2 %in% labels2, n2, paste0(n2, ".l2"))
   par_names <- unique(c(n1, n2))
   list(
-    twolevel = TRUE, q = length(par_names), par_names = par_names,
+    twolevel = TRUE, has_mean = TRUE, q = length(par_names), par_names = par_names,
     ram1 = lev[[1]]$ram, ram2 = lev[[2]]$ram, k1 = match(n1, par_names), k2 = match(n2, par_names),
     within = sets$within, between = sets$between, levels = lev
   )
