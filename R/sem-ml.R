@@ -229,25 +229,36 @@
   out <- list(f = f)
   if (deriv) {
     w <- sigma_inv - sigma_inv %*% s_eff %*% sigma_inv
-    pm <- matrix(0, ram$nv, ram$nv)
-    pm[ram$obs_idx, ram$obs_idx] <- w
-    g_a <- 2 * t(bs %*% t(b) %*% pm %*% b)
-    g_s <- crossprod(b, pm %*% b)
-    vals <- c(g_a[ram$pos_a], ram$s_weight * g_s[ram$pos_s])
-    if (ram$has_mean) {
-      # d/dtheta of d' Sigma^-1 d through mu: -2 (dmu/dtheta)' Sigma^-1 d, with
-      # dmu/dm_j = F B e_j and dmu/dA_rc = F B[, r] (B m)_c.
-      bo <- b[ram$obs_idx, , drop = FALSE]
-      sbo <- as.vector(sinv_d %*% bo)
-      nv <- ram$nv
-      cc <- (ram$pos_a - 1L) %/% nv + 1L
-      r <- (ram$pos_a - 1L) %% nv + 1L
-      vals[seq_along(ram$pos_a)] <- vals[seq_along(ram$pos_a)] - 2 * sbo[r] * bm[cc]
-      vals <- c(vals, -2 * sbo[ram$pos_m])
-    }
-    out$g <- as.vector(ram$gmap %*% vals)
+    # d' Sigma^-1 d with d = xbar - mu has dF/dmu = -2 Sigma^-1 d
+    out$g <- .sem_ram_chain(ram, b, bs, w, if (ram$has_mean) -2 * sinv_d, if (ram$has_mean) bm)
   }
   out
+}
+
+# Chain rule from the moments of the observed variables to the parameters of one RAM. `w` is dF/dSigma (p x p,
+# symmetric, the derivative with every entry of Sigma treated as free, in the order of `ram$obs`), `gmu` is dF/dmu
+# (length p; NULL without a mean structure), `b` = (I - A)^-1, `bs` = B S_ram and `bm` = B m. With Sigma_full = B S B'
+# and mu_full = B m:
+#   dF/dA_rc = 2 [B' P B Sigma_full]_rc + (gmu' F B)_r (B m)_c,  dF/dS_rc = [B' P B]_rc (twice off the diagonal),
+#   dF/dm_j = (gmu' F B)_j,
+# with P the p x p matrix `w` embedded in the full variable set. Equal labels sum through `ram$gmap`.
+.sem_ram_chain <- function(ram, b, bs, w, gmu = NULL, bm = NULL) {
+  pm <- matrix(0, ram$nv, ram$nv)
+  pm[ram$obs_idx, ram$obs_idx] <- w
+  g_a <- 2 * t(bs %*% t(b) %*% pm %*% b)
+  g_s <- crossprod(b, pm %*% b)
+  vals <- c(g_a[ram$pos_a], ram$s_weight * g_s[ram$pos_s])
+  if (ram$has_mean) {
+    # through mu: (dmu/dtheta)' gmu, with dmu/dm_j = F B e_j and dmu/dA_rc = F B[, r] (B m)_c.
+    bo <- b[ram$obs_idx, , drop = FALSE]
+    gbo <- as.vector(gmu %*% bo)
+    nv <- ram$nv
+    cc <- (ram$pos_a - 1L) %/% nv + 1L
+    r <- (ram$pos_a - 1L) %% nv + 1L
+    vals[seq_along(ram$pos_a)] <- vals[seq_along(ram$pos_a)] + gbo[r] * bm[cc]
+    vals <- c(vals, gbo[ram$pos_m])
+  }
+  as.vector(ram$gmap %*% vals)
 }
 
 # ML discrepancy F(theta); the sentinel 1e10 for an unusable implied covariance.
@@ -518,19 +529,76 @@
        mu_b = .sem_implied_mean(tl$ram2, t2)[b])
 }
 
-# Two-level worker of `.sem_eval()`: the log-likelihood and the objective f = -2 log L / N (N level-1 rows). NULL for
-# an unusable point, as in the single-level worker. The analytic gradient arrives with S4a.3.
+# Derivatives of the two-level log-likelihood with respect to the moments (S4a.3), every matrix entry treated as free
+# (the convention `.sem_ram_chain()` expects). With V_n = Sigma_B + diag(Sigma_W / n, 0), c_n the count and
+# C_n = sum_j (c_j - mu_B)(c_j - mu_B)' over the clusters of size n, G_n = dlogL/dV_n
+# = -1/2 (c_n V_n^-1 - V_n^-1 C_n V_n^-1), and
+#   dlogL/dSigma_B = sum_n G_n,
+#   dlogL/dSigma_W = -1/2 [(N - J) Sigma_W^-1 - Sigma_W^-1 SSW Sigma_W^-1] + sum_n G_n[W, W] / n,
+#   dlogL/dmu_B    = sum_n V_n^-1 sum_j (c_j - mu_B),
+# with SSW pooled over all clusters. Inputs and outputs are in the order of `smp$within` (then `smp$between`); the
+# point is known to be usable (the log-likelihood was finite there).
+.sem_ml2_grad_moments <- function(smp, sigma_w, sigma_b, mu_b) {
+  w_idx <- seq_len(smp$p_w)
+  sw_inv <- chol2inv(chol(sigma_w))
+  g_b <- matrix(0, nrow(sigma_b), ncol(sigma_b))
+  g_w <- matrix(0, smp$p_w, smp$p_w)
+  g_mu <- numeric(length(mu_b))
+  ssw <- g_w
+  for (s in smp$sizes) {
+    n <- s$n
+    v <- .sem_ml2_between_cov(sigma_b, sigma_w, n, w_idx)
+    v_inv <- chol2inv(chol((v + t(v)) / 2))
+    dev <- sweep(s$c, 2L, mu_b)
+    g_v <- -0.5 * (s$count * v_inv - v_inv %*% crossprod(dev) %*% v_inv)
+    g_b <- g_b + g_v
+    g_w <- g_w + g_v[w_idx, w_idx] / n
+    g_mu <- g_mu + as.vector(v_inv %*% colSums(dev))
+    ssw <- ssw + s$ssw
+  }
+  g_w <- g_w - 0.5 * ((smp$n - smp$j) * sw_inv - sw_inv %*% ssw %*% sw_inv)
+  list(sigma_w = g_w, sigma_b = g_b, mu_b = g_mu)
+}
+
+# Two-level worker of `.sem_eval()`: the log-likelihood, the objective f = -2 log L / N (N level-1 rows) and, when
+# `deriv`, its gradient `g` over theta (S4a.3): the moment derivatives of `.sem_ml2_grad_moments()` scaled by -2 / N,
+# put in each RAM's `obs` order and chained through that level's RAM (`.sem_ram_chain()`), then accumulated into theta
+# through `k1` and `k2`, so a label shared across levels sums both contributions. NULL for an unusable point, as in
+# the single-level worker.
 .sem_eval_ml2 <- function(theta, tl, smp, deriv) {
-  if (deriv) {
-    stop("internal error: the two-level gradient is not implemented yet (S4a.3)", call. = FALSE)
-  }
+  levels <- list(
+    list(ram = tl$ram1, th = theta[tl$k1], k = tl$k1),
+    list(ram = tl$ram2, th = theta[tl$k2], k = tl$k2)
+  )
+  lv <- lapply(levels, function(l) {
+    l$mats <- .sem_ram_mats(l$ram, l$th)
+    l$b <- tryCatch(solve(l$ram$eye - l$mats$a), error = function(e) NULL)
+    l
+  })
   # as in the single-level worker, only a singular I - A makes the point unusable; any other error propagates
-  for (lv in list(list(tl$ram1, theta[tl$k1]), list(tl$ram2, theta[tl$k2]))) {
-    b <- tryCatch(solve(lv[[1]]$eye - .sem_ram_mats(lv[[1]], lv[[2]])$a), error = function(e) NULL)
-    if (is.null(b)) return(NULL)
-  }
+  if (is.null(lv[[1]]$b) || is.null(lv[[2]]$b)) return(NULL)
   mom <- .sem_twolevel_implied(tl, theta)
   ll <- .sem_loglik_ml2(smp, mom$sigma_w, mom$sigma_b, mom$mu_b)
   if (is.null(ll)) return(NULL)
-  list(f = -2 * ll / smp$n, loglik = ll)
+  out <- list(f = -2 * ll / smp$n, loglik = ll)
+  if (deriv) {
+    gm <- .sem_ml2_grad_moments(smp, unname(mom$sigma_w), unname(mom$sigma_b), unname(mom$mu_b))
+    bv <- c(tl$within, tl$between)
+    dimnames(gm$sigma_w) <- list(tl$within, tl$within)
+    dimnames(gm$sigma_b) <- list(bv, bv)
+    names(gm$mu_b) <- bv
+    gm_sigma <- list(gm$sigma_w, gm$sigma_b)
+    scale <- -2 / smp$n
+    g <- numeric(tl$q)
+    for (i in 1:2) {
+      l <- lv[[i]]
+      o <- l$ram$obs
+      w <- unname(scale * gm_sigma[[i]][o, o, drop = FALSE])
+      gmu <- if (l$ram$has_mean) unname(scale * gm$mu_b[o])
+      bm <- if (l$ram$has_mean) as.vector(l$b %*% .sem_ram_m(l$ram, l$th))
+      g[l$k] <- g[l$k] + .sem_ram_chain(l$ram, l$b, l$b %*% l$mats$s, w, gmu, bm)
+    }
+    out$g <- g
+  }
+  out
 }

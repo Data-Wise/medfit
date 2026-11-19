@@ -127,9 +127,9 @@ test_that("planted defects are caught", {
   expect_lt(gap(.sem_grad), 1e-8)
 
   # (1) Drop the factor 2 on symmetric S entries: the gradient check fails.
-  bad_eval <- sem_mutate(.sem_eval, "ram$s_weight * g_s[ram$pos_s]", "g_s[ram$pos_s]")
+  bad_chain <- sem_mutate(.sem_ram_chain, "ram$s_weight * g_s[ram$pos_s]", "g_s[ram$pos_s]")
   bad_grad <- function(theta, ram, smp) {
-    local_mocked_bindings(.sem_eval = bad_eval)
+    local_mocked_bindings(.sem_ram_chain = bad_chain)
     .sem_grad(theta, ram, smp)
   }
   expect_gt(gap(bad_grad), 1e-3)

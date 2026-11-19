@@ -57,9 +57,11 @@ test_that("planted defect: dropping dmu/dA from the mean term makes the gradient
   mm <- mean_model()
   smp <- .sem_sample(mm$data, mm$ram)
   theta <- stats::setNames(c(0.3, 0.2, 0.1, 1.1, 0.9, 0.8, 0.4, -0.2, 0.5), mm$ram$par_names)
-  broken <- sem_mutate(.sem_eval, "vals[seq_along(ram$pos_a)] - 2 * sbo[r] * bm[cc]", "vals[seq_along(ram$pos_a)]")
-  g <- broken(theta, mm$ram, smp, deriv = TRUE)$g
   fd <- sem_fd_grad(function(th) .sem_fml(th, mm$ram, smp), theta)
+  # the mean chain lives in `.sem_ram_chain()` (shared with the two-level gradient, S4a.3)
+  broken <- sem_mutate(.sem_ram_chain, "vals[seq_along(ram$pos_a)] + gbo[r] * bm[cc]", "vals[seq_along(ram$pos_a)]")
+  local_mocked_bindings(.sem_ram_chain = broken)
+  g <- .sem_eval(theta, mm$ram, smp, deriv = TRUE)$g
   expect_gt(max(abs(g - fd)), 1e-3)
 })
 
