@@ -75,7 +75,7 @@ tlnd_cases <- function() {
     list("is not supported in a two-level model", function() tlnd_fit(se_type = "sandwich")),
     list("missing =", function() tlnd_fit(missing = "fiml")),
     list("incomplete rows are dropped (listwise)", function() tlnd_fit(missing = "fiml")),
-    list("nonlinear constraints (including a product of labels set to zero) are not supported",
+    list("nonlinear constraints (including a product of labels",
          function() tlnd_fit(paste(tl_lavaan_model, "a_w*b_w == 0", sep = "\n"))),
     list("a two-level model takes `fixed_x = FALSE` only", function() tlnd_fit(fixed_x = TRUE)),
     list("`meanstructure = FALSE` is refused", function() tlnd_fit(meanstructure = FALSE)),
@@ -137,6 +137,21 @@ test_that("the conditions the model page quotes for the native route are raised"
   expect_true(all(c("n_clusters", "cluster_size_min", "cluster_size_max") %in% names(g)))
   expect_true(is.na(g$chisq) && is.na(g$p_value))
   expect_true(grepl("the engine fits no saturated two-level model", txt, fixed = TRUE))
+})
+
+test_that("the lavaan route on the inadmissible data warns instead, as the model page says", {
+  skip_if_not_installed("lavaan")
+  d <- tlnd_negative()
+  model <- "level: 1\nM ~ X\nY ~ M + X\nlevel: 2\nM ~ X\nY ~ M + X"
+  fit <- suppressWarnings(lavaan::sem(model, data = d, cluster = "cluster"))
+  seen <- character()
+  out <- withCallingHandlers(extract_mediation(fit, treatment = "X", mediator = "M", outcome = "Y"),
+                             warning = function(w) {
+                               seen <<- c(seen, class(w)[1L])
+                               invokeRestart("muffleWarning")
+                             })
+  expect_true(S7::S7_inherits(out, TwoLevelMediationData))
+  expect_true("medfit_warning_twolevel_inadmissible" %in% seen)
 })
 
 test_that("planted defect: a reworded table fragment or a lost trigger fails the checks", {

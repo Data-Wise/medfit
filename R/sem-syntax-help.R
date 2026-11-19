@@ -208,7 +208,7 @@
 #' | `weights` | "`weights` are not supported in a two-level model" |
 #' | `se_type = "sandwich"` | "se_type = ... is not supported in a two-level model" |
 #' | `missing = "fiml"` | "missing = ... incomplete rows are dropped (listwise)" |
-#' | A nonlinear constraint or a product of labels set to zero | "nonlinear constraints (including a product of labels set to zero) are not supported" |
+#' | Nonlinear constraints, a zero product of labels | "nonlinear constraints (including a product of labels" |
 #' | An explicit `fixed_x = TRUE` or a name vector | "a two-level model takes `fixed_x = FALSE` only" |
 #' | `meanstructure = FALSE` | "`meanstructure = FALSE` is refused" |
 #' | `information = "expected"` | "information = ... is not supported in a two-level model; use" |

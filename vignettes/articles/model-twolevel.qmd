@@ -358,16 +358,17 @@ small between-level variance of the mediator and the outcome:
 
 ```{r}
 #| label: native-inadmissible
-set.seed(1)
-J_neg <- 30
-cl <- sort(rep(seq_len(J_neg), 3))
-xb_neg <- rnorm(J_neg)
-mb_neg <- 0.5 * xb_neg + rnorm(J_neg, sd = 0.3)
-yb_neg <- 0.3 * mb_neg + 0.2 * xb_neg
-x_neg <- xb_neg[cl] + rnorm(length(cl))
-m_neg <- mb_neg[cl] + 0.4 * x_neg + rnorm(length(cl))
-y_neg <- yb_neg[cl] + 0.3 * m_neg + 0.2 * x_neg + rnorm(length(cl), sd = 1.5)
-d_neg <- data.frame(id = cl, X = x_neg, M = m_neg, Y = y_neg)
+d_neg <- withr::with_seed(1, {
+  J_neg <- 30
+  cl <- sort(rep(seq_len(J_neg), 3))
+  xb <- rnorm(J_neg)
+  mb <- 0.5 * xb + rnorm(J_neg, sd = 0.3)
+  yb <- 0.3 * mb + 0.2 * xb
+  x <- xb[cl] + rnorm(length(cl))
+  m <- mb[cl] + 0.4 * x + rnorm(length(cl))
+  y <- yb[cl] + 0.3 * m + 0.2 * x + rnorm(length(cl), sd = 1.5)
+  data.frame(id = cl, X = x, M = m, Y = y)
+})
 
 err <- tryCatch(fit_sem(model, data = d_neg, cluster = "id"), error = function(e) e)
 class(err)[1]
@@ -622,7 +623,7 @@ you have decided to accept can be muffled by class (see [Troubleshooting](guide-
 | `medfit_warning_twolevel_constrained` | warning | the contrast is `NA` because both a and b are equated across levels (with several mediators, those of that mediator, or of every mediator for the total) |
 | `medfit_warning_twolevel_inadmissible` | warning | lavaan's `post.check` is `FALSE` (for example a negative variance) |
 | `medfit_warning_twolevel_few_clusters` | warning | fewer than 50 clusters |
-| `medfit_error_twolevel_inadmissible` | error | sem engine route only: a negative level-2 variance or a non-positive-definite implied covariance at either level. Level-2 variances are fitted without a floor; the condition carries the fit (`fit`) and the ledger (`ledger`) |
+| `medfit_error_twolevel_inadmissible` | error | sem engine route only: a negative level-2 variance or a non-positive-definite implied covariance at either level. Level-2 variances are fitted without a floor; the condition carries the fit (`fit`) and the ledger (`ledger`). Its message is shown in [The sem engine route](#the-sem-engine-route) |
 | `medfit_warning_twolevel_labels_ignored` | warning | `a_label`, `b_label` or `cp_label` was set: the paths are read by variable names and level, not by label |
 | `medfit_error_twolevel_standardized` | error | `standardized = TRUE` |
 | `medfit_error_twolevel_product` | error | a product term or `interaction =` |
