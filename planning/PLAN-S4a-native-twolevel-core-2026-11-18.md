@@ -1,7 +1,7 @@
 # S4a: native two-level ML core, implementation plan (2026-11-18)
 
 **Status:** APPROVED 2026-11-18 (five slices; reliability cell `n/a: S4b`; unset `fixed_x` resolves silently to `FALSE`).
-S4a.1 in progress.
+S4a.5 in progress (S4a.1 to S4a.4 merged: #489, #491, #492).
 **Branch:** `feature/twolevel-native-s4a` (from `origin/dev` at `22688951`). **Risk tier:** high (every slice edits files in
 `tests/sim/risk-files.txt`). **Label:** experimental (the experimental-API exemption: Rd pages and NEWS say so). **Not released**
 until T6/U4 and S4b are done.
@@ -124,7 +124,30 @@ the "not implemented" error is replaced), `.STATUS`. Every error message the pag
 
 - [x] Plan approved (2026-11-18)
 - [x] S4a.1
-- [ ] S4a.2
-- [ ] S4a.3
-- [ ] S4a.4
+- [x] S4a.2 (#489)
+- [x] S4a.3 (#491)
+- [x] S4a.4 (#492)
 - [ ] S4a.5
+
+## Deviations
+
+- **S4a.4 (a): no `.sem_dsigma` per block.** The two-level vcov is the observed information from central differences of
+  the analytic gradient; it agrees with a Richardson Hessian to 5.4e-8 and with lavaan SEs to 3.2e-5. The sandwich is
+  refused at two levels, so the Jacobian was not needed.
+- **S4a.4 (b): oracle list.** The `twolevel-parity` row in `tests/sim/gates.csv` lists lavaan only as oracle, with mutants
+  `zero_cross|se_scale|perturb_theta|driver`.
+- **S4a.4 (c): equivalent mutant.** The defined-quantity step in `R/sem-se.R` is not caught: a linear `:=` has an exact
+  central-difference gradient, so the mutant changes no number.
+- **S4a.5: files outside the listed four.** `R/sem-optim.R` (`.sem_admissibility_ml2()` returns the per-level state and
+  reasons; `.sem_improper_ml2()` now reads it), `R/sem-fit.R` (`fit$admissibility` set before the inadmissible stop;
+  `cluster_ids` kept), `R/fit-sem.R` (`internals$cluster`, `internals$cluster_ids` on a two-level `SEMFit`), and
+  `R/extract-lavaan-twolevel.R` (refactor so both sources share one assembly: `.twolevel_assemble()`,
+  `.twolevel_check_within()`, a lazy `icc` argument on `.twolevel_identification()`, `.twolevel_icc()` delegating to the
+  shared `.sem_twolevel_icc()`; the warnings and their order are unchanged).
+- **S4a.5: `tests/testthat/test-sem-twolevel-guards.R`.** Its S4a.4 pins ("stops at extraction until S4a.5") now expect a
+  `TwoLevelMediationData` with the few-clusters warning; the `fit_sem()` roxygen no longer says extraction is missing.
+- **S4a.5: parallel (k >= 2) native extraction** goes through the shared assembly but has no native test yet.
+- **S4a.5: `glance()`** on a two-level fit gives `chisq` and `p_value` as `NA` with a note (the engine fits no saturated
+  two-level model); `df` is the model df, matching lavaan's.
+- **S4a.5: no gates.csv change.** The planted defects (admissibility from `converged` only; vcov keyed by name) are
+  testthat tests, not gate-script mutants, so no `mutants` token was registered.

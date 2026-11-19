@@ -310,29 +310,36 @@
   msgs
 }
 
-# Two-level admissibility (S4a.4): a negative variance at either level, or an implied Sigma_W or Sigma_B that is not
-# positive definite. Level-2 variances are fitted with no floor (S4b decides floor vs unconstrained), so the fit route
-# turns any message here into `medfit_error_twolevel_inadmissible`.
-.sem_improper_ml2 <- function(theta, tl) {
-  msgs <- character()
+# Two-level admissibility (S4a.4, per level since S4a.5): a negative variance at a level, or that level's implied
+# covariance (Sigma_W within, Sigma_B between) not positive definite. Level-2 variances are fitted with no floor (S4b
+# decides floor vs unconstrained), so the fit route turns any reason here into `medfit_error_twolevel_inadmissible`.
+# `.sem_admissibility_ml2()` is the record the outcome ledger keeps (`admissibility`), one `state` and its `reasons`
+# per level; `.sem_improper_ml2()` is the flat list of reasons.
+.sem_admissibility_ml2 <- function(theta, tl) {
   rams <- list(tl$ram1, tl$ram2)
   ks <- list(tl$k1, tl$k2)
-  for (l in 1:2) {
+  mom <- .sem_twolevel_implied(tl, theta)
+  sigma <- list(mom$sigma_w, mom$sigma_b)
+  pd_name <- c("within covariance Sigma_W", "between covariance Sigma_B")
+  out <- lapply(1:2, function(l) {
     ram <- rams[[l]]
     var_k <- ks[[l]][ram$k_s[ram$s_weight == 1]]
     neg <- unique(var_k[theta[var_k] < 0])
+    reasons <- character()
     if (length(neg)) {
-      msgs <- c(msgs, sprintf("negative level-%d variance: %s", l, paste(tl$par_names[neg], collapse = ", ")))
+      reasons <- sprintf("negative level-%d variance: %s", l, paste(tl$par_names[neg], collapse = ", "))
     }
-  }
-  mom <- .sem_twolevel_implied(tl, theta)
-  for (nm in c("sigma_w", "sigma_b")) {
-    if (min(eigen(mom[[nm]], symmetric = TRUE, only.values = TRUE)$values) <= 0) {
-      msgs <- c(msgs, sprintf("the implied %s is not positive definite",
-                              if (nm == "sigma_w") "within covariance Sigma_W" else "between covariance Sigma_B"))
+    if (min(eigen(sigma[[l]], symmetric = TRUE, only.values = TRUE)$values) <= 0) {
+      reasons <- c(reasons, sprintf("the implied %s is not positive definite", pd_name[l]))
     }
-  }
-  msgs
+    list(state = if (length(reasons)) "inadmissible" else "admissible", reasons = reasons)
+  })
+  stats::setNames(out, c("within", "between"))
+}
+
+.sem_improper_ml2 <- function(theta, tl) {
+  adm <- .sem_admissibility_ml2(theta, tl)
+  c(adm$within$reasons, adm$between$reasons)
 }
 
 # The floor for the variances in a nonlinear row (#213), relative to the parameter's natural unit so that it does not

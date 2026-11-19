@@ -278,10 +278,11 @@ fit_mediation <- function(formula_y,
     checkmate::assert_numeric(weights, len = nrow(data), lower = 0,
                               any.missing = FALSE, .var.name = "weights")
   }
-  # `cluster` belongs to the lmer engine; the lmer engine is linear, unweighted
-  # and model-based, so refuse what it cannot honor rather than ignore it.
+  # `cluster` belongs to the lmer engine (and the sem engine, handled above); the
+  # lmer engine is linear, unweighted and model-based, so refuse what it cannot
+  # honor rather than ignore it.
   if (!is.null(cluster) && engine != "lmer") {
-    stop("`cluster` is only used with engine = \"lmer\".", call. = FALSE)
+    stop("`cluster` is only used with engine = \"lmer\" or engine = \"sem\".", call. = FALSE)
   }
   if (se_type == "kr" && engine != "lmer") {
     stop("se_type = \"kr\" (Kenward-Roger) is only used with engine = \"lmer\".",

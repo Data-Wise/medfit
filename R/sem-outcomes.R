@@ -220,6 +220,8 @@
   context$domain$meanstructure <- isTRUE(out$ram$has_mean)
   context$domain$factors <- out$factors
   context$settings$se_type <- out$se_type
+  # a two-level fit (S4a.5) is marked, so the validators require its per-level admissibility record
+  if (isTRUE(out$ram$twolevel)) context$twolevel <- TRUE
   context
 }
 
@@ -278,14 +280,17 @@
 # that stopped the call, `children` the nodes of the required restrictions.
 # `union` is TRUE only for a zero-product union (`.sem_fit_branches()`), whose certified-empty branches are accounted
 # for; any other parent (the MBCO root, whose null may be certified empty) stays unresolved next to an unresolved child.
+# A two-level fit that converged to an inadmissible point (`medfit_error_twolevel_inadmissible`, S4a.5) is an accepted
+# optimum with a likelihood, but not a fit: the node is `unresolved` and keeps `admissibility`, the per-level record.
 .sem_outcome <- function(context, constraints, result = NULL, error = NULL, notices = list(), children = list(),
                          union = FALSE) {
-  accepted <- is.null(error) && isTRUE(result$converged) && length(result$f) == 1L && is.finite(result$f) &&
-    length(result$status) == 1L && !is.na(result$status)
-  resolved <- accepted && all(vapply(children, function(x) {
+  inadmissible <- inherits(error, "medfit_error_twolevel_inadmissible")
+  accepted <- (is.null(error) || inadmissible) && isTRUE(result$converged) && length(result$f) == 1L &&
+    is.finite(result$f) && length(result$status) == 1L && !is.na(result$status)
+  resolved <- accepted && is.null(error) && all(vapply(children, function(x) {
     identical(x$outcome, "resolved") || (union && .sem_valid_exclusion(x))
   }, TRUE))
-  list(
+  node <- list(
     schema_version = 1L, id = "fit", parent_id = NA_character_, constraints = constraints,
     context = context, enumeration = list(state = "complete", required = length(children)),
     # a malformed product row must not mask the error that is being recorded: the map is then `unavailable`
@@ -316,6 +321,8 @@
     ),
     condition = .sem_condition_record(error), children = children
   )
+  if (!is.null(result$admissibility)) node$admissibility <- result$admissibility
+  node
 }
 
 # IDs are deterministic positions within the call (`fit/branch:2`, `mbco/null:1/branch:1`), not certificates that
@@ -402,6 +409,12 @@
     err$ledger <- .sem_compact_outcome(ledger)
     stop(err)
   }
+  if (inherits(err, "medfit_error_twolevel_inadmissible")) {
+    # the optimizer was accepted at an inadmissible point: the ledger keeps that optimum and the per-level record
+    context$twolevel <- TRUE
+    err$ledger <- .sem_outcome(context, constraints, err$fit, error = err, notices = notices)
+    stop(err)
+  }
   err$ledger <- .sem_outcome(context, constraints, error = err, notices = notices)
   stop(err)
 }
@@ -451,6 +464,13 @@
         identical(x$post_fit, if (length(failed)) failed[[1L]]$post_fit)
       }) &&
       is.list(x$notices$warnings) && is.list(x$notices$messages) && is.null(x$condition) &&
+      # a two-level node records both levels admissible; any other node carries no such record (S4a.5)
+      (if (isTRUE(x$context$twolevel)) {
+        ok <- list(state = "admissible", reasons = character())
+        identical(x$admissibility, list(within = ok, between = ok))
+      } else {
+        is.null(x$admissibility) && is.null(x$context$twolevel)
+      }) &&
       all(vapply(seq_along(x$children), function(i) {
         cons <- x$constraints
         for (j in seq_along(products)) {
@@ -665,6 +685,7 @@
     identical(x$context$domain$weights, fit$weights) &&
     identical(x$context$domain$fixed_x, fit$fixed_x) &&
     identical(x$context$domain$meanstructure, isTRUE(fit$ram$has_mean)) &&
+    identical(isTRUE(x$context$twolevel), isTRUE(fit$ram$twolevel)) &&
     identical(x$context$domain$factors, fit$factors) &&
     identical(x$context$settings, list(n_starts = fit$n_starts, control = fit$control, se_type = fit$se_type)) &&
     (is.null(model) || identical(x$context$model$syntax, model))

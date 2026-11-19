@@ -447,24 +447,41 @@ S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) 
 # `converged` column: a SEMFit exists only for a solution that passed the acceptance gate (otherwise fit_sem()
 # errors), so `@converged` is TRUE for every fit and would carry no information. A fit with sampling weights has
 # a weighted discrepancy that is not a likelihood, so its chi-square, p-value, log likelihood, AIC and BIC are NA.
+# A two-level fit (S4a.5) has no saturated two-level model in the engine, so its chi-square and p-value are NA with a
+# note; it keeps df, the total log likelihood and the criteria, and adds the cluster count and the cluster-size range.
 .glance_semfit <- function(x, ...) {
   weighted <- !is.null(x@internals$weights)
+  twolevel <- isTRUE(x@internals$ram$twolevel)
   # a product term can make the global test invalid: chi-square, df and p-value are then NA, with a note
   note <- .sem_modeltest_reason(x)
   invalid <- !is.null(note)
-  chisq <- if (weighted || invalid) NA_real_ else .sem_chisq(x)
+  chisq <- if (weighted || invalid || twolevel) NA_real_ else .sem_chisq(x)
   ll <- if (weighted) NULL else stats::logLik(x)
   out <- data.frame(
     nobs = x@n_obs, npar = .sem_n_free(x), df = if (invalid) NA_real_ else x@df, chisq = chisq,
-    p_value = if (!weighted && !invalid && x@df > 0) stats::pchisq(chisq, df = x@df, lower.tail = FALSE) else NA_real_,
+    p_value = if (!weighted && !invalid && !twolevel && x@df > 0) {
+      stats::pchisq(chisq, df = x@df, lower.tail = FALSE)
+    } else {
+      NA_real_
+    },
     logLik = if (weighted) NA_real_ else as.numeric(ll),
     AIC = if (weighted) NA_real_ else stats::AIC(ll), BIC = if (weighted) NA_real_ else stats::BIC(ll),
     fixed_x = paste(x@internals$fixed_x, collapse = ", "), stringsAsFactors = FALSE
   )
+  if (twolevel) {
+    sizes <- as.integer(table(x@internals$cluster_ids))
+    out$n_clusters <- length(sizes)
+    out$cluster_size_min <- min(sizes)
+    out$cluster_size_max <- max(sizes)
+  }
   if (requireNamespace("tibble", quietly = TRUE)) {
     out <- tibble::as_tibble(out)
   }
   if (invalid) attr(out, "note") <- .sem_modeltest_note(note)
+  if (twolevel && !invalid) {
+    attr(out, "note") <- paste0("chi-square test not available for a two-level fit: the engine fits no saturated ",
+                                "two-level model (experimental)")
+  }
   out
 }
 

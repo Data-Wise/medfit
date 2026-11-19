@@ -42,8 +42,9 @@
 #' @param between_parameterization Character scalar: `"latent"` (cluster means are latent).
 #' @param data Data frame or `NULL`: always `NULL` for the lavaan adapter (the fit is never refit and the data
 #'   are not copied); kept for the contract shared with the other mediation classes, which read `@data`.
-#' @param source_package Character scalar: `"lavaan"`; kept for the dependents contract shared with the other
-#'   mediation classes (`tests/testthat/test-dependents-contract.R` pins it across classes).
+#' @param source_package Character scalar: `"lavaan"`, or `"medfit"` for a native two-level fit; kept for the
+#'   dependents contract shared with the other mediation classes (`tests/testthat/test-dependents-contract.R` pins it
+#'   across classes).
 #' @param source_version Character: `character(0)` (the default) or one non-empty string, the version of the
 #'   package that made the fit. The lavaan adapter stores the lavaan version here and in `lavaan_version`;
 #'   `lavaan_version` may be `character(0)` for a fit lavaan did not make. Both are checked on construction
@@ -510,7 +511,7 @@ print_summary_twolevel_mediation_data <- function(x, ...) {
 #' @param lavaan_version,call Character scalars: provenance of the fit.
 #' @param between_parameterization Character scalar: `"latent"` (cluster means are latent).
 #' @param data Data frame or `NULL`: always `NULL` for the lavaan adapter.
-#' @param source_package Character scalar: `"lavaan"`.
+#' @param source_package Character scalar: `"lavaan"`, or `"medfit"` for a native two-level fit.
 #' @param source_version Character: `character(0)` (the default) or one non-empty string, the version of the
 #'   package that made the fit.
 #'
