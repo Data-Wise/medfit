@@ -432,7 +432,7 @@
   if (n_clusters < .twolevel_option("min_clusters")) {
     .twolevel_warn(
       sprintf(paste0("The fit has %d clusters (fewer than %d). Two-level estimates and between-level ",
-                     "standard errors are unreliable with few clusters; the adapter still returns them."),
+                     "standard errors are unreliable with few clusters; they are still returned."),
               n_clusters, .twolevel_option("min_clusters")),
       "medfit_warning_twolevel_few_clusters"
     )
