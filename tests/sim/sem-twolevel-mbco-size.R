@@ -13,6 +13,9 @@
 #           conditional on the resolved tests (fails = fit-stage inadmissible + null-stage inadmissible + ledger error
 #           + unresolved + other, each counted in its own column)
 #   oracle: every p-value equals pchisq(statistic, 1, lower.tail = FALSE)
+#           reject_all is the rate over every replication (a test that is not resolved counts as no rejection)
+#   aborts: no test ends in a ledger error or an unclassified error (a failed null refit is unresolved or a classed
+#           inadmissible error, never an abort)
 #   runs:   at most MAX_FAIL of the tests are unresolved or error (inadmissible refits are counted, not hidden)
 # MUTANT=max_branch (the larger branch LR in place of the smaller) alters mbco_sem() in memory and must fail the
 # size rule in the zero_a and zero_b cells, where one branch is false.
@@ -116,12 +119,14 @@ summ <- do.call(rbind, lapply(split(runs, list(runs$pattern, runs$J, runs$level)
     fit_inadm = sum(startsWith(g$err, "fit: medfit_error_twolevel_inadmissible")),
     null_inadm = sum(startsWith(g$err, "medfit_error_twolevel_inadmissible")),
     ledger = sum(startsWith(g$err, "medfit_error_ledger")), unresolved = sum(g$err == "unresolved"),
+    reject_all = sum(g$p[ok] < alpha) / nrow(g), reject_all_se = sqrt(alpha * (1 - alpha) / nrow(g)),
     reject_10 = mean(g$p[ok] < 0.10), mean_stat = mean(g$stat[ok]),
     oracle_gap = max(abs(g$p[ok] - stats::pchisq(g$stat[ok], 1, lower.tail = FALSE)))
   )
 }))
 rownames(summ) <- NULL
 summ <- summ[order(summ$level, summ$J, summ$pattern), ]
+summ$other <- summ$fails - summ$fit_inadm - summ$null_inadm - summ$ledger - summ$unresolved
 summ$limit <- alpha + 3 * summ$mc_se
 summ$pass <- summ$reject <= summ$limit
 summ$mutant <- mutant
@@ -141,6 +146,7 @@ cat(sprintf("\nreps per cell %d, cluster size %d, %.1f minutes on %d cores\n", r
 checks <- c(
   size = all(summ$pass),
   oracle = all(summ$oracle_gap < 1e-12),
+  aborts = sum(summ$ledger + summ$other) == 0,
   fit_failures = sum(summ$fails) / sum(summ$reps) <= max_fail
 )
 cat("\n")

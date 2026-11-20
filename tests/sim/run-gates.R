@@ -150,6 +150,7 @@ verdict_gate <- function(gate, d, s) {
     "fiml-ext" = c("cell", "check", "value", "limit", "pass"),
     "twolevel-parity" = c("cell", "check", "value", "limit", "pass"),
     "twolevel-sandwich" = c("cell", "check", "value", "limit", "pass"),
+    "twolevel-mbco-size" = c("pattern", "J", "level", "reps", "fails", "reject", "ledger", "other", "oracle_gap"),
     restoration = c("check", "kind", "value", "limit", "pass", "detail"),
     "native-defaults" = c("cell", "combo", "quantity", "native", "oracle", "diff", "tol", "status", "reason"),
     semopy = c("param", "status", "est_gap", "se_rel", "sl_est_gap", "sl_se_rel", "reason")
@@ -531,6 +532,28 @@ verdict_gate <- function(gate, d, s) {
         chk("successful checks", all(d$pass %in% TRUE), "no failed or missing checks")
       )
     },
+    # IG3 T-A: size of the two-level MBCO test (smaller branch LR against chi-square(1)) per pattern, J and level; the
+    # 12 cells are frozen here and the size limit is recomputed from the counts, so a results file cannot drop a cell,
+    # widen the limit or hide an abort (a ledger or unclassified error)
+    "twolevel-mbco-size" = {
+      expected <- as.vector(outer(c("origin", "zero_a", "zero_b"),
+                                  as.vector(outer(c("20", "50"), c("within", "between"), paste, sep = ":")),
+                                  paste, sep = ":"))
+      keys <- paste(d$pattern, d$J, d$level, sep = ":")
+      resolved <- d$reps - d$fails
+      limit <- 0.05 + 3 * sqrt(0.05 * 0.95 / resolved)
+      rbind(
+        rows_chk(d, s),
+        chk("complete cells", identical(sort(keys), sort(expected)), "3 patterns x J 20, 50 x 2 levels, no duplicates"),
+        chk("size", all(is.finite(d$reject) & resolved > 0 & d$reject <= limit),
+            sprintf("max reject - limit %s (limit 0.05 + 3 MC SE over resolved tests)", fmt(max(d$reject - limit)))),
+        max_chk("oracle gap", d$oracle_gap, 1e-12),
+        chk("no aborts", all(d$ledger == 0 & d$other == 0),
+            sprintf("%d ledger, %d other errors", sum(d$ledger), sum(d$other))),
+        chk("failed tests", sum(d$fails) / sum(d$reps) <= 0.02,
+            sprintf("%d of %d tests not resolved (limit 2%%)", sum(d$fails), sum(d$reps)))
+      )
+    },
     restoration = {
       # restoration-bound T5/T6 (G12): every check of the script is a row; the numeric verdicts are re-derived from the
       # recorded numbers, so a row that claims pass over a bad number cannot pass. tol_est is k, tol_se the margin.
@@ -691,6 +714,7 @@ mutate <- function(gate, kind, d) {
     if (gate %in% c("fiml", "fiml-ext")) d$value[1L] <- 1
     if (gate == "twolevel-parity") d$value[1L] <- 2 # the estimates limit is 1
     if (gate == "twolevel-sandwich") d$value[1L] <- 1 # the se limit is 1e-3
+    if (gate == "twolevel-mbco-size") d$reject[1L] <- 0.2 # the pass column still says TRUE
     if (gate == "restoration") {
       # the recorded numbers say fail while the pass column still says TRUE
       d$value[grepl("^separation", d$check)] <- 100
@@ -729,6 +753,7 @@ mutate <- function(gate, kind, d) {
     if (gate == "native-defaults") d$status[1] <- "fail"
     if (gate == "semopy") d$status[1] <- "error"
     if (gate %in% c("restoration", "fiml", "fiml-ext", "twolevel-parity", "twolevel-sandwich")) d$pass[1] <- FALSE
+    if (gate == "twolevel-mbco-size") d$ledger[1] <- 1 # an aborted test
   }
   if (kind == "all_flagged" && gate == "nonlinear-profile") d$note[d$fixture %in% "var-1e6-1e-6"] <- "flagged"
   if (kind == "floor_disproved_silent" && gate == "nonlinear-profile") {
@@ -768,7 +793,7 @@ mutate <- function(gate, kind, d) {
     new_gate <- gate %in% c(
       names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x",
       "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep", "compare-lr", "restoration",
-      "native-defaults", "semopy", "fiml", "fiml-ext", "twolevel-parity", "twolevel-sandwich"
+      "native-defaults", "semopy", "fiml", "fiml-ext", "twolevel-parity", "twolevel-sandwich", "twolevel-mbco-size"
     )
     # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
@@ -977,6 +1002,7 @@ scripts <- c(
   "fiml-ext" = "tests/sim/sem-fiml-ext-gate.R",
   "twolevel-parity" = "tests/sim/sem-twolevel-parity-gate.R",
   "twolevel-sandwich" = "tests/sim/sem-twolevel-sandwich-gate.R",
+  "twolevel-mbco-size" = "tests/sim/sem-twolevel-mbco-size.R",
   restoration = "tests/sim/sem-restoration-gate.R",
   "native-defaults" = "tests/sim/native-defaults-oracle.R",
   semopy = "tests/sim/semopy-oracle-gate.R"
