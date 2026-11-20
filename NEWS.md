@@ -29,7 +29,9 @@
   "the adapter still returns them.", because it is raised on both two-level routes.
 * Two messages name the engine by its current name: `model =` with another engine now says "`model` is only used
   with engine = "sem"" (was `"native"`), and a request for standardized estimates from a sem fit says "not supported
-  by the sem engine".
+  by the sem engine". The argument checks of `fit_mediation(engine = "sem")` (formulas instead of `model`, a
+  missing `model`, family arguments, unused arguments, unknown `engine_args`) also say `engine = "sem"`, whichever
+  name the call used.
 
 # medfit 0.19.0
 

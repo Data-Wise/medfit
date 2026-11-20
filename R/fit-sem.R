@@ -561,7 +561,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   )
 }
 
-# `fit_mediation(engine = "native")`: fit the syntax with the native engine, then
+# `fit_mediation(engine = "sem")` (alias "native"): fit the syntax with the sem engine, then
 # extract the mediation structure through the shared workers. Reached before the
 # formula validation of the other engines, since the native route takes `model`,
 # not formulas, and a latent mediator is not a column of `data`. Every argument
@@ -569,10 +569,10 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
 .fit_mediation_native <- function(model, data, treatment, mediator, given, weights, se_type, cluster,
                                   engine_args, m_star, dots) {
   if (given$formulas) {
-    stop("engine = \"native\" takes `model =`, not formulas", call. = FALSE)
+    stop("engine = \"sem\" takes `model =`, not formulas", call. = FALSE)
   }
   if (is.null(model)) {
-    stop("engine = \"native\" needs `model`, the model syntax.", call. = FALSE)
+    stop("engine = \"sem\" needs `model`, the model syntax.", call. = FALSE)
   }
   checkmate::assert_character(model, min.len = 1L, any.missing = FALSE, .var.name = "model")
   checkmate::assert_data_frame(data, min.rows = 1L, .var.name = "data")
@@ -586,16 +586,16 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     stop("se_type = \"kr\" (Kenward-Roger) is only used with engine = \"lmer\".", call. = FALSE)
   }
   if (given$family) {
-    stop("engine = \"native\" fits Gaussian models; `family_y` and `family_m` are not used.", call. = FALSE)
+    stop("engine = \"sem\" fits Gaussian models; `family_y` and `family_m` are not used.", call. = FALSE)
   }
   if (length(dots)) {
-    stop("unused arguments for engine = \"native\": ", paste(names(dots), collapse = ", "), call. = FALSE)
+    stop("unused arguments for engine = \"sem\": ", paste(names(dots), collapse = ", "), call. = FALSE)
   }
   fit_args <- c("information", "n_starts", "control", "meanstructure", "fixed_x", "missing")
   extract_args <- c("outcome", "structure", "decomposition", "interaction", "a_label", "b_label", "cp_label")
   unknown <- setdiff(names(engine_args), c(fit_args, extract_args))
   if (length(unknown)) {
-    stop("unknown `engine_args` for engine = \"native\": ", paste(unknown, collapse = ", "),
+    stop("unknown `engine_args` for engine = \"sem\": ", paste(unknown, collapse = ", "),
          ". Recognized: ", paste(c(fit_args, extract_args), collapse = ", "), ".", call. = FALSE)
   }
   syntax <- paste(model, collapse = "\n")
