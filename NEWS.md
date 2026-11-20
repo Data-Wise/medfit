@@ -13,7 +13,9 @@
   without the deprecation period. Refused inputs (latent variables, products, `weights`, the sandwich covariance,
   FIML, nonlinear constraints, `fixed_x = TRUE`, `meanstructure = FALSE`, expected information, within-only
   variables) each stop with a `medfit_error_twolevel_*` class; the "Two-level models" section of
-  `?"medfit-syntax"` lists the messages.
+  `?"medfit-syntax"` lists the messages. `mbco_sem()` and `compare_lr()` refuse a native two-level fit with class
+  `medfit_error_twolevel_unsupported`; earlier development builds failed inside the refit with a stale
+  "not implemented yet" message.
 * `glance()` on a two-level fit adds `n_clusters`, `cluster_size_min` and `cluster_size_max`; `chisq` and `p_value`
   are `NA` with a note, because the engine fits no saturated two-level model.
 * Level-2 variances are fitted without a floor. An inadmissible two-level solution (a negative variance or a

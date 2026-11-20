@@ -224,6 +224,7 @@ solution (a negative variance or a non-positive-definite implied covariance at e
    \code{meanstructure = FALSE} \tab "\code{meanstructure = FALSE} is refused" \cr
    \code{information = "expected"} \tab "information = ... is not supported in a two-level model; use" \cr
    An inadmissible solution \tab "the two-level solution is inadmissible" \cr
+   \code{mbco_sem()} or \code{compare_lr()} on the fit \tab "is not available for a native two-level fit yet" \cr
 }
 
 

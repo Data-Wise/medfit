@@ -81,7 +81,8 @@ tlnd_cases <- function() {
     list("`meanstructure = FALSE` is refused", function() tlnd_fit(meanstructure = FALSE)),
     list("information =", function() tlnd_fit(information = "expected")),
     list("is not supported in a two-level model; use", function() tlnd_fit(information = "expected")),
-    list("the two-level solution is inadmissible", function() tlnd_fit(data = tlnd_negative()))
+    list("the two-level solution is inadmissible", function() tlnd_fit(data = tlnd_negative())),
+    list("is not available for a native two-level fit yet", function() mbco_sem(tlnd_fit(), "a_w", "b_w"))
   )
 }
 

@@ -26,6 +26,7 @@ exclusions: list(
     "tests/testthat/test-twolevel-bootstrap.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-parallel-statistic.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-sem-twolevel-guards.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-native-refusals.R" = list(object_usage_linter = Inf),
     # the k = 3 QA oracle's helper calls testthat expectations outside test_that()
     "tests/testthat/test-twolevel-parallel-effects-qa.R" = list(object_usage_linter = Inf),
     # U3 three-oracle helpers (tl_mx_*) use the O8 tl_* helpers of helper-twolevel-likelihood.R
