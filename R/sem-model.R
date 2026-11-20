@@ -443,8 +443,8 @@
 # single-level code runs on the pooled rows or on the two-level parameter vector.
 .sem_twolevel_not_implemented <- function(what = "native two-level estimation") {
   .twolevel_abort(
-    paste0(what, " is not implemented yet (S4a, experimental); ",
-           "fit the model with lavaan and use the two-level adapter"),
+    paste0(what, " needs `cluster`: fit a model with `level:` blocks with ",
+           "fit_sem(model, data, cluster = )"),
     "medfit_error_twolevel_not_implemented"
   )
 }

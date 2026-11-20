@@ -14,6 +14,12 @@
                             cluster = NULL) {
   context <- .sem_outcome_context(model, parsed, data, information, weights, meanstructure, fixed_x,
                                   n_starts, control, se_type, factors)
+  if (!is.null(cluster)) {
+    # a two-level call is marked from the start, and its sample is held as a fitted node holds it (`out$data`, no
+    # cluster column), so a node built from this context when the pipeline fails matches its resolved siblings
+    context$twolevel <- TRUE
+    context$sample <- data[setdiff(names(data), cluster)]
+  }
   captured <- .sem_capture_outcome(.sem_fit_pipeline(model, data, information, n_starts, control, weights,
                                                      se_type, parsed, meanstructure, fixed_x, factors, cluster))
   out <- captured$value

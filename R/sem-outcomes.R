@@ -549,6 +549,17 @@
         identical(node$enumeration, list(state = "complete", required = 0L)) &&
         is.list(node$notices$warnings) && is.list(node$notices$messages) && is.null(node$post_fit)
     }
+    # a two-level null that converged to an inadmissible point: an accepted optimum with a likelihood the statistic
+    # never uses, the per-level record that shows a level failed, and the classed condition
+    inadmissible_null <- function(child, id) {
+      isTRUE(x$context$twolevel) && identical(child$optimizer$state, "accepted") &&
+        identical(child$likelihood$state, "available") && is.finite(child$likelihood$f) &&
+        identical(child$feasibility, "witness") && is.list(child$admissibility) &&
+        !all(unlist(child$admissibility) %in% TRUE) &&
+        identical(child$condition$class[1L], "medfit_error_twolevel_inadmissible") &&
+        identical(child$enumeration, list(state = "complete", required = 0L)) &&
+        is.list(child$notices$warnings) && is.list(child$notices$messages) && is.null(child$post_fit)
+    }
     # a null that failed is one of two shapes: the engine stopped (`bare_failure`), or a zero-product union with at
     # least one branch that failed, whose other branches are resolved or certified empty and whose likelihood is theirs
     failed_null <- function(child, id, syntax, parsed) {
@@ -556,12 +567,14 @@
         # NULL when the engine stopped before parsing (the context of the call), else the null's own table
         (is.null(child$context$model$parameters) || identical(child$context$model$parameters, parsed$parameters)) &&
         identical(child$context$n_obs, x$context$n_obs) && is.list(child) && identical(child$schema_version, 1L) &&
-        identical(child$id, id) && identical(child$parent_id, "mbco") && identical(child$outcome, "unresolved")
+        identical(child$id, id) && identical(child$parent_id, "mbco") && identical(child$outcome, "unresolved") &&
+        # a failed null of a two-level fit is marked two-level, as its resolved siblings are; a single-level one is not
+        identical(child$context$twolevel, x$context$twolevel)
       if (!context_ok) {
         return(FALSE)
       }
       if (!length(child$children)) {
-        return(bare_failure(child, id, "mbco"))
+        return(bare_failure(child, id, "mbco") || inadmissible_null(child, id))
       }
       products <- .sem_zero_product_rows(child$constraints)
       grid <- if (length(products)) .sem_branch_grid(products)

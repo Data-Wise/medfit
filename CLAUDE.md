@@ -73,6 +73,7 @@ covr::package_coverage()          # Target: >90%
 R/
 ├── aaa-imports.R           # Package imports
 ├── aab-generics.R          # S7 generics (load before methods!)
+├── aac-s7-compat.R         # .s7_call_safe(): S7 1.0 constructors for classes with a `call` property
 ├── medfit-package.R        # Package documentation
 ├── classes.R               # S7 class definitions (all twelve classes)
 ├── data.R                  # mediation_demo documentation

@@ -81,7 +81,8 @@ test_that("planted: a refit without the factor map is caught", {
   f <- fit_sem("m ~ a*x + g\ny ~ b*m + g", d)
   r <- mbco_sem(f, paths = c("a", "b"))
   expect_true(is.finite(r$statistic))
-  bad <- sem_mutate(mbco_sem, "factors = fit@internals$factors)", "factors = NULL)")
+  bad <- sem_mutate(mbco_sem, "factors = fit@internals$factors, cluster = cluster)",
+                    "factors = NULL, cluster = cluster)")
   testthat::local_mocked_bindings(mbco_sem = bad)
   expect_error(mbco_sem(f, paths = c("a", "b")))
 })

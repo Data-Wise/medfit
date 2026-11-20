@@ -1,3 +1,5 @@
+# IG3 T-A mbco_sem() on native two-level fits on feature/ig3-twolevel-mbco — 2026-11-19 MST: per-level product null (minimum branch LR, chi-square(1), level and n_clusters); implementer, QA, gates and docs done; T-B and two-level compare_lr() not implemented; not pushed, no PR.
+
 # IG2 cluster-robust sandwich for the native two-level fit on feature/ig2-cluster-sandwich — 2026-11-19 MST
 
 # fit_sem(cluster = , se_type = "sandwich") gives the CR0 cluster sandwich (per-cluster scores, observed-information bread, projected under linear constraints; matches lavaan se = "robust.huber.white"); D1-D6 accepted (planning/specs/SCOPE-IG2-cluster-robust-se-2026-11-19.md). Implementer, oracle QA, gates and docs (NEWS, model-twolevel.qmd, ?fit_sem, ?"medfit-syntax") done; experimental, unreleased. CLAUDE.md waits for the merge of dev (#498). Not pushed; no PR. CRAN hold.

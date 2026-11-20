@@ -59,7 +59,8 @@ information or a negative variance (\code{medfit_sem_covariance_error} in
 restriction): the row stays resolved, the statistic and p-value are unchanged, a warning names the failure, and the
 node has \code{covariance = "failed"} with \code{post_fit} and the notices. No covariance is invented; a fit that carries
 \code{post_fit} is refused as \code{object}. Other covariance errors propagate unchanged; singular information keeps its
-warning and NA covariance.
+warning and NA covariance. For a native two-level fit (\code{fit_sem(cluster = )}) the result adds \code{level}
+(\code{"within"} or \code{"between"}) and \code{n_clusters}; a single-level result does not have them.
 }
 \description{
 Tests the null hypothesis that an indirect effect, the product of two or more
@@ -107,6 +108,18 @@ an equality (\code{a == b}), their refits impose the same restriction and their
 \code{diff_ll} values coincide. The test is conservative: under a null where only
 one factor is zero its size is at most the nominal level, and with more than
 one zero factor it is smaller still.
+
+A native two-level fit (experimental) is tested at one level: \code{mbco_sem(fit, "a_w", "b_w")} for the within
+indirect effect and \code{mbco_sem(fit, "a_b", "b_b")} for the between one, with each null refit on both levels and the
+same clusters. The statistic is the minimum likelihood ratio over the refits with one path set to 0, referred to
+chi-square(1); it is conservative at the origin (both paths zero) and is not a test of the between-minus-within
+contrast. Paths from different levels, or a label shared by both levels, are refused with class
+\code{medfit_error_twolevel_unsupported}. A null refit whose solution is inadmissible (a negative level-2 variance)
+gives the unresolved result above (statistic \code{NA}) with a warning of class \code{medfit_warning_twolevel_inadmissible}
+that names the refit and the reason; one that does not converge gives the same result with a warning. The
+statistic is never the other null's likelihood ratio alone. A warning says when a level-2 variance at a refit is
+below 1\% of that variable's implied between plus within variance, because the null then lies near the boundary
+and chi-square(1) may not hold.
 }
 \examples{
 \donttest{

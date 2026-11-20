@@ -13,9 +13,22 @@
   without the deprecation period. Refused inputs (latent variables, products, `weights`, FIML, nonlinear constraints,
   `fixed_x = TRUE`, `meanstructure = FALSE`, expected information, within-only
   variables) each stop with a `medfit_error_twolevel_*` class; the "Two-level models" section of
-  `?"medfit-syntax"` lists the messages. `mbco_sem()` and `compare_lr()` refuse a native two-level fit with class
+  `?"medfit-syntax"` lists the messages. `compare_lr()` refuses a native two-level fit with class
   `medfit_error_twolevel_unsupported`; earlier development builds failed inside the refit with a stale
   "not implemented yet" message.
+* **`mbco_sem()` on native two-level fits (experimental).** `mbco_sem(fit, "a_w", "b_w")` and
+  `mbco_sem(fit, "a_b", "b_b")` test the indirect effect at one level of a `fit_sem(cluster = )` fit: the minimum
+  likelihood ratio over the refits with one path set to 0 (each refit keeps the clusters), referred to
+  chi-square(1). Before, development builds refused the call. The test is conservative when both paths are zero and
+  is not a test of the between-minus-within contrast. The result adds `level` and `n_clusters`. Paths from
+  different levels stop with class `medfit_error_twolevel_unsupported`. A null refit whose solution is
+  inadmissible (a negative level-2 variance) gives the unresolved result (statistic `NA`, `unresolved = TRUE`) with
+  a warning of class `medfit_warning_twolevel_inadmissible` that names the refit and the reason, and a null refit
+  that does not converge gives the same unresolved result with a warning; the statistic is never the other null's
+  likelihood ratio alone. A warning flags a level-2 variance below 1% of its implied between plus within
+  variance at a refit, where chi-square(1) may not hold. A test that two levels' indirect effects are equal is not
+  implemented. A model with `level:` blocks that reaches the single-level fitter without `cluster` now says to pass
+  `cluster` instead of calling native two-level estimation not implemented.
 * `glance()` on a two-level fit adds `n_clusters`, `cluster_size_min` and `cluster_size_max`; `chisq` and `p_value`
   are `NA` with a note, because the engine fits no saturated two-level model.
 * Level-2 variances are fitted without a floor. An inadmissible two-level solution (a negative variance or a
@@ -33,6 +46,14 @@
   `medfit_error_twolevel_weights`, which now covers `weights` only). `weights`, products, nonlinear constraints and
   `information = "expected"` are still refused. Internally, the two-level branch of `fit_sem()` now passes `se_type`
   to the fit; before, it dropped the argument, which had no visible effect because the sandwich was refused first.
+
+## Bug fixes
+
+* **S7 1.0.0 compatibility for `@call`.** Under S7 1.0.0, `new_object()` captured a property passed as `call = call`,
+  so `TwoLevelMediationData` and `TwoLevelParallelMediationData` failed validation ("@call must be <character>") and
+  `SEMFit` and `BootstrapResult` lost their `@call` silently (it became `NULL`). These four classes now use a
+  constructor with the same arguments that passes the properties in the form S7 1.0.0 accepts, and the named form
+  under S7 0.2.2, so one installed medfit works with either version.
 
 ## Minor changes
 

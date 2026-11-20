@@ -223,9 +223,15 @@ solution (a negative variance or a non-positive-definite implied covariance at e
    \code{meanstructure = FALSE} \tab "\code{meanstructure = FALSE} is refused" \cr
    \code{information = "expected"} \tab "information = ... is not supported in a two-level model; use" \cr
    An inadmissible solution \tab "the two-level solution is inadmissible" \cr
-   \code{mbco_sem()} or \code{compare_lr()} on the fit \tab "is not available for a native two-level fit yet" \cr
+   \code{compare_lr()} on the fit \tab "is not available for a native two-level fit yet" \cr
+   \code{mbco_sem()} with paths from different levels \tab "tests a product of paths at one level of a two-level fit" \cr
 }
 
+
+\code{mbco_sem(fit, "a_w", "b_w")} and \code{mbco_sem(fit, "a_b", "b_b")} test the indirect effect at one level: the minimum
+likelihood ratio over the refits with each labeled path set to 0, referred to chi-square(1), as for a single-level
+fit. The test is conservative when both paths are zero, and it is not a test of the between-minus-within
+contrast. The result adds \code{level} and \code{n_clusters}; see \code{\link[=mbco_sem]{mbco_sem()}}.
 
 \code{extract_mediation()} on the fit returns a \code{TwoLevelMediationData}, the same class as the lavaan two-level adapter
 gives, with \verb{@source} \code{"native"}. \code{glance()} reports \code{df}, the total log likelihood, \code{nobs}, \code{n_clusters} and the
