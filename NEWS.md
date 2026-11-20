@@ -25,6 +25,9 @@
 
 * The few-clusters warning (`medfit_warning_twolevel_few_clusters`) now ends "they are still returned." instead of
   "the adapter still returns them.", because it is raised on both two-level routes.
+* Two messages name the engine by its current name: `model =` with another engine now says "`model` is only used
+  with engine = "sem"" (was `"native"`), and a request for standardized estimates from a sem fit says "not supported
+  by the sem engine".
 
 # medfit 0.19.0
 
