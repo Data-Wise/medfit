@@ -14,8 +14,8 @@
 #           + unresolved + other, each counted in its own column)
 #   oracle: every p-value equals pchisq(statistic, 1, lower.tail = FALSE)
 #           reject_all is the rate over every replication (a test that is not resolved counts as no rejection)
-#   aborts: no test ends in a ledger error or an unclassified error (a failed null refit is unresolved or a classed
-#           inadmissible error, never an abort)
+#   aborts: no test ends in a ledger error or an unclassified error (a failed null refit, inadmissible or not, is
+#           unresolved with a warning, never an abort)
 #   runs:   at most MAX_FAIL of the tests are unresolved or error (inadmissible refits are counted, not hidden)
 # MUTANT=max_branch (the larger branch LR in place of the smaller) alters mbco_sem() in memory and must fail the
 # size rule in the zero_a and zero_b cells, where one branch is false.
