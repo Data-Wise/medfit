@@ -80,7 +80,7 @@ tlnd_cases <- function() {
     list("information =", function() tlnd_fit(information = "expected")),
     list("is not supported in a two-level model; use", function() tlnd_fit(information = "expected")),
     list("the two-level solution is inadmissible", function() tlnd_fit(data = tlnd_negative())),
-    list("is not available for a native two-level fit yet", function() mbco_sem(tlnd_fit(), "a_w", "b_w"))
+    list("is not available for a native two-level fit yet", function() compare_lr(tlnd_fit(), c("a_w", "b_w")))
   )
 }
 

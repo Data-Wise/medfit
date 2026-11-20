@@ -7,9 +7,9 @@
 # A product of k labeled paths (a serial indirect effect a*d*b) is the same test with k refits, one per path;
 # the statistic stays the smallest diffLL and the reference stays chi-square(1).
 
-# A native two-level fit (fit_sem(cluster = )) cannot be refit under a null here yet: the
-# refit goes through the single-level path. Refuse up front with a classed error instead of
-# letting the refit fail with the single-level guard's message.
+# A native two-level fit (fit_sem(cluster = )) is refused up front with a classed error by the
+# functions that do not support it yet (`compare_lr()`, IG3 D6); `mbco_sem()` routes the cluster
+# into its refits instead (IG3 T-A).
 .sem_twolevel_refuse <- function(x, operation) {
   if (S7::S7_inherits(x, SEMFit) && isTRUE(x@internals$ram$twolevel)) {
     .twolevel_abort(
@@ -147,8 +147,8 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     stop("`object` must be a SEMFit from fit_sem().", call. = FALSE)
   }
   .sem_fiml_refuse(object, "mbco_sem()")
-  .sem_twolevel_refuse(object, "mbco_sem()")
   fit <- object
+  twolevel <- isTRUE(fit@internals$ram$twolevel)
   .sem_check_modeltest(list(fit), "mbco_sem()")
   two_form <- is.null(paths) && !missing(b)
   if (is.null(paths)) {
@@ -181,6 +181,13 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   if (anyDuplicated(paths)) {
     stop(if (two_form) "`a` and `b` must be different parameters." else "`paths` must be different parameters.",
          call. = FALSE)
+  }
+  # a two-level fit tests the product at one level; its refits carry the cluster column (IG3 T-A)
+  level <- if (twolevel) .mbco_twolevel_level(fit@table, paths)
+  cluster <- if (twolevel) fit@internals$cluster
+  refit_data <- fit@data
+  if (twolevel) {
+    refit_data[[cluster]] <- fit@internals$cluster_ids
   }
   if (!is.null(fit@internals$weights)) {
     stop("MBCO is not available for a fit with sampling weights: the weighted discrepancy is not a ",
@@ -221,11 +228,19 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     # asked for: same rows, domain and one more restriction. The covariance and the standard errors are never
     # fabricated, and the retention is a warning, not an unresolved row: the statistic needs the likelihood only.
     captured <- .sem_capture_outcome({
+      # a two-level null is parsed with its levels resolved, as fit_sem() parses the fit; the guard cannot refuse a
+      # model the fit passed with one more linear row
+      parsed <- if (twolevel) {
+        .sem_twolevel_guard(syntax, refit_data, cluster, information = fit@information, weights = NULL,
+                            se_type = refit_se_type, missing = "listwise", fixed_x = FALSE, fx_unset = TRUE,
+                            meanstructure = TRUE, ms_unset = TRUE)
+      }
       r <- tryCatch(
-        .sem_fit_syntax(syntax, fit@data, fit@information, n_starts = n_starts,
-                        control = control, se_type = refit_se_type,
+        .sem_fit_syntax(syntax, refit_data, fit@information, n_starts = n_starts,
+                        control = control, se_type = refit_se_type, parsed = parsed,
                         meanstructure = isTRUE(fit@internals$ram$has_mean),
-                        covariance_transport = TRUE, fixed_x = fixed_x, factors = fit@internals$factors),
+                        covariance_transport = TRUE, fixed_x = fixed_x, factors = fit@internals$factors,
+                        cluster = cluster),
         medfit_sem_covariance_error = .sem_retain_covariance
       )
       if (!is.null(r$ledger$post_fit) &&
@@ -251,6 +266,11 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
       # still stops, as it always did, and so does a refused ledger, with its class
       if (inherits(err, "medfit_error_ledger")) {
         stop(err)
+      }
+      # a two-level null whose solution is inadmissible (a negative level-2 variance) has no admissible likelihood:
+      # an error that keeps its class, never an LR
+      if (inherits(err, "medfit_error_twolevel_inadmissible")) {
+        .twolevel_abort(msg, "medfit_error_twolevel_inadmissible")
       }
       if (!inherits(err, "medfit_error_no_convergence")) {
         stop(msg, call. = FALSE)
@@ -282,7 +302,10 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
       return(list(failure = failure, mbco_node = rebased))
     }
     # the boundary warning is part of the null's evidence: raised here, after the fit's own notices are replayed
-    boundary <- .sem_capture_outcome(.mbco_warn_boundary(r, con, tested))
+    boundary <- .sem_capture_outcome({
+      .mbco_warn_boundary(r, con, tested)
+      if (twolevel) .mbco_warn_level2_boundary(r, con)
+    })
     rebased$notices$warnings <- c(rebased$notices$warnings, lapply(boundary$notices$warnings, .sem_condition_record))
     .sem_replay_notices(captured$notices)
     .sem_replay_notices(boundary$notices)
@@ -311,7 +334,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
   n <- fit@n_obs
   diff_ll <- n * (f - fit@f)
   stat <- if (unresolved) NA_real_ else min(diff_ll)
-  structure(
+  out <- structure(
     list(
       statistic = c(MBCO = stat),
       parameter = c(df = 1),
@@ -327,6 +350,53 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     ),
     class = c("mbco_sem", "htest")
   )
+  if (twolevel) {
+    out$level <- level
+    out$n_clusters <- length(unique(fit@internals$cluster_ids))
+  }
+  out
+}
+
+# The level of a two-level product: every path a level-1 (within) or every path a level-2 (between) regression. A
+# product of a within and a between path is not a level-specific indirect effect, and a label shared by both levels has
+# no single level; both are refused.
+.mbco_twolevel_level <- function(tab, paths) {
+  at <- lapply(paths, function(p) unique(tab$level[tab$op == "~" & !is.na(tab$label) & tab$label == p]))
+  if (any(lengths(at) != 1L) || length(unique(unlist(at))) != 1L) {
+    where <- vapply(seq_along(paths), function(i) {
+      sprintf("'%s' at level %s", paths[i], paste(at[[i]], collapse = " and "))
+    }, "")
+    .twolevel_abort(
+      paste0("mbco_sem() tests a product of paths at one level of a two-level fit (all level 1, within, or all ",
+             "level 2, between); got ", paste(where, collapse = ", ")),
+      "medfit_error_twolevel_unsupported"
+    )
+  }
+  c("within", "between")[at[[1L]]]
+}
+
+# Level-2 variances have no floor in the two-level fit, so no bound is ever active there; the boundary that matters is
+# a level-2 (residual or exogenous) variance near zero. Rule (IG3 D4): an estimate below 1% of that variable's sample
+# variance, the ICC scale below which the lavaan adapter treats the between part as unidentified.
+.mbco_level2_near_zero <- function(refit) {
+  tab <- refit$table
+  rows <- which(tab$level == 2L & tab$op == "~~" & tab$lhs == tab$rhs & !is.na(refit$par_map) &
+                  tab$lhs %in% names(refit$data))
+  est <- refit$theta[refit$par_map[rows]]
+  total <- vapply(tab$lhs[rows], function(v) stats::var(refit$data[[v]]), numeric(1))
+  unique(tab$lhs[rows][est < 0.01 * total])
+}
+
+.mbco_warn_level2_boundary <- function(refit, con) {
+  near <- .mbco_level2_near_zero(refit)
+  if (length(near)) {
+    warning(sprintf(paste0("a level-2 variance is near zero at the refit with `%s` (%s: below 1%% of the ",
+                           "variable's sample variance): the null lies near the boundary of the parameter space, so ",
+                           "the statistic may be a mixture of chi-squares, not chi-square(1), and its p-value may ",
+                           "not be valid."),
+                    con, paste(near, collapse = ", ")), call. = FALSE)
+  }
+  invisible(NULL)
 }
 
 # The boundary conditions at a fit, for the tested parameter labels: a bound on one of them that is active, or an
