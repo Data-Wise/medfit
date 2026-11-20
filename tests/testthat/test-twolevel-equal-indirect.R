@@ -287,6 +287,25 @@ test_that("nie(level = 'contrast') and tidy() carry no p-value for the contrast;
   expect_match(src, "never reported by `nie()`", fixed = TRUE)
 })
 
+test_that("the contrast carries no p-value under any name: tidy columns, glance columns and nie() attributes", {
+  td <- suppressWarnings(extract_mediation(tle_fit(), treatment = "X", mediator = "M", outcome = "Y"))
+  tid <- suppressWarnings(tidy(td, type = "effects", conf_int = TRUE))
+  expect_identical(names(tid), c("term", "estimate", "std_error", "conf_low", "conf_high"))
+  expect_false(any(grepl("^p|stat|signif|pval", names(suppressWarnings(glance(td))), ignore.case = TRUE)))
+  contrast <- nie(td, level = "contrast")
+  expect_identical(sort(names(attributes(contrast))), c("class", "level", "type"))
+})
+
+test_that("planted defect: a contrast p-value attached to nie() or tidy() under a new name is caught", {
+  td <- suppressWarnings(extract_mediation(tle_fit(), treatment = "X", mediator = "M", outcome = "Y"))
+  contrast <- nie(td, level = "contrast")
+  attr(contrast, "p.value") <- 0.03
+  expect_failure(expect_identical(sort(names(attributes(contrast))), c("class", "level", "type")))
+  tid <- suppressWarnings(tidy(td, type = "effects", conf_int = TRUE))
+  tid$pval <- 0.03
+  expect_failure(expect_identical(names(tid), c("term", "estimate", "std_error", "conf_low", "conf_high")))
+})
+
 test_that("planted defect: a contrast p-value in the docs-consistency check is caught", {
   has_p <- function(x) any(grepl("p.value", names(x), fixed = TRUE))
   expect_true(has_p(data.frame(estimate = 1, p.value = 0.5)))
