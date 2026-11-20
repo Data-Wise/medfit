@@ -270,7 +270,8 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
       # a two-level null whose solution is inadmissible (a negative level-2 variance) has no admissible likelihood:
       # an error that keeps its class, never an LR
       if (inherits(err, "medfit_error_twolevel_inadmissible")) {
-        .twolevel_abort(msg, "medfit_error_twolevel_inadmissible")
+        # the null refit's own condition is the parent, so its fit, reasons and ledger stay reachable
+        rlang::abort(msg, class = "medfit_error_twolevel_inadmissible", call = NULL, parent = err)
       }
       if (!inherits(err, "medfit_error_no_convergence")) {
         stop(msg, call. = FALSE)
@@ -376,22 +377,27 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
 }
 
 # Level-2 variances have no floor in the two-level fit, so no bound is ever active there; the boundary that matters is
-# a level-2 (residual or exogenous) variance near zero. Rule (IG3 D4): an estimate below 1% of that variable's sample
-# variance, the ICC scale below which the lavaan adapter treats the between part as unidentified.
-.mbco_level2_near_zero <- function(refit) {
+# a level-2 (residual or exogenous) variance near zero. Rule (IG3 D4): an estimate below `threshold` (1%) of that
+# variable's implied between + within variance at the refit, the base the lavaan adapter's ICC rule uses
+# (`.sem_twolevel_icc()`: between over between + within), so the cut is on the same scale as its 0.01 ICC floor.
+.mbco_level2_near_zero <- function(refit, threshold = 0.01) {
   tab <- refit$table
+  mom <- .sem_twolevel_implied(refit$ram, unname(refit$theta))
   rows <- which(tab$level == 2L & tab$op == "~~" & tab$lhs == tab$rhs & !is.na(refit$par_map) &
-                  tab$lhs %in% names(refit$data))
+                  tab$lhs %in% rownames(mom$sigma_b))
   est <- refit$theta[refit$par_map[rows]]
-  total <- vapply(tab$lhs[rows], function(v) stats::var(refit$data[[v]]), numeric(1))
-  unique(tab$lhs[rows][est < 0.01 * total])
+  base <- vapply(tab$lhs[rows], function(v) {
+    w <- if (v %in% rownames(mom$sigma_w)) mom$sigma_w[v, v] else 0
+    mom$sigma_b[v, v] + w
+  }, numeric(1))
+  unique(tab$lhs[rows][est < threshold * base])
 }
 
 .mbco_warn_level2_boundary <- function(refit, con) {
   near <- .mbco_level2_near_zero(refit)
   if (length(near)) {
-    warning(sprintf(paste0("a level-2 variance is near zero at the refit with `%s` (%s: below 1%% of the ",
-                           "variable's sample variance): the null lies near the boundary of the parameter space, so ",
+    warning(sprintf(paste0("a level-2 variance is near zero at the refit with `%s` (%s: below 1%% of its implied ",
+                           "between + within variance): the null lies near the boundary of the parameter space, so ",
                            "the statistic may be a mixture of chi-squares, not chi-square(1), and its p-value may ",
                            "not be valid."),
                     con, paste(near, collapse = ", ")), call. = FALSE)

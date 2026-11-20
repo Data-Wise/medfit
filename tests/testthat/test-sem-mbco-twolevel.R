@@ -123,17 +123,25 @@ test_that("an inadmissible two-level null refit is an error that keeps its class
   real <- .sem_fit_syntax
   testthat::local_mocked_bindings(.sem_fit_syntax = function(model, ...) {
     if (!is.null(model) && endsWith(model, "\na_b == 0")) {
-      rlang::abort("the two-level solution is inadmissible: injected", class = "medfit_error_twolevel_inadmissible")
+      bad <- list(theta = c(1, -0.2), improper = "Y~~Y (level 2) = -0.2", admissibility = list(level2 = FALSE))
+      rlang::abort("the two-level solution is inadmissible: injected", class = "medfit_error_twolevel_inadmissible",
+                   fit = bad, improper = bad$improper, ledger = list(outcome = "injected"))
     }
     real(model, ...)
   })
   err <- expect_error(mbco_sem(fit, "a_b", "b_b"), class = "medfit_error_twolevel_inadmissible")
   expect_match(conditionMessage(err), "a_b == 0", fixed = TRUE)
+  # the refit's own condition survives as the parent, with its fit, reasons and ledger
+  expect_s3_class(err$parent, "medfit_error_twolevel_inadmissible")
+  expect_identical(err$parent$improper, "Y~~Y (level 2) = -0.2")
+  expect_identical(err$parent$fit$theta, c(1, -0.2))
+  expect_false(err$parent$fit$admissibility$level2)
+  expect_identical(err$parent$ledger$outcome, "injected")
 })
 
 # A fixture whose between-level residual variance of Y is small but positive: at the `a_w == 0` refit Y~~Y.l2 is about
-# 0.16% of var(Y) (six times below the 1% rule), so the null sits near a level-2 variance boundary, where chi-square(1)
-# is not the law.
+# 0.16% of Y's implied between + within variance (six times below the 1% rule), so the null sits near a level-2
+# variance boundary, where chi-square(1) is not the law.
 tlm_small_between <- function() {
   withr::local_seed(6) # sd 0.2 below: the fit and every branch refit are admissible
   j <- 40
@@ -155,6 +163,27 @@ test_that("a near-zero level-2 variance at a null refit raises the boundary warn
     any(grepl("level-2 variance", vapply(n$notices$warnings, function(w) w$message, ""), fixed = TRUE))
   }, TRUE)
   expect_true(any(warned))
+})
+
+test_that("the level-2 boundary rule cuts at the threshold on the between + within (ICC) base", {
+  fit <- tlm_fit(tlm_small_between())
+  caught <- list()
+  real <- .mbco_warn_level2_boundary
+  testthat::local_mocked_bindings(.mbco_warn_level2_boundary = function(refit, con) {
+    caught[[con]] <<- refit
+    real(refit, con)
+  })
+  suppressWarnings(mbco_sem(fit, "a_w", "b_w"))
+  r <- caught[["a_w == 0"]]
+  # independent base: the implied level-2 and level-1 variances of Y, summed as the ICC denominator
+  mom <- .sem_twolevel_implied(r$ram, unname(r$theta))
+  row <- which(r$table$level == 2L & r$table$op == "~~" & r$table$lhs == "Y" & r$table$rhs == "Y")
+  ratio <- r$theta[r$par_map[row]] / (mom$sigma_b["Y", "Y"] + mom$sigma_w["Y", "Y"])
+  expect_lt(ratio, 0.01)
+  expect_true("Y" %in% .mbco_level2_near_zero(r, threshold = ratio * 1.01))
+  expect_false("Y" %in% .mbco_level2_near_zero(r, threshold = ratio * 0.99))
+  # the default threshold is 1%
+  expect_identical(.mbco_level2_near_zero(r), .mbco_level2_near_zero(r, threshold = 0.01))
 })
 
 test_that("no boundary warning when every level-2 variance is away from zero", {
