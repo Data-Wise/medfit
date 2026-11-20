@@ -37,7 +37,10 @@
   for few clusters. A constrained refit that is inadmissible (a negative variance, a covariance matrix that is not
   positive definite), does not converge or beats the free fit is unresolved (statistic `NA`, `unresolved = TRUE`,
   a warning), never a likelihood-ratio number. The descriptive contrast of `nie(level = "contrast")` still carries
-  no p-value, and there is no Wald test of it.
+  no p-value, and there is no Wald test of it. The bootstrap p-value drops replications whose refit is not admissible,
+  so it is conditional on admissible refits, and `boot$n_dropped` reports how many. The guard admits only that
+  within-versus-between chain pairing (the same `x`, `m`, `y` at both levels, in either written order); a serial
+  `a*d` or `d*b` chain of that shape is admitted too, without a separate oracle.
 * `glance()` on a two-level fit adds `n_clusters`, `cluster_size_min` and `cluster_size_max`; `chisq` and `p_value`
   are `NA` with a note, because the engine fits no saturated two-level model.
 * Level-2 variances are fitted without a floor. An inadmissible two-level solution (a negative variance or a
