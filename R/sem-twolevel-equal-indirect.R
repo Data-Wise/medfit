@@ -18,9 +18,10 @@
 #' @param n_starts,control Optimizer settings for the constrained refit; `NULL` keeps the fit's own.
 #' @param n_boot Number of parametric bootstrap replications of the statistic (default 0, none). Each replication
 #'   draws clustered data of the same cluster sizes from the constrained fit, refits both models and keeps the
-#'   statistic; replications that do not resolve are dropped and counted. The bootstrap p-value is
-#'   `(1 + #{LR* >= LR}) / (n_valid + 1)`; use it at a small number of clusters, where the between-level asymptotics
-#'   are poor.
+#'   statistic; replications that do not resolve (an inadmissible, non-positive-definite or non-converged refit) are
+#'   dropped, so the bootstrap p-value is conditional on admissible refits, and the number dropped is reported
+#'   (`boot$n_dropped`). The bootstrap p-value is `(1 + #{LR* >= LR}) / (n_valid + 1)`; use it at a small number of
+#'   clusters, where the between-level asymptotics are poor.
 #' @param seed Optional integer seed for the bootstrap; the caller's random number state is restored.
 #'
 #' @details
@@ -42,7 +43,7 @@
 #'   [mbco_sem()]), `parameter` (`df = 1`), `p.value` (chi-square(1)), `method`, `data.name`, `n_obs`,
 #'   `n_clusters`, `level` (`c("within", "between")`), `indirect` (the two indirect effects of the free fit and of the
 #'   constrained fit), `unresolved`, `note`, `near_singular`, and `boot` (`NULL`, or a list with `statistic`,
-#'   `p.value`, `n_boot` and `n_valid` when `n_boot > 0`).
+#'   `p.value`, `n_boot`, `n_valid` and `n_dropped` when `n_boot > 0`).
 #'
 #' @examples
 #' \donttest{
@@ -183,7 +184,8 @@ print.twolevel_equal_indirect <- function(x, ...) {
   }
   if (!is.null(x$boot)) {
     cat("Parametric bootstrap p-value: ", format(x$boot$p.value, digits = 4), " (", x$boot$n_valid, " of ",
-        x$boot$n_boot, " replications resolved)\n", sep = "")
+        x$boot$n_boot, " replications resolved; ", x$boot$n_dropped,
+        " dropped, so the p-value is conditional on admissible refits)\n", sep = "")
   }
   invisible(x)
 }
@@ -282,7 +284,7 @@ print.twolevel_equal_indirect <- function(x, ...) {
   stats_b <- if (is.null(seed)) draw() else .sem_with_seed(seed, draw())
   ok <- !is.na(stats_b)
   list(
-    statistic = stats_b, n_boot = n_boot, n_valid = sum(ok),
+    statistic = stats_b, n_boot = n_boot, n_valid = sum(ok), n_dropped = sum(!ok),
     p.value = (1 + sum(stats_b[ok] >= observed)) / (sum(ok) + 1)
   )
 }

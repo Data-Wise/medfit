@@ -663,7 +663,8 @@ within variance at a refit, where chi-square(1) may not hold. `compare_lr()` is 
 yet. A test that the two levels' indirect effects are equal is a separate function,
 `twolevel_equal_indirect(fit)`: the likelihood ratio of the free fit against the fit with
 `a_w*b_w == a_b*b_b`, referred to chi-square(1) (singular where all four paths are 0, and asymptotic in the number of
-clusters; `n_boot` gives a parametric bootstrap p-value for few clusters). A constrained fit that is inadmissible,
+clusters; `n_boot` gives a parametric bootstrap p-value for few clusters; replications whose refit is not admissible are dropped and counted in `boot$n_dropped`, so that
+p-value is conditional on admissible refits). A constrained fit that is inadmissible,
 not positive definite or not converged gives an unresolved result (statistic `NA`) with a warning, never a number.
 The descriptive contrast carries no p-value.
 
