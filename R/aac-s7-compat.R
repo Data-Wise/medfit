@@ -22,7 +22,9 @@
   body(ctor) <- bquote(
     if (.s7_dots_take_list()) {
       S7::new_object(S7::S7_object(), .(props))
-    } else .(body(ctor))
+    } else {
+      .(body(ctor))
+    }
   )
   S7::new_class(
     cls@name,
