@@ -57,6 +57,10 @@ boundary, the chi-square(1) law may not hold; no closed-form law is claimed. The
 free-fit paths are within two standard errors of 0 (class \code{medfit_warning_twolevel_equal_singular}) and when a
 level-2 variance at the constrained fit is below 1\% of its implied between plus within variance.
 
+The guard admits the equality of any two a-then-b chains with the same x, m and y at levels 1 and 2, so a serial
+\code{a*d} or \code{d*b} chain of the same shape is admitted too; only the \code{a*b} indirect effect of a single mediator has an
+oracle and a gate here.
+
 The constrained fit is never trusted blindly: if it ends at an inadmissible solution (a negative variance at either
 level, a covariance matrix that is not positive definite, class \code{medfit_warning_twolevel_inadmissible}), does not
 converge, or has a lower discrepancy than the free fit, the result is \strong{unresolved} (\code{statistic} and \code{p.value}

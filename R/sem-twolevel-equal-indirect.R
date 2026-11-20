@@ -32,6 +32,10 @@
 #' free-fit paths are within two standard errors of 0 (class `medfit_warning_twolevel_equal_singular`) and when a
 #' level-2 variance at the constrained fit is below 1% of its implied between plus within variance.
 #'
+#' The guard admits the equality of any two a-then-b chains with the same x, m and y at levels 1 and 2, so a serial
+#' `a*d` or `d*b` chain of the same shape is admitted too; only the `a*b` indirect effect of a single mediator has an
+#' oracle and a gate here.
+#'
 #' The constrained fit is never trusted blindly: if it ends at an inadmissible solution (a negative variance at either
 #' level, a covariance matrix that is not positive definite, class `medfit_warning_twolevel_inadmissible`), does not
 #' converge, or has a lower discrepancy than the free fit, the result is **unresolved** (`statistic` and `p.value`

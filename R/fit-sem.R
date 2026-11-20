@@ -538,7 +538,9 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
 # a, `y ~ m` labeled b) at one level and the two chains have the same x, m and y at levels 1 and 2. Every other
 # nonlinear row (`a_w*a_b == b_w*b_b`, a product with `cp`, a constant, an inequality, three factors, a second row, and
 # a defined parameter standing for a product, whose name is not a regression label) is another shape and stays refused:
-# only this pairing has an oracle and a gate (IG3 T-B). `parameters` is the parsed table with its levels resolved.
+# only this pairing has an oracle and a gate (IG3 T-B). A serial chain (`a*d` or `d*b` with the same x, m, y at both
+# levels) has the same shape and is admitted, but has no separate oracle or gate.
+# `parameters` is the parsed table with its levels resolved.
 .sem_equal_products_only <- function(constraints, parameters) {
   defs <- constraints[constraints$op == ":=", , drop = FALSE]
   defs <- .sem_defs(stats::setNames(defs$rhs, defs$lhs))
