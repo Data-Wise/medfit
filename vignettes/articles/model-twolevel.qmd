@@ -618,6 +618,48 @@ as identified only when the treatment and every mediator pass the ICC check. An 
 asked of `"nde"` or `"te"`, stops with class `medfit_error_twolevel_level`; an unknown effect or a missing or
 unknown `specific` stops with class `medfit_error_twolevel_unsupported`.
 
+### Testing the indirect effect at one level
+
+`mbco_sem()` tests the indirect effect at one level of a sem engine fit. It needs labeled paths, so the model
+below labels them at each level. Each null refits the model with one path set to 0, on both levels and with the
+same clusters; the statistic is the smaller of the likelihood ratios, referred to chi-square(1)
+([Methods and Formulas](methods.html)). The result adds `level` and `n_clusters`.
+
+```{r}
+#| label: native-mbco
+model_lab <- "
+  level: 1
+    M ~ a_w*X
+    Y ~ b_w*M + X
+  level: 2
+    M ~ a_b*X
+    Y ~ b_b*M + X
+"
+nfit_lab <- fit_sem(model_lab, data = d, cluster = "id")
+mbco_between <- mbco_sem(nfit_lab, "a_b", "b_b")
+mbco_between
+mbco_between$level
+mbco_between$n_clusters
+```
+
+`mbco_sem(nfit_lab, "a_w", "b_w")` tests the within indirect effect the same way. On these data it stops: the
+refit with `b_w == 0` gives the outcome a negative level-2 variance, so the null solution is inadmissible and the
+error has class `medfit_error_twolevel_inadmissible`:
+
+```{r}
+#| label: native-mbco-within
+err_w <- tryCatch(mbco_sem(nfit_lab, "a_w", "b_w"), error = function(e) e)
+class(err_w)[1]
+```
+
+The test is conservative when both paths are zero, and it is not a test of the between-minus-within contrast,
+which stays descriptive ([The contrast is descriptive](#the-contrast-is-descriptive)). Paths from different
+levels (`mbco_sem(fit, "a_w", "b_b")`) stop with class `medfit_error_twolevel_unsupported`. A null refit with an
+inadmissible solution stops with class `medfit_error_twolevel_inadmissible`; one that does not converge gives
+statistic `NA` with a warning. A warning also flags a level-2 variance below 0.01 of its implied between plus
+within variance at a refit, where chi-square(1) may not hold. `compare_lr()` is not available for a two-level fit
+yet, and neither is a test that the two levels' indirect effects are equal.
+
 ## Limits
 
 - **One mediator or several parallel ones, linear paths, observed variables.** Two or more mediators return

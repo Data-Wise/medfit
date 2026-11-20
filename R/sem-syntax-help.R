@@ -212,7 +212,13 @@
 #' | `meanstructure = FALSE` | "`meanstructure = FALSE` is refused" |
 #' | `information = "expected"` | "information = ... is not supported in a two-level model; use" |
 #' | An inadmissible solution | "the two-level solution is inadmissible" |
-#' | `mbco_sem()` or `compare_lr()` on the fit | "is not available for a native two-level fit yet" |
+#' | `compare_lr()` on the fit | "is not available for a native two-level fit yet" |
+#' | `mbco_sem()` with paths from different levels | "tests a product of paths at one level of a two-level fit" |
+#'
+#' `mbco_sem(fit, "a_w", "b_w")` and `mbco_sem(fit, "a_b", "b_b")` test the indirect effect at one level: the minimum
+#' likelihood ratio over the refits with each labeled path set to 0, referred to chi-square(1), as for a single-level
+#' fit. The test is conservative when both paths are zero, and it is not a test of the between-minus-within
+#' contrast. The result adds `level` and `n_clusters`; see [mbco_sem()].
 #'
 #' `extract_mediation()` on the fit returns a `TwoLevelMediationData`, the same class as the lavaan two-level adapter
 #' gives, with `@source` `"native"`. `glance()` reports `df`, the total log likelihood, `nobs`, `n_clusters` and the
