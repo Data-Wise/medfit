@@ -92,7 +92,8 @@ one <- function(i) {
   rep <- (i - 1L) %/% nrow(cells) + 1L
   set.seed(1e5L * rep + 100L * cl$J + match(cl$pattern, names(patterns)))
   d <- simulate(cl$pattern, cl$J)
-  fit <- tryCatch(suppressWarnings(fit_sem(model, d, cluster = "cluster")), error = function(e) e)
+  fit <- tryCatch(suppressWarnings(fit_sem(model, d, cluster = "cluster", fixed_x = FALSE, meanstructure = TRUE)),
+                  error = function(e) e)
   res <- if (inherits(fit, "error")) {
     msg <- paste("fit:", class(fit)[1], conditionMessage(fit))
     list(within = c(stat = NA, p = NA, err = msg), between = c(stat = NA, p = NA, err = msg))
