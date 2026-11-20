@@ -75,3 +75,40 @@ level: 2
   # the minimum is the middle branch
   expect_identical(unname(which.min(ref)), 2L)
 })
+
+test_that("the inadmissible failed-null shape is accepted only under a two-level root", {
+  fit <- fit_sem(tl_lavaan_model, tl_data_balanced(), cluster = "cluster")
+  real <- .sem_fit_syntax
+  testthat::local_mocked_bindings(.sem_fit_syntax = function(model, ...) {
+    r <- real(model, ...)
+    if (!is.null(model) && endsWith(model, "\na_b == 0")) {
+      r$improper <- "Y~~Y (level 2) = -0.2"
+      r$admissibility <- list(level2 = FALSE)
+      cnd <- rlang::error_cnd("medfit_error_twolevel_inadmissible", fit = r, improper = r$improper,
+                              message = "the two-level solution is inadmissible: injected")
+      cnd$ledger <- .sem_outcome(r$ledger$context, r$ledger$constraints, r, error = cnd)
+      stop(cnd)
+    }
+    r
+  })
+  res <- suppressWarnings(mbco_sem(fit, "a_b", "b_b"))
+  expect_true(res$unresolved)
+  expect_true(.sem_valid_mbco_outcome(res$ledger, c("a_b", "b_b")))
+  # the same ledger rewritten as single-level (no two-level marks, no admissibility records) except the inadmissible
+  # null node: every other check passes, so only the two-level-root rule refuses it
+  strip <- function(node) {
+    node$context$twolevel <- NULL
+    node$admissibility <- NULL
+    node$children <- lapply(node$children, strip)
+    node
+  }
+  single <- strip(res$ledger)
+  bad <- vapply(single$children, function(ch) identical(ch$condition$class[1L], "medfit_error_twolevel_inadmissible"),
+                TRUE)
+  expect_identical(sum(bad), 1L)
+  single$children[bad] <- lapply(res$ledger$children[bad], function(ch) {
+    ch$context$twolevel <- NULL
+    ch
+  })
+  expect_false(.sem_valid_mbco_outcome(single, c("a_b", "b_b")))
+})
