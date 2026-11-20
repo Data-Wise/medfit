@@ -96,7 +96,8 @@ test_that("each refused feature raises its own class", {
   product2 <- paste(tl_lavaan_model, "  Y ~ X:M", sep = "\n")
   expect_error(tl_fit(product2), "product term", class = "medfit_error_twolevel_product")
   expect_error(tl_fit(weights = rep(1, nrow(dat))), "`weights`", class = "medfit_error_twolevel_weights")
-  expect_error(tl_fit(se_type = "sandwich"), "sandwich", class = "medfit_error_twolevel_weights")
+  # IG2: se_type = "sandwich" is the cluster-robust sandwich, no longer refused (test-twolevel-native-sandwich.R)
+  expect_identical(tl_fit(se_type = "sandwich")@diagnostics$se_type, "sandwich")
   expect_error(tl_fit(missing = "fiml"), "fiml", class = "medfit_error_twolevel_missing")
   expect_error(tl_fit(missing = "fiml", fixed_x = FALSE), "fiml", class = "medfit_error_twolevel_missing")
   expect_error(tl_fit(paste(tl_lavaan_model, "a_w*b_w == 0.1", sep = "\n")), "nonlinear",

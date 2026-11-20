@@ -1,6 +1,6 @@
 # Scope note: IG2, cluster-robust (sandwich) standard errors for the native two-level fit (S6)
 
-**Date:** 2026-11-19 · **Status:** scope note only; no code. Open decisions D1-D6 await the maintainer.
+**Date:** 2026-11-19 · **Status:** D1-D6 accepted as recommended (2026-11-19); implemented on `feature/ig2-cluster-sandwich`.
 **Gap register:** [PLAN-multilevel-implementation-gaps-2026-11-11.md](../PLAN-multilevel-implementation-gaps-2026-11-11.md) (IG2)
 **Plan:** [PLAN-multilevel-remainder-2026-11-18.md](../PLAN-multilevel-remainder-2026-11-18.md) (IG2, "after S4"; S4a merged, #486 to #493)
 
@@ -112,6 +112,8 @@ Sampling weights at either level; random slopes; corrections beyond CR0 until T6
 (lavaan already reports robust SEs there); CR-type corrections for `twolevel_statistic()`; cluster-robust tests (IG3).
 
 ## 10. Open decisions
+
+D1-D6 accepted as recommended (2026-11-19).
 
 **D1. Argument value.** Reuse `se_type = "sandwich"` (cluster level automatically when `cluster` is given) or add
 `se_type = "cluster"`? **Recommended: reuse `"sandwich"`.** It matches lavaan, where the robust estimator follows the

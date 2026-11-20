@@ -74,7 +74,7 @@
   se_type <- match.arg(se_type, c("model", "sandwich"))
   if (!is.null(cluster)) {
     # `fit_sem()` sends a two-level model here only after `.sem_twolevel_guard()` has refused every unsupported input
-    return(.sem_fit_twolevel(data, information, n_starts, control, parsed, cluster))
+    return(.sem_fit_twolevel(data, information, n_starts, control, parsed, cluster, se_type))
   }
   if (!is.null(weights)) {
     weights <- .sem_check_weights(weights, nrow(data))
@@ -268,7 +268,7 @@
 # are dropped (listwise); the guard has already refused a missing cluster id. Level-2 variances have no floor (S4b
 # decides): an inadmissible solution is the classed error `medfit_error_twolevel_inadmissible`, which carries the
 # accepted fit as evidence (`fit`) and the reasons (`improper`).
-.sem_fit_twolevel <- function(data, information, n_starts, control, parsed, cluster) {
+.sem_fit_twolevel <- function(data, information, n_starts, control, parsed, cluster, se_type = "model") {
   sets <- .sem_twolevel_sets(parsed, data, cluster)
   tl <- .sem_twolevel_ram(parsed, sets)
   vars <- c(sets$within, sets$between)
@@ -330,11 +330,13 @@
   }
   lb <- fit$effective_lower
   fit$effective_lower <- NULL
-  vc <- tryCatch(.sem_vcov(fit$theta, tl, smp, information, cons, lb, ub, "model"), error = function(e) e)
+  # se_type = "sandwich": the cluster-robust CR0 meat from per-cluster scores (IG2, R/sem-sandwich-twolevel.R)
+  meat <- if (se_type == "sandwich") .sem_meat_ml2(fit$theta, tl, x, cluster)
+  vc <- tryCatch(.sem_vcov(fit$theta, tl, smp, information, cons, lb, ub, se_type, meat), error = function(e) e)
   act <- .sem_active_set(fit$theta, tl, smp, lb, ub, if (is.null(cons)) .sem_no_cons(tl$q) else cons)
   out <- c(fit, list(
     constraints = parsed$constraints, active_constraints = act$text[act$active_row], information = information,
-    ram = tl, table = table, par_map = par_map, se_type = "model", weights = NULL, n_starts = n_starts,
+    ram = tl, table = table, par_map = par_map, se_type = se_type, weights = NULL, n_starts = n_starts,
     control = control, partable = .sem_to_partable(table), data = x[, vars, drop = FALSE], n_obs = smp$n,
     n_dropped = n_dropped, df = df, eq_rank = eq_rank, branch = character(), fixed_x = character(), factors = NULL,
     cluster = cluster, cluster_ids = x[[cluster]]

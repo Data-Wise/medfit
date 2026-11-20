@@ -217,7 +217,6 @@ solution (a negative variance or a non-positive-definite implied covariance at e
    Latent variables (\verb{=~}) \tab "latent variables (\verb{=~}) are not supported in a two-level model" \cr
    A product term (\code{x:m}) \tab "a product term (\code{x:m}) is not supported in a two-level model" \cr
    \code{weights} \tab "\code{weights} are not supported in a two-level model" \cr
-   \code{se_type = "sandwich"} \tab "se_type = ... is not supported in a two-level model" \cr
    \code{missing = "fiml"} \tab "missing = ... incomplete rows are dropped (listwise)" \cr
    Nonlinear constraints, a zero product of labels \tab "nonlinear constraints (including a product of labels" \cr
    An explicit \code{fixed_x = TRUE} or a name vector \tab "a two-level model takes \code{fixed_x = FALSE} only" \cr

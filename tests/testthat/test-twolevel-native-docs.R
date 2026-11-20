@@ -71,8 +71,6 @@ tlnd_cases <- function() {
          function() tlnd_fit(paste(tl_lavaan_model, "  Y ~ X:M", sep = "\n"))),
     list("`weights` are not supported in a two-level model",
          function() tlnd_fit(weights = rep(1, nrow(tlnd_data())))),
-    list("se_type =", function() tlnd_fit(se_type = "sandwich")),
-    list("is not supported in a two-level model", function() tlnd_fit(se_type = "sandwich")),
     list("missing =", function() tlnd_fit(missing = "fiml")),
     list("incomplete rows are dropped (listwise)", function() tlnd_fit(missing = "fiml")),
     list("nonlinear constraints (including a product of labels",

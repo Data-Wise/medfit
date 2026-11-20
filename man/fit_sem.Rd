@@ -74,7 +74,10 @@ sandwich covariance \eqn{A^{-1} B A^{-1}}{A^-1 B A^-1} with casewise scores
 (HC0-type: it equals \code{sandwich::vcovHC(type = "HC0")} per equation and
 lavaan's robust standard errors with \code{sampling.weights}, and is smaller
 than the HC3 default of the glm route by a factor that shrinks like
-\eqn{1/n}{1/n}). Model-based standard errors are not valid under weights.}
+\eqn{1/n}{1/n}). Model-based standard errors are not valid under weights. In a two-level model (\code{cluster})
+\code{"sandwich"} is the cluster-robust sandwich: per-cluster scores, \eqn{B = \sum_j s_j s_j'}{B = sum_j s_j s_j'}
+with no small-sample factor (CR0), the observed information as \eqn{A}{A}, projected under active linear
+constraints; it matches lavaan's \code{se = "robust.huber.white"} for the same two-level model.}
 
 \item{meanstructure}{Logical or \code{NULL}. \code{TRUE} (default) fits a mean structure;
 \code{NULL} fits one only when the model writes
@@ -123,8 +126,9 @@ ledger. \code{extract_mediation()} on a native two-level fit returns a \code{Two
 with a note, because the engine fits no saturated two-level model. See the "Two-level models" section of
 \link{medfit-syntax}. Unset \code{fixed_x}
 means \code{FALSE} on this route; an explicit \code{fixed_x = TRUE}, \code{meanstructure = FALSE}, \code{weights},
-\code{se_type = "sandwich"}, \code{missing = "fiml"}, \code{information = "expected"}, latent variables, product terms and
-nonlinear constraints are refused with classed errors (\verb{medfit_error_twolevel_*}). Appended last to preserve
+\code{missing = "fiml"}, \code{information = "expected"}, latent variables, product terms and
+nonlinear constraints are refused with classed errors (\verb{medfit_error_twolevel_*}). \code{se_type = "sandwich"} gives
+the cluster-robust sandwich (see \code{se_type}), and \code{glance()} then reports \code{se_type}. Appended last to preserve
 positional calls.}
 }
 \value{
