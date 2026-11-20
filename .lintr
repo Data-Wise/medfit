@@ -47,6 +47,7 @@ exclusions: list(
     "tests/sim/sem-twolevel-parity-gate.R" = list(object_usage_linter = Inf),
     "tests/sim/sem-twolevel-sandwich-gate.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-native-sandwich.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-native-sandwich-qa.R" = list(object_usage_linter = Inf),
     "tests/testthat/helper-fiml-golden.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g1-covariate.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g1-two-covariates.R" = list(object_usage_linter = Inf),
