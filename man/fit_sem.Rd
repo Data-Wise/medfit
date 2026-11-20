@@ -127,7 +127,9 @@ with a note, because the engine fits no saturated two-level model. See the "Two-
 \link{medfit-syntax}. Unset \code{fixed_x}
 means \code{FALSE} on this route; an explicit \code{fixed_x = TRUE}, \code{meanstructure = FALSE}, \code{weights},
 \code{missing = "fiml"}, \code{information = "expected"}, latent variables, product terms and
-nonlinear constraints are refused with classed errors (\verb{medfit_error_twolevel_*}). \code{se_type = "sandwich"} gives
+nonlinear constraints are refused with classed errors (\verb{medfit_error_twolevel_*}); the one nonlinear row admitted
+is a single equality of two products of two labels each (\code{a_w*b_w == a_b*b_b}, the null of
+\code{\link[=twolevel_equal_indirect]{twolevel_equal_indirect()}}). \code{se_type = "sandwich"} gives
 the cluster-robust sandwich (see \code{se_type}), and \code{glance()} then reports \code{se_type}. Appended last to preserve
 positional calls.}
 }
