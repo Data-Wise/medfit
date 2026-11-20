@@ -92,6 +92,13 @@ planted defect (section 6), metamorphic invariance (section 6), fault injection 
 registration (`gates.csv` row with `oracle` and `mutants`, `tests/sim/structures.csv` row), platform run on the OpenBLAS
 runner.
 
+Metamorphic invariance, as tested (QA loop 1, 2026-11-19): the meat is invariant to 1e-10 elementwise under row
+permutation and cluster relabeling (measured 1.7e-13 on entries up to 324); the full V is invariant up to the bread's
+finite-difference noise. The observed-information bread is a finite-difference Hessian that moves with the row order
+before IG2 too (model-based V about 2e-11 relative), so the test bounds the sandwich V's change by 10 times the model-based
+V's change on the same permutation. Fault injection `J = 2`: B has rank 2 at a given theta on a two-cluster subset; a real
+two-cluster fit stops with `medfit_error_no_convergence` for both SE types.
+
 ## 8. API sketch
 
 ```r

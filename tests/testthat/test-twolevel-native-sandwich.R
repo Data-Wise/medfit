@@ -117,27 +117,41 @@ test_that("an equality constraint across levels projects the sandwich (a_w == a_
   expect_lt(tls_contrast_se(stats::vcov(fit)), 1e-6)
 })
 
-test_that("relabeling and reordering the clusters leaves V unchanged; duplicating every cluster halves it", {
+test_that("relabeling and reordering the clusters leaves the meat unchanged; duplicating every cluster halves V", {
   d <- tl_data_unbalanced()
   fit <- tls_fit(tl_lavaan_model, d)
   tl <- fit@internals$ram
-  v_at <- function(data) {
+  v_at <- function(data, se_type = "sandwich") {
     x <- tls_x(fit, data)
     smp <- .sem_sample_ml2(x, tls_sets(fit), "cluster")
-    .sem_vcov(fit@theta, tl, smp, "observed", se_type = "sandwich", meat = .sem_meat_ml2(fit@theta, tl, x, "cluster"))
+    meat <- if (se_type == "sandwich") .sem_meat_ml2(fit@theta, tl, x, "cluster")
+    .sem_vcov(fit@theta, tl, smp, "observed", se_type = se_type, meat = meat)
   }
   v0 <- v_at(d)
   expect_equal(unname(v0), unname(stats::vcov(fit)), tolerance = 1e-10)
   relabeled <- d
   relabeled$cluster <- paste0("k", 1000 - as.integer(factor(d$cluster)))
-  withr::with_seed(3, shuffled <- relabeled[sample(nrow(relabeled)), ])
-  expect_lt(tls_rel_v(v_at(shuffled), v0), 1e-10)
+  s0 <- .sem_scores_ml2(fit@theta, tl, tls_x(fit, d), "cluster")
+  m0 <- .sem_meat_ml2(fit@theta, tl, tls_x(fit, d), "cluster")
+  v0_model <- v_at(d, "model")
+  for (seed in 1:5) {
+    withr::with_seed(seed, shuffled <- relabeled[sample(nrow(relabeled)), ])
+    # the IG2 part, scores and meat, is invariant elementwise (cluster i of d is cluster k(1000 - i) of shuffled)
+    s1 <- .sem_scores_ml2(fit@theta, tl, tls_x(fit, shuffled), "cluster")
+    expect_lt(max(abs(s1[paste0("k", 1000 - seq_len(nrow(s0))), ] - s0)), 1e-10)
+    expect_lt(max(abs(.sem_meat_ml2(fit@theta, tl, tls_x(fit, shuffled), "cluster") - m0)), 1e-10)
+    # V is not: the observed-information bread is a finite-difference Hessian of a sum taken in row order, so it
+    # moves with the row order before IG2 too (the model-based V moves about 2e-11 here). The sandwich V may move
+    # only as much as that bread noise carries through, a small multiple of the model-based V's own change.
+    ref_change <- max(tls_rel_v(v_at(shuffled, "model"), v0_model), 1e-13)
+    expect_lt(tls_rel_v(v_at(shuffled), v0), 10 * ref_change)
+  }
   twice <- rbind(d, transform(d, cluster = paste0("copy", cluster)))
   fit2 <- tls_fit(tl_lavaan_model, twice)
   expect_lt(tls_rel_v(2 * stats::vcov(fit2), stats::vcov(fit)), 1e-3)
 })
 
-test_that("a one-row cluster has a finite score and still matches lavaan; two clusters give a rank-2 meat", {
+test_that("a one-row cluster has a finite score and still matches lavaan", {
   skip_if_not_installed("lavaan")
   d <- tl_data_unbalanced()
   single <- d[d$cluster != d$cluster[1] | !duplicated(d$cluster), ]
@@ -147,12 +161,20 @@ test_that("a one-row cluster has a finite score and still matches lavaan; two cl
   expect_true(all(is.finite(s)))
   cmp <- tls_merge(fit, tls_lavaan(tl_lavaan_model, single))
   tls_cmp_se(cmp$se, cmp$lav_se, cmp$key)
-  # J = 2: the meat is a sum of two outer products, so its rank is at most 2 whatever q is
+})
+
+test_that("the meat over two clusters has rank 2 at a given theta; a real two-cluster fit does not converge", {
+  d <- tl_data_unbalanced()
+  # a property of B alone, not of a fit: evaluated at the 40-cluster estimate on a two-cluster subset, the meat is a
+  # sum of two outer products, so its rank is 2 whatever q is
   fit40 <- fit_sem(tl_lavaan_model, d, cluster = "cluster")
   two <- d[d$cluster %in% unique(d$cluster)[1:2], ]
   meat <- .sem_meat_ml2(fit40@theta, fit40@internals$ram, tls_x(fit40, two), "cluster")
   expect_true(all(is.finite(meat)))
   expect_identical(qr(meat)$rank, 2L)
+  # fitting those two clusters fails before any covariance is formed, the same classed error for both SE types
+  expect_error(fit_sem(tl_lavaan_model, two, cluster = "cluster"), class = "medfit_error_no_convergence")
+  expect_error(tls_fit(tl_lavaan_model, two), class = "medfit_error_no_convergence")
 })
 
 test_that("a sandwich fit keeps the few-clusters warning at extraction", {
@@ -162,7 +184,7 @@ test_that("a sandwich fit keeps the few-clusters warning at extraction", {
 })
 
 # Planted defects (scope note section 6): each wrong sandwich must fail the check the oracle tests use.
-test_that("planted defects in the scores, meat, bread or projection fail the oracle checks", {
+test_that("planted defects in the scores, meat or projection fail the oracle checks", {
   skip_if_not_installed("lavaan")
   d <- tl_data_unbalanced()
   fit <- tls_fit(tl_lavaan_model, d)
@@ -176,9 +198,17 @@ test_that("planted defects in the scores, meat, bread or projection fail the ora
   se_from <- function(meat) sqrt(diag(a_inv %*% meat %*% a_inv))[tls_rows(fit)]
   # the correct pieces pass
   tls_cmp_se(se_from(crossprod(s)), cmp$lav_se)
-  # 1. scores pooled by cluster size instead of per cluster
+  # 1. scores pooled by cluster size instead of per cluster, planted in .sem_scores_ml2() and run through the fit
+  scores_ok <- .sem_scores_ml2
+  local({
+    local_mocked_bindings(.package = "medfit", .sem_scores_ml2 = function(theta, ram, data, cluster) {
+      sc <- scores_ok(theta, ram, data, cluster)
+      rowsum(sc, as.integer(table(factor(data[[cluster]]))))
+    })
+    bad <- tls_merge(tls_fit(tl_lavaan_model, d), lav)
+    expect_failure(tls_cmp_se(bad$se, bad$lav_se))
+  })
   n_j <- as.integer(table(x$cluster))
-  expect_failure(tls_cmp_se(se_from(crossprod(rowsum(s, n_j))), cmp$lav_se))
   # 2. casewise: each row carries s_j / n_j, so the meat is sum_j s_j s_j' / n_j
   expect_failure(tls_cmp_se(se_from(crossprod(s / sqrt(n_j))), cmp$lav_se))
   # 3. the cross-level block of the meat dropped: the SE of a_w - a_b moves
@@ -198,10 +228,16 @@ test_that("planted defects in the scores, meat, bread or projection fail the ora
   target <- -smp$n / 2 * .sem_eval_ml2(th, tl, smp, TRUE)$g
   expect_failure(tls_sum_identity(s_off[-1, , drop = FALSE], target))
   expect_failure(tls_sum_identity(rbind(s_off, s_off[1, ]), target))
-  # 5. bread from the expected information: lavaan's expected-information robust SEs differ from the observed ones
-  lav_exp <- suppressWarnings(lavaan::sem(tl_lavaan_model, d, cluster = "cluster", fixed.x = FALSE,
-                                          information = "expected", se = "robust.huber.white"))
-  expect_failure(tls_cmp_se(tls_merge(fit, lav_exp)$lav_se, cmp$lav_se))
+  # 5. a CR1 meat, J / (J - 1) times CR0, planted in .sem_meat_ml2() and run through the fit
+  meat_ok <- .sem_meat_ml2
+  local({
+    local_mocked_bindings(.package = "medfit", .sem_meat_ml2 = function(theta, ram, data, cluster) {
+      n_cl <- length(unique(data[[cluster]]))
+      n_cl / (n_cl - 1) * meat_ok(theta, ram, data, cluster)
+    })
+    bad <- tls_merge(tls_fit(tl_lavaan_model, d), lav)
+    expect_failure(tls_cmp_se(bad$se, bad$lav_se))
+  })
   # 6. the projection skipped under a_w == a_b: the unprojected sandwich at the constrained optimum
   model_c <- paste(tl_lavaan_model, "a_w == a_b", sep = "\n")
   fit_c <- tls_fit(model_c, d)
