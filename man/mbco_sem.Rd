@@ -114,9 +114,10 @@ indirect effect and \code{mbco_sem(fit, "a_b", "b_b")} for the between one, with
 same clusters. The statistic is the minimum likelihood ratio over the refits with one path set to 0, referred to
 chi-square(1); it is conservative at the origin (both paths zero) and is not a test of the between-minus-within
 contrast. Paths from different levels, or a label shared by both levels, are refused with class
-\code{medfit_error_twolevel_unsupported}. A null refit whose solution is inadmissible stops with class
-\code{medfit_error_twolevel_inadmissible}; one that does not converge gives the unresolved result above (statistic
-\code{NA} and a warning). A warning says when a level-2 variance at a refit is below 1\% of that variable's implied
+\code{medfit_error_twolevel_unsupported}. A null refit whose solution is inadmissible (a negative level-2 variance)
+gives the unresolved result above (statistic \code{NA}) with a warning of class \code{medfit_warning_twolevel_inadmissible}
+that names the refit and the reason; one that does not converge gives the same result with a warning. The
+statistic is never the other null's likelihood ratio alone. A warning says when a level-2 variance at a refit is below 1\% of that variable's implied
 between plus within variance, because the null then lies near the boundary and chi-square(1) may not hold.
 }
 \examples{

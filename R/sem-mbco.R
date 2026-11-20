@@ -119,9 +119,10 @@
 #' same clusters. The statistic is the minimum likelihood ratio over the refits with one path set to 0, referred to
 #' chi-square(1); it is conservative at the origin (both paths zero) and is not a test of the between-minus-within
 #' contrast. Paths from different levels, or a label shared by both levels, are refused with class
-#' `medfit_error_twolevel_unsupported`. A null refit whose solution is inadmissible stops with class
-#' `medfit_error_twolevel_inadmissible`; one that does not converge gives the unresolved result above (statistic
-#' `NA` and a warning). A warning says when a level-2 variance at a refit is below 1% of that variable's implied
+#' `medfit_error_twolevel_unsupported`. A null refit whose solution is inadmissible (a negative level-2 variance)
+#' gives the unresolved result above (statistic `NA`) with a warning of class `medfit_warning_twolevel_inadmissible`
+#' that names the refit and the reason; one that does not converge gives the same result with a warning. The
+#' statistic is never the other null's likelihood ratio alone. A warning says when a level-2 variance at a refit is below 1% of that variable's implied
 #' between plus within variance, because the null then lies near the boundary and chi-square(1) may not hold.
 #'
 #' @examples
@@ -279,12 +280,13 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
         stop(err)
       }
       # a two-level null whose solution is inadmissible (a negative level-2 variance) has no admissible likelihood:
-      # an error that keeps its class, never an LR
-      if (inherits(err, "medfit_error_twolevel_inadmissible")) {
-        # the null refit's own condition is the parent, so its fit, reasons and ledger stay reachable
-        rlang::abort(msg, class = "medfit_error_twolevel_inadmissible", call = NULL, parent = err)
+      # an unresolved row, as a null that did not converge, never an LR (and never the other null's LR alone)
+      inadmissible <- inherits(err, "medfit_error_twolevel_inadmissible")
+      if (inadmissible) {
+        reason <- paste(err$improper %||% conditionMessage(err), collapse = "; ")
+        msg <- sprintf("the refit with `%s` converged to an inadmissible solution (%s).", con, reason)
       }
-      if (!inherits(err, "medfit_error_no_convergence")) {
+      if (!inadmissible && !inherits(err, "medfit_error_no_convergence")) {
         stop(msg, call. = FALSE)
       }
       failure <- msg
@@ -313,7 +315,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     }
     rebased <- .sem_rebase_outcome(node, paste0("mbco/null:", i), "mbco")
     if (!is.null(failure)) {
-      return(list(failure = failure, mbco_node = rebased))
+      return(list(failure = failure, inadmissible = inadmissible, mbco_node = rebased))
     }
     # the boundary warning is part of the null's evidence: raised here, after the fit's own notices are replayed
     boundary <- .sem_capture_outcome({
@@ -342,8 +344,13 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
     .sem_abort_ledger("malformed MBCO outcome ledger", ledger)
   }
   if (unresolved) {
-    warning(paste0(paste(unique(note[nzchar(note)]), collapse = "\n"),
-                   "\nThe MBCO statistic is not available (NA); `$tests` lists each refit."), call. = FALSE)
+    text <- paste0(paste(unique(note[nzchar(note)]), collapse = "\n"),
+                   "\nThe MBCO statistic is not available (NA); `$tests` lists each refit.")
+    if (any(vapply(refit, function(r) isTRUE(r$inadmissible), TRUE))) {
+      rlang::warn(text, class = "medfit_warning_twolevel_inadmissible")
+    } else {
+      warning(text, call. = FALSE)
+    }
   }
   n <- fit@n_obs
   diff_ll <- n * (f - fit@f)

@@ -143,25 +143,77 @@ test_that("a two-level null refit that fails in the engine keeps a valid ledger 
   expect_true(.sem_valid_mbco_outcome(res$ledger, c("a_w", "b_w")))
 })
 
-test_that("an inadmissible two-level null refit is an error that keeps its class, never a number", {
+test_that("an inadmissible two-level null refit is an unresolved row with a classed warning, never a number", {
   fit <- tlm_fit()
   real <- .sem_fit_syntax
   testthat::local_mocked_bindings(.sem_fit_syntax = function(model, ...) {
+    r <- real(model, ...)
     if (!is.null(model) && endsWith(model, "\na_b == 0")) {
-      bad <- list(theta = c(1, -0.2), improper = "Y~~Y (level 2) = -0.2", admissibility = list(level2 = FALSE))
-      rlang::abort("the two-level solution is inadmissible: injected", class = "medfit_error_twolevel_inadmissible",
-                   fit = bad, improper = bad$improper, ledger = list(outcome = "injected"))
+      # the real refit, declared inadmissible the way the fit route declares it: same optimum, a failed level
+      r$improper <- "Y~~Y (level 2) = -0.2"
+      r$admissibility <- list(level2 = FALSE)
+      cnd <- rlang::error_cnd("medfit_error_twolevel_inadmissible", fit = r, improper = r$improper,
+                              message = "the two-level solution is inadmissible: injected")
+      cnd$ledger <- .sem_outcome(r$ledger$context, r$ledger$constraints, r, error = cnd)
+      stop(cnd)
     }
-    real(model, ...)
+    r
   })
-  err <- expect_error(mbco_sem(fit, "a_b", "b_b"), class = "medfit_error_twolevel_inadmissible")
-  expect_match(conditionMessage(err), "a_b == 0", fixed = TRUE)
-  # the refit's own condition survives as the parent, with its fit, reasons and ledger
-  expect_s3_class(err$parent, "medfit_error_twolevel_inadmissible")
-  expect_identical(err$parent$improper, "Y~~Y (level 2) = -0.2")
-  expect_identical(err$parent$fit$theta, c(1, -0.2))
-  expect_false(err$parent$fit$admissibility$level2)
-  expect_identical(err$parent$ledger$outcome, "injected")
+  w <- NULL
+  res <- withCallingHandlers(mbco_sem(fit, "a_b", "b_b"), medfit_warning_twolevel_inadmissible = function(cnd) {
+    w <<- cnd
+    invokeRestart("muffleWarning")
+  })
+  expect_s3_class(w, "medfit_warning_twolevel_inadmissible")
+  expect_match(conditionMessage(w), "a_b == 0", fixed = TRUE)
+  expect_match(conditionMessage(w), "Y~~Y (level 2) = -0.2", fixed = TRUE)
+  expect_true(res$unresolved)
+  expect_true(is.na(res$statistic))
+  expect_true(is.na(res$p.value))
+  # the admissible branch keeps its row, but the statistic is never its LR alone
+  expect_identical(res$tests$converged, c(FALSE, TRUE))
+  expect_true(is.na(res$tests$f[1L]))
+  expect_true(is.finite(res$tests$diff_ll[2L]))
+  expect_match(res$tests$note[1L], "inadmissible", fixed = TRUE)
+  expect_identical(res$ledger$children[[2L]]$condition$class[1L], "medfit_error_twolevel_inadmissible")
+  expect_true(.sem_valid_mbco_outcome(res$ledger, c("a_b", "b_b")))
+})
+
+test_that("the model page's within test is unresolved: its b_w == 0 refit is inadmissible", {
+  set.seed(2026)
+  j <- 100
+  n <- 5
+  id <- rep(seq_len(j), each = n)
+  xb <- stats::rnorm(j)[id]
+  xw <- stats::rnorm(j * n)
+  x <- xb + xw
+  m <- 0.4 * xw + 0.7 * xb + 0.5 * stats::rnorm(j)[id] + stats::rnorm(j * n)
+  mbar <- stats::ave(m, id)
+  y <- 0.3 * xw + 0.2 * xb + 0.5 * (m - mbar) + 0.9 * mbar + 0.5 * stats::rnorm(j)[id] + stats::rnorm(j * n)
+  d <- data.frame(id = id, X = x, M = m, Y = y)
+  model <- "
+    level: 1
+      M ~ a_w*X
+      Y ~ b_w*M + X
+    level: 2
+      M ~ a_b*X
+      Y ~ b_b*M + X
+  "
+  fit <- fit_sem(model, data = d, cluster = "id")
+  expect_warning(res <- mbco_sem(fit, "a_w", "b_w"), class = "medfit_warning_twolevel_inadmissible")
+  expect_true(res$unresolved)
+  expect_true(is.na(res$statistic))
+  expect_identical(res$tests$converged, c(TRUE, FALSE))
+  expect_identical(res$ledger$outcome, "unresolved")
+  node <- res$ledger$children[[3L]]
+  expect_identical(node$id, "mbco/null:2")
+  expect_identical(node$condition$class[1L], "medfit_error_twolevel_inadmissible")
+  expect_true(.sem_valid_mbco_outcome(res$ledger, c("a_w", "b_w")))
+  # the between test on the same data keeps its number
+  between <- mbco_sem(fit, "a_b", "b_b")
+  expect_false(between$unresolved)
+  expect_equal(unname(between$statistic), 19.73, tolerance = 0.005 / 19.73)
+  expect_identical(between$n_clusters, 100L)
 })
 
 # A fixture whose between-level residual variance of Y is small but positive: at the `a_w == 0` refit Y~~Y.l2 is about
