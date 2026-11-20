@@ -56,6 +56,8 @@ test_that("the result carries the levels, the cluster count, the sample size and
   expect_false(res$unresolved)
   expect_null(res$boot)
   expect_output(print(res), "equal indirect effects", ignore.case = TRUE)
+  # the package's own print method runs (print() is S7-dispatched, so it is registered in .onLoad), not print.htest
+  expect_output(print(res), "Within vs between indirect effect", fixed = TRUE)
 })
 
 test_that("the statistic is invariant to cluster labels, row order and the order of the factors in a product", {
@@ -272,6 +274,7 @@ test_that("the parametric bootstrap p-value is reproducible, in (0, 1] and count
   expect_identical(r1$boot$n_boot, 6L)
   expect_lte(r1$boot$n_valid, 6L)
   expect_identical(r1$boot$n_dropped, 6L - r1$boot$n_valid)
+  expect_output(print(r1), "conditional on admissible refits", fixed = TRUE)
   exceed <- sum(r1$boot$statistic >= unname(r1$statistic), na.rm = TRUE)
   expect_equal(r1$boot$p.value, (1 + exceed) / (r1$boot$n_valid + 1))
   # the asymptotic p-value is still reported
