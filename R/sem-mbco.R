@@ -287,6 +287,8 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
       context <- .sem_outcome_context(syntax, parsed, fit@data, fit@information, NULL,
                                       isTRUE(fit@internals$ram$has_mean), fixed_x,
                                       n_starts, control, refit_se_type, fit@internals$factors)
+      # marked two-level as `.sem_fit_syntax()` marks a two-level call, so the validator holds it to its siblings
+      if (twolevel) context$twolevel <- TRUE
       node <- .sem_outcome(context, parsed$constraints, error = err, notices = captured$notices)
     } else if (is.null(failure)) {
       # the null's own notices include the ones its fit replayed; a retained null's fit replayed none, so its own

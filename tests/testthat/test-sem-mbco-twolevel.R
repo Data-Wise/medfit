@@ -118,6 +118,31 @@ test_that("a branch refit that fails leaves the two-level MBCO result unresolved
   expect_true(.sem_valid_mbco_outcome(res$ledger, c("a_w", "b_w")))
 })
 
+test_that("a two-level null refit that fails in the engine keeps a valid ledger and an unresolved result", {
+  # the failure is raised inside the pipeline, so `.sem_fit_syntax()` builds the failed node's ledger from its entry
+  # context (the gates' 16 non-converged size-study reps took this path and were refused as a malformed ledger)
+  fit <- tlm_fit()
+  real <- .sem_fit_pipeline
+  testthat::local_mocked_bindings(.sem_fit_pipeline = function(model, ...) {
+    if (!is.null(model) && endsWith(model, "\na_w == 0")) {
+      stop(.sem_no_convergence("injected engine failure"))
+    }
+    real(model, ...)
+  })
+  expect_warning(res <- mbco_sem(fit, "a_w", "b_w"), "injected engine failure")
+  expect_true(res$unresolved)
+  expect_true(is.na(res$statistic))
+  expect_identical(res$tests$converged, c(FALSE, TRUE))
+  expect_identical(res$ledger$outcome, "unresolved")
+  failed <- res$ledger$children[[2L]]
+  expect_identical(failed$id, "mbco/null:1")
+  expect_identical(failed$condition$class[1L], "medfit_error_no_convergence")
+  # the failed node holds the fit's rows (no cluster column, as a resolved node) and the two-level mark
+  expect_identical(failed$context[["sample"]] %||% res$ledger$context[["sample"]], fit@data)
+  expect_true(isTRUE(failed$context$twolevel))
+  expect_true(.sem_valid_mbco_outcome(res$ledger, c("a_w", "b_w")))
+})
+
 test_that("an inadmissible two-level null refit is an error that keeps its class, never a number", {
   fit <- tlm_fit()
   real <- .sem_fit_syntax

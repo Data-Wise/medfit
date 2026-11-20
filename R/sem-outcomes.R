@@ -556,7 +556,9 @@
         # NULL when the engine stopped before parsing (the context of the call), else the null's own table
         (is.null(child$context$model$parameters) || identical(child$context$model$parameters, parsed$parameters)) &&
         identical(child$context$n_obs, x$context$n_obs) && is.list(child) && identical(child$schema_version, 1L) &&
-        identical(child$id, id) && identical(child$parent_id, "mbco") && identical(child$outcome, "unresolved")
+        identical(child$id, id) && identical(child$parent_id, "mbco") && identical(child$outcome, "unresolved") &&
+        # a failed null of a two-level fit is marked two-level, as its resolved siblings are; a single-level one is not
+        identical(child$context$twolevel, x$context$twolevel)
       if (!context_ok) {
         return(FALSE)
       }
