@@ -2,7 +2,8 @@
 # section 8). `twolevel_equal_indirect(fit)` refers the likelihood ratio of the free two-level fit against the fit with
 # `a_w*b_w == a_b*b_b` (the nonlinear gate, SLSQP rows, Lagrangian Hessian, polish) to chi-square(1). Away from the
 # all-zero point the null is a smooth surface and chi-square(1) is asymptotic in the number of clusters J; at the origin
-# it is singular. Model: two-level (1-1-1, observed) X -> M -> Y with a direct path at both levels, clusters of size N_J.
+# it is singular. Model: two-level (1-1-1, observed) X -> M -> Y with a direct path at both levels, clusters of size
+# N_J.
 # Cells: J in {20, 50} x null pattern {equal, origin}. `equal`: within paths (0.4, 0.5) and between paths (0.5, 0.4), so
 # both indirect effects are 0.2 and differ in their factors; `origin`: every mediation path 0 (the singular point).
 # REPS replications per cell.

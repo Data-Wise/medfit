@@ -533,9 +533,6 @@ verdict_gate <- function(gate, d, s) {
         chk("successful checks", all(d$pass %in% TRUE), "no failed or missing checks")
       )
     },
-    # IG3 T-A: size of the two-level MBCO test (smaller branch LR against chi-square(1)) per pattern, J and level; the
-    # 12 cells are frozen here and the size limit is recomputed from the counts, so a results file cannot drop a cell,
-    # widen the limit or hide an abort (a ledger or unclassified error)
     # IG3 T-B: size of the two-level equal-indirect-effects test per pattern and J; the 4 cells are frozen here and the
     # size limit is recomputed from the counts, as for the MBCO size gate
     "twolevel-equal-size" = {
@@ -555,6 +552,9 @@ verdict_gate <- function(gate, d, s) {
             sprintf("%d of %d tests not resolved (limit 2%%)", sum(d$fails), sum(d$reps)))
       )
     },
+    # IG3 T-A: size of the two-level MBCO test (smaller branch LR against chi-square(1)) per pattern, J and level; the
+    # 12 cells are frozen here and the size limit is recomputed from the counts, so a results file cannot drop a cell,
+    # widen the limit or hide an abort (a ledger or unclassified error)
     "twolevel-mbco-size" = {
       expected <- as.vector(outer(c("origin", "zero_a", "zero_b"),
                                   as.vector(outer(c("20", "50"), c("within", "between"), paste, sep = ":")),

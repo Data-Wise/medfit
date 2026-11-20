@@ -150,7 +150,9 @@ twolevel_equal_indirect <- function(object, a_within = "a_w", b_within = "b_w", 
     rlang::warn(paste0(note, "\nThe likelihood-ratio statistic is not available (NA)."),
                 class = if (isTRUE(res$inadmissible)) "medfit_warning_twolevel_inadmissible" else NULL)
   }
-  null_est <- if (is.null(res$fit)) c(within = NA_real_, between = NA_real_) else {
+  null_est <- if (is.null(res$fit)) {
+    c(within = NA_real_, between = NA_real_)
+  } else {
     th <- stats::setNames(res$fit$theta[match(paths, res$fit$ram$par_names)], paths)
     c(within = th[[a_within]] * th[[b_within]], between = th[[a_between]] * th[[b_between]])
   }
@@ -271,8 +273,12 @@ print.twolevel_equal_indirect <- function(x, ...) {
     d <- as.data.frame(z)
     names(d) <- vars
     d[[cluster]] <- cl
-    free <- tryCatch(suppressWarnings(suppressMessages(
-      fit_sem(fit@model, d, cluster = cluster, n_starts = n_starts, control = control))), error = function(e) NULL)
+    free <- tryCatch(
+      suppressWarnings(suppressMessages(
+        fit_sem(fit@model, d, cluster = cluster, n_starts = n_starts, control = control)
+      )),
+      error = function(e) NULL
+    )
     if (is.null(free)) {
       return(NA_real_)
     }
