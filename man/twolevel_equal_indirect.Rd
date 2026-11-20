@@ -70,9 +70,12 @@ refused with class \code{medfit_error_twolevel_unsupported}; a single-level fit 
 }
 \examples{
 \donttest{
-d <- data.frame(
-  cluster = rep(1:30, each = 6), X = rnorm(180), M = rnorm(180), Y = rnorm(180)
-)
+set.seed(1)
+id <- rep(1:40, each = 6)
+x <- stats::rnorm(40)[id] + stats::rnorm(240)
+m <- 0.5 * x + stats::rnorm(40)[id] + stats::rnorm(240)
+y <- 0.4 * m + 0.2 * x + stats::rnorm(40)[id] + stats::rnorm(240)
+d <- data.frame(cluster = id, X = x, M = m, Y = y)
 fit <- fit_sem(
   "level: 1\n M ~ a_w*X\n Y ~ b_w*M + X\nlevel: 2\n M ~ a_b*X\n Y ~ b_b*M + X",
   data = d, cluster = "cluster"
