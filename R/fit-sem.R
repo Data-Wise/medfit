@@ -61,7 +61,10 @@
 #'   (HC0-type: it equals `sandwich::vcovHC(type = "HC0")` per equation and
 #'   lavaan's robust standard errors with `sampling.weights`, and is smaller
 #'   than the HC3 default of the glm route by a factor that shrinks like
-#'   \eqn{1/n}{1/n}). Model-based standard errors are not valid under weights.
+#'   \eqn{1/n}{1/n}). Model-based standard errors are not valid under weights. In a two-level model (`cluster`)
+#'   `"sandwich"` is the cluster-robust sandwich: per-cluster scores, \eqn{B = \sum_j s_j s_j'}{B = sum_j s_j s_j'}
+#'   with no small-sample factor (CR0), the observed information as \eqn{A}{A}, projected under active linear
+#'   constraints; it matches lavaan's `se = "robust.huber.white"` for the same two-level model.
 #' @param meanstructure Logical or `NULL`. `TRUE` (default) fits a mean structure;
 #'   `NULL` fits one only when the model writes
 #'   an intercept (`y ~ 1`, free or fixed); `FALSE` fits covariances only and
@@ -103,8 +106,9 @@
 #'   with a note, because the engine fits no saturated two-level model. See the "Two-level models" section of
 #'   [medfit-syntax]. Unset `fixed_x`
 #'   means `FALSE` on this route; an explicit `fixed_x = TRUE`, `meanstructure = FALSE`, `weights`,
-#'   `se_type = "sandwich"`, `missing = "fiml"`, `information = "expected"`, latent variables, product terms and
-#'   nonlinear constraints are refused with classed errors (`medfit_error_twolevel_*`). Appended last to preserve
+#'   `missing = "fiml"`, `information = "expected"`, latent variables, product terms and
+#'   nonlinear constraints are refused with classed errors (`medfit_error_twolevel_*`). `se_type = "sandwich"` gives
+#'   the cluster-robust sandwich (see `se_type`), and `glance()` then reports `se_type`. Appended last to preserve
 #'   positional calls.
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
 #'   [fit_mediation()] uses; the old name still works with a warning.
@@ -419,8 +423,8 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
                                   se_type = se_type, missing = missing, fixed_x = fixed_x, fx_unset = fx_unset,
                                   meanstructure = meanstructure, ms_unset = ms_unset)
     fit <- .sem_fit_syntax(model, data, information, n_starts = if (is.null(n_starts)) 5L else n_starts,
-                           control = control, parsed = parsed, meanstructure = TRUE, fixed_x = FALSE,
-                           cluster = cluster)
+                           control = control, se_type = se_type, parsed = parsed, meanstructure = TRUE,
+                           fixed_x = FALSE, cluster = cluster)
     return(.sem_record_protocol(.sem_as_semfit(fit, model, match.call()), resolved_control$protocol))
   }
   if (missing == "fiml") {
@@ -485,9 +489,6 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   }
   if (!is.null(weights)) {
     abort("`weights` are not supported in a two-level model", "weights")
-  }
-  if (se_type == "sandwich") {
-    abort("se_type = \"sandwich\" is not supported in a two-level model", "weights")
   }
   if (missing == "fiml") {
     abort("missing = \"fiml\" is not supported in a two-level model; incomplete rows are dropped (listwise)",

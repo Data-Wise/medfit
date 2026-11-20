@@ -377,12 +377,42 @@ err$ledger$admissibility$between$reasons
 ```
 
 The lavaan route on the same data returns the estimates with the warning `medfit_warning_twolevel_inadmissible`
-instead. The sem engine route refuses latent variables, product terms, `weights`, `se_type = "sandwich"`,
-`missing = "fiml"`, nonlinear constraints, `fixed_x = TRUE`, `meanstructure = FALSE`, `information =
-"expected"` and a variable named only in `level: 1` rows, each with a classed error whose name starts
-`medfit_error_twolevel_`; the full table of messages is in the "Two-level models" section of
-[`?"medfit-syntax"`](../reference/medfit-syntax.html). A labeled path, a linear equality across levels and a
-variable named only in `level: 2` rows (constant within each cluster) are accepted.
+instead. The sem engine route refuses latent variables, product terms, `weights`, `missing = "fiml"`,
+nonlinear constraints, `fixed_x = TRUE`, `meanstructure = FALSE`, `information = "expected"` and a variable
+named only in `level: 1` rows, each with a classed error whose name starts `medfit_error_twolevel_`; the full
+table of messages is in the "Two-level models" section of [`?"medfit-syntax"`](../reference/medfit-syntax.html).
+A labeled path, a linear equality across levels and a variable named only in `level: 2` rows (constant within
+each cluster) are accepted.
+
+### Cluster-robust standard errors
+
+`se_type = "sandwich"` on a two-level fit gives cluster-robust standard errors: the sandwich
+$A^{-1} B A^{-1}$ with the observed information as $A$ and $B = \sum_j s_j s_j'$ summed over the per-cluster
+scores $s_j$, with no small-sample factor (CR0). Under an active linear constraint, such as a path equated across
+levels, the sandwich is projected onto the constraint, as in a single-level fit. The estimates are the same as
+with the default `se_type = "model"`; only the covariance changes. It matches lavaan's
+`se = "robust.huber.white"` for the same model:
+
+```{r}
+#| label: native-sandwich
+nfit_r <- fit_sem(model, data = d, cluster = "id", se_type = "sandwich")
+ntd_r <- extract_mediation(nfit_r, treatment = "X", mediator = "M", outcome = "Y")
+```
+
+```{r}
+#| label: native-sandwich-lavaan
+#| eval: !expr has_lavaan
+lfit_r <- lavaan::sem(model, data = d, cluster = "id", fixed.x = FALSE, information = "observed",
+                      h1.information = "structured", se = "robust.huber.white")
+ltd_r <- extract_mediation(lfit_r, treatment = "X", mediator = "M", outcome = "Y")
+cbind(model = sqrt(diag(ntd@vcov)), sandwich = sqrt(diag(ntd_r@vcov)), lavaan = sqrt(diag(ltd_r@vcov)))
+```
+
+`print()` and `summary()` of the fit name the standard errors as cluster-robust with the number of clusters, and
+`glance()` reports `se_type`. The intervals of `confint()` and `tidy()` use the normal reference, and the
+few-clusters warning still applies: the cluster sandwich is biased downward with few clusters, and medfit adds
+no small-sample correction. Sampling `weights`, product terms, nonlinear constraints and `information =
+"expected"` stay refused with `se_type = "sandwich"` as with the default.
 
 ## Bootstrap
 

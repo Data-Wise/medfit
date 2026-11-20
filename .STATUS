@@ -1,3 +1,7 @@
+# IG2 cluster-robust sandwich for the native two-level fit on feature/ig2-cluster-sandwich — 2026-11-19 MST
+
+# fit_sem(cluster = , se_type = "sandwich") gives the CR0 cluster sandwich (per-cluster scores, observed-information bread, projected under linear constraints; matches lavaan se = "robust.huber.white"); D1-D6 accepted (planning/specs/SCOPE-IG2-cluster-robust-se-2026-11-19.md). Implementer, oracle QA, gates and docs (NEWS, model-twolevel.qmd, ?fit_sem, ?"medfit-syntax") done; experimental, unreleased. CLAUDE.md waits for the merge of dev (#498). Not pushed; no PR. CRAN hold.
+
 # IG2 and IG3 scope notes on feature/ig2-ig3-scope — 2026-11-19 MST
 
 # Planning only: planning/specs/SCOPE-IG2-cluster-robust-se-2026-11-19.md (cluster sandwich for the native two-level fit; per-cluster scores do not exist yet) and SCOPE-IG3-twolevel-tests-2026-11-19.md (per-level product null via linear branch refits, equal indirect effects via a nonlinear row; mbco_sem() on a native two-level fit fails today because the refit drops cluster). S4a ticked in the remainder plan. No R/ changes; not pushed.

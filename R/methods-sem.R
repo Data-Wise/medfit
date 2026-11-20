@@ -222,7 +222,7 @@ S7::method(print, SEMFit) <- function(x, ...) {
   cat(sprintf("  Parameters:    %d free, %s df\n", .sem_n_free(x), format(x@df)))
   cat(sprintf("  Information:   %s\n", x@information))
   if (!is.null(x@diagnostics$se_type)) {
-    se_label <- if (x@diagnostics$se_type == "sandwich") "sandwich (robust)" else "model-based"
+    se_label <- .sem_se_label(x@diagnostics$se_type, .sem_n_clusters(x))
     cat(sprintf("  Std. errors:   %s%s\n", se_label, if (!is.null(x@internals$weights)) ", sampling weights" else ""))
   }
   cat(sprintf("  Converged:     %s\n", ifelse(x@converged, "Yes", "No")))
@@ -249,6 +249,19 @@ S7::method(print, SEMFit) <- function(x, ...) {
   invisible(x)
 }
 
+# The standard-error label of print() and summary(): a two-level sandwich is cluster-robust (CR0) over its clusters.
+.sem_se_label <- function(se_type, n_clusters = NULL) {
+  if (se_type != "sandwich") return("model-based")
+  if (is.null(n_clusters)) return("sandwich (robust)")
+  sprintf("cluster-robust sandwich (CR0, %d clusters)", n_clusters)
+}
+
+# Number of clusters of a two-level fit (after listwise deletion); NULL for a single-level fit.
+.sem_n_clusters <- function(x) {
+  if (!isTRUE(x@internals$ram$twolevel)) return(NULL)
+  length(unique(x@internals$cluster_ids))
+}
+
 S7::method(summary, SEMFit) <- function(object, ...) {
   if (.sem_fiml_is(object)) .sem_fiml_require(object)
   fx <- .sem_fixed_rows(object@table)
@@ -266,7 +279,7 @@ S7::method(summary, SEMFit) <- function(object, ...) {
       n_dropped = object@n_dropped, model_test_note = if (!is.null(reason)) .sem_modeltest_note(reason),
       df = if (is.null(reason)) object@df else NA_real_, information = object@information,
       converged = object@converged, f = object@f,
-      diagnostics = object@diagnostics
+      diagnostics = object@diagnostics, n_clusters = .sem_n_clusters(object)
     ),
     class = "summary_SEMFit"
   )
@@ -296,8 +309,7 @@ print_summary_semfit <- function(x, ...) {
   if (!is.null(x$model_test_note)) cat("Note: ", x$model_test_note, "\n", sep = "")
   cat(sprintf("Information: %s\n", x$information))
   if (!is.null(x$diagnostics$se_type)) {
-    cat(sprintf("Standard errors: %s\n",
-                if (x$diagnostics$se_type == "sandwich") "sandwich (robust)" else "model-based"))
+    cat(sprintf("Standard errors: %s\n", .sem_se_label(x$diagnostics$se_type, x$n_clusters)))
   }
   cat(sprintf("Converged: %s\n", ifelse(x$converged, "Yes", "No")))
   optimum <- x$diagnostics$optimum
@@ -473,6 +485,7 @@ S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) 
     out$n_clusters <- length(sizes)
     out$cluster_size_min <- min(sizes)
     out$cluster_size_max <- max(sizes)
+    out$se_type <- x@diagnostics$se_type
   }
   if (requireNamespace("tibble", quietly = TRUE)) {
     out <- tibble::as_tibble(out)

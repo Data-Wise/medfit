@@ -20,7 +20,7 @@ swap <- function(name, pattern, replacement) {
   if (bindingIsLocked(name, ns)) unlockBinding(name, ns)
   assign(name, fn, envir = ns)
 }
-vcov_call <- ".sem_vcov(fit$theta, tl, smp, information, cons, lb, ub, \"model\")"
+vcov_call <- ".sem_vcov(fit$theta, tl, smp, information, cons, lb, ub, se_type, meat)"
 if (mutant == "zero_cross") {
   swap(".sem_fit_twolevel", vcov_call, paste0(
     "(function(v) { i1 <- setdiff(tl$k1, tl$k2); i2 <- setdiff(tl$k2, tl$k1); v[i1, i2] <- 0; v[i2, i1] <- 0; v })(",
