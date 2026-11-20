@@ -136,3 +136,36 @@ chi-square(1)**, as single-level `mbco_sem()`, plus the boundary warning for lev
 is validated on the two-level objective.
 
 **D6. Two-level `compare_lr()`.** **Recommended: defer**; the lavaan branch-refit oracle covers T-A in tests.
+
+## 12. Addendum, 2026-11-20: T-B decisions and the lavaan probe
+
+**Decided by the maintainer (2026-11-20).** D1 and D4 were settled by T-A (#501).
+
+| Decision | Outcome |
+|---|---|
+| D2. T-B statistic | LR with the nonlinear row `a_w*b_w == a_b*b_b`, calibrated by a parametric bootstrap at small `J`. No Wald test. |
+| D3. T-B entry point | A separate exported function, `twolevel_equal_indirect()`. `nie(level = "contrast")` stays descriptive, with no p-value. |
+| D5. Order | T-A first (done, #501). T-B only after the nonlinear gate is validated on the two-level objective. |
+| D6. Two-level `compare_lr()` | Still deferred. |
+
+**Oracle finding (probe, 2026-11-20, lavaan 0.7.3).** Section 6 listed lavaan with the nonlinear constraint as an oracle
+whose support was unverified. Probe: simulated two-level data (`J = 60`, 10 units per cluster), free fit with the paths
+`aw`, `bw`, `ab`, `bb`, then the same model plus `aw*bw == ab*bb`.
+
+- lavaan accepts the constraint and reports `converged = TRUE`.
+- The solution is inadmissible: `bb = -35.4`, `ab = -0.007`, level-2 `y ~~ y = -0.62`, with the warnings "vcov not
+  positive definite" and "some estimated ov variances are negative".
+- The reported LR is 68.7 on 1 df. The free products are 0.19 (within) and 0.083 (between), so the LR is spurious.
+- Not tried: starting lavaan at the free solution.
+
+**Consequences.**
+
+1. lavaan's nonlinear two-level fit is not an oracle for the T-B statistic. The hand O8 likelihood
+   (`helper-twolevel-likelihood.R`) maximized under the constraint is the statistic oracle.
+2. A lavaan run may still serve as a cross-check, accepted only when its solution is admissible (variances nonnegative,
+   vcov positive definite).
+3. The probe is a real instance of the failure the acceptance gate must refuse: an engine reporting convergence at an
+   inadmissible optimum. The fault-injection item (section 8) gains a case: a constrained refit that ends at a negative
+   level-2 variance or a non-positive-definite information matrix must give an unresolved result, not an LR.
+4. Planted defect added (section 7): accepting an inadmissible constrained optimum as the null fit, caught by the O8
+   maximum and the admissibility check.
