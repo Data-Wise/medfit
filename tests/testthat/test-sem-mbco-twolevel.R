@@ -81,6 +81,18 @@ test_that("MBCO on a two-level fit is invariant to cluster labels, row order and
   expect_identical(swapped$tests$constraint, c("b_w == 0", "a_w == 0"))
 })
 
+test_that("rows dropped listwise keep the cluster ids aligned in the two-level refits", {
+  data <- tl_data_balanced()
+  data$M[c(3, 50, 121)] <- NA
+  data$Y[c(7, 200)] <- NA
+  res <- mbco_sem(tlm_fit(data), "a_w", "b_w")
+  expect_identical(res$n_obs, 235L)
+  expect_false(res$unresolved)
+  tlm_check_oracle(res, data, c("a_w", "b_w"))
+  res_b <- mbco_sem(tlm_fit(data), "a_b", "b_b")
+  tlm_check_oracle(res_b, data, c("a_b", "b_b"))
+})
+
 test_that("a product of a within and a between path is refused with a classed error", {
   fit <- tlm_fit()
   err <- expect_error(mbco_sem(fit, "a_w", "b_b"), class = "medfit_error_twolevel_unsupported")
@@ -119,10 +131,11 @@ test_that("an inadmissible two-level null refit is an error that keeps its class
   expect_match(conditionMessage(err), "a_b == 0", fixed = TRUE)
 })
 
-# A fixture whose between-level residual variance of Y is small but positive: the null sits near a level-2 variance
-# boundary, where chi-square(1) is not the law.
+# A fixture whose between-level residual variance of Y is small but positive: at the `a_w == 0` refit Y~~Y.l2 is about
+# 0.16% of var(Y) (six times below the 1% rule), so the null sits near a level-2 variance boundary, where chi-square(1)
+# is not the law.
 tlm_small_between <- function() {
-  withr::local_seed(6) # sd 0.2 below: admissible fit and branch refits; a level-2 variance falls below 1% at `a_w == 0`
+  withr::local_seed(6) # sd 0.2 below: the fit and every branch refit are admissible
   j <- 40
   cl <- rep(seq_len(j), each = 6)
   xb <- stats::rnorm(j)
