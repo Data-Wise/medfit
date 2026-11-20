@@ -36,7 +36,7 @@ test_that("engine = 'native' stays silent (no warning, message or lifecycle sign
 test_that("engine = 'sem' reports the same guard messages as engine = 'native'", {
   for (eng in c("sem", "native")) {
     expect_error(fit_mediation(data = mediation_demo, treatment = "treatment", mediator = "mediator1", engine = eng),
-                 "engine = \"native\" needs `model`", fixed = TRUE)
+                 "engine = \"sem\" needs `model`", fixed = TRUE)
   }
 })
 

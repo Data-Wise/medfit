@@ -205,7 +205,7 @@ test_that("every native-route guard names its cause", {
                class = "medfit_error_twolevel_cluster")
   expect_error(call_native(model = mod, family_y = stats::binomial()), "Gaussian")
   expect_error(call_native(model = mod, engine_args = list(bogus = 1)), "unknown `engine_args`.*bogus")
-  expect_error(call_native(model = mod, zzz = 1), "unused arguments for engine = \"native\": zzz")
+  expect_error(call_native(model = mod, zzz = 1), "unused arguments for engine = \"sem\": zzz")
   expect_error(fit_mediation(data = dat, treatment = "X", mediator = "Q", engine = "native", model = mod),
                "'Q' is not a variable in `model`")
   expect_error(fit_mediation(Y ~ X + M, M ~ X, dat, "X", "M", model = mod),
