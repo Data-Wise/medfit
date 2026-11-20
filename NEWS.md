@@ -10,8 +10,8 @@
   `information = "observed"` and `h1.information = "structured"`. The sem engine of 0.19.0 could not fit a model with
   `level:` blocks, and earlier development builds stopped one with class `medfit_error_twolevel_not_implemented`;
   it is now fitted. The route is experimental and may change
-  without the deprecation period. Refused inputs (latent variables, products, `weights`, the sandwich covariance,
-  FIML, nonlinear constraints, `fixed_x = TRUE`, `meanstructure = FALSE`, expected information, within-only
+  without the deprecation period. Refused inputs (latent variables, products, `weights`, FIML, nonlinear constraints,
+  `fixed_x = TRUE`, `meanstructure = FALSE`, expected information, within-only
   variables) each stop with a `medfit_error_twolevel_*` class; the "Two-level models" section of
   `?"medfit-syntax"` lists the messages. `mbco_sem()` and `compare_lr()` refuse a native two-level fit with class
   `medfit_error_twolevel_unsupported`; earlier development builds failed inside the refit with a stale
@@ -22,6 +22,17 @@
   non-positive-definite implied covariance at either level) stops with class `medfit_error_twolevel_inadmissible`;
   the condition carries the fit and its outcome ledger, with the verdict per level. The lavaan route keeps its
   warning, `medfit_warning_twolevel_inadmissible`.
+* **Cluster-robust standard errors for native two-level fits (experimental).** `fit_sem(model, data, cluster = ,
+  se_type = "sandwich")` gives the cluster-robust CR0 sandwich: per-cluster scores, the observed information as the
+  bread and no small-sample factor. It matches lavaan's `se = "robust.huber.white"` on the same two-level model.
+  Under active linear constraints (for example a path equated across levels) the sandwich is projected, as in a
+  single-level fit. Wald intervals use the normal reference, and the few-clusters warning still applies; the CR0
+  sandwich is biased downward with few clusters, and no correction is applied until the few-clusters study reports.
+  `print()` and `summary()` label the standard errors with the number of clusters, and `glance()` on a two-level fit
+  reports `se_type`. Development builds refused `se_type = "sandwich"` with `cluster` (class
+  `medfit_error_twolevel_weights`, which now covers `weights` only). `weights`, products, nonlinear constraints and
+  `information = "expected"` are still refused. Internally, the two-level branch of `fit_sem()` now passes `se_type`
+  to the fit; before, it dropped the argument, which had no visible effect because the sandwich was refused first.
 
 ## Minor changes
 
