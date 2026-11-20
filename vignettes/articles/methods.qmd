@@ -474,7 +474,8 @@ total contrast is `NA` only when every mediator's contrast is, because otherwise
   2008). Observed cluster means are a different model with a different causal story (Preacher et al., 2010);
   medfit does not offer it.
 - **The contrast is descriptive.** No source supports $\text{NIE}_w - \text{NIE}_b$ as a named test; its
-  standard error is a delta-method standard error, not a test of equal indirect effects.
+  standard error is a delta-method standard error, not a test of equal indirect effects. That test is
+  `twolevel_equal_indirect()`, a likelihood-ratio test of $a_w b_w = a_b b_b$.
 - **Few clusters.** No source gives a cluster count below which the estimates or the between standard errors
   can be trusted. The warning below 50 clusters is a judgment, and the threshold is an option.
 - **`fixed.x = TRUE`.** The between standard errors are conditional on the sample between-level moments of the

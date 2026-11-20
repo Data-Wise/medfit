@@ -660,7 +660,12 @@ levels (`mbco_sem(fit, "a_w", "b_b")`) stop with class `medfit_error_twolevel_un
 inadmissible solution gives statistic `NA` with the warning `medfit_warning_twolevel_inadmissible`; one that does
 not converge gives statistic `NA` with a warning. A warning also flags a level-2 variance below 0.01 of its implied between plus
 within variance at a refit, where chi-square(1) may not hold. `compare_lr()` is not available for a two-level fit
-yet, and neither is a test that the two levels' indirect effects are equal.
+yet. A test that the two levels' indirect effects are equal is a separate function,
+`twolevel_equal_indirect(fit)`: the likelihood ratio of the free fit against the fit with
+`a_w*b_w == a_b*b_b`, referred to chi-square(1) (singular where all four paths are 0, and asymptotic in the number of
+clusters; `n_boot` gives a parametric bootstrap p-value for few clusters). A constrained fit that is inadmissible,
+not positive definite or not converged gives an unresolved result (statistic `NA`) with a warning, never a number.
+The descriptive contrast carries no p-value.
 
 ## Limits
 
