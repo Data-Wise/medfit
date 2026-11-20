@@ -47,6 +47,14 @@
   `information = "expected"` are still refused. Internally, the two-level branch of `fit_sem()` now passes `se_type`
   to the fit; before, it dropped the argument, which had no visible effect because the sandwich was refused first.
 
+## Bug fixes
+
+* **S7 1.0.0 compatibility for `@call`.** Under S7 1.0.0, `new_object()` captured a property passed as `call = call`,
+  so `TwoLevelMediationData` and `TwoLevelParallelMediationData` failed validation ("@call must be <character>") and
+  `SEMFit` and `BootstrapResult` lost their `@call` silently (it became `NULL`). These four classes now use a
+  constructor with the same arguments that passes the properties in the form S7 1.0.0 accepts, and the named form
+  under S7 0.2.2, so one installed medfit works with either version.
+
 ## Minor changes
 
 * The few-clusters warning (`medfit_warning_twolevel_few_clusters`) now ends "they are still returned." instead of

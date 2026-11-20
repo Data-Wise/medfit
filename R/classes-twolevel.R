@@ -270,6 +270,7 @@ TwoLevelMediationData <- S7::new_class(
     NULL
   }
 )
+TwoLevelMediationData <- .s7_call_safe(TwoLevelMediationData)
 
 
 # The version of the package that made the fit: `source_version` when set, else `lavaan_version` for a lavaan
@@ -731,6 +732,7 @@ TwoLevelParallelMediationData <- S7::new_class(
     NULL
   }
 )
+TwoLevelParallelMediationData <- .s7_call_safe(TwoLevelParallelMediationData)
 
 # The paths of one level of a TwoLevelParallelMediationData, named by their alias rows: a_<M>_<level> for each
 # mediator, then b_<M>_<level>, then c_prime_<level> (SPEC-IG5 section 5).
