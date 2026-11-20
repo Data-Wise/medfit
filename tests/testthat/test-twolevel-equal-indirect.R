@@ -143,8 +143,11 @@ test_that("planted defect: a statistic from the wrong level paths is caught by t
   hand <- tle_hand_dll(data)
   # within-level paths on both sides: a_w*b_w == a_w*b_w is no constraint; the cross pairing a_w*b_b == a_b*b_w is a
   # different surface and a different LR
-  wrong <- fit_sem(paste(tl_lavaan_model, "a_w*b_b == a_b*b_w", sep = "\n"), data, cluster = "cluster")
-  bad <- list(statistic = c(LR = (wrong@f - tle_fit(data)@f) * wrong@n_obs))
+  # (the guard refuses this pairing, so it goes straight to the engine)
+  syntax <- paste(tl_lavaan_model, "a_w*b_b == a_b*b_w", sep = "\n")
+  wrong <- .sem_fit_syntax(syntax, data, "observed", parsed = .sem_resolve_levels(.sem_parse(syntax), "cluster"),
+                           meanstructure = TRUE, fixed_x = FALSE, cluster = "cluster")
+  bad <- list(statistic = c(LR = (wrong$f - tle_fit(data)@f) * wrong$n_obs))
   expect_failure(tle_check_oracle(bad, hand))
 })
 
@@ -268,6 +271,7 @@ test_that("the parametric bootstrap p-value is reproducible, in (0, 1] and count
   expect_lte(r1$boot$p.value, 1)
   expect_identical(r1$boot$n_boot, 6L)
   expect_lte(r1$boot$n_valid, 6L)
+  expect_identical(r1$boot$n_dropped, 6L - r1$boot$n_valid)
   exceed <- sum(r1$boot$statistic >= unname(r1$statistic), na.rm = TRUE)
   expect_equal(r1$boot$p.value, (1 + exceed) / (r1$boot$n_valid + 1))
   # the asymptotic p-value is still reported

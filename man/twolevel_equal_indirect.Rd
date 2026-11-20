@@ -27,9 +27,10 @@ twolevel_equal_indirect(
 
 \item{n_boot}{Number of parametric bootstrap replications of the statistic (default 0, none). Each replication
 draws clustered data of the same cluster sizes from the constrained fit, refits both models and keeps the
-statistic; replications that do not resolve are dropped and counted. The bootstrap p-value is
-\verb{(1 + #\{LR* >= LR\}) / (n_valid + 1)}; use it at a small number of clusters, where the between-level asymptotics
-are poor.}
+statistic; replications that do not resolve (an inadmissible, non-positive-definite or non-converged refit) are
+dropped, so the bootstrap p-value is conditional on admissible refits, and the number dropped is reported
+(\code{boot$n_dropped}). The bootstrap p-value is \verb{(1 + #\{LR* >= LR\}) / (n_valid + 1)}; use it at a small number of
+clusters, where the between-level asymptotics are poor.}
 
 \item{seed}{Optional integer seed for the bootstrap; the caller's random number state is restored.}
 }
@@ -38,7 +39,7 @@ An object of class \code{c("twolevel_equal_indirect", "htest")}: \code{statistic
 \code{\link[=mbco_sem]{mbco_sem()}}), \code{parameter} (\code{df = 1}), \code{p.value} (chi-square(1)), \code{method}, \code{data.name}, \code{n_obs},
 \code{n_clusters}, \code{level} (\code{c("within", "between")}), \code{indirect} (the two indirect effects of the free fit and of the
 constrained fit), \code{unresolved}, \code{note}, \code{near_singular}, and \code{boot} (\code{NULL}, or a list with \code{statistic},
-\code{p.value}, \code{n_boot} and \code{n_valid} when \code{n_boot > 0}).
+\code{p.value}, \code{n_boot}, \code{n_valid} and \code{n_dropped} when \code{n_boot > 0}).
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}

@@ -231,14 +231,16 @@ test_that("the single-level fitter never runs on a model with level lines", {
 test_that("IG3 T-B: only one equality of two products of two labels is admitted; other nonlinear rows are refused", {
   m <- function(con) paste(tl_lavaan_model, con, sep = "\n")
   # admitted: the row itself, written either way round, and through defined parameters
-  for (con in c("a_w*b_w == a_b*b_b", "a_b*b_b == a_w*b_w", "b_w*a_w == b_b*a_b", "(a_w*b_w) == (a_b*b_b)",
-                "iw := a_w*b_w\nib := a_b*b_b\niw == ib")) {
+  for (con in c("a_w*b_w == a_b*b_b", "a_b*b_b == a_w*b_w", "b_w*a_w == b_b*a_b", "(a_w*b_w) == (a_b*b_b)")) {
     tl_expect_fit(tl_fit(m(con)))
   }
   # refused with the same class: a coefficient, three labels, an inequality, a repeated label, a constant, a second row
   for (con in c("2*a_w*b_w == a_b*b_b", "a_w*b_w*cp_w == a_b*b_b", "a_w*b_w < a_b*b_b", "a_w*b_w > a_b*b_b",
                 "a_w*b_w == a_w*b_b", "a_w*b_w == 0.1", "a_w*b_w == 0", "a_w*b_w == a_b*b_b\ncp_w*a_w == cp_b*a_b",
-                "a_w*b_w == a_b*b_b + cp_b", "ab := a_w*b_w\nab > 0.1")) {
+                "a_w*b_w == a_b*b_b + cp_b", "ab := a_w*b_w\nab > 0.1",
+                # other pairings have no oracle or gate: a with a, a product with cp, a defined parameter
+                "a_w*a_b == b_w*b_b", "a_w*b_w == cp_w*cp_b", "a_w*b_w == cp_b*b_b", "a_w*cp_w == a_b*cp_b",
+                "a_w*b_b == a_b*b_w", "iw := a_w*b_w\nib := a_b*b_b\niw == ib")) {
     expect_error(tl_fit(m(con)), "nonlinear", class = "medfit_error_twolevel_nonlinear", info = con)
   }
 })
