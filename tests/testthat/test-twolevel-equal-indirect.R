@@ -290,7 +290,9 @@ test_that("nie(level = 'contrast') and tidy() carry no p-value for the contrast;
   tid <- suppressWarnings(tidy(td, type = "effects"))
   expect_true("nie_contrast" %in% tid$term)
   expect_false(any(c("p.value", "statistic", "p_value") %in% names(tid)))
-  src <- paste(readLines(test_path("..", "..", "R", "sem-twolevel-equal-indirect.R")), collapse = "\n")
+  src_file <- test_path("..", "..", "R", "sem-twolevel-equal-indirect.R")
+  skip_if_not(file.exists(src_file), "R/ sources are not shipped with the installed tests")
+  src <- paste(readLines(src_file), collapse = "\n")
   expect_match(src, "never reported by `nie()`", fixed = TRUE)
 })
 
