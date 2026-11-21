@@ -55,7 +55,8 @@ from that point the likelihood-ratio statistic is referred to chi-square(1), an 
 clusters \code{J} (the between-level paths rest on \code{J} clusters). Near it, and when a level-2 variance is near the
 boundary, the chi-square(1) law may not hold; no closed-form law is claimed. The function warns when all four
 free-fit paths are within two standard errors of 0 (class \code{medfit_warning_twolevel_equal_singular}) and when a
-level-2 variance at the constrained fit is below 1\% of its implied between plus within variance.#'
+level-2 variance at the constrained fit is below 1\% of its implied between plus within variance.
+
 The constrained surface has sign twins: flipping the signs of the within pair \eqn{(a_w, b_w)}{(a_w, b_w)}, the
 between pair \eqn{(a_b, b_b)}{(a_b, b_b)} or both leaves the equality satisfied, at a worse likelihood. The
 optimizer's "the starts disagree" warning is not raised when every disagreeing accepted start is such a twin of the
