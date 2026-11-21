@@ -26,9 +26,21 @@
   a warning of class `medfit_warning_twolevel_inadmissible` that names the refit and the reason, and a null refit
   that does not converge gives the same unresolved result with a warning; the statistic is never the other null's
   likelihood ratio alone. A warning flags a level-2 variance below 1% of its implied between plus within
-  variance at a refit, where chi-square(1) may not hold. A test that two levels' indirect effects are equal is not
-  implemented. A model with `level:` blocks that reaches the single-level fitter without `cluster` now says to pass
+  variance at a refit, where chi-square(1) may not hold. A model with `level:` blocks that reaches the single-level fitter without `cluster` now says to pass
   `cluster` instead of calling native two-level estimation not implemented.
+* **`twolevel_equal_indirect()` (experimental).** A likelihood-ratio test that the within and the between indirect
+  effects of a `fit_sem(cluster = )` fit are equal, `a_w*b_w == a_b*b_b`: the free fit against the fit with that one
+  nonlinear equality, which the two-level guard now admits (every other nonlinear row is still refused with
+  `medfit_error_twolevel_nonlinear`). The statistic is referred to chi-square(1), with the caveat that the null is
+  singular where all four paths are 0 (a warning of class `medfit_warning_twolevel_equal_singular` flags it) and
+  that the between-level asymptotics are in the number of clusters; `n_boot` adds a parametric bootstrap p-value
+  for few clusters. A constrained refit that is inadmissible (a negative variance, a covariance matrix that is not
+  positive definite), does not converge or beats the free fit is unresolved (statistic `NA`, `unresolved = TRUE`,
+  a warning), never a likelihood-ratio number. The descriptive contrast of `nie(level = "contrast")` still carries
+  no p-value, and there is no Wald test of it. The bootstrap p-value drops replications whose refit is not admissible,
+  so it is conditional on admissible refits, and `boot$n_dropped` reports how many. The guard admits only that
+  within-versus-between chain pairing (the same `x`, `m`, `y` at both levels, in either written order); a serial
+  `a*d` or `d*b` chain of that shape is admitted too, without a separate oracle.
 * `glance()` on a two-level fit adds `n_clusters`, `cluster_size_min` and `cluster_size_max`; `chisq` and `p_value`
   are `NA` with a note, because the engine fits no saturated two-level model.
 * Level-2 variances are fitted without a floor. An inadmissible two-level solution (a negative variance or a

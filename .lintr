@@ -49,6 +49,9 @@ exclusions: list(
     "tests/testthat/test-twolevel-native-docs.R" = list(object_usage_linter = Inf),
     "tests/sim/sem-twolevel-parity-gate.R" = list(object_usage_linter = Inf),
     "tests/sim/sem-twolevel-sandwich-gate.R" = list(object_usage_linter = Inf),
+    # IG3 T-B equal-indirect tests use the tl_* O8 helpers of helper-twolevel-likelihood.R and testthat expectations
+    "tests/testthat/helper-twolevel-equal.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-equal-indirect.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-native-sandwich.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-native-sandwich-qa.R" = list(object_usage_linter = Inf),
     "tests/testthat/helper-fiml-golden.R" = list(object_usage_linter = Inf),

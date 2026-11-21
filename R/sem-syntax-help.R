@@ -207,7 +207,7 @@
 #' | A product term (`x:m`) | "a product term (`x:m`) is not supported in a two-level model" |
 #' | `weights` | "`weights` are not supported in a two-level model" |
 #' | `missing = "fiml"` | "missing = ... incomplete rows are dropped (listwise)" |
-#' | Nonlinear constraints, a zero product of labels | "nonlinear constraints (including a product of labels" |
+#' | Nonlinear constraints (not `a_w*b_w == a_b*b_b`) | "nonlinear constraints (including a product of labels" |
 #' | An explicit `fixed_x = TRUE` or a name vector | "a two-level model takes `fixed_x = FALSE` only" |
 #' | `meanstructure = FALSE` | "`meanstructure = FALSE` is refused" |
 #' | `information = "expected"` | "information = ... is not supported in a two-level model; use" |

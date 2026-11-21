@@ -286,6 +286,7 @@ reference:
       - medfit-syntax
       - bootstrap_mediation
       - twolevel_statistic
+      - twolevel_equal_indirect
 
   - title: "Methods"
     desc: "tidy() and glance() for medfit classes; print, summary, anova, confint and logLik methods for SEMFit"

@@ -768,6 +768,12 @@ bootstrap, or the `lavaan` fit with `treatment`, `mediator`, `outcome` and `clus
 bootstrap (report its percentile interval). A treatment or mediator with almost no between-cluster variance gives a within-only result and the classed
 warning `medfit_between_unidentified`. More: [Two-level mediation](model-twolevel.html).
 
+To test whether the within and the between indirect effects are equal, pass the `fit_sem(cluster = )` fit to
+`twolevel_equal_indirect(fit)`: a likelihood-ratio test of `a_w*b_w == a_b*b_b` against chi-square(1), experimental.
+`n_boot = 200` adds a parametric bootstrap p-value for few clusters, conditional on admissible refits (`boot$n_dropped`
+counts the rest). An inadmissible or non-converged constrained refit gives an unresolved result (statistic `NA`) with a
+warning, and the descriptive contrast of `nie(level = "contrast")` carries no p-value.
+
 ## 24. Two parallel mediators in a two-level lavaan fit
 
 *When:* as in recipe 23, but two or more mediators each carry part of the effect and none is regressed on
@@ -832,3 +838,4 @@ Every exported class and function appears in a recipe, or the table says why not
 | `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | 22 (the simple model; the parallel and serial forms are in [Bounded FIML](model-fiml.html)) |
 | `TwoLevelMediationData` | 23 (an `extract_mediation()` on a two-level `lavaan` fit, and `twolevel_statistic()` for its bootstrap; see [Two-level mediation](model-twolevel.html)) |
 | `TwoLevelParallelMediationData` | 24 (an `extract_mediation()` on a two-level `lavaan` fit with two or more mediators, and `twolevel_statistic()` for its bootstrap; see [Several parallel mediators](model-twolevel.html#several-parallel-mediators)) |
+| `twolevel_equal_indirect()` | 23 (the test that the within and between indirect effects of a `fit_sem(cluster = )` fit are equal; see [Two-level mediation](model-twolevel.html)) |

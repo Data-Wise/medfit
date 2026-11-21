@@ -107,7 +107,9 @@
 #'   [medfit-syntax]. Unset `fixed_x`
 #'   means `FALSE` on this route; an explicit `fixed_x = TRUE`, `meanstructure = FALSE`, `weights`,
 #'   `missing = "fiml"`, `information = "expected"`, latent variables, product terms and
-#'   nonlinear constraints are refused with classed errors (`medfit_error_twolevel_*`). `se_type = "sandwich"` gives
+#'   nonlinear constraints are refused with classed errors (`medfit_error_twolevel_*`); the one nonlinear row admitted
+#'   is the equality of the within and between indirect effects (`a_w*b_w == a_b*b_b`, the null of
+#'   [twolevel_equal_indirect()]). `se_type = "sandwich"` gives
 #'   the cluster-robust sandwich (see `se_type`), and `glance()` then reports `se_type`. Appended last to preserve
 #'   positional calls.
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
@@ -494,8 +496,12 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     abort("missing = \"fiml\" is not supported in a two-level model; incomplete rows are dropped (listwise)",
           "missing")
   }
-  if (.sem_has_nonlinear_constraint(parsed$constraints)) {
-    abort("nonlinear constraints (including a product of labels set to zero) are not supported in a two-level model",
+  # one nonlinear row shape is admitted (IG3 T-B): the within indirect effect equal to the between one
+  if (.sem_has_nonlinear_constraint(parsed$constraints) &&
+        !.sem_equal_products_only(parsed$constraints, parsed$parameters)) {
+    abort(paste0("nonlinear constraints (including a product of labels set to zero) are not supported in a two-level ",
+                 "model; the one exception is the equality of the within and the between indirect effect, ",
+                 "`a_w*b_w == a_b*b_b`"),
           "nonlinear")
   }
   if (!fx_unset && !isFALSE(fixed_x)) {
@@ -525,6 +531,61 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
     }
   }
   FALSE
+}
+
+# Whether the only nonlinear constraint is exactly one equality of the within indirect effect and the between one:
+# `a_w*b_w == a_b*b_b`, in either written order and either factor order, where each product is a chain (`m ~ x` labeled
+# a, `y ~ m` labeled b) at one level and the two chains have the same x, m and y at levels 1 and 2. Every other
+# nonlinear row (`a_w*a_b == b_w*b_b`, a product with `cp`, a constant, an inequality, three factors, a second row, and
+# a defined parameter standing for a product, whose name is not a regression label) is another shape and stays refused:
+# only this pairing has an oracle and a gate (IG3 T-B). A serial chain (`a*d` or `d*b` with the same x, m, y at both
+# levels) has the same shape and is admitted, but has no separate oracle or gate.
+# `parameters` is the parsed table with its levels resolved.
+.sem_equal_products_only <- function(constraints, parameters) {
+  defs <- constraints[constraints$op == ":=", , drop = FALSE]
+  defs <- .sem_defs(stats::setNames(defs$rhs, defs$lhs))
+  two_labels <- function(e) {
+    while (is.call(e) && identical(e[[1L]], as.name("("))) e <- e[[2L]]
+    if (is.call(e) && identical(e[[1L]], as.name("*")) && length(e) == 3L && is.symbol(e[[2L]]) &&
+          is.symbol(e[[3L]])) {
+      c(as.character(e[[2L]]), as.character(e[[3L]]))
+    }
+  }
+  reg <- parameters[parameters$op == "~" & !is.na(parameters$label) & nzchar(parameters$label), , drop = FALSE]
+  # the chain of a product at one level: c(level, x, m, y), or NULL when it is not an a-then-b chain
+  chain <- function(labels) {
+    rows <- lapply(labels, function(l) reg[reg$label == l, , drop = FALSE])
+    if (any(vapply(rows, nrow, 1L) != 1L) || rows[[1L]]$level != rows[[2L]]$level) {
+      return(NULL)
+    }
+    for (k in 1:2) {
+      a_row <- rows[[k]]
+      b_row <- rows[[3L - k]]
+      if (identical(a_row$lhs, b_row$rhs)) {
+        return(c(level = a_row$level, x = a_row$rhs, m = a_row$lhs, y = b_row$lhs))
+      }
+    }
+    NULL
+  }
+  n_nl <- 0L
+  for (i in which(constraints$op %in% c("==", "<", ">"))) {
+    lhs <- .sem_expr_parse(constraints$lhs[i])
+    rhs <- .sem_expr_parse(constraints$rhs[i])
+    if (.sem_tree_linear(.sem_expr_subst(call("-", lhs, rhs), defs))) {
+      next
+    }
+    n_nl <- n_nl + 1L
+    pair <- list(two_labels(lhs), two_labels(rhs))
+    if (constraints$op[i] != "==" || n_nl > 1L || any(vapply(pair, is.null, TRUE)) || anyDuplicated(unlist(pair))) {
+      return(FALSE)
+    }
+    ch <- lapply(pair, chain)
+    if (any(vapply(ch, is.null, TRUE)) || !setequal(c(ch[[1L]][["level"]], ch[[2L]][["level"]]), c("1", "2")) ||
+          !identical(unname(ch[[1L]][-1L]), unname(ch[[2L]][-1L]))) {
+      return(FALSE)
+    }
+  }
+  n_nl == 1L
 }
 
 # the resolved search protocol goes in diagnostics, after the fit (and the FIML ledger binding) are built

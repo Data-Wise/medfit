@@ -218,7 +218,7 @@ solution (a negative variance or a non-positive-definite implied covariance at e
    A product term (\code{x:m}) \tab "a product term (\code{x:m}) is not supported in a two-level model" \cr
    \code{weights} \tab "\code{weights} are not supported in a two-level model" \cr
    \code{missing = "fiml"} \tab "missing = ... incomplete rows are dropped (listwise)" \cr
-   Nonlinear constraints, a zero product of labels \tab "nonlinear constraints (including a product of labels" \cr
+   Nonlinear constraints (not \code{a_w*b_w == a_b*b_b}) \tab "nonlinear constraints (including a product of labels" \cr
    An explicit \code{fixed_x = TRUE} or a name vector \tab "a two-level model takes \code{fixed_x = FALSE} only" \cr
    \code{meanstructure = FALSE} \tab "\code{meanstructure = FALSE} is refused" \cr
    \code{information = "expected"} \tab "information = ... is not supported in a two-level model; use" \cr
