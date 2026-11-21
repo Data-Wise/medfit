@@ -10,14 +10,17 @@
 #
 # Rules (nonzero exit when any fails):
 #   size:   rejection rate at alpha = 0.05 is at most alpha + 3 MC standard errors in every cell; the rate is
-#           conditional on the resolved tests (fails = fit-stage inadmissible + null-stage unresolved + ledger error
-#           + other, each counted in its own column)
+#           conditional on the resolved tests (fails = fit-stage inadmissible + fit-stage no-convergence + null-stage
+#           unresolved + ledger error + other, each counted in its own column; the two fit-stage columns count the
+#           free fit of the simulated data failing before the test runs, so they never trip the aborts rule)
 #   oracle: every p-value equals pchisq(statistic, 1, lower.tail = FALSE)
 #   aborts: no test ends in a ledger error or an unclassified error (an inadmissible, non-PD or non-converged null
 #           refit is unresolved with a warning, never an abort and never a number)
 #   runs:   at most MAX_FAIL of the tests are unresolved or error (counted, not hidden)
-# MUTANT=cross_pair (the wrong pairing a_w*b_b == a_b*b_w) alters twolevel_equal_indirect() in memory and must fail the
-# size rule in the equal cells, where the true surface is a_w*b_w == a_b*b_b. MUTANT=df_two (chi-square(2) p-value)
+# MUTANT=cross_pair (the wrong pairing a_w*b_b == a_b*b_w) alters twolevel_equal_indirect() in memory; the two-level
+# guard refuses that pairing, so no test resolves and the size and failed-test rules fail (it checks the guard, not the
+# size rule). MUTANT=stat_doubled (the statistic times 2, p computed from it, so the oracle rule still holds) is the
+# defect that must fail the size rule in the equal cells. MUTANT=df_two (chi-square(2) p-value)
 # must fail the oracle rule.
 # Run from the package root:  Rscript tests/sim/sem-twolevel-equal-size.R   (REPS=500 by default; REPS=20 smoke)
 # Results: tests/sim/results/sem-twolevel-equal-size-<date>.csv (MUTANT runs write ...-<mutant>-<date>.csv)
@@ -45,6 +48,8 @@ mutate <- function(pattern, replacement) {
 if (mutant == "cross_pair") {
   mutate("sprintf(\"%s*%s == %s*%s\", a_within, b_within, a_between, b_between)",
          "sprintf(\"%s*%s == %s*%s\", a_within, b_between, a_between, b_within)")
+} else if (mutant == "stat_doubled") {
+  mutate("stat <- n * (res$fit$f - fit@f)", "stat <- 2 * n * (res$fit$f - fit@f)")
 } else if (mutant == "df_two") {
   mutate("stats::pchisq(stat, df = 1, lower.tail = FALSE)", "stats::pchisq(stat, df = 2, lower.tail = FALSE)")
 } else if (nzchar(mutant)) {
@@ -113,6 +118,7 @@ summ <- do.call(rbind, lapply(split(runs, list(runs$pattern, runs$J), drop = TRU
     pattern = g$pattern[1], J = g$J[1], n_j = n_j, reps = nrow(g), fails = sum(!ok),
     reject = mean(g$p[ok] < alpha), mc_se = sqrt(alpha * (1 - alpha) / sum(ok)),
     fit_inadm = sum(startsWith(g$err, "fit: medfit_error_twolevel_inadmissible")),
+    fit_noconv = sum(startsWith(g$err, "fit: medfit_error_no_convergence")),
     unresolved = sum(g$err == "unresolved"), ledger = sum(startsWith(g$err, "medfit_error_ledger")),
     reject_all = sum(g$p[ok] < alpha) / nrow(g), reject_10 = mean(g$p[ok] < 0.10), mean_stat = mean(g$stat[ok]),
     oracle_gap = max(abs(g$p[ok] - stats::pchisq(g$stat[ok], 1, lower.tail = FALSE)))
@@ -120,7 +126,7 @@ summ <- do.call(rbind, lapply(split(runs, list(runs$pattern, runs$J), drop = TRU
 }))
 rownames(summ) <- NULL
 summ <- summ[order(summ$J, summ$pattern), ]
-summ$other <- summ$fails - summ$fit_inadm - summ$unresolved - summ$ledger
+summ$other <- summ$fails - summ$fit_inadm - summ$fit_noconv - summ$unresolved - summ$ledger
 summ$limit <- alpha + 3 * summ$mc_se
 summ$pass <- summ$reject <= summ$limit
 summ$mutant <- mutant
