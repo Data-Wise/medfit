@@ -30,7 +30,13 @@
 #' clusters `J` (the between-level paths rest on `J` clusters). Near it, and when a level-2 variance is near the
 #' boundary, the chi-square(1) law may not hold; no closed-form law is claimed. The function warns when all four
 #' free-fit paths are within two standard errors of 0 (class `medfit_warning_twolevel_equal_singular`) and when a
-#' level-2 variance at the constrained fit is below 1% of its implied between plus within variance.
+#' level-2 variance at the constrained fit is below 1% of its implied between plus within variance.#'
+#' The constrained surface has sign twins: flipping the signs of the within pair \eqn{(a_w, b_w)}{(a_w, b_w)}, the
+#' between pair \eqn{(a_b, b_b)}{(a_b, b_b)} or both leaves the equality satisfied, at a worse likelihood. The
+#' optimizer's "the starts disagree" warning is not raised when every disagreeing accepted start is such a twin of the
+#' kept fit; the lowest-discrepancy start is kept. Any other disagreement among the starts, and every other
+#' optimizer warning, is signaled as usual. With `n_starts = 1` no second start is compared, so a worse twin can be
+#' kept without a warning; use `n_starts` of 2 or more.
 #'
 #' The guard admits the equality of any two a-then-b chains with the same x, m and y at levels 1 and 2, so a serial
 #' `a*d` or `d*b` chain of the same shape is admitted too; only the `a*b` indirect effect of a single mediator has an
