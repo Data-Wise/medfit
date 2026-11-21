@@ -45,8 +45,10 @@
   twin of the kept fit (flipping the signs of the within pair, the between pair or both leaves `a_w*b_w == a_b*b_b`
   satisfied, so the twin is a worse local optimum of the same constraint); the lowest-discrepancy start is kept. It
   was a false alarm for a correct fit. A disagreement that is not a sign twin, and every other optimizer warning,
-  still surface. With `n_starts = 1` there is no second start to compare, so a worse twin can be kept without a
-  warning; `n_starts` of 2 or more includes the free-fit reference starts.
+  still surface. After the refit the twins of the kept fit are tried too (a twin certificate, #504): each flip of a
+  pair with no zero is fitted once from the kept estimates with that flip, and the lowest discrepancy is kept, so a
+  worse twin is no longer kept when `n_starts = 1` leaves no second start to compare. It adds up to three
+  single-start refits and changes the statistic only when a twin ends lower.
 * `glance()` on a two-level fit adds `n_clusters`, `cluster_size_min` and `cluster_size_max`; `chisq` and `p_value`
   are `NA` with a note, because the engine fits no saturated two-level model.
 * Level-2 variances are fitted without a floor. An inadmissible two-level solution (a negative variance or a

@@ -667,7 +667,8 @@ clusters; `n_boot` gives a parametric bootstrap p-value for few clusters; replic
 p-value is conditional on admissible refits). The constrained surface has sign twins (flipping the signs of the
 within pair, the between pair or both keeps the equality), which are worse optima of the same constraint: the
 optimizer's starts-disagree warning is not raised when every disagreeing start is such a twin, and the best start
-is kept. With `n_starts = 1` a worse twin can be kept without a warning, so leave `n_starts` at 2 or more.
+is kept. The twins of the kept fit are also tried from its estimates (a twin certificate), so a worse twin is not
+kept even with `n_starts = 1`; the certificate adds up to three single-start refits.
 A constrained fit that is inadmissible,
 not positive definite or not converged gives an unresolved result (statistic `NA`) with a warning, never a number.
 The descriptive contrast carries no p-value.

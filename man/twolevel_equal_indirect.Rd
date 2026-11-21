@@ -61,8 +61,10 @@ The constrained surface has sign twins: flipping the signs of the within pair \e
 between pair \eqn{(a_b, b_b)}{(a_b, b_b)} or both leaves the equality satisfied, at a worse likelihood. The
 optimizer's "the starts disagree" warning is not raised when every disagreeing accepted start is such a twin of the
 kept fit; the lowest-discrepancy start is kept. Any other disagreement among the starts, and every other
-optimizer warning, is signaled as usual. With \code{n_starts = 1} no second start is compared, so a worse twin can be
-kept without a warning; use \code{n_starts} of 2 or more.
+optimizer warning, is signaled as usual. After the refit the twins of the kept fit are tried as well (a twin
+certificate): each flip of a pair with no zero is fitted once from the kept estimates with that flip, and the lowest
+discrepancy is kept, so a worse twin is not kept even with \code{n_starts = 1}, where no second start is compared. The
+certificate costs up to three extra single-start refits and changes the statistic only when a twin ends lower.
 
 The guard admits the equality of any two a-then-b chains with the same x, m and y at levels 1 and 2, so a serial
 \code{a*d} or \code{d*b} chain of the same shape is admitted too; only the \code{a*b} indirect effect of a single mediator has an

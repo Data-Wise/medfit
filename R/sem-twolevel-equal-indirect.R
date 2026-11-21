@@ -36,8 +36,10 @@
 #' between pair \eqn{(a_b, b_b)}{(a_b, b_b)} or both leaves the equality satisfied, at a worse likelihood. The
 #' optimizer's "the starts disagree" warning is not raised when every disagreeing accepted start is such a twin of the
 #' kept fit; the lowest-discrepancy start is kept. Any other disagreement among the starts, and every other
-#' optimizer warning, is signaled as usual. With `n_starts = 1` no second start is compared, so a worse twin can be
-#' kept without a warning; use `n_starts` of 2 or more.
+#' optimizer warning, is signaled as usual. After the refit the twins of the kept fit are tried as well (a twin
+#' certificate): each flip of a pair with no zero is fitted once from the kept estimates with that flip, and the lowest
+#' discrepancy is kept, so a worse twin is not kept even with `n_starts = 1`, where no second start is compared. The
+#' certificate costs up to three extra single-start refits and changes the statistic only when a twin ends lower.
 #'
 #' The guard admits the equality of any two a-then-b chains with the same x, m and y at levels 1 and 2, so a serial
 #' `a*d` or `d*b` chain of the same shape is admitted too; only the `a*b` indirect effect of a single mediator has an
@@ -185,7 +187,7 @@ twolevel_equal_indirect <- function(object, a_within = "a_w", b_within = "b_w", 
     class = c("twolevel_equal_indirect", "htest")
   )
   if (n_boot > 0L && !unresolved) {
-    out$boot <- .tle_bootstrap(fit, res$fit, con, n_starts, control, as.integer(n_boot), seed, stat)
+    out$boot <- .tle_bootstrap(fit, res$fit, con, n_starts, control, as.integer(n_boot), seed, stat, twin_paths = paths)
   }
   out
 }
@@ -246,7 +248,76 @@ print.twolevel_equal_indirect <- function(x, ...) {
       warning(w)
     }
   }
+  # the twin certificate (#504): one start from each pair-sign twin of the kept optimum, so a worse twin is not kept
+  # even when no start visited the better one (`n_starts = 1`); a better twin replaces the kept fit
+  if (!inherits(r, "error") && !is.null(twin_paths)) {
+    r <- .tle_twin_certificate(r, parsed, syntax, refit_data, fit, control, cluster, twin_paths)
+  }
   .tle_resolve_null(r, con)
+}
+
+# The twin certificate of the constrained refit `r` (#504): the pair-sign twins of the kept optimum (each level's pair
+# (a, b) flipped together, as `.tle_twin_explained()` defines a twin; a pair with a zero is not flipped) are each fitted
+# once, from the kept estimates with that flip, and the lowest discrepancy is kept. The twins share the row
+# a_w*b_w == a_b*b_b with the kept optimum, so a twin that ends lower is a better optimum of the same constrained
+# model. A twin refit that errors or is not accepted is ignored (the kept fit stands); a twin that does not beat the
+# kept discrepancy by more than the spread tolerance leaves the kept fit unchanged, so the statistic is unchanged
+# wherever the kept fit was already the best. The warnings of an adopted twin are signalled; those of a rejected twin
+# are dropped. The start is the kept estimates of the rows the user wrote (regressions and any written covariance or
+# intercept); the engine's own default start is kept for the rows it completes (variances, level-2 means).
+.tle_twin_certificate <- function(r, parsed, syntax, data, fit, control, cluster, twin_paths) {
+  idx <- match(twin_paths, r$ram$par_names)
+  theta <- unname(r$theta)
+  if (anyNA(idx) || length(idx) != 4L) {
+    return(r)
+  }
+  pairs <- Filter(function(p) all(theta[p] != 0), list(idx[1:2], idx[3:4]))
+  best <- r
+  best_w <- list()
+  for (mask in seq_len(2L^length(pairs) - 1L)) {
+    flip <- unlist(pairs[bitwAnd(mask, 2L^(seq_along(pairs) - 1L)) > 0L])
+    start <- theta
+    start[flip] <- -start[flip]
+    held <- list()
+    twin <- withCallingHandlers(
+      tryCatch(
+        .sem_fit_syntax(syntax, data, fit@information, n_starts = 1L, control = control, se_type = "model",
+                        parsed = .tle_start_parsed(parsed, r, start), meanstructure = TRUE, fixed_x = FALSE,
+                        factors = fit@internals$factors, cluster = cluster),
+        error = function(e) NULL
+      ),
+      warning = function(w) {
+        held[[length(held) + 1L]] <<- w
+        invokeRestart("muffleWarning")
+      }
+    )
+    if (!is.null(twin) && twin$f < best$f - .sem_spread_tol) {
+      best <- twin
+      best_w <- held
+    }
+  }
+  for (w in best_w) {
+    warning(w)
+  }
+  best
+}
+
+# `parsed` with the start value of every row the user wrote set to the matching entry of `start` (a theta vector of the
+# fit `r`): the rows are matched by lhs, op, rhs and level, a covariance in either order. Rows are never added, so the
+# completed model is the one `parsed` already describes; a fixed row keeps its value.
+.tle_start_parsed <- function(parsed, r, start) {
+  p <- parsed$parameters
+  key <- function(lhs, op, rhs, level) {
+    paste(ifelse(op == "~~" & lhs > rhs, rhs, lhs), op, ifelse(op == "~~" & lhs > rhs, lhs, rhs), level)
+  }
+  tab <- r$table
+  tab_key <- key(tab$lhs, tab$op, tab$rhs, tab$level)
+  hit <- match(key(p$lhs, p$op, p$rhs, p$level), tab_key)
+  ok <- !is.na(hit) & is.na(p$fixed)
+  ok[ok] <- !is.na(r$par_map[hit[ok]])
+  p$start[ok] <- start[r$par_map[hit[ok]]]
+  parsed$parameters <- p
+  parsed
 }
 
 # Whether every accepted start that missed the kept optimum (discrepancy `f`, estimate `theta`) is a sign twin of it
@@ -311,7 +382,7 @@ print.twolevel_equal_indirect <- function(x, ...) {
 
 # Parametric bootstrap of the statistic: clustered data of the same sizes drawn from the constrained fit, both models
 # refitted. A replication whose free or constrained fit does not resolve is dropped and counted in `n_valid`.
-.tle_bootstrap <- function(fit, null_fit, con, n_starts, control, n_boot, seed, observed) {
+.tle_bootstrap <- function(fit, null_fit, con, n_starts, control, n_boot, seed, observed, twin_paths = NULL) {
   cluster <- fit@internals$cluster
   tl <- null_fit$ram
   mom <- .sem_twolevel_implied(tl, unname(null_fit$theta))
@@ -336,8 +407,10 @@ print.twolevel_equal_indirect <- function(x, ...) {
     if (is.null(free)) {
       return(NA_real_)
     }
-    res <- tryCatch(suppressWarnings(suppressMessages(.tle_refit(free, con, n_starts, control))),
-                    error = function(e) list(failure = "error"))
+    res <- tryCatch(
+      suppressWarnings(suppressMessages(.tle_refit(free, con, n_starts, control, twin_paths = twin_paths))),
+      error = function(e) list(failure = "error")
+    )
     if (!is.null(res$failure)) {
       return(NA_real_)
     }
