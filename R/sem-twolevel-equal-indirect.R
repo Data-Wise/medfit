@@ -32,6 +32,13 @@
 #' free-fit paths are within two standard errors of 0 (class `medfit_warning_twolevel_equal_singular`) and when a
 #' level-2 variance at the constrained fit is below 1% of its implied between plus within variance.
 #'
+#' The constrained surface has sign twins: flipping the signs of the within pair \eqn{(a_w, b_w)}{(a_w, b_w)}, the
+#' between pair \eqn{(a_b, b_b)}{(a_b, b_b)} or both leaves the equality satisfied, at a worse likelihood. The
+#' optimizer's "the starts disagree" warning is not raised when every disagreeing accepted start is such a twin of the
+#' kept fit; the lowest-discrepancy start is kept. Any other disagreement among the starts, and every other
+#' optimizer warning, is signaled as usual. With `n_starts = 1` no second start is compared, so a worse twin can be
+#' kept without a warning; use `n_starts` of 2 or more.
+#'
 #' The guard admits the equality of any two a-then-b chains with the same x, m and y at levels 1 and 2, so a serial
 #' `a*d` or `d*b` chain of the same shape is admitted too; only the `a*b` indirect effect of a single mediator has an
 #' oracle and a gate here.
@@ -128,7 +135,7 @@ twolevel_equal_indirect <- function(object, a_within = "a_w", b_within = "b_w", 
                        "chi-square(1) and its p-value may not be valid."),
                 class = "medfit_warning_twolevel_equal_singular")
   }
-  res <- .tle_refit(fit, con, n_starts, control)
+  res <- .tle_refit(fit, con, n_starts, control, twin_paths = paths)
   unresolved <- !is.null(res$failure)
   n <- fit@n_obs
   stat <- NA_real_
@@ -204,7 +211,7 @@ print.twolevel_equal_indirect <- function(x, ...) {
 # Returns `list(fit =)` for a refit the engine accepted, or `list(failure =, inadmissible =)` for one that did not
 # (the solution is inadmissible, the covariance is not positive definite, or the optimizer did not converge): an
 # unresolved row, never a likelihood. A model or data error still stops.
-.tle_refit <- function(fit, con, n_starts, control, data = NULL, model = fit@model) {
+.tle_refit <- function(fit, con, n_starts, control, data = NULL, model = fit@model, twin_paths = NULL) {
   cluster <- fit@internals$cluster
   refit_data <- if (is.null(data)) {
     d <- fit@data
@@ -217,13 +224,57 @@ print.twolevel_equal_indirect <- function(x, ...) {
   parsed <- .sem_twolevel_guard(syntax, refit_data, cluster, information = fit@information, weights = NULL,
                                 se_type = "model", missing = "listwise", fixed_x = FALSE, fx_unset = TRUE,
                                 meanstructure = TRUE, ms_unset = TRUE)
-  r <- tryCatch(
-    .sem_fit_syntax(syntax, refit_data, fit@information, n_starts = n_starts, control = control,
-                    se_type = "model", parsed = parsed, meanstructure = TRUE, fixed_x = FALSE,
-                    factors = fit@internals$factors, cluster = cluster),
-    error = function(e) e
+  # The warnings are held until the fit is known: the optimizer's "starts disagree" warning is dropped when every
+  # disagreeing start is a sign twin of the kept optimum (#504); any other warning is signalled again unchanged.
+  held <- list()
+  r <- withCallingHandlers(
+    tryCatch(
+      .sem_fit_syntax(syntax, refit_data, fit@information, n_starts = n_starts, control = control,
+                      se_type = "model", parsed = parsed, meanstructure = TRUE, fixed_x = FALSE,
+                      factors = fit@internals$factors, cluster = cluster),
+      error = function(e) e
+    ),
+    warning = function(w) {
+      held[[length(held) + 1L]] <<- w
+      invokeRestart("muffleWarning")
+    }
   )
+  twins <- !inherits(r, "error") && !is.null(twin_paths) &&
+    .tle_twin_explained(r$attempts, unname(r$theta), r$f, match(twin_paths, r$ram$par_names))
+  for (w in held) {
+    if (!(twins && grepl("^the starts disagree", conditionMessage(w)))) {
+      warning(w)
+    }
+  }
   .tle_resolve_null(r, con)
+}
+
+# Whether every accepted start that missed the kept optimum (discrepancy `f`, estimate `theta`) is a sign twin of it
+# (#504). `idx` holds the positions of a_within, b_within, a_between, b_between. The row a_w*b_w == a_b*b_b is
+# unchanged when a level's pair (a, b) changes sign together, so the constrained surface has up to four optima that
+# differ in the two pair signs: a disagreeing start is explained when its signs are the kept optimum's with one or
+# both pairs flipped. A disagreement with the kept optimum's own signs, with a mixed sign pattern or with a zero
+# among the four paths is a genuine second optimum and is not explained.
+.tle_twin_explained <- function(attempts, theta, f, idx) {
+  if (anyNA(idx) || length(idx) != 4L) {
+    return(FALSE)
+  }
+  kept <- sign(theta[idx])
+  for (a in attempts) {
+    if (!isTRUE(a$accepted) || abs(a$f - f) <= .sem_spread_tol) {
+      next
+    }
+    sg <- sign(a$theta[idx])
+    if (anyNA(sg) || any(sg == 0) || any(kept == 0)) {
+      return(FALSE)
+    }
+    rel <- sg * kept
+    pair_ok <- rel[1L] == rel[2L] && rel[3L] == rel[4L]
+    if (!pair_ok || all(rel == 1)) {
+      return(FALSE)
+    }
+  }
+  TRUE
 }
 
 .tle_resolve_null <- function(r, con) {

@@ -664,7 +664,11 @@ yet. A test that the two levels' indirect effects are equal is a separate functi
 `twolevel_equal_indirect(fit)`: the likelihood ratio of the free fit against the fit with
 `a_w*b_w == a_b*b_b`, referred to chi-square(1) (singular where all four paths are 0, and asymptotic in the number of
 clusters; `n_boot` gives a parametric bootstrap p-value for few clusters; replications whose refit is not admissible are dropped and counted in `boot$n_dropped`, so that
-p-value is conditional on admissible refits). A constrained fit that is inadmissible,
+p-value is conditional on admissible refits). The constrained surface has sign twins (flipping the signs of the
+within pair, the between pair or both keeps the equality), which are worse optima of the same constraint: the
+optimizer's starts-disagree warning is not raised when every disagreeing start is such a twin, and the best start
+is kept. With `n_starts = 1` a worse twin can be kept without a warning, so leave `n_starts` at 2 or more.
+A constrained fit that is inadmissible,
 not positive definite or not converged gives an unresolved result (statistic `NA`) with a warning, never a number.
 The descriptive contrast carries no p-value.
 

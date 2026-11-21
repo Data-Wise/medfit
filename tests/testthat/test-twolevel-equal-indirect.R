@@ -320,3 +320,61 @@ test_that("planted defect: a contrast p-value in the docs-consistency check is c
   expect_true(has_p(data.frame(estimate = 1, p.value = 0.5)))
   expect_false(has_p(data.frame(estimate = 1)))
 })
+
+# --- #504: the constrained surface a_w*b_w == a_b*b_b has sign-twin local optima (a pair (a, b) -> (-a, -b) keeps the
+# row), so some starts end at a genuine twin with a higher discrepancy; the spread warning is dropped only then ---
+
+tle_collect_warnings <- function(expr) {
+  w <- character()
+  val <- withCallingHandlers(expr, warning = function(x) {
+    w <<- c(w, conditionMessage(x))
+    invokeRestart("muffleWarning")
+  })
+  list(value = val, warnings = w)
+}
+
+tle_issue504_data <- function(s) {
+  set.seed(s)
+  id <- rep(1:40, each = 6)
+  x <- stats::rnorm(40)[id] + stats::rnorm(240)
+  m <- 0.5 * x + stats::rnorm(40)[id] + stats::rnorm(240)
+  y <- 0.4 * m + 0.2 * x + stats::rnorm(40)[id] + stats::rnorm(240)
+  data.frame(cluster = id, X = x, M = m, Y = y)
+}
+
+test_that("ordinary two-level data gives no 'starts disagree' warning and the statistic matches the oracle (#504)", {
+  model <- "level: 1\n M ~ a_w*X\n Y ~ b_w*M + X\nlevel: 2\n M ~ a_b*X\n Y ~ b_b*M + X"
+  for (s in 1:12) {
+    data <- tle_issue504_data(s)
+    got <- tle_collect_warnings(twolevel_equal_indirect(fit_sem(model, data, cluster = "cluster")))
+    expect_false(any(grepl("starts disagree", got$warnings)), info = paste("seed", s))
+    expect_false(got$value$unresolved, info = paste("seed", s))
+    if (s <= 3L) {
+      hand <- tle_hand_dll(data)
+      tle_check_oracle(got$value, hand)
+    }
+  }
+})
+
+test_that("the twin explanation: a sign twin is explained, a non-twin disagreement is not (#504)", {
+  idx <- 1:4 # a_w, b_w, a_b, b_b
+  kept <- c(0.5, 0.4, 0.37, 0.59, 1)
+  att <- function(f, th) list(accepted = TRUE, f = f, theta = th)
+  twin <- att(9.836, c(0.5, 0.4, -0.43, -0.38, 1))
+  twin_w <- att(9.9, c(-0.5, -0.4, 0.37, 0.59, 1))
+  twin_both <- att(9.95, c(-0.5, -0.4, -0.43, -0.38, 1))
+  same_pattern <- att(9.9, c(0.5, 0.4, 0.37, 0.59, 2)) # same signs, higher f: a real local optimum
+  mixed <- att(9.9, c(0.5, -0.4, 0.37, -0.59, 1)) # product signs flipped: not a pair twin
+  agree <- att(9.675, kept)
+  expl <- function(...) .tle_twin_explained(list(agree, ...), kept, 9.675, idx)
+  expect_true(expl())
+  expect_true(expl(twin))
+  expect_true(expl(twin, twin_w, twin_both))
+  # planted defects: each non-twin disagreement must still count as unexplained
+  expect_false(expl(same_pattern))
+  expect_false(expl(twin, same_pattern))
+  expect_false(expl(mixed))
+  expect_false(expl(att(9.9, c(0, 0.4, -0.43, -0.38, 1)))) # a zero sign is not evidence of a twin
+  # a rejected attempt is ignored
+  expect_true(.tle_twin_explained(list(agree, list(accepted = FALSE, f = Inf, theta = NULL), twin), kept, 9.675, idx))
+})

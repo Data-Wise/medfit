@@ -41,6 +41,12 @@
   so it is conditional on admissible refits, and `boot$n_dropped` reports how many. The guard admits only that
   within-versus-between chain pairing (the same `x`, `m`, `y` at both levels, in either written order); a serial
   `a*d` or `d*b` chain of that shape is admitted too, without a separate oracle.
+  The optimizer's "the starts disagree" warning is no longer raised when every disagreeing accepted start is a sign
+  twin of the kept fit (flipping the signs of the within pair, the between pair or both leaves `a_w*b_w == a_b*b_b`
+  satisfied, so the twin is a worse local optimum of the same constraint); the lowest-discrepancy start is kept. It
+  was a false alarm for a correct fit. A disagreement that is not a sign twin, and every other optimizer warning,
+  still surface. With `n_starts = 1` there is no second start to compare, so a worse twin can be kept without a
+  warning; `n_starts` of 2 or more includes the free-fit reference starts.
 * `glance()` on a two-level fit adds `n_clusters`, `cluster_size_min` and `cluster_size_max`; `chisq` and `p_value`
   are `NA` with a note, because the engine fits no saturated two-level model.
 * Level-2 variances are fitted without a floor. An inadmissible two-level solution (a negative variance or a
