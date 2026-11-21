@@ -378,3 +378,107 @@ test_that("the twin explanation: a sign twin is explained, a non-twin disagreeme
   # a rejected attempt is ignored
   expect_true(.tle_twin_explained(list(agree, list(accepted = FALSE, f = Inf, theta = NULL), twin), kept, 9.675, idx))
 })
+
+# --- #504 residual: with `n_starts = 1` no second start is compared, so a worse sign twin could be kept in silence. The
+# twin certificate fits one start from each pair-sign twin of the kept optimum and keeps the lowest discrepancy ---
+
+# a two-level mediation sample with chosen within and between a and b paths (opposite-sign indirect effects and
+# near-zero paths are the stress family of #507 where a worse twin was kept)
+tle_twin_data <- function(seed, J = 40, n = 6, aw = 0.5, bw = 0.4, ab = 0.5, bb = 0.4) {
+  withr::local_seed(seed)
+  id <- rep(seq_len(J), each = n)
+  N <- J * n
+  xb <- stats::rnorm(J)
+  xw <- stats::rnorm(N)
+  mb <- ab * xb + stats::rnorm(J)
+  mw <- aw * xw + stats::rnorm(N)
+  yb <- bb * mb + 0.2 * xb + stats::rnorm(J)
+  yw <- bw * mw + 0.2 * xw + stats::rnorm(N)
+  data.frame(cluster = id, X = xb[id] + xw, M = mb[id] + mw, Y = yb[id] + yw)
+}
+
+tle_twin_model <- "level: 1\n M ~ a_w*X\n Y ~ b_w*M + X\nlevel: 2\n M ~ a_b*X\n Y ~ b_b*M + X"
+
+# cells where the constrained refit with one start ends at a worse twin without the certificate: the discrepancy of the
+# kept fit is higher than the hand optimum's (LR 8.18 against 7.64, and 4.69 against 2.25)
+tle_twin_cells <- list(
+  list(data = function() tle_twin_data(209, 40, 6, 0.3, -0.4, 0.4, 0.4)),
+  list(data = function() tle_twin_data(108, 15, 4, 0.5, 0.4, -0.4, 0.5))
+)
+
+test_that("with one start a worse sign twin is not kept: the statistic matches the hand optimum (#504)", {
+  for (cell in tle_twin_cells) {
+    data <- cell$data()
+    fit <- fit_sem(tle_twin_model, data, cluster = "cluster")
+    res <- suppressWarnings(twolevel_equal_indirect(fit, n_starts = 1))
+    hand <- tle_hand_dll(data)
+    expect_false(res$unresolved)
+    tle_check_oracle(res, hand)
+    # the null fit satisfies the equality
+    expect_equal(unname(res$indirect$null[["within"]]), unname(res$indirect$null[["between"]]), tolerance = 1e-6)
+    # more starts reach the same optimum
+    res30 <- suppressWarnings(twolevel_equal_indirect(fit, n_starts = 30))
+    expect_lt(abs(unname(res$statistic) - unname(res30$statistic)), 1e-6)
+  }
+})
+
+test_that("the certificate leaves the statistic unchanged where the kept fit was already the best (#504)", {
+  model <- tle_twin_model
+  # statistics of the \donttest family before the certificate (J = 40, n = 6, seeds 1 and 2)
+  known <- c(`1` = 0.3006055823, `2` = 0.01452715782)
+  for (s in names(known)) {
+    data <- tle_issue504_data(as.integer(s))
+    fit <- fit_sem(model, data, cluster = "cluster")
+    for (ns in list(NULL, 1L)) {
+      res <- twolevel_equal_indirect(fit, n_starts = ns)
+      expect_equal(unname(res$statistic), unname(known[[s]]), tolerance = 1e-8, info = paste("seed", s, "starts", ns))
+    }
+  }
+})
+
+test_that("the start of a twin refit sets the written rows only and flips the chosen pair (#504)", {
+  fit <- tle_fit()
+  con <- "a_w*b_w == a_b*b_b"
+  syntax <- paste0(fit@model, "\n", con)
+  data <- fit@data
+  data$cluster <- fit@internals$cluster_ids
+  parsed <- .sem_twolevel_guard(syntax, data, "cluster", information = "observed", weights = NULL, se_type = "model",
+                                missing = "listwise", fixed_x = FALSE, fx_unset = TRUE, meanstructure = TRUE,
+                                ms_unset = TRUE)
+  r <- .tle_refit(fit, con, 1L, list())$fit
+  start <- unname(r$theta)
+  start[match(c("a_w", "b_w"), r$ram$par_names)] <- -start[match(c("a_w", "b_w"), r$ram$par_names)]
+  out <- .tle_start_parsed(parsed, r, start)$parameters
+  # no row is added or removed, and only the start column changes
+  expect_identical(nrow(out), nrow(parsed$parameters))
+  expect_identical(out[setdiff(names(out), "start")], parsed$parameters[setdiff(names(out), "start")])
+  # every written row carries the kept estimate, the within pair with its sign flipped
+  by_label <- stats::setNames(out$start, out$label)
+  expect_equal(unname(by_label[["a_w"]]), -unname(r$theta[["a_w"]]))
+  expect_equal(unname(by_label[["b_w"]]), -unname(r$theta[["b_w"]]))
+  expect_equal(unname(by_label[["a_b"]]), unname(r$theta[["a_b"]]))
+  expect_equal(unname(by_label[["b_b"]]), unname(r$theta[["b_b"]]))
+  expect_false(anyNA(out$start))
+})
+
+test_that("planted defect: without the twin step the one-start statistic misses the hand optimum (#504)", {
+  data <- tle_twin_cells[[1]]$data()
+  fit <- fit_sem(tle_twin_model, data, cluster = "cluster")
+  hand <- tle_hand_dll(data)
+  # the defect: the certificate returns the kept fit
+  testthat::local_mocked_bindings(.tle_twin_certificate = function(r, ...) r)
+  res <- suppressWarnings(twolevel_equal_indirect(fit, n_starts = 1))
+  expect_failure(tle_check_oracle(res, hand))
+  expect_gt(unname(res$statistic) / 2 - hand$dll, 0.1)
+})
+
+test_that("planted defect: a twin step that never flips a sign is caught as well (#504)", {
+  data <- tle_twin_cells[[1]]$data()
+  fit <- fit_sem(tle_twin_model, data, cluster = "cluster")
+  hand <- tle_hand_dll(data)
+  # the defect: the twin start keeps the kept signs, so every twin refit returns to the kept optimum
+  bad_fn <- sem_mutate(medfit:::.tle_twin_certificate, "start[flip] <- -start[flip]", "start[flip] <- start[flip]")
+  testthat::local_mocked_bindings(.tle_twin_certificate = bad_fn)
+  res <- suppressWarnings(twolevel_equal_indirect(fit, n_starts = 1))
+  expect_failure(tle_check_oracle(res, hand))
+})
