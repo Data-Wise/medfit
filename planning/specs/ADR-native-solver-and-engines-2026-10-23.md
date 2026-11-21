@@ -214,6 +214,35 @@ analog of status -4, as a stall that the gate alone may accept, with a retry oth
 (7)' and the evaluation and iteration limit messages (9, 10) and retry. The stationarity and curvature checks are
 solver independent.
 
+## 4b. Boundary regression evidence (2026-10-29, issue #360)
+
+[PR #363](https://github.com/Data-Wise/medfit/pull/363), merged into `dev` as `edcf23d8`, adds a
+[self-contained regression](../../tests/testthat/test-sem-boundary-oracle.R) for a latent predictor with
+three known loadings and known independent indicator-error variances. Two seeded samples have an active
+`lower(0)` outcome residual-variance bound; a third is interior. Both one start and the public default are checked.
+This is evidence for the existing solver, not a new solver decision or completion of the D-4 reliability gate.
+
+**Why this oracle:** with the measurement constants fixed, the GLS indicator score has known error variance
+`tau = 1 / sum(loading^2 / error_variance)`. The remaining indicator contrasts are independent of the
+score, mediator and outcome, with a parameter-independent Gaussian density. Full observed-data and reduced-score
+likelihood differences therefore agree. The regression optimizes
+the reduced likelihood independently of medfit's RAM/objective helpers and checks all six named free coordinates.
+Separate QA optimized the full five-variable likelihood by structural propagation and `nlminb`; it agreed in all
+six fit cells (maximum coordinate gap `3.51e-7`, loss gap `2.66e-13`). The
+[task record](../PLAN-360-boundary-regression-2026-10-29.md) preserves validation and provenance.
+
+**Alternatives rejected:** objective agreement alone can accept an inadmissible solution, because removing the
+bound permits a negative residual variance and a better likelihood. Require nonnegative variance as well as
+coordinate and likelihood agreement. Always fixing the variance to zero would miss an incorrectly active bound,
+so retain the interior control. Native active-bound values may be tiny positive remainders (about `1e-21`); check
+`0 <= variance < 1e-10`, while the independently pinned boundary reference is exactly zero.
+
+**Limits and revalidation:** these finite searches support only the three fixtures, with `fixed_x = FALSE` and
+`meanstructure = FALSE`. They do not certify a global optimum, validate standard errors, or cover estimated
+measurement errors, means, weights, or arbitrary latent models. Revisit the score reduction if measurement
+parameters or error correlations change. Changes to bounds, sample-covariance conventions, or solver paths
+require fresh oracle checks; keep the D-4 paired reliability and scale gates separate.
+
 ## 5. Consequences
 
 - Users of constrained native fits get SLSQP's speed and, rarely, a wrong-branch statistic; the guards (gate,
