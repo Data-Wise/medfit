@@ -65,6 +65,6 @@ T6/U4 as its only remaining gate.
 
 T6 is done (`studies/few-clusters/T6-results-memo.md`, 169,000 rows). U4 is produced by T8, which needs T6 and T7;
 T7 (cluster bootstrap) is no-go until **M2** (bootstrap scope and compute) is decided. Remaining path to a release:
-M2 decision -> T7 at the authorized scope, or M2 drops T7 -> T8 (decision table, U4 package, the T8 maintainer
-questions: ICC source, unequal n = 5 non-convergence, P1/P2X mismatch) -> S4b, if the maintainer keeps it in the
+M2 is decided (2026-11-21): T7 is dropped for this release. Path: T8 on T6 alone (decision table, U4 package; the
+open maintainer questions on the ICC source and the P1/P2X mismatch) -> S4b, if the maintainer keeps it in the
 release -> release checklist. Every sim-independent task above is merged.

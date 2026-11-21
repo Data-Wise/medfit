@@ -226,3 +226,10 @@ B = 2000), cluster-bootstrap percentile (`method = "nonparametric", cluster = "i
 - Cell 1106 (T5 P0 inadmissible rate .102, within one MCSE of about .013 of the .10 cutoff) stays in P1 and is
   provisional: T8 reports it as borderline.
 - MC B is 2000, as in section 6 and the T5 runner; the T5 memo's "MC B = 1000" is a typo, to be fixed in T8.
+
+### Decision recorded 2026-11-21 (after T6)
+
+- **M2** decided: **drop T7 for the next release.** Both bootstrap scopes from the T5 pilot exceed the S2 stop rule
+  (9,160 core-h at plan scope, 5,171 at the cut scope, cap 5,000). T8 proceeds on T6 alone: the decision table and
+  U4 package report the delta and MC arms (and P1), and state that the cluster-bootstrap arm was not run beyond the
+  six T5 pilot cells. T7 stays in this plan as later work; it is not a release gate.
