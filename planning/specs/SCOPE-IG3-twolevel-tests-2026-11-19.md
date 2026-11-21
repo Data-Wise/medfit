@@ -1,6 +1,7 @@
 # Scope note: IG3, optional tests for the native two-level fit
 
-**Date:** 2026-11-19 · **Status:** scope note only; no code. Open decisions D1-D6 await the maintainer.
+**Date:** 2026-11-19 · **Status (2026-11-21):** implemented. T-A merged as #501, T-B as #502 (hard size gate #505,
+sign-twin starts #507). D1 to D5 decided (section 12); D6, two-level `compare_lr()`, stays deferred.
 **Gap register:** [PLAN-multilevel-implementation-gaps-2026-11-11.md](../PLAN-multilevel-implementation-gaps-2026-11-11.md) (IG3)
 **Plan:** [PLAN-multilevel-remainder-2026-11-18.md](../PLAN-multilevel-remainder-2026-11-18.md) (IG3, "after S4; boundary law")
 

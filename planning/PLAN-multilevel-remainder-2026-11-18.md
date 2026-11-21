@@ -53,4 +53,18 @@ T6/U4 as its only remaining gate.
 - [x] U2 (decision, 2026-11-18): S4 ships `fixed_x = FALSE` only; `fixed_x = TRUE` on a two-level model is a classed error; the fixed-moment oracle is later work, not an S4 blocker
 - [x] S4-dec (2026-11-18): native `level:` accepts integers, `within`/`between`, and the cluster variable's name (lavaan parity)
 - [x] S4a (2026-11-19): S4a.1 to S4a.5 merged; S4a.1 #486, S4a.2 #489, S4a.3 #491, S4a.4 #492, S4a.5 in #493 (`707f53a7`)
-- [ ] S4b (gated)
+- [x] IG2 (2026-11-19): CR0 cluster-robust SEs for the native two-level fit, #499 (`ae8a343e`); CLAUDE.md note #500
+- [x] IG3 T-A (2026-11-20): `mbco_sem()` on native two-level fits, #501 (`9dc55c3e`)
+- [x] IG3 T-B (2026-11-20): `twolevel_equal_indirect()`, #502 (`2b1c6311`); size gate made hard on the REPS = 2000
+  baseline, #505 (`59969ebd`); sign-twin starts explained instead of warned, #507 (`b72971a9`). D6 (two-level
+  `compare_lr()`) stays deferred.
+- [ ] S4b (gated on T6/U4)
+- [ ] IG5s serial scope (maintainer decision only)
+
+## Release gate (reconciled 2026-11-21)
+
+T6 is done (`studies/few-clusters/T6-results-memo.md`, 169,000 rows). U4 is produced by T8, which needs T6 and T7;
+T7 (cluster bootstrap) is no-go until **M2** (bootstrap scope and compute) is decided. Remaining path to a release:
+M2 decision -> T7 at the authorized scope, or M2 drops T7 -> T8 (decision table, U4 package, the T8 maintainer
+questions: ICC source, unequal n = 5 non-convergence, P1/P2X mismatch) -> S4b, if the maintainer keeps it in the
+release -> release checklist. Every sim-independent task above is merged.

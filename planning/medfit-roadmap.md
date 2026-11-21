@@ -17,7 +17,8 @@
 > `sem_control()` and two-level provenance. **2026-11-17: 0.19.0 is released** (tag `v0.19.0` at
 > `2c334734`, GitHub-only) with IG5, two-level parallel mediators (experimental;
 > #458-#465) ([checklist](PLAN-0.19.0-release-checklist-2026-11-16.md)); dev is 0.19.0.9000. See the
-> [Current board](#current-board) reconciliations of 2026-11-15 and 2026-11-17.
+> [Current board](#current-board) reconciliations of 2026-11-15, 2026-11-17 and 2026-11-21 (native two-level
+> fit, IG2 and IG3 merged to dev; next release gated on the few-clusters M2, T7 and T8).
 > This file's [Current board](#current-board) owns medfit priorities; older phase
 > schedules and the extensions plan are historical design references.
 > Future feature versions/dates are unassigned. CRAN remains held; hosted
@@ -1871,6 +1872,17 @@ Integration is successful when:
 ---
 
 ## Current board
+
+**Reconciliation 2026-11-21 (supersedes the 2026-11-17 line on open work).** Merged to `dev` since 0.19.0, all
+experimental and unreleased: the multilevel remainder's sim-independent tasks
+([plan](PLAN-multilevel-remainder-2026-11-18.md)): U1 tolerances (#482), U3 three-way oracle (#483), the U2 and S4-dec
+decisions, S4a native two-level fit (`fit_sem(cluster = )`; #486, #489, #491 to #493, refusals #495), IG2 cluster-robust
+SEs (#499), IG3 T-A `mbco_sem()` on two-level fits (#501) and T-B `twolevel_equal_indirect()` (#502, #505, #507);
+sem-engine wording (#496, #497); ADR 4b boundary evidence (#509). The few-clusters study ran T5 (#480, #490) and T6
+(#484, #485; 169,000 datasets on Hopper). **Next release gate:** M2 (bootstrap scope) -> T7 or its waiver -> T8 (U4
+package) -> S4b if kept in scope -> release checklist. Deferred: two-level `compare_lr()` (IG3 D6), serial two-level
+mediators (IG5s, decision only). Unchanged: IG4 and IG6 NO-GO, FIML admission unresolved, CRAN on hold (#83). Open PR:
+#470 (rforge non-publishing branch).
 
 **Reconciliation 2026-11-17 (supersedes the 2026-11-15 line that IG1 to IG7 and any 0.19.0 scope are
 unauthorized).** IG5, parallel mediators in the lavaan two-level adapter (`TwoLevelParallelMediationData`,
