@@ -1880,7 +1880,7 @@ decisions, S4a native two-level fit (`fit_sem(cluster = )`; #486, #489, #491 to 
 SEs (#499), IG3 T-A `mbco_sem()` on two-level fits (#501) and T-B `twolevel_equal_indirect()` (#502, #505, #507);
 sem-engine wording (#496, #497); ADR 4b boundary evidence (#509). The few-clusters study ran T5 (#480, #490) and T6
 (#484, #485; 169,000 datasets on Hopper). **Next release gate:** M2 decided 2026-11-21, T7 dropped -> T8 (U4
-package) -> S4b if kept in scope -> release checklist. Deferred: two-level `compare_lr()` (IG3 D6), serial two-level
+package) -> release checklist; S4b is out of the next release (decided 2026-11-21). Deferred: two-level `compare_lr()` (IG3 D6), serial two-level
 mediators (IG5s, decision only). Unchanged: IG4 and IG6 NO-GO, FIML admission unresolved, CRAN on hold (#83). Open PR:
 #470 (rforge non-publishing branch).
 

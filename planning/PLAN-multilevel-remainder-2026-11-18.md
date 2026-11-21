@@ -58,7 +58,7 @@ T6/U4 as its only remaining gate.
 - [x] IG3 T-B (2026-11-20): `twolevel_equal_indirect()`, #502 (`2b1c6311`); size gate made hard on the REPS = 2000
   baseline, #505 (`59969ebd`); sign-twin starts explained instead of warned, #507 (`b72971a9`). D6 (two-level
   `compare_lr()`) stays deferred.
-- [ ] S4b (gated on T6/U4)
+- [ ] S4b (gated on T6/U4; out of the next release, decided 2026-11-21)
 - [ ] IG5s serial scope (maintainer decision only)
 
 ## Release gate (reconciled 2026-11-21)
@@ -66,5 +66,4 @@ T6/U4 as its only remaining gate.
 T6 is done (`studies/few-clusters/T6-results-memo.md`, 169,000 rows). U4 is produced by T8, which needs T6 and T7;
 T7 (cluster bootstrap) is no-go until **M2** (bootstrap scope and compute) is decided. Remaining path to a release:
 M2 is decided (2026-11-21): T7 is dropped for this release. Path: T8 on T6 alone (decision table, U4 package; the
-open maintainer questions on the ICC source and the P1/P2X mismatch) -> S4b, if the maintainer keeps it in the
-release -> release checklist. Every sim-independent task above is merged.
+open maintainer questions on the ICC source and the P1/P2X mismatch) -> release checklist. S4b is out of the next release (maintainer, 2026-11-21): it follows T8 in the next cycle. Every sim-independent task above is merged.
