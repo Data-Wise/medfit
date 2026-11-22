@@ -482,3 +482,133 @@ test_that("planted defect: a twin step that never flips a sign is caught as well
   res <- suppressWarnings(twolevel_equal_indirect(fit, n_starts = 1))
   expect_failure(tle_check_oracle(res, hand))
 })
+
+# --- #504 independent QA additions: a between-pair twin, the twin edge cases, the bootstrap, the #507 warning rule ---
+
+test_that("a worse twin that only the between-pair flip repairs is not kept with one start (#504)", {
+  # J = 60, n = 4: the kept one-start fit ends 16 LR units above the optimum; only the between pair flip repairs it
+  data <- tle_twin_data(10280, 60, 4, 0.5, 0.6, -0.5, 0.6)
+  fit <- fit_sem(tle_twin_model, data, cluster = "cluster")
+  res <- suppressWarnings(twolevel_equal_indirect(fit, n_starts = 1))
+  expect_false(res$unresolved)
+  tle_check_oracle(res, tle_hand_dll(data))
+  res30 <- suppressWarnings(twolevel_equal_indirect(fit, n_starts = 30))
+  expect_lt(abs(unname(res$statistic) - unname(res30$statistic)), 1e-6)
+})
+
+# the constrained refits of `twolevel_equal_indirect()` seen through `.sem_fit_syntax()`: call 1 is the kept fit, the
+# later calls are the twin refits; `edit(call_number, fit)` changes what a call returns
+tle_with_twin_mock <- function(fit, edit, n_starts = 1L, improper = NULL) {
+  real <- .sem_fit_syntax
+  calls <- 0L
+  in_twin <- FALSE
+  wrapped <- function(...) {
+    calls <<- calls + 1L
+    in_twin <<- calls >= 2L
+    on.exit(in_twin <<- FALSE)
+    edit(calls, real(...))
+  }
+  imp <- function(theta, tl) if (in_twin && !is.null(improper)) improper else NULL
+  res <- suppressWarnings(testthat::with_mocked_bindings(
+    twolevel_equal_indirect(fit, n_starts = n_starts),
+    .sem_fit_syntax = wrapped, .sem_improper_ml2 = imp
+  ))
+  list(res = res, calls = calls)
+}
+
+test_that("a pair with a zero is not flipped: 0, 1 or 3 twin refits for 2, 1 or 0 zero-free pairs (#504)", {
+  fit <- tle_fit()
+  zero <- function(idx) function(i, r) {
+    if (i == 1L && length(idx)) r$theta[match(c("a_w", "b_w", "a_b", "b_b")[idx], r$ram$par_names)] <- 0
+    r
+  }
+  expect_identical(tle_with_twin_mock(fit, zero(c(1, 3)))$calls, 1L)
+  expect_identical(tle_with_twin_mock(fit, zero(1))$calls, 2L)
+  expect_identical(tle_with_twin_mock(fit, zero(NULL))$calls, 4L)
+})
+
+test_that("a twin refit that errors, does not converge or is inadmissible leaves the kept fit (#504)", {
+  data <- tle_twin_cells[[1]]$data()
+  fit <- fit_sem(tle_twin_model, data, cluster = "cluster")
+  # the kept one-start statistic with every twin refit forced to fail
+  fail <- function(i, r) if (i >= 2L) stop(.sem_no_convergence("injected twin failure")) else r
+  got <- tle_with_twin_mock(fit, fail)$res
+  hand <- tle_hand_dll(data)
+  expect_false(got$unresolved)
+  # the kept (worse) twin stands: the statistic is above the hand optimum, and finite
+  expect_gt(unname(got$statistic) / 2 - hand$dll, 0.1)
+  # an inadmissible twin (the engine's own check fires on the twin refits only) leaves it the same
+  inadm <- tle_with_twin_mock(fit, function(i, r) r, improper = "negative variance: injected twin")$res
+  expect_false(inadm$unresolved)
+  expect_identical(unname(inadm$statistic), unname(got$statistic))
+})
+
+test_that("a twin is adopted only when it beats the kept discrepancy by more than the spread tolerance (#504)", {
+  fit <- tle_fit()
+  kept_f <- NULL
+  # a twin lower by 1e-9 (below .sem_spread_tol) is not adopted: the statistic is the kept fit's
+  below <- function(i, r) {
+    if (i == 1L) kept_f <<- r$f else r$f <- kept_f - 1e-9
+    r
+  }
+  got <- tle_with_twin_mock(fit, below)$res
+  expect_identical(unname(got$statistic), unname(fit@n_obs * (kept_f - fit@f)))
+  # a twin lower by 1e-5 (above the tolerance) is adopted: the statistic drops by n * 1e-5
+  above <- function(i, r) {
+    if (i == 1L) kept_f <<- r$f else r$f <- kept_f - 1e-5
+    r
+  }
+  got2 <- tle_with_twin_mock(fit, above)$res
+  expect_equal(unname(got2$statistic), unname(got$statistic) - fit@n_obs * 1e-5, tolerance = 1e-9)
+})
+
+test_that("the starts-disagree warning is dropped for a pair twin only; any other disagreement still warns (#507)", {
+  fit <- tle_fit()
+  real <- .sem_fit_syntax
+  paths <- c("a_w", "b_w", "a_b", "b_b")
+  disagree <- function(flip) {
+    calls <- 0L
+    function(...) {
+      calls <<- calls + 1L
+      r <- real(...)
+      if (calls == 1L) {
+        th <- r$theta
+        i <- match(paths, r$ram$par_names)
+        th[i[flip]] <- -th[i[flip]]
+        r$attempts <- c(r$attempts, list(list(accepted = TRUE, f = r$f + 0.5, theta = th)))
+        warning("the starts disagree: injected", call. = FALSE)
+      }
+      r
+    }
+  }
+  caught <- function(flip) {
+    w <- character()
+    withCallingHandlers(
+      testthat::with_mocked_bindings(twolevel_equal_indirect(fit, n_starts = 5), .sem_fit_syntax = disagree(flip)),
+      warning = function(x) {
+        w <<- c(w, conditionMessage(x))
+        invokeRestart("muffleWarning")
+      }
+    )
+    any(grepl("injected", w))
+  }
+  expect_false(caught(1:2)) # a pair twin: explained
+  expect_false(caught(1:4))
+  expect_true(caught(integer())) # same signs, higher f: a genuine second optimum still warns
+  expect_true(caught(c(1L, 3L))) # one element of each pair: not a pair twin, still warns
+})
+
+test_that("the parametric bootstrap applies the twin certificate to every replicate refit (#504)", {
+  data <- tl_simulate(rep(5, 20), seed = 8)
+  fit <- tle_fit(data)
+  calls <- 0L
+  real <- .tle_twin_certificate
+  testthat::local_mocked_bindings(.tle_twin_certificate = function(r, ...) {
+    calls <<- calls + 1L
+    real(r, ...)
+  })
+  res <- suppressWarnings(twolevel_equal_indirect(fit, n_boot = 3, seed = 1))
+  # the observed refit plus one per replicate whose free fit resolved
+  expect_gte(calls, 1L + res$boot$n_valid)
+  expect_gt(res$boot$n_valid, 0L)
+})
