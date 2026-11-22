@@ -498,8 +498,9 @@ test_that("a worse twin that only the between-pair flip repairs is not kept with
 
 # the constrained refits of `twolevel_equal_indirect()` seen through `.sem_fit_syntax()`: call 1 is the kept fit, the
 # later calls are the twin refits; `edit(call_number, fit)` changes what a call returns
-tle_with_twin_mock <- function(fit, edit, n_starts = 1L, improper = NULL) {
+tle_with_twin_mock <- function(fit, edit, n_starts = 1L, improper = NULL, vcov_fail = FALSE) {
   real <- .sem_fit_syntax
+  real_vcov <- .sem_vcov
   st <- new.env()
   st$calls <- 0L
   st$in_twin <- FALSE
@@ -510,9 +511,16 @@ tle_with_twin_mock <- function(fit, edit, n_starts = 1L, improper = NULL) {
     edit(st$calls, real(...))
   }
   imp <- function(theta, tl) if (st$in_twin && !is.null(improper)) improper else NULL
+  # the covariance stage fails on the twin refits only
+  vc <- function(...) {
+    if (st$in_twin && vcov_fail) {
+      stop(.sem_covariance_diagnostic("information_not_pd", "injected twin: information is not positive definite"))
+    }
+    real_vcov(...)
+  }
   res <- suppressWarnings(testthat::with_mocked_bindings(
     twolevel_equal_indirect(fit, n_starts = n_starts),
-    .sem_fit_syntax = wrapped, .sem_improper_ml2 = imp
+    .sem_fit_syntax = wrapped, .sem_improper_ml2 = imp, .sem_vcov = vc
   ))
   list(res = res, calls = st$calls)
 }
@@ -682,4 +690,115 @@ test_that("an adopted twin's own sign-explained disagreement is silent; a non-tw
   expect_false(caught(1:4))
   expect_true(caught(integer())) # same signs, higher f: a genuine second optimum still warns
   expect_true(caught(c(1L, 3L))) # one element of each pair: not a pair twin, still warns
+})
+
+test_that("a covariance-stage twin below the kept fit is unresolved; a worse or f-less one is skipped (#504)", {
+  data <- tle_twin_cells[[1]]$data()
+  fit <- fit_sem(tle_twin_model, data, cluster = "cluster")
+  # the kept fit is a worse twin and every twin refit ends with a covariance that is not positive definite
+  better <- tle_with_twin_mock(fit, function(i, r) r, vcov_fail = TRUE)$res
+  tle_expect_unresolved(better)
+  expect_match(better$note, "not positive definite", fixed = TRUE)
+  expect_true(better$twin$unresolved)
+  expect_false(better$twin$replaced)
+  real <- .sem_fit_syntax
+  real_vcov <- .sem_vcov
+  calls <- 0L
+  expect_warning(
+    testthat::with_mocked_bindings(
+      twolevel_equal_indirect(fit, n_starts = 1),
+      .sem_fit_syntax = function(...) {
+        calls <<- calls + 1L
+        real(...)
+      },
+      .sem_vcov = function(...) {
+        if (calls >= 2L) stop(.sem_covariance_diagnostic("information_not_pd", "injected twin"))
+        real_vcov(...)
+      }
+    ),
+    class = "medfit_warning_twolevel_inadmissible"
+  )
+  # the kept fit is already the best (the twins end higher): a covariance-stage twin leaves the kept statistic
+  fit2 <- tle_fit()
+  plain <- tle_with_twin_mock(fit2, function(i, r) r)$res
+  worse <- tle_with_twin_mock(fit2, function(i, r) r, vcov_fail = TRUE)$res
+  expect_false(worse$unresolved)
+  expect_false(worse$twin$unresolved)
+  expect_identical(unname(worse$statistic), unname(plain$statistic))
+  # a covariance-stage failure that carries no discrepancy has nothing to compare: skipped
+  st <- new.env()
+  st$calls <- 0L
+  res <- suppressWarnings(testthat::with_mocked_bindings(
+    twolevel_equal_indirect(fit, n_starts = 1),
+    .sem_fit_syntax = function(...) {
+      st$calls <- st$calls + 1L
+      tryCatch(real(...), medfit_sem_covariance_error = function(e) {
+        e$partial$f <- NULL
+        stop(e)
+      })
+    },
+    .sem_vcov = function(...) {
+      if (st$calls >= 2L) stop(.sem_covariance_diagnostic("information_not_pd", "injected twin"))
+      real_vcov(...)
+    }
+  ))
+  expect_false(res$unresolved)
+  expect_false(res$twin$unresolved)
+  # the statistic is the kept fit's, the one with the certificate disabled
+  off <- suppressWarnings(testthat::with_mocked_bindings(
+    twolevel_equal_indirect(fit, n_starts = 1), .tle_twin_certificate = function(r, ...) r
+  ))
+  expect_identical(unname(res$statistic), unname(off$statistic))
+})
+
+test_that("the twin element records what the certificate did, for resolved and unresolved results (#504)", {
+  # ordinary data: the kept fit is the best, nothing replaced
+  ord <- twolevel_equal_indirect(tle_fit(), n_starts = 1)
+  expect_named(ord$twin, c("tried", "replaced", "flipped", "f_gain", "unresolved"))
+  expect_true(ord$twin$tried)
+  expect_false(ord$twin$replaced)
+  expect_identical(ord$twin$flipped, character())
+  expect_identical(ord$twin$f_gain, 0)
+  expect_false(ord$twin$unresolved)
+  # a kept-worse-twin cell: the twin replaced the kept fit, and the gain is the discrepancy the statistic drops by
+  data <- tle_twin_cells[[1]]$data()
+  fit <- fit_sem(tle_twin_model, data, cluster = "cluster")
+  got <- suppressWarnings(twolevel_equal_indirect(fit, n_starts = 1))
+  testthat::local_mocked_bindings(.tle_twin_certificate = function(r, ...) r)
+  kept <- suppressWarnings(twolevel_equal_indirect(fit, n_starts = 1))
+  expect_true(got$twin$replaced)
+  expect_gt(length(got$twin$flipped), 0L)
+  expect_true(all(got$twin$flipped %in% c("within", "between")))
+  expect_gt(got$twin$f_gain, 0)
+  expect_equal(got$twin$f_gain * got$n_obs, unname(kept$statistic) - unname(got$statistic), tolerance = 1e-8)
+  # the certificate disabled: the record says nothing was tried, and the statistic is the kept fit's
+  expect_false(kept$twin$tried)
+  expect_false(kept$twin$replaced)
+})
+
+test_that("the twin element is present when the result is unresolved (#504)", {
+  # an inadmissible better twin (J = 15, n = 4, the q1 profile): unresolved, and the record says why
+  data <- tle_twin_data(1001, 15, 4, 0.5, 0.4, -0.4, 0.5)
+  fit <- suppressWarnings(fit_sem(tle_twin_model, data, cluster = "cluster"))
+  res <- suppressWarnings(twolevel_equal_indirect(fit, n_starts = 1))
+  tle_expect_unresolved(res)
+  expect_true(res$twin$unresolved)
+  expect_true(res$twin$tried)
+  expect_false(res$twin$replaced)
+  # the kept refit itself ends inadmissible: no certificate, the record is the empty one
+  fit2 <- tle_fit()
+  testthat::local_mocked_bindings(.sem_improper_ml2 = function(theta, tl) "negative variance: injected")
+  res2 <- suppressWarnings(twolevel_equal_indirect(fit2))
+  tle_expect_unresolved(res2)
+  expect_identical(res2$twin, list(tried = FALSE, replaced = FALSE, flipped = character(), f_gain = 0,
+                                   unresolved = FALSE))
+})
+
+test_that("the twin element does not change print() or the other elements (#504)", {
+  res <- twolevel_equal_indirect(tle_fit())
+  bare <- res
+  bare$twin <- NULL
+  expect_identical(utils::capture.output(print(res)), utils::capture.output(print(bare)))
+  expect_false(any(grepl("twin", utils::capture.output(print(res)), ignore.case = TRUE)))
+  expect_identical(setdiff(names(res), "twin"), setdiff(names(bare), "twin"))
 })
