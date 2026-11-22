@@ -145,6 +145,24 @@ test_that("a lavaan fit without an h1 estimate falls back to the model-implied I
   expect_equal(icc, .sem_twolevel_icc(implied[[1]]$cov, implied[[2]]$cov))
 })
 
+test_that("an all-NA lavInspect ICC falls back to the model-implied ICC with the classed warning (fault injection)", {
+  fit <- tln_fit_lavaan(tli_model, tl_data_unbalanced())
+  real_inspect <- lavaan::lavInspect
+  testthat::local_mocked_bindings(
+    lavInspect = function(object, what = "list", ...) {
+      if (identical(what, "icc")) {
+        return(stats::setNames(rep(NA_real_, 3L), c("M", "Y", "X")))
+      }
+      real_inspect(object, what, ...)
+    },
+    .package = "lavaan"
+  )
+  expect_warning(icc <- .twolevel_icc(fit), class = "medfit_warning_twolevel_icc_h1_unavailable")
+  implied <- real_inspect(fit, "implied")
+  expect_equal(icc, .sem_twolevel_icc(implied[[1]]$cov, implied[[2]]$cov))
+  expect_true(all(icc > 0))   # not the silent all-zero (within-only) vector
+})
+
 test_that("a saturated lavaan fit with a negative level-2 variance is identified under h1, within-only under implied", {
   d <- tli_sim(35L)
   fit <- tln_fit_lavaan(tli_model, d)
@@ -160,8 +178,8 @@ test_that("both routes make the same within-only call on the same data, and it d
   for (fx in tli_flip) {
     d <- tli_sim(fx$seed)
     nat_fit <- tli_native(d)
-    # the lavaan-route call is read from the tightened-EM fit: on lavaan's default stopping rule these fixtures sit within
-    # .002 to .003 of a cut (seeds 24 and 32), which a change in lavaan's EM could flip
+    # the lavaan-route call is read from the tightened-EM fit: on lavaan's default stopping rule these fixtures sit
+    # within .002 to .003 of a cut (seeds 24 and 32), which a change in lavaan's EM could flip
     lav_fit <- tli_lavaan_tight(tli_model_shared, d)
     nat <- tli_call(extract_mediation(nat_fit, treatment = "X", mediator = "M"))
     lav <- tli_call(extract_mediation(lav_fit, "X", "M"))
@@ -219,9 +237,9 @@ test_that("an h1 EM that does not converge warns with a classed condition and st
 })
 
 test_that("a parallel-mediator fit whose mediator has no between part is weak, not within-only, under h1", {
-  # tlp_fixture("low_icc_m2"): M2 has a negative level-2 variance (implied ICC 0, the pre-change within-only call);
+  # tlp_fixture("weak_icc_m2"): M2 has a negative level-2 variance (implied ICC 0, the pre-change within-only call);
   # its h1 ICC is about .013, inside the weak band [.01, .05). Every mediator is read, as before (D2).
-  fit <- tlp_fixture("low_icc_m2")
+  fit <- tlp_fixture("weak_icc_m2")
   icc <- .twolevel_icc(fit)
   expect_gte(icc[["M2"]], 0.01)
   expect_lt(icc[["M2"]], 0.05)

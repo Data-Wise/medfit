@@ -185,7 +185,8 @@
 .twolevel_icc <- function(fit) {
   implied <- lavaan::lavInspect(fit, "implied")
   icc <- tryCatch(lavaan::lavInspect(fit, "icc"), error = function(e) NULL)
-  if (!is.numeric(icc) || is.null(names(icc))) {
+  # an absent, unnamed or all-NA vector is no estimate (a partly non-finite one keeps the per-variable 0 convention)
+  if (!is.numeric(icc) || is.null(names(icc)) || !any(is.finite(icc))) {
     .twolevel_warn(
       paste0("The unrestricted (h1) ICC is not available from this fit (`h1 = FALSE`?); the within-only rule ",
              "uses the model-implied ICC instead."),

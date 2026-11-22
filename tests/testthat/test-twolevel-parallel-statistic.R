@@ -194,12 +194,10 @@ test_that("a refit whose mediator loses its between level is a failed replicate 
   fit <- tlp_fixture("base")
   stat <- twolevel_statistic(fit, "nie", treatment = "X", mediator = c("M1", "M2"), outcome = "Y",
                              level = "between")
-  # M2 without a between part: its ICC is below the floor, so the between total is not returned (the refit's h1 ICC of
-  # M2 is about .013 on this data, so the mock sets it below the floor, as the implied ICC put it before)
-  tlp_mock_low_icc_m2()
-  expect_true(is.na(suppressWarnings(stat(tlp_sim(m2_between = FALSE)))))
+  # M2 without a between part: its h1 ICC (.0025 on this data) is below the floor, so the between total is not returned
+  expect_true(is.na(suppressWarnings(stat(tlp_sim(m2_between = FALSE, seed = 76L)))))
   within <- twolevel_statistic(fit, "nie", treatment = "X", mediator = c("M1", "M2"), outcome = "Y")
-  expect_true(is.finite(suppressWarnings(within(tlp_sim(m2_between = FALSE)))))
+  expect_true(is.finite(suppressWarnings(within(tlp_sim(m2_between = FALSE, seed = 76L)))))
 })
 
 # --- Errors ---
@@ -259,7 +257,6 @@ test_that("a lavaan fit with several mediators needs the roles and follows the s
                                   level = "contrast", specific = "M1"),
                class = "medfit_error_twolevel_constrained")
   low <- tlp_fixture("low_icc_m2")
-  tlp_mock_low_icc_m2()
   expect_error(twolevel_statistic(low, "nie", treatment = "X", mediator = c("M1", "M2"), outcome = "Y",
                                   level = "between"),
                class = "medfit_between_unidentified")

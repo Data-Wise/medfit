@@ -57,7 +57,6 @@ test_that("k = 3 with a covariate: paths and the 14 x 14 vcov equal lavaan's, re
 
 test_that("D2 names the low-ICC mediator when the mediators are not passed in sorted order", {
   fit <- tlp_fixture("low_icc_m2")
-  tlp_mock_low_icc_m2()
   w <- tl_catch(extract_mediation(fit, "X", c("M2", "M1"), "Y"), "medfit_between_unidentified")
   expect_s3_class(w, "medfit_between_unidentified")
   expect_match(conditionMessage(w), "the ICC of the mediator 'M2'", fixed = TRUE)
@@ -75,7 +74,6 @@ test_that("D2 names the low-ICC mediator when the mediators are not passed in so
 })
 
 test_that("a within-only object has no contrast available for any mediator or the total", {
-  tlp_mock_low_icc_m2()
   td <- tlp_extract(tlp_fixture("low_icc_m2"))
   expect_false(td@between_identified)
   expect_identical(.twolevel_parallel_contrast_available(td), c(M1 = FALSE, M2 = FALSE, total = FALSE))
