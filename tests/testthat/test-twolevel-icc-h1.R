@@ -28,10 +28,15 @@ tli_smp <- function(data, w = c("M", "Y", "X"), z = character()) {
   .sem_sample_ml2(data, list(within = w, between = z), "cluster")
 }
 
-# lavaan with an EM stopping rule tight enough that its h1 is the maximum to about 1e-5 in the ICC.
+# lavaan with an EM stopping rule tight enough that its h1 is the maximum to about 1e-5 in the ICC. lavaan 0.7 takes
+# `em.h1.args`; 0.6 takes `em.h1.iter.max` and `em.h1.tol`.
 tli_lavaan_tight <- function(model, data) {
-  suppressWarnings(lavaan::sem(model, data, cluster = "cluster", fixed.x = FALSE,
-                               em.h1.args = list(tol = 1e-10, max_iter = 100000L)))
+  args <- if ("em.h1.args" %in% names(lavaan::lavOptions())) {
+    list(em.h1.args = list(tol = 1e-10, max_iter = 100000L))
+  } else {
+    list(em.h1.tol = 1e-10, em.h1.iter.max = 100000L)
+  }
+  suppressWarnings(do.call(lavaan::sem, c(list(model, data, cluster = "cluster", fixed.x = FALSE), args)))
 }
 
 # The rule's three outcomes as the adapter reports them: a classed warning for within-only and for weak, none otherwise.
@@ -155,7 +160,9 @@ test_that("both routes make the same within-only call on the same data, and it d
   for (fx in tli_flip) {
     d <- tli_sim(fx$seed)
     nat_fit <- tli_native(d)
-    lav_fit <- tln_fit_lavaan(tli_model_shared, d)
+    # the lavaan-route call is read from the tightened-EM fit: on lavaan's default stopping rule these fixtures sit within
+    # .002 to .003 of a cut (seeds 24 and 32), which a change in lavaan's EM could flip
+    lav_fit <- tli_lavaan_tight(tli_model_shared, d)
     nat <- tli_call(extract_mediation(nat_fit, treatment = "X", mediator = "M"))
     lav <- tli_call(extract_mediation(lav_fit, "X", "M"))
     label <- paste("seed", fx$seed)
@@ -164,12 +171,12 @@ test_that("both routes make the same within-only call on the same data, and it d
     # the fixture separates the sources: the model-implied ICC of the same native fit makes the other call
     mom <- .sem_twolevel_implied(nat_fit@internals$ram, unname(nat_fit@theta))
     expect_identical(tli_call_from_icc(.sem_twolevel_icc(mom$sigma_w, mom$sigma_b)), fx$implied, label = label)
-    # and the native ICC is the h1 one: the object's own ICCs track lavaan's h1 ICCs to the lavaan EM tolerance (the
-    # fixtures sit on the boundary, where lavaan's default stops about 5e-3 short)
-    lav_h1 <- lavaan::lavInspect(lav_fit, "icc")
-    expect_lt(max(abs(nat$value@icc[names(lav_h1)] - lav_h1)), 1e-2, label = label)
-    lav_tight <- lavaan::lavInspect(tli_lavaan_tight(tli_model_shared, d), "icc")
+    # and the native ICC is the h1 one: the object's own ICCs track lavaan's tightened h1 ICCs to 1e-4, and the default
+    # lavaan fit to 1e-2 (the fixtures sit on the boundary, where lavaan's default stops about 5e-3 short)
+    lav_tight <- lavaan::lavInspect(lav_fit, "icc")
     expect_lt(max(abs(nat$value@icc[names(lav_tight)] - lav_tight)), 1e-4, label = label)
+    lav_default <- lavaan::lavInspect(tln_fit_lavaan(tli_model_shared, d), "icc")
+    expect_lt(max(abs(nat$value@icc[names(lav_default)] - lav_default)), 1e-2, label = label)
   }
 })
 
@@ -198,6 +205,17 @@ test_that("the h1 moments return NULL, and the native ICC falls back with a warn
   expect_warning(icc <- .sem_twolevel_h1_icc(fit), class = "medfit_warning_twolevel_icc_h1_unavailable")
   mom <- .sem_twolevel_implied(fit@internals$ram, unname(fit@theta))
   expect_equal(icc, .sem_twolevel_icc(mom$sigma_w, mom$sigma_b))
+})
+
+test_that("an h1 EM that does not converge warns with a classed condition and still returns its last iterate", {
+  fit <- tli_native(tli_sim(32L))
+  real <- .sem_twolevel_h1_moments
+  testthat::local_mocked_bindings(
+    .sem_twolevel_h1_moments = function(smp, ...) real(smp, max_iter = 1L),
+    .package = "medfit"
+  )
+  expect_warning(icc <- .sem_twolevel_h1_icc(fit), class = "medfit_warning_twolevel_icc_h1_unconverged")
+  expect_setequal(names(icc), c("M", "Y", "X"))
 })
 
 test_that("a parallel-mediator fit whose mediator has no between part is weak, not within-only, under h1", {

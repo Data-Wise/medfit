@@ -152,5 +152,12 @@
     mom <- .sem_twolevel_implied(ram, unname(object@theta))
     return(.sem_twolevel_icc(mom$sigma_w, mom$sigma_b))
   }
+  if (!isTRUE(h1$converged)) {
+    .twolevel_warn(
+      sprintf(paste0("The unrestricted (h1) EM did not converge in %d iterations; the within-only rule uses its last ",
+                     "iterate, so an ICC near a cut (0.01, 0.05) may be on the wrong side."), h1$iter),
+      "medfit_warning_twolevel_icc_h1_unconverged"
+    )
+  }
   .sem_twolevel_icc(h1$sigma_w, h1$sigma_b)
 }
