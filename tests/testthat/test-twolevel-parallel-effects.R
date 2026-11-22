@@ -183,6 +183,7 @@ test_that("the hand gradient matches the package SE on a diagonal vcov", {
 # --- O5: within-only (D2) ---
 
 test_that("within-only fit: between effects and contrasts NA with medfit_between_unidentified", {
+  tlp_mock_low_icc_m2()
   td <- tlp_extract(tlp_fixture("low_icc_m2"))
   expect_false(td@between_identified)
   w <- tl_catch(nie(td, level = "between"), "medfit_between_unidentified")
@@ -257,9 +258,10 @@ test_that("summary() of a within-only object warns as k = 1 does (QA loop 1)", {
     cls
   }
   k1 <- warn_classes(summary(tl_td(within_only = TRUE)))
+  tlp_mock_low_icc_m2()
   td <- suppressWarnings(tlp_extract(tlp_fixture("low_icc_m2")))
   expect_false(td@between_identified)
-  k2 <- warn_classes(summary(td))
+  k2 <-warn_classes(summary(td))
   expect_identical(k2, k1)
   # the NA rows are still there: between and contrast effects are NA
   s <- summary(td)

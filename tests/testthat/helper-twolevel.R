@@ -291,7 +291,9 @@ tlp_fixture <- function(name = "base") {
       equal_row_a1 = tl_fit(tlp_sim(), tlp_model(extra = "  a1 == a1B\n")),
       # M1's b equated algebraically (lavaan keeps two parameters): the numeric detector only
       nl_b1 = tl_fit(tlp_sim(), tlp_model(extra = "  b1^2 - b1B^2 == 0\n")),
-      # M2 has no between part (ICC near 0): a real within-only fit (D2)
+      # M2 has no between part (a negative level-2 variance, so the model-implied ICC is 0); its h1 ICC is about
+      # .013, a weak (not within-only) call since the ICC source became h1 (2026-11-22). Tests of the within-only
+      # branch call tlp_mock_low_icc_m2() so M2 sits below the floor, as the implied ICC put it before
       low_icc_m2 = tl_fit(tlp_sim(m2_between = FALSE), tlp_model()),
       serial_within = tl_fit(tlp_sim(), sub("M2 ~ a2*X", "M2 ~ a2*X + d*M1", tlp_model(), fixed = TRUE)),
       serial_between = tl_fit(tlp_sim(), sub("M2 ~ a2B*X", "M2 ~ a2B*X + dB*M1", tlp_model(), fixed = TRUE)),
@@ -402,6 +404,22 @@ tl_mock_tiny_mediator_icc <- function(wrap = identity) {
       icc <- real(fit)
       icc[["M"]] <- 0.001
       wrap(icc)
+    },
+    .package = "medfit",
+    .env = parent.frame()
+  )
+}
+
+# The `low_icc_m2` fit with M2's ICC below the floor: the h1 ICC of a mediator with no between part is usually above
+# 0.01 (the saturated estimate does not see the negative level-2 variance), so the within-only branch is exercised on
+# the same fit by replacing M2's ICC, as `tl_mock_tiny_mediator_icc()` does for the one-mediator fit.
+tlp_mock_low_icc_m2 <- function() {
+  real <- medfit:::.twolevel_icc
+  testthat::local_mocked_bindings(
+    .twolevel_icc = function(fit) {
+      icc <- real(fit)
+      icc[["M2"]] <- 0.001
+      icc
     },
     .package = "medfit",
     .env = parent.frame()

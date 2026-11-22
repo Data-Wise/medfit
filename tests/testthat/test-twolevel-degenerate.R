@@ -88,11 +88,11 @@ test_that("the ICC band edges follow the options", {
   )
 })
 
-test_that("ICCs are reported for X, M and Y from the implied moments", {
+test_that("ICCs are reported for X, M and Y from the unrestricted (h1) estimate", {
+  # the source changed from the model-implied moments to lavaan's h1 ICC on 2026-11-22 (T5 memo, S4)
   fit <- tl_fixture("base")
   td <- tl_extract(fit)
-  imp <- lavaan::lavInspect(fit, "implied")
-  want <- diag(imp[[2]]$cov) / (diag(imp[[2]]$cov) + diag(imp[[1]]$cov))
+  want <- lavaan::lavInspect(fit, "icc")
   expect_equal(td@icc[c("X", "M", "Y")], want[c("X", "M", "Y")], tolerance = 1e-10)
 })
 

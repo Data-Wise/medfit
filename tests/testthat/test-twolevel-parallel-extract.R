@@ -93,8 +93,9 @@ test_that("D2: a low ICC in any mediator (not only the first) makes the object w
   }
 })
 
-test_that("D2 on a real fit: a mediator with no between variance gives a within-only object", {
+test_that("D2 on a real fit: a mediator below the ICC floor gives a within-only object", {
   fit <- tlp_fixture("low_icc_m2")
+  tlp_mock_low_icc_m2()   # the h1 ICC of M2 on this fit is about .013, so M2 is set below the floor
   expect_lt(.twolevel_icc(fit)[["M2"]], 0.01)
   expect_gt(.twolevel_icc(fit)[["M1"]], 0.05)
   w <- tl_catch(extract_mediation(fit, "X", c("M1", "M2"), "Y"), "medfit_between_unidentified")

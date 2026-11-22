@@ -238,7 +238,7 @@ S7::method(extract_mediation, SEMFit) <- function(object, treatment, mediator, .
 # engine's fit. The ledger is read first: an inadmissible level refuses the fit whatever `@converged` says, and a
 # ledger that does not describe this fit is `medfit_error_ledger`. The parameter table takes the adapter's shape, each
 # row keyed by its free-parameter index (`par_map`; a label shared across levels is one index), so the 6x6 block of
-# `@vcov` is read by position, never by name; the ICCs come from the engine's implied moments.
+# `@vcov` is read by position, never by name; the ICCs are the h1 (unrestricted) ones.
 .sem_extract_twolevel <- function(object, treatment, mediator, args) {
   ledger <- object@diagnostics$ledger
   states <- vapply(ledger$admissibility, function(l) as.character(l$state)[1L], "")
@@ -280,9 +280,8 @@ S7::method(extract_mediation, SEMFit) <- function(object, treatment, mediator, .
   V6 <- .twolevel_subvcov(object@vcov, key)
   converged <- isTRUE(object@converged)
   .twolevel_check_within(key, V6, converged)
-  mom <- .sem_twolevel_implied(object@internals$ram, unname(object@theta))
   ident <- .twolevel_identification(NULL, treatment, mediator, outcome, converged, V6,
-                                    icc = .sem_twolevel_icc(mom$sigma_w, mom$sigma_b))
+                                    icc = .sem_twolevel_h1_icc(object))
   ids <- object@internals$cluster_ids
   sizes <- as.integer(table(factor(ids, levels = unique(ids))))
   version <- as.character(utils::packageVersion("medfit"))
@@ -300,8 +299,9 @@ S7::method(extract_mediation, SEMFit) <- function(object, treatment, mediator, .
   )
 }
 
-# ICC per variable from the implied within and between covariances (a lavaan fit's through `.twolevel_icc()`): a
-# variable absent at a level has variance 0 there, and a non-finite ratio is 0 (clamped to [0, 1]).
+# ICC per variable from a within and a between covariance (the unrestricted h1 pair, `.sem_twolevel_h1_icc()`; the
+# model-implied pair only as the fallback): a variable absent at a level has variance 0 there, and a non-finite ratio
+# is 0 (clamped to [0, 1]).
 .sem_twolevel_icc <- function(w, b) {
   vars <- union(rownames(w), rownames(b))
   icc <- vapply(vars, function(v) {
