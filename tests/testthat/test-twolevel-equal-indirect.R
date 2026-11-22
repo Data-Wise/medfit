@@ -871,3 +871,33 @@ test_that("twin$flipped lists whole-pair sign changes and marks any other sign c
   expect_identical(flipped(c("a_w", "b_w", "a_b"))$flipped, c("within", "other"))
   expect_true(flipped("a_b")$replaced)
 })
+
+test_that("replaced is an explicit flag: a same-sign adoption is replaced with an empty flipped; a tie is not (#504)", {
+  fit <- tle_fit()
+  kept_f <- NULL
+  lower_by <- function(delta, nm = character()) {
+    function(i, r) {
+      if (i == 1L) {
+        kept_f <<- r$f
+      } else {
+        r$f <- kept_f - delta
+        r$theta[match(nm, r$ram$par_names)] <- -r$theta[match(nm, r$ram$par_names)]
+      }
+      r
+    }
+  }
+  # same signs as the kept fit, discrepancy lower by 1e-5 (above the spread tolerance): adopted, nothing flipped
+  same <- tle_with_twin_mock(fit, lower_by(1e-5))$res
+  expect_true(same$twin$replaced)
+  expect_identical(same$twin$flipped, character())
+  expect_equal(same$twin$f_gain, 1e-5, tolerance = 1e-9)
+  # lower by 1e-9 (a numerical tie, below the tolerance): not adopted, record empty, statistic is the kept fit's
+  tie <- tle_with_twin_mock(fit, lower_by(1e-9, c("a_w", "b_w")))$res
+  expect_false(tie$twin$replaced)
+  expect_identical(tie$twin$flipped, character())
+  expect_identical(tie$twin$f_gain, 0)
+  expect_identical(unname(tie$statistic), unname(fit@n_obs * (kept_f - fit@f)))
+  # two separate partial sign changes give one "other", not one per path
+  two <- tle_with_twin_mock(fit, lower_by(1e-5, c("a_w", "a_b")))$res
+  expect_identical(two$twin$flipped, "other")
+})
