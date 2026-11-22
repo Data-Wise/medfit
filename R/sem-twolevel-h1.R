@@ -16,7 +16,8 @@
 # lavaan's EM (`lav_mvn_cl_em_sat()`, identity start) approaches; lavaan stops when its step criterion drops below
 # `em.h1.args$tol` (1e-4 by default), so the two ICCs agree to the size of that stopping rule (about 1e-4 in the
 # interior, a few 1e-3 or more near a zero level-2 variance), not to machine precision. Tightening lavaan's `tol` to
-# 1e-10 brings the gap to about 1e-5.
+# 1e-10 together with `max_iter = 100000L` brings the gap to about 1e-5 (the tolerance alone can stop at the default
+# iteration cap).
 # The closed form for balanced clusters (Sigma_W = SSW / (N - J), Sigma_B = S_B - Sigma_W / n) is the same maximum
 # whenever that Sigma_B is positive definite; it is not used here because it gives an indefinite Sigma_B (a negative
 # ICC) exactly where the unrestricted maximum sits on the boundary.
