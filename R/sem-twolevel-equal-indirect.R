@@ -36,8 +36,25 @@
 #' between pair \eqn{(a_b, b_b)}{(a_b, b_b)} or both leaves the equality satisfied, at a worse likelihood. The
 #' optimizer's "the starts disagree" warning is not raised when every disagreeing accepted start is such a twin of the
 #' kept fit; the lowest-discrepancy start is kept. Any other disagreement among the starts, and every other
-#' optimizer warning, is signaled as usual. With `n_starts = 1` no second start is compared, so a worse twin can be
-#' kept without a warning; use `n_starts` of 2 or more.
+#' optimizer warning, is signaled as usual.
+#'
+#' After the refit the pair-sign twins of the kept fit are tried as well (a twin certificate): each flip of a pair
+#' with no zero is fitted once from the kept estimates with that flip, and the lowest discrepancy is kept. It is a local
+#' search of up to three single-start solves, not a proof of a global optimum: a twin refit that fails is skipped, and
+#' the search runs at every `n_starts`, so a worse twin is not kept with `n_starts = 1`, where no second start is
+#' compared. It changes the statistic only when a twin ends lower. A twin that ends at an inadmissible solution (a
+#' level-2 variance on its boundary) or with a covariance matrix that is not positive definite, below the kept
+#' discrepancy, makes the result unresolved, as it does with more starts. When the better optimum has a level-2
+#' variance on its boundary the result is therefore unresolved or, with `n_starts = 1` in very small samples (about 12
+#' clusters), a non-global optimum, as before the certificate.
+#' The row allows eight sign patterns; flipping pairs together reaches the four of the kept fit's orbit. The other
+#' orbit does hold local optima: a per-elimination oracle found local optima in both orbits in 30 of 35 small cells
+#' (closest gap 0.02 LR). The kept orbit still won every time that was tested (no win from the other orbit in 84 stress
+#' cells, 114 QA cells with an all-orthant oracle and 715 constrained fits from signed starts), so the coverage of the
+#' other orbit rests on the free-fit-pattern and all-positive default starts: evidence, not a proof. The pair flip is
+#' a symmetry of the constraint, not of the likelihood, so the twins are separate local optima. Cost: a call takes
+#' about 3 to 4 times as long at `n_starts = 1`, about twice at the default and about 1.3 times at 30 starts; a
+#' bootstrap replicate costs about 2.5 times the engine fits.
 #'
 #' The guard admits the equality of any two a-then-b chains with the same x, m and y at levels 1 and 2, so a serial
 #' `a*d` or `d*b` chain of the same shape is admitted too; only the `a*b` indirect effect of a single mediator has an
@@ -53,8 +70,15 @@
 #' @return An object of class `c("twolevel_equal_indirect", "htest")`: `statistic` (`LR`, the scale of
 #'   [mbco_sem()]), `parameter` (`df = 1`), `p.value` (chi-square(1)), `method`, `data.name`, `n_obs`,
 #'   `n_clusters`, `level` (`c("within", "between")`), `indirect` (the two indirect effects of the free fit and of the
-#'   constrained fit), `unresolved`, `note`, `near_singular`, and `boot` (`NULL`, or a list with `statistic`,
-#'   `p.value`, `n_boot`, `n_valid` and `n_dropped` when `n_boot > 0`).
+#'   constrained fit), `unresolved`, `note`, `near_singular`, `twin`, and `boot` (`NULL`, or a list with `statistic`,
+#'   `p.value`, `n_boot`, `n_valid` and `n_dropped` when `n_boot > 0`). `twin` records what the twin certificate did,
+#'   for resolved and unresolved results: `tried` (a twin refit was attempted), `replaced` (a twin replaced the kept
+#'   fit), `flipped` (read from the signs of the adopted fit's four path estimates against the kept fit's, not from
+#'   the start that produced it: `"within"` or `"between"` when both paths of that pair changed sign, `"other"` once
+#'   for any other sign change, including a path that reaches or leaves zero, and empty when no sign changed, as when
+#'   the twin is another optimum in the kept fit's sign pattern), `f_gain` (the kept discrepancy minus the adopted
+#'   one, 0 if none; the statistic drops by `n_obs * f_gain`) and `unresolved` (a better inadmissible or
+#'   covariance-stage twin made the result unresolved). `print()` does not show it.
 #'
 #' @examples
 #' \donttest{
@@ -180,12 +204,13 @@ twolevel_equal_indirect <- function(object, a_within = "a_w", b_within = "b_w", 
       unresolved = unresolved,
       note = note,
       near_singular = near_singular,
+      twin = res$twin,
       boot = NULL
     ),
     class = c("twolevel_equal_indirect", "htest")
   )
   if (n_boot > 0L && !unresolved) {
-    out$boot <- .tle_bootstrap(fit, res$fit, con, n_starts, control, as.integer(n_boot), seed, stat)
+    out$boot <- .tle_bootstrap(fit, res$fit, con, n_starts, control, as.integer(n_boot), seed, stat, twin_paths = paths)
   }
   out
 }
@@ -239,14 +264,152 @@ print.twolevel_equal_indirect <- function(x, ...) {
       invokeRestart("muffleWarning")
     }
   )
-  twins <- !inherits(r, "error") && !is.null(twin_paths) &&
+  .tle_resignal(held, r, twin_paths)
+  # the twin certificate (#504): one start from each pair-sign twin of the kept optimum, so a worse twin is not kept
+  # even when no start visited the better one (`n_starts = 1`); a better twin replaces the kept fit
+  twin <- .tle_twin_record()
+  if (!inherits(r, "error") && !is.null(twin_paths)) {
+    r <- .tle_twin_certificate(r, parsed, syntax, refit_data, fit, control, cluster, twin_paths)
+    twin <- attr(r, "twin") %||% twin
+    attr(r, "twin") <- NULL
+  }
+  res <- .tle_resolve_null(r, con)
+  res$twin <- twin
+  res
+}
+
+# What the twin certificate did (the `twin` element of the result): `tried` is whether a twin refit was attempted,
+# `replaced` whether a twin replaced the kept fit, `flipped` the pairs ("within", "between") that twin flipped, `f_gain`
+# the kept discrepancy minus the adopted one (0 when none), `unresolved` whether a better inadmissible or
+# covariance-stage twin made the result unresolved.
+.tle_twin_record <- function(tried = FALSE, replaced = FALSE, flipped = character(), f_gain = 0, unresolved = FALSE) {
+  list(tried = tried, replaced = replaced, flipped = flipped, f_gain = f_gain, unresolved = unresolved)
+}
+
+# The discrepancy of a twin refit that ended in an error the result treats as unresolved (an inadmissible solution or a
+# covariance that is not positive definite): the condition carries the fit, so a better one can be told from a worse
+# one. NULL for any other error (a refit that did not converge has no discrepancy to compare).
+.tle_twin_error_f <- function(e) {
+  if (inherits(e, "medfit_error_twolevel_inadmissible")) {
+    e$fit$f
+  } else if (inherits(e, "medfit_sem_covariance_error")) {
+    e$partial$f
+  }
+}
+
+# Signals the held warnings of the fit `r` again, unchanged, except the optimizer's "starts disagree" warning when every
+# disagreeing accepted start of `r` is a sign twin of its kept optimum (#504, `.tle_twin_explained()`).
+.tle_resignal <- function(held, r, twin_paths) {
+  explained <- !inherits(r, "error") && !is.null(twin_paths) &&
     .tle_twin_explained(r$attempts, unname(r$theta), r$f, match(twin_paths, r$ram$par_names))
   for (w in held) {
-    if (!(twins && grepl("^the starts disagree", conditionMessage(w)))) {
+    if (!(explained && grepl("^the starts disagree", conditionMessage(w)))) {
       warning(w)
     }
   }
-  .tle_resolve_null(r, con)
+}
+
+# The twin certificate of the constrained refit `r` (#504): the pair-sign twins of the kept optimum (each level's pair
+# (a, b) flipped together, as `.tle_twin_explained()` defines a twin; a pair with a zero is not flipped) are each fitted
+# once, from the kept estimates with that flip, and the lowest discrepancy is kept. The twins share the row
+# a_w*b_w == a_b*b_b with the kept optimum, so a twin that ends lower is a better optimum of the same constrained
+# model. It is a local search of up to three single-start solves, not a proof of a global optimum. A twin refit that
+# errors or does not converge is skipped; a twin that does not beat the kept discrepancy by more than the spread
+# tolerance leaves the kept fit unchanged, so the statistic is unchanged wherever the kept fit was already the best.
+# A twin that ends inadmissible (a boundary variance) or with a covariance that is not positive definite, at a
+# discrepancy below the best accepted fit, makes the refit unresolved, as such a start does with more starts: its
+# condition is returned in place of a fit. The returned object carries the record of what was done (attribute `twin`).
+# The warnings of an adopted twin are signalled through the same twin filter as the kept fit's; those of a rejected
+# twin are dropped.
+# The start is the kept estimates of the rows the user wrote (regressions and any written covariance or intercept); the
+# engine's default start is kept for the rows it completes (variances, level-2 means).
+.tle_twin_certificate <- function(r, parsed, syntax, data, fit, control, cluster, twin_paths) {
+  idx <- match(twin_paths, r$ram$par_names)
+  theta <- unname(r$theta)
+  if (anyNA(idx) || length(idx) != 4L) {
+    attr(r, "twin") <- .tle_twin_record()
+    return(r)
+  }
+  pairs <- Filter(function(p) all(theta[p] != 0), list(within = idx[1:2], between = idx[3:4]))
+  best <- r
+  best_w <- list()
+  replaced <- FALSE
+  bad <- NULL
+  bad_f <- Inf
+  tried <- FALSE
+  for (mask in seq_len(2L^length(pairs) - 1L)) {
+    pick <- bitwAnd(mask, 2L^(seq_along(pairs) - 1L)) > 0L
+    flip <- unlist(pairs[pick], use.names = FALSE)
+    start <- theta
+    start[flip] <- -start[flip]
+    held <- list()
+    tried <- TRUE
+    twin <- withCallingHandlers(
+      tryCatch(
+        .sem_fit_syntax(syntax, data, fit@information, n_starts = 1L, control = control, se_type = "model",
+                        parsed = .tle_start_parsed(parsed, r, start), meanstructure = TRUE, fixed_x = FALSE,
+                        factors = fit@internals$factors, cluster = cluster),
+        error = function(e) e
+      ),
+      warning = function(w) {
+        held[[length(held) + 1L]] <<- w
+        invokeRestart("muffleWarning")
+      }
+    )
+    if (inherits(twin, "error")) {
+      f_bad <- .tle_twin_error_f(twin)
+      if (!is.null(f_bad) && f_bad < bad_f) {
+        bad <- twin
+        bad_f <- f_bad
+      }
+    } else if (twin$f < best$f - .sem_spread_tol) {
+      best <- twin
+      best_w <- held
+      replaced <- TRUE
+    }
+  }
+  if (!is.null(bad) && bad_f < best$f - .sem_spread_tol) {
+    attr(bad, "twin") <- .tle_twin_record(tried = TRUE, unresolved = TRUE)
+    return(bad)
+  }
+  .tle_resignal(best_w, best, twin_paths)
+  flipped <- if (replaced) {
+    .tle_flipped(theta[idx], unname(best$theta)[match(twin_paths, best$ram$par_names)])
+  } else {
+    character()
+  }
+  attr(best, "twin") <- .tle_twin_record(tried = tried, replaced = replaced, flipped = flipped, f_gain = r$f - best$f)
+  best
+}
+
+# The sign changes between the kept fit and the adopted twin at the four path estimates `kept` and `adopted` (a_within,
+# b_within, a_between, b_between), read from the fits and not from the start that produced the twin (a start with one
+# pair flipped can end at the other pair's twin): "within" or "between" when both elements of that pair changed sign,
+# and "other" once when an element changed sign (or reached or left zero) outside a whole-pair flip. Empty when the
+# signs are the same (the twin is another optimum in the kept fit's orthant).
+.tle_flipped <- function(kept, adopted) {
+  changed <- sign(kept) != sign(adopted)
+  whole <- c(within = all(changed[1:2]), between = all(changed[3:4]))
+  partial <- c(changed[1:2], changed[3:4])[!rep(whole, each = 2L)]
+  c(names(whole)[whole], if (any(partial)) "other")
+}
+
+# `parsed` with the start value of every row the user wrote set to the matching entry of `start` (a theta vector of the
+# fit `r`): the rows are matched by lhs, op, rhs and level, a covariance in either order. Rows are never added, so the
+# completed model is the one `parsed` already describes; a fixed row keeps its value.
+.tle_start_parsed <- function(parsed, r, start) {
+  p <- parsed$parameters
+  key <- function(lhs, op, rhs, level) {
+    paste(ifelse(op == "~~" & lhs > rhs, rhs, lhs), op, ifelse(op == "~~" & lhs > rhs, lhs, rhs), level)
+  }
+  tab <- r$table
+  tab_key <- key(tab$lhs, tab$op, tab$rhs, tab$level)
+  hit <- match(key(p$lhs, p$op, p$rhs, p$level), tab_key)
+  ok <- !is.na(hit) & is.na(p$fixed)
+  ok[ok] <- !is.na(r$par_map[hit[ok]])
+  p$start[ok] <- start[r$par_map[hit[ok]]]
+  parsed$parameters <- p
+  parsed
 }
 
 # Whether every accepted start that missed the kept optimum (discrepancy `f`, estimate `theta`) is a sign twin of it
@@ -311,7 +474,7 @@ print.twolevel_equal_indirect <- function(x, ...) {
 
 # Parametric bootstrap of the statistic: clustered data of the same sizes drawn from the constrained fit, both models
 # refitted. A replication whose free or constrained fit does not resolve is dropped and counted in `n_valid`.
-.tle_bootstrap <- function(fit, null_fit, con, n_starts, control, n_boot, seed, observed) {
+.tle_bootstrap <- function(fit, null_fit, con, n_starts, control, n_boot, seed, observed, twin_paths = NULL) {
   cluster <- fit@internals$cluster
   tl <- null_fit$ram
   mom <- .sem_twolevel_implied(tl, unname(null_fit$theta))
@@ -336,8 +499,10 @@ print.twolevel_equal_indirect <- function(x, ...) {
     if (is.null(free)) {
       return(NA_real_)
     }
-    res <- tryCatch(suppressWarnings(suppressMessages(.tle_refit(free, con, n_starts, control))),
-                    error = function(e) list(failure = "error"))
+    res <- tryCatch(
+      suppressWarnings(suppressMessages(.tle_refit(free, con, n_starts, control, twin_paths = twin_paths))),
+      error = function(e) list(failure = "error")
+    )
     if (!is.null(res$failure)) {
       return(NA_real_)
     }

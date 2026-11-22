@@ -38,8 +38,15 @@ clusters, where the between-level asymptotics are poor.}
 An object of class \code{c("twolevel_equal_indirect", "htest")}: \code{statistic} (\code{LR}, the scale of
 \code{\link[=mbco_sem]{mbco_sem()}}), \code{parameter} (\code{df = 1}), \code{p.value} (chi-square(1)), \code{method}, \code{data.name}, \code{n_obs},
 \code{n_clusters}, \code{level} (\code{c("within", "between")}), \code{indirect} (the two indirect effects of the free fit and of the
-constrained fit), \code{unresolved}, \code{note}, \code{near_singular}, and \code{boot} (\code{NULL}, or a list with \code{statistic},
-\code{p.value}, \code{n_boot}, \code{n_valid} and \code{n_dropped} when \code{n_boot > 0}).
+constrained fit), \code{unresolved}, \code{note}, \code{near_singular}, \code{twin}, and \code{boot} (\code{NULL}, or a list with \code{statistic},
+\code{p.value}, \code{n_boot}, \code{n_valid} and \code{n_dropped} when \code{n_boot > 0}). \code{twin} records what the twin certificate did,
+for resolved and unresolved results: \code{tried} (a twin refit was attempted), \code{replaced} (a twin replaced the kept
+fit), \code{flipped} (read from the signs of the adopted fit's four path estimates against the kept fit's, not from
+the start that produced it: \code{"within"} or \code{"between"} when both paths of that pair changed sign, \code{"other"} once
+for any other sign change, including a path that reaches or leaves zero, and empty when no sign changed, as when
+the twin is another optimum in the kept fit's sign pattern), \code{f_gain} (the kept discrepancy minus the adopted
+one, 0 if none; the statistic drops by \code{n_obs * f_gain}) and \code{unresolved} (a better inadmissible or
+covariance-stage twin made the result unresolved). \code{print()} does not show it.
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
@@ -61,8 +68,25 @@ The constrained surface has sign twins: flipping the signs of the within pair \e
 between pair \eqn{(a_b, b_b)}{(a_b, b_b)} or both leaves the equality satisfied, at a worse likelihood. The
 optimizer's "the starts disagree" warning is not raised when every disagreeing accepted start is such a twin of the
 kept fit; the lowest-discrepancy start is kept. Any other disagreement among the starts, and every other
-optimizer warning, is signaled as usual. With \code{n_starts = 1} no second start is compared, so a worse twin can be
-kept without a warning; use \code{n_starts} of 2 or more.
+optimizer warning, is signaled as usual.
+
+After the refit the pair-sign twins of the kept fit are tried as well (a twin certificate): each flip of a pair
+with no zero is fitted once from the kept estimates with that flip, and the lowest discrepancy is kept. It is a local
+search of up to three single-start solves, not a proof of a global optimum: a twin refit that fails is skipped, and
+the search runs at every \code{n_starts}, so a worse twin is not kept with \code{n_starts = 1}, where no second start is
+compared. It changes the statistic only when a twin ends lower. A twin that ends at an inadmissible solution (a
+level-2 variance on its boundary) or with a covariance matrix that is not positive definite, below the kept
+discrepancy, makes the result unresolved, as it does with more starts. When the better optimum has a level-2
+variance on its boundary the result is therefore unresolved or, with \code{n_starts = 1} in very small samples (about 12
+clusters), a non-global optimum, as before the certificate.
+The row allows eight sign patterns; flipping pairs together reaches the four of the kept fit's orbit. The other
+orbit does hold local optima: a per-elimination oracle found local optima in both orbits in 30 of 35 small cells
+(closest gap 0.02 LR). The kept orbit still won every time that was tested (no win from the other orbit in 84 stress
+cells, 114 QA cells with an all-orthant oracle and 715 constrained fits from signed starts), so the coverage of the
+other orbit rests on the free-fit-pattern and all-positive default starts: evidence, not a proof. The pair flip is
+a symmetry of the constraint, not of the likelihood, so the twins are separate local optima. Cost: a call takes
+about 3 to 4 times as long at \code{n_starts = 1}, about twice at the default and about 1.3 times at 30 starts; a
+bootstrap replicate costs about 2.5 times the engine fits.
 
 The guard admits the equality of any two a-then-b chains with the same x, m and y at levels 1 and 2, so a serial
 \code{a*d} or \code{d*b} chain of the same shape is admitted too; only the \code{a*b} indirect effect of a single mediator has an
