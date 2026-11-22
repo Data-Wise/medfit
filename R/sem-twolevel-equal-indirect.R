@@ -74,11 +74,11 @@
 #'   `p.value`, `n_boot`, `n_valid` and `n_dropped` when `n_boot > 0`). `twin` records what the twin certificate did,
 #'   for resolved and unresolved results: `tried` (a twin refit was attempted), `replaced` (a twin replaced the kept
 #'   fit), `flipped` (read from the signs of the adopted fit's four path estimates against the kept fit's, not from
-#'   the start that produced it: `"within"` or `"between"` when both paths of that pair changed sign, and `"other"` once
-#'   when a path changed sign outside a whole-pair flip; empty if none, as when the twin is another optimum in the
-#'   kept fit's sign pattern), `f_gain` (the kept
-#'   discrepancy minus the adopted one, 0 if none; the statistic drops by `n_obs * f_gain`) and `unresolved` (a better
-#'   inadmissible or covariance-stage twin made the result unresolved). `print()` does not show it.
+#'   the start that produced it: `"within"` or `"between"` when both paths of that pair changed sign, `"other"` once
+#'   for any other sign change, including a path that reaches or leaves zero, and empty when no sign changed, as when
+#'   the twin is another optimum in the kept fit's sign pattern), `f_gain` (the kept discrepancy minus the adopted
+#'   one, 0 if none; the statistic drops by `n_obs * f_gain`) and `unresolved` (a better inadmissible or
+#'   covariance-stage twin made the result unresolved). `print()` does not show it.
 #'
 #' @examples
 #' \donttest{
