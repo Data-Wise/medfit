@@ -73,7 +73,10 @@
 #'   constrained fit), `unresolved`, `note`, `near_singular`, `twin`, and `boot` (`NULL`, or a list with `statistic`,
 #'   `p.value`, `n_boot`, `n_valid` and `n_dropped` when `n_boot > 0`). `twin` records what the twin certificate did,
 #'   for resolved and unresolved results: `tried` (a twin refit was attempted), `replaced` (a twin replaced the kept
-#'   fit), `flipped` (the pairs, `"within"` and `"between"`, that twin flipped; empty if none), `f_gain` (the kept
+#'   fit), `flipped` (read from the signs of the adopted fit's four path estimates against the kept fit's, not from
+#'   the start that produced it: `"within"` or `"between"` when both paths of that pair changed sign, and `"other"` once
+#'   when a path changed sign outside a whole-pair flip; empty if none, as when the twin is another optimum in the
+#'   kept fit's sign pattern), `f_gain` (the kept
 #'   discrepancy minus the adopted one, 0 if none; the statistic drops by `n_obs * f_gain`) and `unresolved` (a better
 #'   inadmissible or covariance-stage twin made the result unresolved). `print()` does not show it.
 #'
@@ -330,7 +333,7 @@ print.twolevel_equal_indirect <- function(x, ...) {
   pairs <- Filter(function(p) all(theta[p] != 0), list(within = idx[1:2], between = idx[3:4]))
   best <- r
   best_w <- list()
-  best_flip <- character()
+  replaced <- FALSE
   bad <- NULL
   bad_f <- Inf
   tried <- FALSE
@@ -362,7 +365,7 @@ print.twolevel_equal_indirect <- function(x, ...) {
     } else if (twin$f < best$f - .sem_spread_tol) {
       best <- twin
       best_w <- held
-      best_flip <- names(pairs)[pick]
+      replaced <- TRUE
     }
   }
   if (!is.null(bad) && bad_f < best$f - .sem_spread_tol) {
@@ -370,10 +373,25 @@ print.twolevel_equal_indirect <- function(x, ...) {
     return(bad)
   }
   .tle_resignal(best_w, best, twin_paths)
-  attr(best, "twin") <- .tle_twin_record(
-    tried = tried, replaced = length(best_flip) > 0L, flipped = best_flip, f_gain = r$f - best$f
-  )
+  flipped <- if (replaced) {
+    .tle_flipped(theta[idx], unname(best$theta)[match(twin_paths, best$ram$par_names)])
+  } else {
+    character()
+  }
+  attr(best, "twin") <- .tle_twin_record(tried = tried, replaced = replaced, flipped = flipped, f_gain = r$f - best$f)
   best
+}
+
+# The sign changes between the kept fit and the adopted twin at the four path estimates `kept` and `adopted` (a_within,
+# b_within, a_between, b_between), read from the fits and not from the start that produced the twin (a start with one
+# pair flipped can end at the other pair's twin): "within" or "between" when both elements of that pair changed sign,
+# and "other" once when an element changed sign (or reached or left zero) outside a whole-pair flip. Empty when the
+# signs are the same (the twin is another optimum in the kept fit's orthant).
+.tle_flipped <- function(kept, adopted) {
+  changed <- sign(kept) != sign(adopted)
+  whole <- c(within = all(changed[1:2]), between = all(changed[3:4]))
+  partial <- c(changed[1:2], changed[3:4])[!rep(whole, each = 2L)]
+  c(names(whole)[whole], if (any(partial)) "other")
 }
 
 # `parsed` with the start value of every row the user wrote set to the matching entry of `start` (a theta vector of the

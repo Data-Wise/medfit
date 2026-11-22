@@ -827,3 +827,47 @@ test_that("twin$flipped is the pair that differs between the kept fit and the ad
     expect_equal(res$twin$f_gain, kept$f - adopted$f, tolerance = 1e-12)
   }
 })
+
+# `flipped` is read from the signs of the adopted fit, not from the start that produced it: a start with the within pair
+# flipped can converge to the between twin (#504 re-pass 2)
+test_that("twin$flipped follows the adopted fit's signs, not the start flip: the seed-209 cell (#504)", {
+  con <- "a_w*b_w == a_b*b_b"
+  paths <- c("a_w", "b_w", "a_b", "b_b")
+  data <- tle_twin_data(209, 40, 6, 0.3, -0.4, 0.4, 0.4)
+  fit <- fit_sem(tle_twin_model, data, cluster = "cluster")
+  res <- suppressWarnings(twolevel_equal_indirect(fit, n_starts = 1))
+  kept <- suppressWarnings(.tle_refit(fit, con, 1L, list(), twin_paths = NULL))$fit
+  adopted <- suppressWarnings(.tle_refit(fit, con, 1L, list(), twin_paths = paths))$fit
+  sg <- function(f) paste(ifelse(sign(f$theta[match(paths, f$ram$par_names)]) > 0, "+", "-"), collapse = "")
+  # the kept signs are +--+ and the adopted ones +-+-: the between pair is the one that differs
+  expect_identical(c(sg(kept), sg(adopted)), c("+--+", "+-+-"))
+  expect_true(res$twin$replaced)
+  expect_identical(res$twin$flipped, "between")
+  expect_identical(res$twin$flipped, tle_sign_diff(kept, adopted))
+  expect_equal(res$twin$f_gain, kept$f - adopted$f, tolerance = 1e-12)
+})
+
+# the start-flip-equals-final-flip cases (the between cells 108 and 10280) are pinned by the re-pass 2 test above; here
+# the record is derived from the adopted signs for each pair pattern, whatever the start flip was
+test_that("twin$flipped lists whole-pair sign changes and marks any other sign change as 'other' (#504)", {
+  fit <- tle_fit()
+  idx <- function(r, nm) match(nm, r$ram$par_names)
+  # an adopted twin (lower f) whose signs differ from the kept fit's in the chosen elements, whatever the start flip was
+  adopt <- function(nm) {
+    function(i, r) {
+      if (i >= 2L) {
+        r$theta[idx(r, nm)] <- -r$theta[idx(r, nm)]
+        r$f <- r$f - 1e-3
+      }
+      r
+    }
+  }
+  flipped <- function(nm) tle_with_twin_mock(fit, adopt(nm))$res$twin
+  expect_identical(flipped(c("a_w", "b_w"))$flipped, "within")
+  expect_identical(flipped(c("a_b", "b_b"))$flipped, "between")
+  expect_identical(flipped(c("a_w", "b_w", "a_b", "b_b"))$flipped, c("within", "between"))
+  # one element of a pair changes sign: not a whole-pair flip, shown as "other"
+  expect_identical(flipped("a_w")$flipped, "other")
+  expect_identical(flipped(c("a_w", "b_w", "a_b"))$flipped, c("within", "other"))
+  expect_true(flipped("a_b")$replaced)
+})
