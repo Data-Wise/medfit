@@ -187,6 +187,8 @@ navbar:
         href: articles/cookbook.html#missing-data-bounded-fiml
       - text: "23. Two-level lavaan fit (1-1-1)"
         href: articles/cookbook.html#a-two-level-lavaan-fit-within-and-between
+      - text: "24. Two parallel mediators (two-level)"
+        href: articles/cookbook.html#two-parallel-mediators-in-a-two-level-lavaan-fit
     articles:
       text: Articles
       menu:

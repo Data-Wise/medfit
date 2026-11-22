@@ -43,7 +43,8 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | `lmer` pair, cluster treatment | `extract_mediation(..., cluster = )` |
 | Formulas, cluster treatment | `fit_mediation(engine = "lmer", cluster = )` with plain formulas, no `(1 \| id)` |
 | `lavaan` fit | `extract_mediation(lavaan_fit, ...)` |
-| Two-level `lavaan` fit (`level:` blocks, `cluster =`), X, M, Y on level-1 units | `extract_mediation(lavaan_fit, treatment = , mediator = , outcome = )`, a `TwoLevelMediationData`; `nie(x, level = "within" \| "between" \| "contrast" \| "both")` |
+| Two-level `lavaan` fit (`level:` blocks, `cluster =`), X, M, Y on level-1 units (experimental) | `extract_mediation(lavaan_fit, treatment = , mediator = , outcome = )`, a `TwoLevelMediationData`; `nie(x, level = "within" \| "between" \| "contrast" \| "both")` |
+| The same two-level model fitted by the sem engine (experimental, unreleased) | `fit_sem(model, data, cluster = )` or `fit_mediation(engine = "sem", model = , cluster = )`, then `extract_mediation(fit)`; `se_type = "sandwich"` for cluster-robust SEs; `mbco_sem(fit, "a_w", "b_w")` tests one level |
 | Two-level `lavaan` fit, two or more parallel mediators | `extract_mediation(lavaan_fit, treatment = , mediator = c("M1", "M2"), outcome = )`, a `TwoLevelParallelMediationData` (experimental); `nie(x, level = , type = "total" \| "specific")` |
 | IPW weights | `fit_mediation(weights = , se_type = "sandwich")` |
 | Choose an engine, estimator and optimizer | [Which engine should I use?](guide-engines.html): `"glm"`, `"regmedint"`, `"lmer"` or `"sem"` (`"native"` is the earlier spelling) |
@@ -75,7 +76,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | Bounded FIML fit, X to M to Y | `FIMLMediationData` | $a \, b$ |
 | Bounded FIML fit, two parallel mediators | `FIMLParallelMediationData` | $\sum a_j b_j$ |
 | Bounded FIML fit, two serial mediators | `FIMLSerialMediationData` | $a \, d \, b$ |
-| Two-level `lavaan` fit, X, M, Y on level-1 units | `TwoLevelMediationData` | $a_w b_w$ and $a_b b_b$ per level |
+| Two-level fit (`lavaan` or sem engine), X, M, Y on level-1 units (experimental) | `TwoLevelMediationData` | $a_w b_w$ and $a_b b_b$ per level |
 | Two-level `lavaan` fit, parallel mediators (experimental) | `TwoLevelParallelMediationData` | $\sum_j a_{jw} b_{jw}$ and $\sum_j a_{jb} b_{jb}$ per level |
 
 ## Effects
