@@ -218,7 +218,8 @@ tl_doc_cases <- function() {
            fit <- tl_fit(tl_sim(), h1 = FALSE)
            tl_catch(extract_mediation(fit, "X", "M", "Y"), "medfit_warning_twolevel_icc_h1_unavailable")
          }),
-    list("medfit_warning_twolevel_icc_h1_unavailable", "The unrestricted (h1) ICC could not be estimated from these data",
+    list("medfit_warning_twolevel_icc_h1_unavailable",
+         "The unrestricted (h1) ICC could not be estimated from these data",
          function() {
            fit <- suppressMessages(suppressWarnings(fit_sem(tl_model_unlabeled(), tl_sim(), cluster = "id")))
            testthat::local_mocked_bindings(.sem_twolevel_h1_moments = function(smp, ...) NULL, .package = "medfit")
