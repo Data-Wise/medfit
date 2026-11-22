@@ -50,9 +50,14 @@
   kept. It is a local search of up to three single-start solves at every `n_starts`, not a proof of a global optimum
   (a twin refit that fails is skipped); it changes the statistic only when a twin ends lower, so a worse twin is no
   longer kept with `n_starts = 1`. A twin that ends inadmissible below the kept discrepancy (a level-2 variance on
-  its boundary) makes the result unresolved, as it does with more starts. The row allows eight sign patterns; the
-  certificate reaches the four of the kept fit's orbit, and the other four were checked empirically (no win in 84
-  stress cells, 160 QA cells and 715 constrained fits from signed starts), which is evidence, not a proof. A call
+  its boundary) or with a covariance that is not positive definite makes the result unresolved, as it does with more
+  starts; a result that was a number in 0.19.0 can therefore now be unresolved when the better optimum sits on a
+  level-2 variance boundary (about 2.2% of 454 stress cells at `n_starts = 1`; 2 of 160 QA cells). The result carries
+  a `twin` element recording what the certificate did (`tried`, `replaced`, `flipped`, `f_gain`, `unresolved`);
+  `print()` is unchanged. The row allows eight sign patterns; the
+  certificate reaches the four of the kept fit's orbit. The other orbit does hold local optima (30 of 35 small cells,
+  closest gap 0.02 LR), and the kept orbit still won every time tested (84 stress cells, 114 QA cells with an
+  all-orthant oracle and 715 constrained fits from signed starts), which is evidence, not a proof. A call
   takes about 3 to 4 times as long at `n_starts = 1`, about twice at the default and about 1.3 times at 30 starts,
   and a bootstrap replicate costs about 2.5 times the engine fits. Because each bootstrap replicate now uses the
   certificate, `n_boot` p-values for a given `seed` can differ from those of 0.19.0.

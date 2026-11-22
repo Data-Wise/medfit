@@ -670,9 +670,11 @@ optimizer's starts-disagree warning is not raised when every disagreeing start i
 is kept. The twins of the kept fit are also tried from its estimates (a twin certificate): up to three single-start
 local solves at every `n_starts`, a twin refit that fails is skipped, and the result is not a proof of a global
 optimum. A worse twin is therefore not kept with `n_starts = 1`; a twin that ends inadmissible below the kept fit
-(a level-2 variance on its boundary) makes the result unresolved, as it does with more starts. The row allows eight
-sign patterns; the certificate flips pairs together and reaches the four of the kept fit's orbit, and the other four
-were checked empirically (evidence, not a proof). It costs about 3 to 4 times the time at `n_starts = 1`, about twice
+(a level-2 variance on its boundary) or with a covariance that is not positive definite makes the result unresolved,
+as it does with more starts. The row allows eight sign patterns; the certificate flips pairs together and reaches the
+four of the kept fit's orbit. The other orbit does hold local optima (30 of 35 small cells, closest gap 0.02 LR), and
+the kept orbit still won every time tested (evidence, not a proof). The result's `twin` element records what the
+certificate did (`tried`, `replaced`, `flipped`, `f_gain`, `unresolved`). It costs about 3 to 4 times the time at `n_starts = 1`, about twice
 at the default and about 1.3 times at 30 starts; `n_boot` p-values for a given `seed` can differ from 0.19.0.
 A constrained fit that is inadmissible,
 not positive definite or not converged gives an unresolved result (statistic `NA`) with a warning, never a number.
