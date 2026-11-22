@@ -10,7 +10,7 @@ as PR #510 (`706049f4`), the literature notes as PR #511 (`a4a8a8a1`).
    start-set change, risk tier) as a follow-up gated on a cross-orbit counterexample. Reason: no cross-orbit win in
    84 stress cells, 114 QA cells with an all-orthant oracle and 715 constrained fits; the certificate is local and
    reversible. Risk accepted: the other sign orbit is covered by evidence, not proof; a counterexample would be a
-   fifth #504 recurrence. Outcome: shipped in #510. D-start issue not filed.
+   fifth #504 recurrence. Outcome: shipped in #510. D-start filed as #512.
 
 2. **Traceability.** Add a minimal diagnostics field to the `twolevel_equal_indirect()` result recording a twin
    replacement or an unresolved-by-twin outcome; no `print()` change. Reason: 10 of 454 stress cells moved from a
@@ -53,7 +53,7 @@ as PR #510 (`706049f4`), the literature notes as PR #511 (`a4a8a8a1`).
 
 ## Open
 
-- D-start follow-up issue: not filed (decision 1).
+- D-start follow-up: filed as #512, gated on a cross-orbit counterexample (decision 1).
 - Single-level nonlinear constraints (`cp == a*b`, `a*b > k`) were not checked for the sign-twin structure.
 - Not run for #510: the REPS = 2000 simulation baseline and the OpenBLAS runner (first hosted run is the 0.20.0
   release PR).
