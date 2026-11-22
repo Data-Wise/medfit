@@ -61,10 +61,23 @@ The constrained surface has sign twins: flipping the signs of the within pair \e
 between pair \eqn{(a_b, b_b)}{(a_b, b_b)} or both leaves the equality satisfied, at a worse likelihood. The
 optimizer's "the starts disagree" warning is not raised when every disagreeing accepted start is such a twin of the
 kept fit; the lowest-discrepancy start is kept. Any other disagreement among the starts, and every other
-optimizer warning, is signaled as usual. After the refit the twins of the kept fit are tried as well (a twin
-certificate): each flip of a pair with no zero is fitted once from the kept estimates with that flip, and the lowest
-discrepancy is kept, so a worse twin is not kept even with \code{n_starts = 1}, where no second start is compared. The
-certificate costs up to three extra single-start refits and changes the statistic only when a twin ends lower.
+optimizer warning, is signaled as usual.
+
+After the refit the pair-sign twins of the kept fit are tried as well (a twin certificate): each flip of a pair
+with no zero is fitted once from the kept estimates with that flip, and the lowest discrepancy is kept. It is a local
+search of up to three single-start solves, not a proof of a global optimum: a twin refit that fails is skipped, and
+the search runs at every \code{n_starts}, so a worse twin is not kept with \code{n_starts = 1}, where no second start is
+compared. It changes the statistic only when a twin ends lower. A twin that ends at an inadmissible solution (a
+level-2 variance on its boundary) below the kept discrepancy makes the result unresolved, as it does with more
+starts. When the better optimum has a level-2 variance on its boundary the result is therefore unresolved or, with
+\code{n_starts = 1} in very small samples (about 12 clusters), a non-global optimum, as before the certificate.
+The row allows eight sign patterns; flipping pairs together reaches the four of the kept fit's orbit. The other four
+were checked empirically (no win from the other orbit in 84 stress cells, 160 QA cells and 715 constrained fits
+from signed starts; in the stress set 35 of 57 cells have optima in both orbits, 26 of them within 1.0 LR), so
+their coverage rests on the free-fit-pattern and all-positive default starts: evidence, not a proof. The pair flip is
+a symmetry of the constraint, not of the likelihood, so the twins are separate local optima. Cost: a call takes
+about 3 to 4 times as long at \code{n_starts = 1}, about twice at the default and about 1.3 times at 30 starts; a
+bootstrap replicate costs about 2.5 times the engine fits.
 
 The guard admits the equality of any two a-then-b chains with the same x, m and y at levels 1 and 2, so a serial
 \code{a*d} or \code{d*b} chain of the same shape is admitted too; only the \code{a*b} indirect effect of a single mediator has an
