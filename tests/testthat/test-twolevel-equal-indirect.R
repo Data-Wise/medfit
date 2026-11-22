@@ -802,3 +802,28 @@ test_that("the twin element does not change print() or the other elements (#504)
   expect_false(any(grepl("twin", utils::capture.output(print(res)), ignore.case = TRUE)))
   expect_identical(setdiff(names(res), "twin"), setdiff(names(bare), "twin"))
 })
+
+# --- #504 re-pass 2: `twin$flipped` names the pair whose signs differ between the kept fit and the adopted twin ---
+
+tle_sign_diff <- function(kept, adopted, paths = c("a_w", "b_w", "a_b", "b_b")) {
+  sk <- sign(kept$theta[match(paths, kept$ram$par_names)])
+  sa <- sign(adopted$theta[match(paths, adopted$ram$par_names)])
+  c("within", "between")[c(all(sk[1:2] != sa[1:2]), all(sk[3:4] != sa[3:4]))]
+}
+
+test_that("twin$flipped is the pair that differs between the kept fit and the adopted twin, with its f_gain (#504)", {
+  con <- "a_w*b_w == a_b*b_b"
+  paths <- c("a_w", "b_w", "a_b", "b_b")
+  # two cells where only the between pair is repaired (the kept one-start fit ends 2.4 and 16 LR units high)
+  cells <- list(tle_twin_data(108, 15, 4, 0.5, 0.4, -0.4, 0.5), tle_twin_data(10280, 60, 4, 0.5, 0.6, -0.5, 0.6))
+  for (data in cells) {
+    fit <- fit_sem(tle_twin_model, data, cluster = "cluster")
+    res <- suppressWarnings(twolevel_equal_indirect(fit, n_starts = 1))
+    kept <- suppressWarnings(.tle_refit(fit, con, 1L, list(), twin_paths = NULL))$fit
+    adopted <- suppressWarnings(.tle_refit(fit, con, 1L, list(), twin_paths = paths))$fit
+    expect_true(res$twin$replaced)
+    expect_identical(res$twin$flipped, "between")
+    expect_identical(res$twin$flipped, tle_sign_diff(kept, adopted))
+    expect_equal(res$twin$f_gain, kept$f - adopted$f, tolerance = 1e-12)
+  }
+})
