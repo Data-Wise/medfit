@@ -41,7 +41,10 @@ An object of class \code{c("twolevel_equal_indirect", "htest")}: \code{statistic
 constrained fit), \code{unresolved}, \code{note}, \code{near_singular}, \code{twin}, and \code{boot} (\code{NULL}, or a list with \code{statistic},
 \code{p.value}, \code{n_boot}, \code{n_valid} and \code{n_dropped} when \code{n_boot > 0}). \code{twin} records what the twin certificate did,
 for resolved and unresolved results: \code{tried} (a twin refit was attempted), \code{replaced} (a twin replaced the kept
-fit), \code{flipped} (the pairs, \code{"within"} and \code{"between"}, that twin flipped; empty if none), \code{f_gain} (the kept
+fit), \code{flipped} (read from the signs of the adopted fit's four path estimates against the kept fit's, not from
+the start that produced it: \code{"within"} or \code{"between"} when both paths of that pair changed sign, and \code{"other"} once
+when a path changed sign outside a whole-pair flip; empty if none, as when the twin is another optimum in the
+kept fit's sign pattern), \code{f_gain} (the kept
 discrepancy minus the adopted one, 0 if none; the statistic drops by \code{n_obs * f_gain}) and \code{unresolved} (a better
 inadmissible or covariance-stage twin made the result unresolved). \code{print()} does not show it.
 }

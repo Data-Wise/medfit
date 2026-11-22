@@ -54,6 +54,8 @@
   starts; a result that was a number in 0.19.0 can therefore now be unresolved when the better optimum sits on a
   level-2 variance boundary (about 2.2% of 454 stress cells at `n_starts = 1`; 2 of 160 QA cells). The result carries
   a `twin` element recording what the certificate did (`tried`, `replaced`, `flipped`, `f_gain`, `unresolved`);
+  `flipped` is read from the signs of the adopted fit against the kept fit's (a pair whose two paths both changed
+  sign, plus `"other"` for any sign change outside a whole pair), not from the start that produced the twin;
   `print()` is unchanged. The row allows eight sign patterns; the
   certificate reaches the four of the kept fit's orbit. The other orbit does hold local optima (30 of 35 small cells,
   closest gap 0.02 LR), and the kept orbit still won every time tested (84 stress cells, 114 QA cells with an
