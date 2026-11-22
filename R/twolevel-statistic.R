@@ -28,7 +28,8 @@
 #'
 #' A refit that errors, does not converge, warns, or leaves the between level unidentified (a treatment
 #' or any mediator ICC below `getOption("medfit.between_icc_error", 0.01)`, for a between effect or the
-#' contrast) is a failed replicate: [bootstrap_mediation()] excludes it and reports the count in a
+#' contrast; the ICC is the unrestricted (h1) one that `lavaan::lavInspect(refit, "icc")` reports) is a
+#' failed replicate: [bootstrap_mediation()] excludes it and reports the count in a
 #' warning. An inadmissible refit (a negative variance) is kept, as the point estimate keeps it. The
 #' covariance checks of the point-estimate extraction are not repeated per refit (no standard errors are
 #' computed). Refits skip standard errors, the model test and lavaan's post-check (`se = "none"`,

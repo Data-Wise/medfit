@@ -328,12 +328,15 @@ fc_t3_refusals_closure <- function(fit, defect = "") {
   }, character(1))
 }
 
-test_that("T3: the closure refuses at build time per effect exactly as the shipped constructor (J = 10, seeds 7, 13)", {
+test_that("T3: the closure refuses at build time per effect exactly as the shipped constructor (J = 10, seeds 95, 13)", { # nolint: line_length_linter.
   skip_on_cran()
-  cases <- fc_t3_cases(c(7, 13), J = 10)
+  cases <- fc_t3_cases(c(95, 13), J = 10)
   shipped <- lapply(cases, function(cs) fc_t3_refusals_shipped(cs$fit))
   closure <- lapply(cases, function(cs) fc_t3_refusals_closure(cs$fit))
-  # seed 7: the between level is not identified; seed 13: the original fit is unusable, every effect refused
+  # seed 95: the between level is not identified (the h1 mediator ICC is .003; the rule read the model-implied ICC
+  # before 2026-11-22, and seed 7 was the within-only seed then: its h1 mediator ICC is .014, so it now builds);
+  # (seed 95 is about 3x below the .01 floor; recheck it after a lavaan upgrade, whose EM stopping rule sets the h1 ICC)
+  # seed 13: the original fit is unusable, every effect refused
   expect_identical(shipped[[1]][["nie_within"]], "ok")
   expect_match(shipped[[1]][c("nie_between", "nie_contrast")], "medfit_between_unidentified")
   expect_match(shipped[[2]], "medfit_error_twolevel_unusable")
@@ -358,7 +361,7 @@ test_that("T3: the closure refuses at build time per effect exactly as the shipp
 
 test_that("T3: the closure equals three runs of the shipped callback on the J = 10 seeds that build, exactly", {
   skip_on_cran()
-  cases <- fc_t3_cases(setdiff(1:20, c(7, 13)), J = 10)
+  cases <- fc_t3_cases(setdiff(1:20, 13), J = 10)
   shipped <- fc_t3_shipped(cases)
   expect_gte(sum(stats::complete.cases(shipped$value)), 12L)
   fc_t3_check(fc_t3_closure(cases), shipped)

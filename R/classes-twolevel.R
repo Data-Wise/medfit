@@ -30,7 +30,10 @@
 #' @param treatment,mediator,outcome,cluster Character scalars: variable names.
 #' @param n_obs,n_clusters Integer scalars: rows used and number of clusters.
 #' @param cluster_sizes Integer vector of cluster sizes (length `n_clusters`).
-#' @param icc Named numeric vector: intraclass correlation of treatment, mediator and outcome.
+#' @param icc Named numeric vector: intraclass correlation of treatment, mediator and outcome. It is the
+#'   unrestricted (h1) estimate, the between variance over the total in the saturated two-level model
+#'   (`lavaan::lavInspect(fit, "icc")` for a lavaan fit), not the ratio the fitted model implies; the
+#'   within-only rule reads it.
 #' @param between_identified Logical scalar: whether the between level is identified.
 #' @param admissible Logical scalar: `lavaan::lavInspect(fit, "post.check")`.
 #' @param converged Logical scalar: whether the fit converged.
@@ -501,7 +504,8 @@ print_summary_twolevel_mediation_data <- function(x, ...) {
 #'   path vectors.
 #' @param n_obs,n_clusters Integer scalars: rows used and number of clusters.
 #' @param cluster_sizes Integer vector of cluster sizes (length `n_clusters`).
-#' @param icc Named numeric vector: intraclass correlation of the treatment, each mediator and the outcome.
+#' @param icc Named numeric vector: intraclass correlation of the treatment, each mediator and the outcome. It is
+#'   the unrestricted (h1) estimate, as for [TwoLevelMediationData]; the within-only rule reads it.
 #' @param between_identified Logical scalar: whether the between level is identified.
 #' @param admissible Logical scalar: `lavaan::lavInspect(fit, "post.check")`.
 #' @param converged Logical scalar: whether the fit converged.

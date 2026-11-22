@@ -33,7 +33,10 @@ cross-level covariances are carried.}
 
 \item{cluster_sizes}{Integer vector of cluster sizes (length \code{n_clusters}).}
 
-\item{icc}{Named numeric vector: intraclass correlation of treatment, mediator and outcome.}
+\item{icc}{Named numeric vector: intraclass correlation of treatment, mediator and outcome. It is the
+unrestricted (h1) estimate, the between variance over the total in the saturated two-level model
+(\code{lavaan::lavInspect(fit, "icc")} for a lavaan fit), not the ratio the fitted model implies; the
+within-only rule reads it.}
 
 \item{between_identified}{Logical scalar: whether the between level is identified.}
 

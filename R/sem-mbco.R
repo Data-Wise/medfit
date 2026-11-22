@@ -399,8 +399,9 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
 
 # Level-2 variances have no floor in the two-level fit, so no bound is ever active there; the boundary that matters is
 # a level-2 (residual or exogenous) variance near zero. Rule (IG3 D4): an estimate below `threshold` (1%) of that
-# variable's implied between + within variance at the refit, the base the lavaan adapter's ICC rule uses
-# (`.sem_twolevel_icc()`: between over between + within), so the cut is on the same scale as its 0.01 ICC floor.
+# variable's implied between + within variance at the refit (between over between + within, the scale of the
+# adapter's 0.01 ICC floor). The adapter's ICC itself is now the h1 (unrestricted) ratio; this cut stays on the
+# refit's own implied variances, since it asks about the fitted parameter, not the saturated moments.
 .mbco_level2_near_zero <- function(refit, threshold = 0.01) {
   tab <- refit$table
   mom <- .sem_twolevel_implied(refit$ram, unname(refit$theta))

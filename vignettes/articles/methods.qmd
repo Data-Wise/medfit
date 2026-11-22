@@ -482,7 +482,8 @@ total contrast is `NA` only when every mediator's contrast is, because otherwise
   treatment.
 - **Identification.** The between slopes need between variance in the treatment and the mediator. The adapter
   treats an ICC below 0.01 as unidentified (a within-only result) and warns between 0.01 and 0.05; both cutoffs
-  are judgments.
+  are judgments. The ICC is the unrestricted (h1) one, the between variance over the total in the saturated
+  two-level model, not the ratio the fitted model implies.
 
 ### What is not supported
 

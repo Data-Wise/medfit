@@ -176,12 +176,27 @@
   found[order(match(found, stems))]
 }
 
-# Intraclass correlation per variable from the model-implied within and between covariances:
-# Sigma_B / (Sigma_B + Sigma_W). A variable absent at the within level has ICC 1 (between-only); one absent
-# at the between level has ICC 0. A non-finite or negative ratio (a Heywood case) is 0.
+# Intraclass correlation per variable from the unrestricted (h1, saturated) within and between covariances,
+# lavaan's `lavInspect(fit, "icc")`: Sigma_B / (Sigma_B + Sigma_W). It does not depend on the fitted structure, so
+# a negative level-2 variance in the model does not move it, and the native route uses the same source
+# (`.sem_twolevel_h1_icc()`). A variable absent at the within level (between-only) has ICC 1, which lavaan omits from
+# its vector; one absent at the between level has ICC 0. A non-finite or negative ratio is 0. When lavaan has no h1
+# estimate (a fit with `h1 = FALSE`), the model-implied ICC is used with a warning.
 .twolevel_icc <- function(fit) {
   implied <- lavaan::lavInspect(fit, "implied")
-  .sem_twolevel_icc(implied[[1L]]$cov, implied[[2L]]$cov)
+  icc <- tryCatch(lavaan::lavInspect(fit, "icc"), error = function(e) NULL)
+  # an absent, unnamed or all-NA vector is no estimate (a partly non-finite one keeps the per-variable 0 convention)
+  if (!is.numeric(icc) || is.null(names(icc)) || !any(is.finite(icc))) {
+    .twolevel_warn(
+      paste0("The unrestricted (h1) ICC is not available from this fit (`h1 = FALSE`?); the within-only rule ",
+             "uses the model-implied ICC instead."),
+      "medfit_warning_twolevel_icc_h1_unavailable"
+    )
+    return(.sem_twolevel_icc(implied[[1L]]$cov, implied[[2L]]$cov))
+  }
+  icc <- stats::setNames(ifelse(is.finite(icc), pmin(pmax(icc, 0), 1), 0), names(icc))
+  between_only <- setdiff(rownames(implied[[2L]]$cov), names(icc))
+  c(icc, stats::setNames(rep(1, length(between_only)), between_only))
 }
 
 # TRUE when the symmetric matrix is positive definite after dropping fixed (zero) rows and rows repeated by
@@ -208,7 +223,7 @@
 # definite, the fit did not converge. The treatment and mediator ICCs drive the decision; the outcome ICC is
 # only reported (a near-zero outcome ICC shows up as a Heywood case and as `admissible`). `post.check` alone
 # is not used: a between SD of 0.05 passes it with a between SE far above 0.7.
-# `icc` defaults to the lavaan fit's; the native route (`fit = NULL`) passes the ICCs of its own implied moments.
+# `icc` defaults to the lavaan fit's h1 ICCs; the native route (`fit = NULL`) passes its own h1 ICCs.
 .twolevel_identification <- function(fit, treatment, mediator, outcome, converged, V6, icc = .twolevel_icc(fit)) {
   icc_error <- .twolevel_option("icc_error")
   icc_warn <- .twolevel_option("icc_warn")

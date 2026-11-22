@@ -233,3 +233,10 @@ B = 2000), cluster-bootstrap percentile (`method = "nonparametric", cluster = "i
   (9,160 core-h at plan scope, 5,171 at the cut scope, cap 5,000). T8 proceeds on T6 alone: the decision table and
   U4 package report the delta and MC arms (and P1), and state that the cluster-bootstrap arm was not run beyond the
   six T5 pilot cells. T7 stays in this plan as later work; it is not a release gate.
+
+### Decision recorded 2026-11-22 (ICC source)
+
+- **ICC source** decided: **h1 (unrestricted) on both routes** for the within-only rule (T5 memo, open item 2; branch
+  `feature/twolevel-icc-h1`). Records made before the change used the model-implied ICC; runs after it read h1. About
+  2% of boundary-heavy datasets can differ between routes at the .01 and .05 cuts (lavaan's default h1 EM stops
+  early), accepted and documented.

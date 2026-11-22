@@ -42,7 +42,8 @@ path vectors.}
 
 \item{cluster_sizes}{Integer vector of cluster sizes (length \code{n_clusters}).}
 
-\item{icc}{Named numeric vector: intraclass correlation of the treatment, each mediator and the outcome.}
+\item{icc}{Named numeric vector: intraclass correlation of the treatment, each mediator and the outcome. It is
+the unrestricted (h1) estimate, as for \link{TwoLevelMediationData}; the within-only rule reads it.}
 
 \item{between_identified}{Logical scalar: whether the between level is identified.}
 

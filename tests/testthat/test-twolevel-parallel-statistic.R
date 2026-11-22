@@ -194,10 +194,10 @@ test_that("a refit whose mediator loses its between level is a failed replicate 
   fit <- tlp_fixture("base")
   stat <- twolevel_statistic(fit, "nie", treatment = "X", mediator = c("M1", "M2"), outcome = "Y",
                              level = "between")
-  # M2 without a between part: its ICC is below the floor, so the between total is not returned
-  expect_true(is.na(suppressWarnings(stat(tlp_sim(m2_between = FALSE)))))
+  # M2 without a between part: its h1 ICC (.0025 on this data) is below the floor, so the between total is not returned
+  expect_true(is.na(suppressWarnings(stat(tlp_sim(m2_between = FALSE, seed = 76L)))))
   within <- twolevel_statistic(fit, "nie", treatment = "X", mediator = c("M1", "M2"), outcome = "Y")
-  expect_true(is.finite(suppressWarnings(within(tlp_sim(m2_between = FALSE)))))
+  expect_true(is.finite(suppressWarnings(within(tlp_sim(m2_between = FALSE, seed = 76L)))))
 })
 
 # --- Errors ---
