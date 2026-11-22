@@ -213,6 +213,27 @@ tl_doc_cases <- function() {
          function() tl_ex("medfit_between_unidentified", "x_centered")),
     list("medfit_warning_between_weak", "The between-level variance of the treatment or the mediator is small",
          function() tl_ex("medfit_warning_between_weak", "x_small_between")),
+    list("medfit_warning_twolevel_icc_h1_unavailable", "The unrestricted (h1) ICC is not available from this fit",
+         function() {
+           fit <- tl_fit(tl_sim(), h1 = FALSE)
+           tl_catch(extract_mediation(fit, "X", "M", "Y"), "medfit_warning_twolevel_icc_h1_unavailable")
+         }),
+    list("medfit_warning_twolevel_icc_h1_unavailable", "The unrestricted (h1) ICC could not be estimated from these data",
+         function() {
+           fit <- suppressMessages(suppressWarnings(fit_sem(tl_model_unlabeled(), tl_sim(), cluster = "id")))
+           testthat::local_mocked_bindings(.sem_twolevel_h1_moments = function(smp, ...) NULL, .package = "medfit")
+           tl_catch(.sem_twolevel_h1_icc(fit), "medfit_warning_twolevel_icc_h1_unavailable")
+         }),
+    list("medfit_warning_twolevel_icc_h1_unconverged", "The unrestricted (h1) EM did not converge",
+         function() {
+           fit <- suppressMessages(suppressWarnings(fit_sem(tl_model_unlabeled(), tl_sim(), cluster = "id")))
+           real <- .sem_twolevel_h1_moments
+           testthat::local_mocked_bindings(
+             .sem_twolevel_h1_moments = function(smp, ...) real(smp, max_iter = 1L),
+             .package = "medfit"
+           )
+           tl_catch(.sem_twolevel_h1_icc(fit), "medfit_warning_twolevel_icc_h1_unconverged")
+         }),
     list("medfit_warning_twolevel_constrained", "The contrast NIE_within - NIE_between is NA",
          function() {
            td <- tl_extract(tl_fixture("shared_ab"))

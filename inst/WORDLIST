@@ -66,6 +66,7 @@ SEM's
 SEMFit
 SEs
 SLSQP
+SQUAREM
 SRMR
 SUR
 Satorra
@@ -96,6 +97,7 @@ cdots
 codecov
 codoc
 coef
+collinear
 confint
 confounder
 counterfactuals

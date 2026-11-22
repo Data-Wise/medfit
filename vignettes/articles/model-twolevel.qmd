@@ -226,6 +226,29 @@ with class `medfit_warning_between_weak`: they may be imprecise. These threshold
 judgments, not published cutoffs; they are the options `medfit.between_icc_error` and
 `medfit.between_icc_warn`.
 
+### Which ICC the rule reads
+
+The rule reads the unrestricted (h1) ICC: the between variance over the total in the saturated two-level
+model, which `@icc` stores. On the lavaan route it is `lavaan::lavInspect(fit, "icc")`, with a between-only
+variable counted as 1; on the native route medfit estimates the same saturated moments by an EM algorithm on
+the per-size cluster summaries. It is not the ratio the fitted model implies. A fit whose model-implied
+level-2 variance is negative used to have that ratio clamped to 0 and so came out within-only; its h1 ICC is
+usually above 0.01, so such a fit is now weak or identified (`admissible` still reports the negative variance).
+Within-only is therefore rarer than in earlier development builds.
+
+Two conditions cover the cases where the h1 ICC is missing or not settled. A lavaan fit without an h1
+estimate (`h1 = FALSE`), or a native fit whose summaries cannot give one, uses the model-implied ICC and warns
+with class `medfit_warning_twolevel_icc_h1_unavailable`. A native EM that does not converge keeps its last
+iterate and warns with class `medfit_warning_twolevel_icc_h1_unconverged`.
+
+The two routes agree on the ICC to about 3e-5 when lavaan's h1 EM is run to convergence, but lavaan's default
+h1 EM stops early. When an ICC sits near 0.01 or 0.05 the routes can then fall on opposite sides of a cut: in
+about 1 of 50 boundary-heavy simulated datasets we checked, the within-only or weak call differed between the
+lavaan route and the native route. When an ICC is near a cut, tighten the EM in the lavaan fit with
+`em.h1.args = list(tol = 1e-10, max_iter = 100000L)` (lavaan 0.7; lavaan 0.6 takes `em.h1.tol = 1e-10` and
+`em.h1.iter.max = 100000`), an argument of `lavaan::lavaan()` and `lavaan::sem()`. The tolerance alone can stop
+at the default iteration cap and leave the ICC off the converged value.
+
 ## Paths equated across levels
 
 If you give the same label to a path at both levels (`M ~ a*X` in both blocks) or add `a == a2`, lavaan
@@ -714,6 +737,8 @@ you have decided to accept can be muffled by class (see [Troubleshooting](guide-
 |---|---|---|
 | `medfit_between_unidentified` | warning (error from `twolevel_statistic()`) | the between level is not identified: the result is within-only. Also from a between accessor on a within-only object; `twolevel_statistic()` stops with this class for a between effect or the contrast |
 | `medfit_warning_between_weak` | warning | the ICC of the treatment or of a mediator is in [0.01, 0.05) |
+| `medfit_warning_twolevel_icc_h1_unavailable` | warning | no h1 ICC (a lavaan fit with `h1 = FALSE`, or native summaries too thin or collinear): the model-implied ICC is used for the within-only rule |
+| `medfit_warning_twolevel_icc_h1_unconverged` | warning | native route: the EM for the h1 ICC did not converge; its last iterate is used |
 | `medfit_warning_twolevel_constrained` | warning | the contrast is `NA` because both a and b are equated across levels (with several mediators, those of that mediator, or of every mediator for the total) |
 | `medfit_warning_twolevel_inadmissible` | warning | lavaan's `post.check` is `FALSE` (for example a negative variance) |
 | `medfit_warning_twolevel_few_clusters` | warning | fewer than 50 clusters |

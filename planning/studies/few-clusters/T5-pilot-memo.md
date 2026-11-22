@@ -190,6 +190,11 @@ until M2 is decided.
 ## Open for the maintainer
 
 1. M2: cluster allocation, the cut scope, or no bootstrap arm (S2 fires either way).
-2. ICC source for the identification rule (model-implied, as shipped, or h1).
+2. ICC source for the identification rule (model-implied, as shipped, or h1). **Decided 2026-11-22: h1** on both
+   routes (branch `feature/twolevel-icc-h1`). The lavaan route reads `lavInspect(fit, "icc")`; the native route
+   estimates the saturated moments by EM. Accepted consequence: the two routes can differ on the within-only or
+   weak call in about 2% of boundary-heavy datasets near the .01 and .05 cuts, because lavaan's default h1 EM stops
+   early; documented, with the workaround of tightening lavaan's EM (`em.h1.args = list(tol = 1e-10, max_iter =
+   100000L)`).
 3. Unequal n = 5 non-convergence: keep the cells, as a finding, or change the design.
 4. P1 pilot: the plan/P2X mismatch; M7 at 10% puts 49 cells in P1.

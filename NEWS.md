@@ -80,6 +80,21 @@
   `medfit_error_twolevel_weights`, which now covers `weights` only). `weights`, products, nonlinear constraints and
   `information = "expected"` are still refused. Internally, the two-level branch of `fit_sem()` now passes `se_type`
   to the fit; before, it dropped the argument, which had no visible effect because the sandwich was refused first.
+* **Behavior change (experimental two-level API): the within-only rule reads the unrestricted (h1) ICC.** The ICC
+  that decides within-only (below 0.01) and weak (below 0.05), and that `@icc` stores, was the ratio the fitted model
+  implies; it is now the between variance over the total in the saturated two-level model, on both routes. The
+  lavaan route reads `lavaan::lavInspect(fit, "icc")` (a between-only variable counts as 1); the native route
+  estimates the same moments by an EM algorithm with SQUAREM acceleration on the per-size cluster summaries
+  (about 3e-5 from lavaan's EM run to convergence). A fit whose model-implied level-2 variance is negative had its
+  ICC clamped to 0 and came out within-only; its h1 ICC is usually above 0.01, so within-only is rarer and such a
+  fit is now weak or identified (`admissible` is unchanged; differences between the two sources reached .363 in the
+  few-clusters pilot). Estimates, standard errors and the fit are unchanged. Two new warning classes:
+  `medfit_warning_twolevel_icc_h1_unavailable` (no h1 estimate, for example `h1 = FALSE`: the model-implied ICC is
+  used) and `medfit_warning_twolevel_icc_h1_unconverged` (native EM did not converge; the last iterate is used).
+  Known limit: lavaan's default h1 EM stops early, so in about 2% of boundary-heavy simulated datasets the two routes
+  can put an ICC on opposite sides of 0.01 or 0.05 and differ on the within-only or weak call; pass
+  `em.h1.args = list(tol = 1e-10, max_iter = 100000L)` to the lavaan fit (lavaan 0.7; lavaan 0.6 takes `em.h1.tol`
+  and `em.h1.iter.max`) when an ICC is near a cut. The API is experimental, so no deprecation period applies.
 
 ## Bug fixes
 
