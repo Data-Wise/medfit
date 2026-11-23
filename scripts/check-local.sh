@@ -122,7 +122,8 @@ initial_source_state=$source_state
   printf 'Rscript=%s R=%s\n' "$(command -v Rscript)" "$(command -v R)"
 } >> "$LOG"
 
-run_phase tests "$root" Rscript "$scripts/check-local-tests.R" || fail "tests"
+# Parse the reporter before tests run so edits cannot add commands to this invocation.
+run_phase tests "$root" Rscript -e 'source(commandArgs(TRUE)[1L])' "$scripts/check-local-tests.R" || fail "tests"
 test_seconds=$phase_seconds
 if [ "$mode" != check ]; then
   state=passed

@@ -38,6 +38,10 @@ helpers, test settings, dependencies or toolchain require a new receipt for
 affected checks. A missing exit or an interrupted check is incomplete. A
 quick-test or strict-check result serves its own gate.
 
+The full suite runs the semopy fixture through `uv` when available. If the
+default uv cache is outside the writable area, set `UV_CACHE_DIR` to a
+writable directory before running the suite.
+
 ## Coverage scope
 
 Hosted coverage runs on pulls targeting `main` and pushes to `main`, including

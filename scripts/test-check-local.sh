@@ -120,6 +120,24 @@ require_text '^commit=[0-9a-f]+ tree=[0-9a-f]+ source_state=clean$' "$log"
 require_text '^source_end commit=[0-9a-f]+ tree=[0-9a-f]+ source_state=dirty source_eligible=no$' "$log"
 require_text 'run finish .*status=passed exit=0' "$log"
 
+fixture "$tmp/reporter-edit"
+cat >> "$tmp/reporter-edit/tests/testthat/test-other.R" <<'R'
+test_that("the reporter source can change while the suite runs", {
+  cat("self\n", file = Sys.getenv("FIXTURE_REPORTER_PATH"), append = TRUE)
+  expect_true(TRUE)
+})
+R
+if ! (
+  FIXTURE_REPORTER_PATH="$tmp/reporter-edit/scripts/check-local-tests.R" run "$tmp/reporter-edit" --tests-only
+) > "$tmp/out-reporter-edit" 2>&1; then
+  cat "$(log_path "$tmp/out-reporter-edit")" >&2
+  exit 1
+fi
+log=$(log_path "$tmp/out-reporter-edit")
+require_text 'test_totals files=2 blocks=4 passed=3 failed=0 errors=0 warnings=0 skipped=1' "$log"
+require_text '^self$' "$tmp/reporter-edit/scripts/check-local-tests.R"
+require_text 'run finish .*status=passed exit=0' "$log"
+
 (run "$tmp/one" --full-tests) > "$tmp/out-full" 2>&1
 log=$(log_path "$tmp/out-full")
 require_text 'NOT_CRAN=true' "$log"
