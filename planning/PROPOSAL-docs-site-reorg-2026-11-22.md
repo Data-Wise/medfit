@@ -1,6 +1,6 @@
 ---
 title: "Proposal: docs and website audit, currency fixes, ADHD-friendly layout"
-status: proposal (not authorized, nothing implemented)
+status: in progress (A and B merged as #514, C as #515, D as #516, E as #517; F and G open)
 date: 2026-11-22
 base: dev at ce39a655 (0.19.0.9000, unreleased)
 source: read-only audit; all file:line cites verified by reading at ce39a655. Nothing was rendered, so build-time and table-of-contents points are inferred.
