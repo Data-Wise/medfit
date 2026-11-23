@@ -31,7 +31,7 @@ library(generics)
 ```
 
 These examples use the default listwise path. For the separate bounded FIML opt-in (0.16.0 and 0.17.0) and its narrower support, see the
-[native guide](sem-guide.html#bounded-fiml).
+[sem engine guide](sem-guide.html#bounded-fiml).
 
 ## Step 1. Write the model
 

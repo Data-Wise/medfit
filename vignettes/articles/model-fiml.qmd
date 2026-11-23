@@ -87,7 +87,7 @@ In the serial forms all three disturbance covariances (`M1 ~~ 0*M2`,
 `M1 ~~ 0*Y`, `M2 ~~ 0*Y`) must be written. With covariates, every covariate
 predicts every equation and the exogenous covariances are all written or none. The
 syntax rules, parameter counts and the extraction details are in the
-[native guide](sem-guide.html#bounded-fiml).
+[sem engine guide](sem-guide.html#bounded-fiml).
 
 In a serial fit, `extract_mediation()` names both mediators in the fitted order.
 In the pure chain the treatment is the variable with no path to the second

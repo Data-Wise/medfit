@@ -394,6 +394,59 @@ test_that("planted defects: the Troubleshooting gate catches dead and missing li
   expect_match(trouble_problems(tr[-first_row]), "at least 6")
 })
 
+# Engine naming in headings: the engine is "the sem engine" (`"native"` is the silent alias), so no article
+# heading or title outside the release-history pages names it "native engine", "native fit", "native model" or
+# "native SEM". The release-history pages describe what was true then. An exception needs a reason here; the
+# list is empty because "native two-level" (the experimental route's official name) does not match the pattern.
+native_heading_pattern <- "native (engine|fit|model|SEM)"
+native_history_pages <- c("whats-new-0-11", "guide-changes")
+native_heading_exempt <- character()  # named: heading text = reason
+
+native_heading_problems <- function(pages, exempt = native_heading_exempt, history = native_history_pages) {
+  bad <- character()
+  for (n in setdiff(names(pages), history)) {
+    x <- pages[[n]]
+    fence <- grepl("^\\s*(```|~~~)", x)
+    code <- cumsum(fence) %% 2L == 1L | fence
+    head <- x[!code & grepl("^#{1,6}\\s+\\S", x)]
+    head <- trimws(sub("\\s*\\{[^}]*\\}\\s*$", "", sub("^#{1,6}\\s+", "", head)))  # text, not the id attribute
+    titles <- sub("^title:\\s*", "", x[grepl("^title:", x)][1L])
+    head <- c(head, titles[!is.na(titles)])
+    hit <- head[grepl(native_heading_pattern, head, ignore.case = TRUE) & !head %in% names(exempt)]
+    if (length(hit)) bad <- c(bad, sprintf("%s heading names the engine 'native': %s", n, hit[1L]))
+  }
+  bad
+}
+
+test_that("no article heading or title calls the engine 'native'; the history pages keep the old name", {
+  skip_if_not(have_tree(), "source tree not available")
+  fs <- list.files(root_path("vignettes", "articles"), "\\.qmd$", full.names = TRUE)
+  pages <- stats::setNames(lapply(fs, readLines, warn = FALSE), sub("\\.qmd$", "", basename(fs)))
+  expect_gt(length(pages), 20L)
+  expect_true(all(native_history_pages %in% names(pages)))  # an exemption for a page that is gone is stale
+  expect_identical(native_heading_problems(pages), character())
+  # the history pages really do say it: the exemption is not empty
+  expect_true(any(grepl(native_heading_pattern, pages[["whats-new-0-11"]], ignore.case = TRUE)))
+})
+
+test_that("planted defects: the native-heading gate catches a heading, a title and an old-id attribute is not read", {
+  ok <- list(a = c("---", "title: The sem engine", "---",
+                   "## 11. A latent mediator, sem engine {#a-latent-mediator-native-engine}",
+                   "## The native two-level route"))
+  expect_identical(native_heading_problems(ok), character())  # the id attribute and 'native two-level' are fine
+  expect_match(native_heading_problems(list(a = c("## 11. A latent mediator, native engine"))), "a heading names")
+  expect_match(native_heading_problems(list(a = "### Check a native fit")), "native fit")
+  expect_match(native_heading_problems(list(a = "## Native SEM: from a model")), "Native SEM")
+  expect_match(native_heading_problems(list(a = c("---", "title: \"A native model\"", "---"))), "native model")
+  # history pages and code comments are not headings
+  expect_identical(native_heading_problems(list(`guide-changes` = "## native engine")), character())
+  expect_identical(native_heading_problems(list(a = c("```{r}", "## native engine", "```"))), character())
+  # an explicit exception passes only for its exact heading
+  keep <- c(`A native fit` = "reason")
+  expect_identical(native_heading_problems(list(a = "## A native fit"), exempt = keep), character())
+  expect_match(native_heading_problems(list(a = "## Another native fit"), exempt = keep), "native fit")
+})
+
 test_that("every export has an Rd alias", {
   skip_if_not(have_tree() && dir.exists(root_path("man")), "man/ not available")
   rd <- list.files(root_path("man"), "\\.Rd$", full.names = TRUE)

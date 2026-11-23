@@ -164,7 +164,7 @@ unmeasured treatment–outcome and mediator–outcome confounding. With
 $\theta_3 = 0$ the decomposition reduces to simple mediation. The
 `InteractionMediationData` validator checks each identity when the object is
 built. A native `fit_sem()` fit with the product `x:m` in the outcome equation
-gives the same object ([the native product term](#products-and-observed-information)).
+gives the same object ([the sem engine product term](#products-and-observed-information)).
 
 ## Several mediators with products: joint natural effects
 
@@ -645,7 +645,7 @@ exogenous covariance, or with two parallel mediators, alone or with one or two s
 (the parallel form also allows a free mediator residual covariance), free intercepts and a free or exactly zero direct path. It assumes
 ignorable missingness under that model; choosing FIML does not validate MAR or
 protect against nonignorable missingness. See the
-[native guide](sem-guide.html#bounded-fiml) for settings and API limits.
+[sem engine guide](sem-guide.html#bounded-fiml) for settings and API limits.
 
 For retained row $i$, let $O_i$ select its observed components, with implied mean
 $\mu_{O_i}(\theta)$ and covariance $\Sigma_{O_i O_i}(\theta)$. The minimized total

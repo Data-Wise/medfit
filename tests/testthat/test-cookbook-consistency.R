@@ -25,11 +25,9 @@ test_that("the cookbook has twenty-four numbered recipes and every article link 
   expect_identical(missing, character())
 })
 
-# pandoc heading id: lowercase, backticks and punctuation dropped (underscores, dots, hyphens kept), spaces to hyphens
-recipe_id <- function(h) {
-  h <- gsub("[^a-z0-9 _.-]", "", gsub("`", "", tolower(h)))
-  gsub(" +", "-", trimws(h))
-}
+# pandoc heading id: an explicit `{#id}` wins (a renamed recipe keeps its old anchor that way); otherwise the
+# auto id: lowercase, backticks and punctuation dropped (underscores, dots, hyphens kept), spaces to hyphens
+recipe_id <- function(h) docs_heading_anchor(h)
 # recipes whose heading id is not linked from the "Find your recipe" table above the first recipe
 recipe_link_problems <- function(cb_lines) {
   first <- grep("^## [0-9]+\\. ", cb_lines)[1L]
@@ -50,6 +48,22 @@ test_that("every recipe is linked from the Find your recipe table, and a missing
   expect_identical(recipe_link_problems(planted), "13")
   wrong <- sub("](#binary-outcome)", "](#binary-outcom)", cb, fixed = TRUE)
   expect_identical(recipe_link_problems(wrong), "3")
+})
+
+test_that("a renamed recipe keeps its old anchor by an explicit id, and a wrong or dropped id is caught", {
+  cb <- strsplit(article_text("cookbook.qmd"), "\n")[[1]]
+  # recipe 11 was "A latent mediator, native engine": the table and the model pages still link its old id
+  expect_true(any(grepl("^## 11\\. .* \\{#a-latent-mediator-native-engine\\}$", cb)))
+  expect_true(any(grepl("\\[11\\]\\(#a-latent-mediator-native-engine\\)", cb)))
+  expect_identical(recipe_id("A latent mediator, sem engine {#a-latent-mediator-native-engine}"),
+                   "a-latent-mediator-native-engine")
+  expect_identical(recipe_id("Binary outcome"), "binary-outcome")
+  # planted: the explicit id is wrong, so the table link no longer matches
+  wrong_id <- sub("{#a-latent-mediator-native-engine}", "{#a-latent-mediator-sem-engine}", cb, fixed = TRUE)
+  expect_identical(recipe_link_problems(wrong_id), "11")
+  # planted: the heading is renamed and the explicit id dropped, so the auto id drifts from the table link
+  dropped <- sub(" {#a-latent-mediator-native-engine}", "", cb, fixed = TRUE)
+  expect_identical(recipe_link_problems(dropped), "11")
 })
 
 test_that("the cookbook's cluster recipe simulates the same data as methods.qmd", {

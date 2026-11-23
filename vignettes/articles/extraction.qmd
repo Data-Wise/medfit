@@ -39,7 +39,7 @@ Extraction returns the S7 class that matches the structure: `MediationData`, `In
 | Treatment assigned to whole clusters (`lmer` fits) | [Extracting from lmer Models](#extracting-from-lmer-models-cluster-level-treatment) |
 | A `lavaan` fit | [Extracting from lavaan Models](#extracting-from-lavaan-models) |
 | A two-level `lavaan` fit (`level:` blocks) | [Two-level mediation](model-twolevel.html) |
-| Model syntax with latent variables (`fit_sem()`) | [Extracting from a Native SEM Fit](#extracting-from-a-native-sem-fit) |
+| Model syntax with latent variables (`fit_sem()`) | [Extracting from a sem engine fit](#extracting-from-a-native-sem-fit) |
 
 ## Quick Comparison: med() vs extract_mediation()
 
@@ -786,7 +786,7 @@ returning an object whose numbers would disagree with `nie()`. `weights` and
 `regmedint` is a suggested package — install it with
 `install.packages("regmedint")`.
 
-## Extracting from a Native SEM Fit
+## Extracting from a sem engine fit {#extracting-from-a-native-sem-fit}
 
 `fit_sem()` fits model syntax with the sem engine and returns a
 `SEMFit`. `extract_mediation()` accepts it with the same arguments as the lavaan
@@ -823,7 +823,7 @@ decompose(x4)
 Without the product, `decomposition = "four_way"` and `interaction =` are refused by name, and
 the message says to add the product. A precomputed product column is fitted as an ordinary
 variable, so write the product in the syntax. A model with a product must stay inside a supported
-class (see [the native model page](model-sem.html#product-terms)), and the global chi-square is
+class (see [the sem engine model page](model-sem.html#product-terms)), and the global chi-square is
 `NA` when a product factor is a regression target. See `?"medfit-syntax"` for the syntax.
 
 ## Compatibility with RMediation

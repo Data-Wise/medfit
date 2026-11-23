@@ -131,7 +131,7 @@ rbind(
 
 They differ in what follows. lavaan reports a chi-square for this model; medfit reports `NA`, because
 the product contains a regression target (`mediator1`) and the model treats it as exogenous, which makes
-the global test invalid (see [the native model page](model-sem.html#product-terms)). lavaan stores the
+the global test invalid (see [the sem engine model page](model-sem.html#product-terms)). lavaan stores the
 product under the spelling you wrote (`treatment:mediator1`); medfit stores `mediator1:treatment`, whichever
 order you write. A model medfit rejects (a residual covariance between outcomes, a shared or fixed coefficient,
 a constraint on a coefficient, a bound) is still fitted by lavaan.

@@ -161,7 +161,7 @@ carries a class, so you can handle or silence one kind.
 | `a product ':' needs a variable name on each side` | a space around the colon in a product (`x :m`) | write the product without spaces: `x:m` |
 | `(rule 8: no outcome-derived regressors)` | a product has a factor that is its own outcome or downstream of it (`y ~ x + x:y`) | build the product from variables that are not outcomes of that equation |
 | `cannot have a residual covariance (rule 9)` | a model with a product has `m1 ~~ m2` between outcomes | drop the residual covariance, or fit without the product |
-| `has a fixed coefficient (rule 9)` | a regression in a model with a product has a fixed value (`0.3*x`, `0*x`); the same rule covers bounds, shared labels and loops | free the coefficient; the full list is in the table in [the native model page](model-sem.html#product-terms) |
+| `has a fixed coefficient (rule 9)` | a regression in a model with a product has a fixed value (`0.3*x`, `0*x`); the same rule covers bounds, shared labels and loops | free the coefficient; the full list is in the table in [the sem engine model page](model-sem.html#product-terms) |
 | `names the coefficient label` | `==`, `<` or `>` in a model with a product names a coefficient label (`a == b`) | constrain a defined parameter (`:=`) instead, or fit without the product |
 | `the model test is not valid for this model` (a warning) | a product has a factor that is itself an outcome, so the chi-square is not valid | the test is reported as NA and `anova()` and `mbco_sem()` refuse; the coefficients and the sandwich standard errors are unaffected |
 | `model-based standard errors assume normality, which a product violates` (a warning) | a model with a product was fitted without `se_type = "sandwich"` | add `se_type = "sandwich"` |
@@ -195,7 +195,7 @@ reference, its verdict is `"unresolved"` and `reference$lr` is `NA`.
 ### Errors that carry evidence {#errors-that-carry-evidence}
 
 A native fit that cannot be trusted stops with a classed error, never with a fit. Several of these errors carry
-the outcome ledger as `$ledger` (what a ledger is: [the native guide](sem-guide.html#the-outcome-ledger)); read
+the outcome ledger as `$ledger` (what a ledger is: [the sem engine guide](sem-guide.html#the-outcome-ledger)); read
 it before you rerun anything. An unresolved branch means unknown, not infeasible: only a literal contradiction is
 a proof of emptiness.
 
@@ -242,7 +242,7 @@ which case you hit:
 | `medfit_error_fiml_serial_source_fit` | a serial FIML fit was passed as the source of a bootstrap (reached only if the guard above is lifted) | not available for serial fits |
 
 An extracted FIML object also refuses `quick()`, `pm()` and `glance()`; see the
-[native guide](sem-guide.html#bounded-fiml) for the full list.
+[sem engine guide](sem-guide.html#bounded-fiml) for the full list.
 
 ## Messages that are not errors
 

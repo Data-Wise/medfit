@@ -56,6 +56,9 @@ exclusions: list(
     "tests/testthat/test-twolevel-equal-indirect.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-native-sandwich.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-native-sandwich-qa.R" = list(object_usage_linter = Inf),
+    # the cookbook and model-page guards read heading anchors with docs_heading_anchor() of helper-docs-headings.R
+    "tests/testthat/test-cookbook-consistency.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-model-pages.R" = list(object_usage_linter = Inf),
     "tests/testthat/helper-fiml-golden.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g1-covariate.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g1-two-covariates.R" = list(object_usage_linter = Inf),

@@ -87,7 +87,7 @@ boot <- bootstrap_mediation(function(d) mean(d$mediator1),
 c(estimate = boot@estimate, lower = boot@ci_lower, upper = boot@ci_upper)
 ```
 
-## Native SEM: from a model to a discrepancy
+## The sem engine: from a model to a discrepancy {#native-sem-from-a-model-to-a-discrepancy}
 
 The sem engine translates syntax into RAM matrices. Let $A$ contain
 directed paths, $S_R$ contain model variances and covariances, $I$ be the
