@@ -21,9 +21,8 @@ The runner prints a different log path for each invocation. Follow that path
 with `tail -f` to see progress by file and phase. Use `--full-tests` once on the
 final source tree for the full suite. Link to that same successful log from the
 gate and PR reports. Serial runs report per-file wall time and R-process CPU
-time. If testthat
-parallel mode is requested, the reporter labels replayed events separately
-and records counts and the whole test phase duration.
+time. If testthat parallel mode is requested, the reporter labels replayed
+events separately and records counts and the whole test phase duration.
 
 Run `sh scripts/test-check-local.sh` to exercise the runner against a small
 fixture package, including failing and interrupted runs.
@@ -31,12 +30,13 @@ fixture package, including failing and interrupted runs.
 A receipt is reusable only for the same verified tree, run mode and environment.
 Check for `source_eligible=yes` and `run finish ... status=passed exit=0`.
 The source marker checks that the checkout started and ended clean at the
-same commit and tree. Also verify the command, R and dependency versions,
-library paths, relevant environment options and test counts. Keep the checkout
-and its inputs stable throughout the run. Changes to ignored inputs, fixtures,
-helpers, test settings, dependencies or toolchain require a new receipt for
-affected checks. A missing exit or an interrupted check is incomplete. A
-quick-test or strict-check result serves its own gate.
+same commit and tree and that the runner came from that checkout. Also verify
+the command, R and dependency versions, library paths, relevant environment
+options and test counts. Keep the checkout and its inputs stable throughout
+the run. Changes to ignored inputs, fixtures, helpers, test settings,
+dependencies or toolchain require a new receipt for affected checks. A missing
+exit or an interrupted check is incomplete. A quick-test or strict-check
+result serves its own gate.
 
 The full suite runs the semopy fixture through `uv` when available. If the
 default uv cache is outside the writable area, set `UV_CACHE_DIR` to a

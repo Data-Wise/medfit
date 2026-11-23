@@ -1,6 +1,6 @@
-# Development throughput runner instrumented (dev 0.19.0.9000, unreleased) — 2026-11-23 MST
+# Development throughput runner and pilots (dev 0.19.0.9000, unreleased) — 2026-11-23 MST
 
-# Local feature/development-throughput records per-run logs, test file timing and pass/failure receipts. The full source, quick local and strict installed-package gates retain their separate scope. See planning/PLAN-development-throughput-2026-11-23.md for baseline evidence and pilot checkpoints.
+# Local feature/development-throughput records per-run logs, test file timing and pass/failure receipts. The full source, quick local and strict installed-package gates retain their separate scope. The development throughput plan records source and hosted timings, a focused docs pilot and suite experiments. Docs policy and suite defaults retain their current gates pending the plan checkpoints.
 
 # Docs reorganization PRs C, D, E merged (#515, #516, #517) (dev 0.19.0.9000, unreleased) — 2026-11-22 MST
 
