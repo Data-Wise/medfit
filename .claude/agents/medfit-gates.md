@@ -44,7 +44,8 @@ is `Verdict: FAIL` with the failing check; the orchestrator then stops and asks 
 acceptance.
 
 ## Commands
-- Full suite: `NOT_CRAN=true Rscript -e 'r <- as.data.frame(devtools::test(reporter="silent", stop_on_failure=FALSE))'`
+- Full suite: `scripts/check-local.sh --full-tests`. Record the exact source and counts. Apply the
+  [local verification receipt rules](../../scripts/README.md#local-verification) before reusing a result.
 - Local gate for `dev`: `scripts/check-local.sh`
 - Lint: `Rscript -e 'lintr::lint_package()'` (CI fails on line length; `object_usage_linter` notes also appear on `dev`)
 - Gates on demand: `Rscript tests/sim/<gate>.R`; gates run in CI only on PRs to `main`.

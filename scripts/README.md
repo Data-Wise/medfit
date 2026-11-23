@@ -8,21 +8,42 @@ configuration on the 404 page; other script URLs are preserved.
 Run `Rscript scripts/test-fix-pkgdown-404.R` to check the repair independently.
 The repair is idempotent and does nothing when pkgdown produces a correct page.
 
+## Local verification
+
+| Command | Purpose |
+| --- | --- |
+| `scripts/check-local.sh --full-tests` | Source-mode testthat suite with `NOT_CRAN=true`. Record the counts for the final candidate. |
+| `scripts/check-local.sh --tests-only` | Source-mode quick suite with `NOT_CRAN=false` and force-Suggests disabled. |
+| `scripts/check-local.sh` | The quick suite, then a package build and check with vignettes and the repeated test pass disabled. |
+| Separate strict installed-package check | Build the tarball and check with `--as-cran --run-donttest` and the required strict flavor settings. Record which checks ran, including vignettes and optional dependencies. |
+
+The runner prints a different log path for each invocation. Follow that path
+with `tail -f` to see progress by file and phase. Use `--full-tests` once on the
+final source tree for the full suite. Link to that same successful log from the
+gate and PR reports. Serial runs report per-file wall time and R-process CPU
+time. If testthat
+parallel mode is requested, the reporter labels replayed events separately
+and records counts and the whole test phase duration.
+
+Run `sh scripts/test-check-local.sh` to exercise the runner against a small
+fixture package, including failing and interrupted runs.
+
+A receipt is reusable only for the same verified tree, run mode and environment.
+Check for `source_eligible=yes` and `run finish ... status=passed exit=0`.
+The source marker checks that the checkout started and ended clean at the
+same commit and tree. Also verify the command, R and dependency versions,
+library paths, relevant environment options and test counts. Keep the checkout
+and its inputs stable throughout the run. Changes to ignored inputs, fixtures,
+helpers, test settings, dependencies or toolchain require a new receipt for
+affected checks. A missing exit or an interrupted check is incomplete. A
+quick-test or strict-check result serves its own gate.
+
 ## Coverage scope
 
-The coverage workflow starts on pushes to `dev`/`main` and PR updates targeting
-`dev`. A lightweight job skips R coverage only when **every changed path** is
-`.STATUS`, `CLAUDE.md`, `AGENTS.md`, or a Markdown file under `planning/`.
-Code, tests, dependencies, workflow changes, executable documentation, and unknown
-paths still run coverage. Planning scripts and data are not exempt. Pushes to
-`main` always run coverage, including release/version and metadata-only changes.
-The release R-CMD-check and OpenBLAS workflows are unchanged.
-
-The scope check compares the full push range or the entire PR against its merge
-base. Deletions and both sides of renames count. Missing history, malformed event
-input, an empty diff, or a failed scope job conservatively runs coverage. A
-metadata-only run reports a skipped coverage job; it does not upload a new
-Codecov report. Superseded PR runs remain cancellable.
+Hosted coverage runs on pulls targeting `main` and pushes to `main`, including
+metadata-only changes. Regular `dev` PRs use local test evidence, lint and
+risk-tier, plus pkgdown when applicable. Superseded coverage runs on a PR
+remain cancellable.
 
 Run the scope regressions locally:
 

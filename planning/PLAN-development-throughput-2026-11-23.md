@@ -4,7 +4,7 @@
 
 **Base** — `origin/dev` at `d8c83813` on 2026-11-23
 **Branch** — `feature/development-throughput`
-**Status** — Planned. Start with T1 and T2.
+**Status** — T1 runner implemented. T2 receipt guidance updated and baseline measurement in progress.
 
 The audit found about an hour of local final verification on two docs branches. Across 35 recent dev PRs, the median longest hosted workflow took eight minutes. Measure and streamline the local path first. Keep required pre-PR, numerical, platform and release checks in force during the pilots.
 
@@ -24,3 +24,9 @@ The audit found about an hour of local final verification on two docs branches. 
 - [ ] After five eligible docs PRs and five numerical PRs, compare time to first actionable failure, final local gate duration, longest hosted job and setup, and review intervals where available.
 
 Keep raw timing and test fixtures in the worktree's ignored `_agents_workspace/development-throughput/`. Record concise receipts on the feature branch. T3–T5 may be trialed independently after T2. Before opening an implementation PR, run the required suite and lint on the final candidate and record counts and the exact tree. Preserve coverage targets, independent oracles, planted-defect checks and release/CRAN holds. Sync affected runner help and agent guidance as implementation lands.
+
+## Milestone evidence
+
+- The serial `NOT_CRAN=true` docs-headings run at `a032b32c` passed 22,887 expectations across 244 files and 2,720 blocks. It recorded five skips and five warnings in 47m 39s wall time. The tests used 33m 11s of R CPU in total. The laptop spent about 14m 09s asleep during `test-fiml-g2-parallel.R`, which took 14m 47s wall time and 45s R CPU. Rank files by both measures before selecting optimization candidates.
+- FIML files used about half of R CPU in that run. The leading files by R CPU were `test-fiml-g3-serial-two-cov.R` (182s), `test-twolevel-equal-indirect.R` (159s), `test-sem-fiml-oracles.R` (158s), `test-twolevel-few-clusters-harness.R` (143s), and `test-twolevel-icc-h1-qa.R` (130s).
+- The quick local gate uses `NOT_CRAN=false` and disables forced Suggests. It builds with `--no-build-vignettes` and checks examples on the installed package with `--ignore-vignettes --no-tests`. The full source run uses `NOT_CRAN=true` and preserves testthat helpers, fixtures and skip conditions. The separate strict command uses `R CMD build --no-manual` and `R CMD check --as-cran --no-manual --run-donttest`. The pilot sets `_R_CHECK_DEPENDS_ONLY_`, `_R_CHECK_SUGGESTS_ONLY_`, `_R_CHECK_CRAN_INCOMING_`, and `_R_CHECK_CRAN_INCOMING_REMOTE_` to `true`. This checks installed-package tests and examples with these settings. The package currently excludes vignettes from its source tarball. The hosted noSuggests job separately installs a hard-dependency library and testthat.
