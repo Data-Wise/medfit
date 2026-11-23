@@ -18,49 +18,42 @@ model, from one mediator to a latent variable.
 > **In one line:** `med()` runs a mediation analysis, `quick()` prints it, and
 > `nie()`, `nde()`, `te()`, `pm()` and `tidy()` read it.
 
-**Next:** [run the 60-second example](#try-it-in-60-seconds). Not sure which model you need? Jump to [Pick your model](#pick-your-model).
-
-> **Missing data (FIML):** the bounded FIML models are numerically verified against lavaan, not statistically admitted: no interval coverage is established. [Details](https://data-wise.github.io/medfit/articles/model-fiml.html)
+**Next:** [install](#install), then [run the example](#start-here-in-60-seconds).
 
 ## Install
 
 ```r
-install.packages(
-  "medfit",
-  repos = c("https://data-wise.r-universe.dev", "https://cloud.r-project.org")
-)
+install.packages("medfit",
+  repos = c("https://data-wise.r-universe.dev", "https://cloud.r-project.org"))
 ```
 
-This installs the version currently built by r-universe; check `packageVersion("medfit")`
-after installation. Binaries are available
-for supported R/platform combinations; a source installation can require a
-compiler for dependencies such as `nloptr`. From GitHub instead:
-`pak::pak("data-wise/medfit")`.
+From GitHub instead: `pak::pak("data-wise/medfit")`. This installs the version currently built by r-universe; check `packageVersion("medfit")` afterward. Binaries exist for supported R and platform combinations; a source installation can need a compiler for dependencies such as `nloptr`.
 
 > **CRAN has 0.3.2, which does not run the examples on this site.** It lacks
 > `mediation_demo`, `fit_sem()`, `mbco_sem()` and the joint and cluster classes.
 > Its two known issues, serial `te()`/`pm()` and `confint()` path rows, are fixed in
 > 0.5.0; see [#83](https://github.com/Data-Wise/medfit/issues/83).
 
-## Try it in 60 seconds
+## Start here in 60 seconds
+
+`mediation_demo` ships with the package, so this runs as written:
 
 ```r
 library(medfit)
 
-# Simulate data
-set.seed(123)
-n <- 200
-mydata <- data.frame(X = rnorm(n))
-mydata$M <- 0.5 * mydata$X + rnorm(n)
-mydata$Y <- 0.3 * mydata$X + 0.4 * mydata$M + rnorm(n)
-
-result <- med(data = mydata, treatment = "X", mediator = "M", outcome = "Y")
+result <- med(
+  data = mediation_demo,
+  treatment = "treatment", mediator = "mediator1", outcome = "outcome",
+  covariates = c("covariate1", "covariate2")
+)
 quick(result)
-#> NIE = 0.164  | NDE = 0.293 | PM = 36 %
+#> NIE = 0.333  | NDE = 0.206 | PM = 61.8 %
 ```
 
-NIE is the indirect effect through the mediator, NDE the direct effect, PM the
-share mediated. Next: read the pieces, then add an interval.
+**You should see** one line. NIE is the indirect effect through the mediator, NDE the direct effect, PM the share mediated. If you get an error instead, see [When something fails](#when-something-fails).
+
+<details>
+<summary><b>Then: read the pieces, get a table, add an interval</b></summary>
 
 ```r
 nie(result)   # indirect effect (a * b)
@@ -68,82 +61,64 @@ nde(result)   # direct effect (c')
 te(result)    # total effect
 pm(result)    # proportion mediated
 paths(result) # a, b, c'
-```
 
-### Read it as a table
-
-```r
 library(generics)
-
-# Tidy tibble of all effects
-tidy(result)
+tidy(result)   # every effect with its standard error
 #> # A tibble: 6 × 3
 #>   term    estimate std_error
 #>   <chr>      <dbl>     <dbl>
-#> 1 a          0.471    0.0750
-#> 2 b          0.349    0.0689
-#> 3 c_prime    0.293    0.0797
-#> 4 nie        0.164    0.0417
-#> 5 nde        0.293    0.0797
-#> 6 te         0.457    0.0773
+#> 1 a          0.583    0.0989
+#> 2 b          0.571    0.0535
+#> 3 c_prime    0.206    0.110 
+#> 4 nie        0.333    0.0645
+#> 5 nde        0.206    0.110 
+#> 6 te         0.539    0.119 
 
-# One-row model summary
-glance(result)
+glance(result)  # one-row model summary
 #> # A tibble: 1 × 6
 #>     nie   nde    te    pm  nobs converged
-#>   <dbl> <dbl> <dbl> <dbl> <int> <lgl>
-#> 1 0.164 0.293 0.457 0.360   200 TRUE
-```
+#>   <dbl> <dbl> <dbl> <dbl> <int> <lgl>    
+#> 1 0.333 0.206 0.539 0.618   400 TRUE     
 
-### Add an interval
-
-```r
-# With bootstrap CI
+# With a bootstrap interval
 result_boot <- med(
-  data = mydata,
-  treatment = "X",
-  mediator = "M",
-  outcome = "Y",
-  boot = TRUE,
-  n_boot = 1000,
-  seed = 42
+  data = mediation_demo,
+  treatment = "treatment", mediator = "mediator1", outcome = "outcome",
+  covariates = c("covariate1", "covariate2"),
+  boot = TRUE, n_boot = 1000, seed = 42
 )
-
 quick(result_boot)
-#> NIE = 0.164  [0.0867, 0.256] | NDE = 0.293 | PM = 36 %
+#> NIE = 0.333  [0.208, 0.458] | NDE = 0.206 | PM = 61.8 %
 ```
+
+</details>
 
 ## Pick your model
 
-Find the row that matches your data, then open its page. All of them are on the
-[Models page](https://data-wise.github.io/medfit/articles/models.html).
+Find your data, open its page.
 
 | I have | Start here |
 |---|---|
 | One mediator, a continuous outcome | [Simple mediation](https://data-wise.github.io/medfit/articles/model-simple.html) |
 | A binary or count variable | [Binary and non-normal variables](https://data-wise.github.io/medfit/articles/model-glm-families.html) |
-| An effect of the mediator that depends on treatment | [Treatment-by-mediator interaction](https://data-wise.github.io/medfit/articles/model-interaction.html) |
-| Inverse-probability or case weights | [Weights and robust SEs](https://data-wise.github.io/medfit/articles/model-weights.html) |
-| Mediators in a chain | [Serial mediation](https://data-wise.github.io/medfit/articles/model-serial.html) |
-| Mediators side by side | [Parallel mediation](https://data-wise.github.io/medfit/articles/model-parallel.html) |
-| Several mediators with products | [Joint mediation](https://data-wise.github.io/medfit/articles/model-joint.html) |
-| Treatment assigned to whole clusters | [Cluster-randomized trials](https://data-wise.github.io/medfit/articles/model-cluster.html) |
-| A lavaan fit | [lavaan fits](https://data-wise.github.io/medfit/articles/model-lavaan.html) |
-| A latent mediator | [The sem engine: a latent mediator](https://data-wise.github.io/medfit/articles/model-sem-latent.html) |
-| Constraints, or a test of the indirect effect | [The sem engine: constraints and MBCO](https://data-wise.github.io/medfit/articles/model-sem-constraints.html) |
-| Serial or parallel mediators written as syntax | [The sem engine: several mediators and weights](https://data-wise.github.io/medfit/articles/model-sem-multi.html) |
+| Several mediators | [Parallel](https://data-wise.github.io/medfit/articles/model-parallel.html), [serial](https://data-wise.github.io/medfit/articles/model-serial.html) or [joint](https://data-wise.github.io/medfit/articles/model-joint.html) mediation |
+| Clusters (schools, clinics) or two-level data | [Cluster-randomized trials](https://data-wise.github.io/medfit/articles/model-cluster.html), [two-level mediation](https://data-wise.github.io/medfit/articles/model-twolevel.html) (experimental) |
+| A lavaan fit, or a latent mediator | [lavaan fits](https://data-wise.github.io/medfit/articles/model-lavaan.html), [the sem engine: a latent mediator](https://data-wise.github.io/medfit/articles/model-sem-latent.html) |
+| Missing data | [Bounded FIML](https://data-wise.github.io/medfit/articles/model-fiml.html): numerically verified against lavaan, not statistically admitted (no interval coverage is established) |
 
-Already have fitted `lm`, `glm`, `lmer` or lavaan models? `extract_mediation()`
-turns them into the same objects:
+Other cases (interaction, weights, constraints and MBCO, serial or parallel models written as syntax) are on the [full Models table](https://data-wise.github.io/medfit/articles/models.html). Not sure which engine? See [Which engine should I use?](https://data-wise.github.io/medfit/articles/guide-engines.html)
 
-```r
-fit_m <- lm(M ~ X, data = mydata)
-fit_y <- lm(Y ~ X + M, data = mydata)
-med_data <- extract_mediation(fit_m, model_y = fit_y, treatment = "X", mediator = "M")
-nie(med_data)
-```
+## When something fails
 
-**More:** [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) | [Reference card](https://data-wise.github.io/medfit/articles/refcard.html) | [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html) | [What changed since CRAN 0.3.2](https://data-wise.github.io/medfit/articles/guide-changes.html) | [Methods](https://data-wise.github.io/medfit/articles/methods.html)
+- [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html): each error and warning, with the fix.
+- [Glossary and symbols](https://data-wise.github.io/medfit/articles/guide-glossary.html): what a term or symbol means.
+- [What changed since CRAN 0.3.2](https://data-wise.github.io/medfit/articles/guide-changes.html): if the CRAN version behaves differently.
+
+## Go further
+
+[Get Started](https://data-wise.github.io/medfit/articles/getting-started.html) | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (twenty-four recipes) | [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html) | [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html) | [Which interval should I use?](https://data-wise.github.io/medfit/articles/guide-intervals.html)
+
+## More, when you need it
 
 <details>
 <summary><strong>What's new in 0.19.0.9000</strong></summary>
@@ -185,7 +160,19 @@ for settings and limits.
 
 </details>
 
-## More examples
+<details>
+<summary><b>Already have fitted models?</b> (<code>lm</code>, <code>glm</code>, <code>lmer</code>, lavaan)</summary>
+
+`extract_mediation()` turns fitted models into the same objects (see [Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html)):
+
+```r
+fit_m <- lm(mediator1 ~ treatment + covariate1 + covariate2, data = mediation_demo)
+fit_y <- lm(outcome ~ treatment + mediator1 + covariate1 + covariate2, data = mediation_demo)
+med_data <- extract_mediation(fit_m, model_y = fit_y, treatment = "treatment", mediator = "mediator1")
+nie(med_data)
+```
+
+</details>
 
 <details>
 <summary><b>Cluster-randomized trial</b> (treatment assigned to schools, clinics)</summary>
@@ -269,7 +256,8 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")  # minimum of two likelihood-ratio tes
 
 </details>
 
-## What is in the box
+<details>
+<summary><b>Classes and functions</b></summary>
 
 | Class | Models |
 |---|---|
@@ -295,9 +283,12 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")  # minimum of two likelihood-ratio tes
 | Write a model as syntax | `fit_sem()`, `mbco_sem()` |
 | Bootstrap | `bootstrap_mediation()` (parametric, nonparametric, plugin) |
 
-Every function is on the [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html).
+Every function is on the [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html). For the classes, see the [Introduction](https://data-wise.github.io/medfit/articles/introduction.html); for resampling, [Bootstrap Inference](https://data-wise.github.io/medfit/articles/bootstrap.html).
 
-## Mediationverse Ecosystem
+</details>
+
+<details>
+<summary><b>Mediationverse ecosystem and related packages</b></summary>
 
 medfit is the foundation for the **mediationverse** ecosystem:
 
@@ -312,31 +303,19 @@ medfit is the foundation for the **mediationverse** ecosystem:
 
 See [Ecosystem Coordination](https://github.com/Data-Wise/mediation-planning/blob/main/docs/ECOSYSTEM-COORDINATION.md) for version compatibility and development guidelines.
 
-## Documentation
+Also: [Package documentation](https://data-wise.github.io/medfit/), [Development Guide](https://github.com/data-wise/medfit/blob/main/CLAUDE.md), [NEWS](https://data-wise.github.io/medfit/news/index.html).
 
-| If you want to | Read |
-|---|---|
-| Run your first model | [Get Started](https://data-wise.github.io/medfit/articles/getting-started.html) |
-| Find the page for your model | [Models](https://data-wise.github.io/medfit/articles/models.html) |
-| Copy a short recipe | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (twenty-four recipes) |
-| Look up a function or class | [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html) |
-| Understand the classes | [Introduction](https://data-wise.github.io/medfit/articles/introduction.html) |
-| Extract from fitted models | [Model Extraction](https://data-wise.github.io/medfit/articles/extraction.html) |
-| Run a bootstrap | [Bootstrap Inference](https://data-wise.github.io/medfit/articles/bootstrap.html) |
-| Check the math | [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html) |
-| Upgrade from CRAN 0.3.2 | [What changed since CRAN 0.3.2](https://data-wise.github.io/medfit/articles/guide-changes.html) |
-| Fix an error or warning | [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html) |
-| Choose an engine | [Which engine should I use?](https://data-wise.github.io/medfit/articles/guide-engines.html) |
-| Choose an interval | [Which interval should I use?](https://data-wise.github.io/medfit/articles/guide-intervals.html) |
-| Look up a term or symbol | [Glossary and symbols](https://data-wise.github.io/medfit/articles/guide-glossary.html) |
+</details>
 
-## Development Status
+---
+
+## Development status
 
 CRAN has an older release (0.3.2), and this site documents the GitHub build (see
 the callout under Install). Current development adds mediation structures and
 inference on the `dev` branch; see `NEWS.md` for what each release contains.
 
-### Code Quality
+### Code quality
 
 - **Defensive Programming**: checkmate for input validation, S7 validators for class integrity
 - **Testing**: 2,600+ `test_that()` blocks (>90% coverage, enforced via codecov)
@@ -371,13 +350,6 @@ R package version x.y.z. https://data-wise.github.io/medfit/
 ```
 
 Replace `x.y.z` with your installed version, or run `citation("medfit")` for the exact entry.
-
-## Related Resources
-
-- [Package Documentation](https://data-wise.github.io/medfit/)
-- [Development Guide](https://github.com/data-wise/medfit/blob/main/CLAUDE.md)
-- [NEWS](https://data-wise.github.io/medfit/news/index.html)
-- [Ecosystem Strategy](https://github.com/Data-Wise/mediation-planning/blob/main/docs/ECOSYSTEM-COORDINATION.md)
 
 ## Contact
 
