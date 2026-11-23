@@ -27,6 +27,12 @@ coverage calibration remain deferred. Extracted-object bootstrap, profiles, MBCO
 and fit tests remain unavailable. See the native guide and
 [Methods and Formulas](methods.html#fiml-source-intervals) for assumptions and scope.
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you must decide which interval to report.\
+**You get:** a table that picks an interval by situation, the intervals side by side on one dataset, and what each one assumes.\
+**Reading time:** 4 min
+:::
+
 ## Pick by situation
 
 | Your situation | Use | Why |
@@ -131,6 +137,10 @@ A bootstrap warns when refits fail and are dropped; see
 - **Percentile intervals only.**
 - **Standard errors under weights** need `se_type = "sandwich"` (the sandwich
   treats observations as independent).
+
+::: {.next-action}
+**Next:** See how to run the bootstrap: [Bootstrap Inference](bootstrap.html)
+:::
 
 ## Related
 

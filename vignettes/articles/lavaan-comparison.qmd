@@ -19,6 +19,12 @@ analysis and stops there. This page runs both on the same data, then lists what
 each does, with a status for every feature that a test checks against a live
 probe on each build.
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you are choosing between medfit's sem engine and lavaan for a path model, or moving a lavaan model across.\
+**You get:** both fitted on the same data and a feature table whose status a test checks against a live probe.\
+**Reading time:** 7 min
+:::
+
 | | |
 |---|---|
 | **Use medfit native when** | you want the indirect effect, `mbco_sem()`, or a nonlinear constraint such as `cp == a*b` on a path model |
@@ -173,3 +179,7 @@ when `compare_lr()` mislabels.
 
 The same simple model written in OpenMx and semopy syntax, next to medfit and lavaan, is on
 [One model in medfit, lavaan, OpenMx and semopy](syntax-crosswalk.html).
+
+::: {.next-action}
+**Next:** The same model in four packages' syntax: [One model in medfit, lavaan, OpenMx and semopy](syntax-crosswalk.html)
+:::

@@ -15,6 +15,12 @@ execute:
 medfit 0.15.0 changed two defaults of `fit_sem()` and `fit_mediation(engine = "native")`, so that a
 default native fit is posed like a default lavaan fit with `fixed.x = TRUE` and `meanstructure = TRUE`:
 
+::: {.callout-note title="At a glance"}
+**Use this when:** a sem engine number moved after 0.15.0, or you compare a default medfit fit with a default lavaan fit.\
+**You get:** what the `fixed_x` and `meanstructure` defaults do to the likelihood, which numbers move and why the structural estimates do not.\
+**Reading time:** 10 min
+:::
+
 | Argument | Default through 0.14.x | Default from 0.15.0 | lavaan equivalent |
 |---|---|---|---|
 | `fixed_x` | `FALSE` (every exogenous moment is a parameter) | the observed exogenous variables | `fixed.x = TRUE` |
@@ -255,6 +261,10 @@ the shape of the null: `a*b == 0` is two lines, `a = 0` and `b = 0`, and each of
 the line with the larger minimum. medfit fits both lines and keeps the smaller, so its reference stands. On another
 design the warning alone does not show that; compute both line minima before reading it as a wrong line rather than an
 optimizer failure (see `?compare_lr`).
+
+::: {.next-action}
+**Next:** Read the whole sem engine workflow: [The sem engine guide](sem-guide.html)
+:::
 
 ## See also
 

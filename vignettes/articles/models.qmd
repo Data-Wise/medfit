@@ -109,3 +109,7 @@ outcome through `glm` gives a path product on the log-odds scale, while `regmedi
 - Bayesian fits through `brms` (planned).
 
 See [Methods and Formulas](methods.html) for the assumptions behind each model.
+
+::: {.next-action}
+**Next:** Open the page for your model. If none fits, start with [Simple mediation](model-simple.html)
+:::

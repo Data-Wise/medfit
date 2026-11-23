@@ -20,6 +20,12 @@ CRAN has 0.3.2; install from GitHub or r-universe, see the
 [Methods and Formulas](methods.html); task recipes are in the
 [Cookbook](cookbook.html); one page per model type is in [Models](models.html).
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you already know medfit and want the call, the class or the warning in one lookup.\
+**You get:** one-page tables of the calls, the classes and the warnings.\
+**Reading time:** 7 min
+:::
+
 ## Start here
 
 ```{r}
@@ -147,3 +153,7 @@ Every call returns a `BootstrapResult`: use `print()`, `summary()`, `coef()`, `c
 | Native fit: the model test is not valid for this model | A product factor is a regression target or the exogenous block is restricted: `glance()` reports `NA`, and `anova()` and `mbco_sem()` refuse |
 | Native fit: the starts disagree | Several accepted optima: the lowest was kept; raise `n_starts` |
 | Native `anova()`: not nested | The restricted model frees or drops something the larger one does not: constrain or fix parameters of the larger model instead |
+
+::: {.next-action}
+**Next:** Find a recipe: [Cookbook](cookbook.html). Find a model page: [Models](models.html)
+:::

@@ -19,6 +19,12 @@ two-level API is experimental and may change without a deprecation period. To fi
 sem engine instead of `lavaan` (`fit_sem(cluster = )`, unreleased), see
 [The sem engine route](model-twolevel.html#the-sem-engine-route); this guide covers the `lavaan` route only.
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you have a two-level `lavaan` fit and want one analysis walked through to a reported result.\
+**You get:** the steps from the fit to the effects at each level, an interval and a report line.\
+**Reading time:** 3 min | **Status:** experimental
+:::
+
 ```{r}
 #| label: setup
 library(medfit)
@@ -156,3 +162,7 @@ glance(td)
 Each condition carries a class. The [Troubleshooting guide](guide-troubleshooting.html#two-level-mediation)
 lists every two-level message with its cause and fix, and [Which interval should I use?](guide-intervals.html)
 compares the interval types.
+
+::: {.next-action}
+**Next:** Every option in one place: [Two-level mediation](model-twolevel.html)
+:::

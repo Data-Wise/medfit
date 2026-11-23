@@ -20,6 +20,12 @@ These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 2
 `mediation_demo` and the native, joint and cluster functions; install from
 GitHub or r-universe (see the [home page](https://data-wise.github.io/medfit/#install)).
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you know the task and want a short recipe you can run.\
+**You get:** short recipes, each with code on `mediation_demo` (or simulated data) and a link to the page that explains it.\
+**Reading time:** 15 min
+:::
+
 **Find your recipe**
 
 | I want to ... | Recipe |
@@ -873,3 +879,7 @@ Every exported class and function appears in a recipe, or the table says why not
 | `TwoLevelMediationData` | 23 (an `extract_mediation()` on a two-level `lavaan` fit, and `twolevel_statistic()` for its bootstrap; see [Two-level mediation](model-twolevel.html)) |
 | `TwoLevelParallelMediationData` | 24 (an `extract_mediation()` on a two-level `lavaan` fit with two or more mediators, and `twolevel_statistic()` for its bootstrap; see [Several parallel mediators](model-twolevel.html#several-parallel-mediators)) |
 | `twolevel_equal_indirect()` | 23 (the test that the within and between indirect effects of a `fit_sem(cluster = )` fit are equal; see [Two-level mediation](model-twolevel.html)) |
+
+::: {.next-action}
+**Next:** Look up one call: [Reference Card](refcard.html). Pick a model page: [Models](models.html)
+:::

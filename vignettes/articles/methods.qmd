@@ -21,6 +21,12 @@ interpretation depends on identification assumptions (no unmeasured
 confounding of the relevant relations), which medfit does not check. Each
 section says which assumptions the estimand needs.
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you need the formula, the assumption or the standard-error derivation behind an estimate.\
+**You get:** the notation, the estimand and the formula for every effect and interval, with references.\
+**Reading time:** 52 min
+:::
+
 ## Notation and conventions
 
 | Symbol | Meaning |
@@ -1249,6 +1255,10 @@ test. Subsetting or binding rows drops this attribute.
 fit0 <- fit_sem(paste0(fit@model, "\nb == 0"), data = mediation_demo)
 anova(fit, fit0)
 ```
+
+::: {.next-action}
+**Next:** See how the numbers are computed: [Computation algorithms](computation-algorithms.html)
+:::
 
 ## References
 
