@@ -12,10 +12,18 @@ the snapshot of the harness the runs used). The per-dataset rows stay outside gi
 
 | Arm | Planned (P2X §8) | Run |
 |---|---|---|
-| Delta and MC (MC B = 1000) | all 120 cells, R = 500 | done: 60,000 datasets, 0 lavaan errors |
+| Delta and MC (MC B = 2000; corrected 2026-11-23, note below) | all 120 cells, R = 500 | done: 60,000 datasets, 0 lavaan errors |
 | Cluster bootstrap | 6 cells (1001, 1002, 1004, 1021, 1022, 1024), R = 300, B = 499 | 6 of 6 done (1024, 1022, 1004, 1002, 1021 locally; 1001 on Hopper, below) |
 | Timing probe for S2 | not in P2X | 13 cells at 4 datasets x B = 50, the other 107 at 2 x B = 25 |
 | P1 (floor arm) | 4 cells | not run (below) |
+
+Correction note (2026-11-23, T8): this table said "MC B = 1000"; the run used B = 2000 (plan section 6 and the 2026-11-17
+decision). Evidence: the T5 manifest records no `MC_B` value, but its snapshot of the driver
+(`tests/sim/twolevel-few-clusters.R`, sha256 `3c1b5f36...`, the file at commit `cd243264`) documents "MC_B ... T5 uses
+2000", and `T6-manifest-sha256.txt` / the T6 runner use `MC_B = 2000`. Cross-check (INFERENCE; the two runs used
+different machines): the median ratio of MC time to fit time per cell is .078 in T5 (`T5-cells.csv`, `mc_s` / `fit_s`)
+and .095 in T6 (`T6-cells.csv`, `mc_s_median` / `fit_s_median`, B = 2000), a ratio of 1.10 where B = 1000 in T5 would
+give about 2. The T5 cost figure in "T6 and T7 cost" (MC .05 s per dataset) is for B = 2000.
 
 ## Verdicts
 

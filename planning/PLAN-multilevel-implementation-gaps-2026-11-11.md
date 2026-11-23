@@ -24,6 +24,9 @@ owns priority. Standing decisions stay: Q3 (fixed slopes, `sigma_ab = 0`), Q4 (t
 - **U2** The native fixed-moment convention has an oracle (plan 0.8, S1-Q2).
 - **U3** Oracles agree: the hand-built O8 likelihood, lavaan, and OpenMx.
 - **U4** A reliability grid with small-J, low-ICC and unbalanced cells, plus a level-2 variance parametrization experiment (floor versus unconstrained), with Q8 and D-11 unchanged.
+  **Met 2026-11-23** (few-clusters study T8): the grid (120 cells, R = 1000) and the lavaan default-versus-floor experiment (49 cells, paired) are done, Q8 and D-11 are unchanged, and the U4 package is `studies/few-clusters/T8-README.md`
+  (per-cell table, P0/P1 comparison, adapter-threshold evidence, decision table, P1 selection rule).
+  Limits: the cluster-bootstrap arm was not run beyond six pilot cells (T7 dropped 2026-11-21, later work, not a gate); the P1 arm is a lavaan proxy and does not settle the native S4 parametrization (S4b, plan section 5, M5); the decision table is the delta and MC verdict under the M8 failure cutoffs, with a coverage rule left to the maintainer as a labeled proposal.
 - **U5** (for IG6 only) The identification literature (Jak et al. shared loadings; Heywood evidence) is read; still open.
 
 The seven-item admission checklist applies to any S4 PR: the solver files are on `tests/sim/risk-files.txt`.

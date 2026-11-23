@@ -1,0 +1,13 @@
+"n","balance","icc_x","min_J_below_20pct","min_J_below_5pct","rate_fail_max_at_J100"
+5,"equal",0.05,10,,0.059
+5,"equal",0.2,10,30,0
+5,"equal",0.4,10,10,0
+20,"equal",0.05,10,30,0
+20,"equal",0.2,10,10,0
+20,"equal",0.4,10,10,0
+5,"unequal",0.05,100,,0.063
+5,"unequal",0.2,30,50,0.001
+5,"unequal",0.4,20,20,0
+20,"unequal",0.05,30,50,0
+20,"unequal",0.2,10,20,0
+20,"unequal",0.4,10,10,0
