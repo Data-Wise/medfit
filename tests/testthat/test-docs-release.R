@@ -430,7 +430,8 @@ test_that("no article heading or title calls the engine 'native'; the history pa
 })
 
 test_that("planted defects: the native-heading gate catches a heading, a title and an old-id attribute is not read", {
-  ok <- list(a = c("---", "title: The sem engine", "---", "## 11. A latent mediator, sem engine {#a-latent-mediator-native-engine}",
+  ok <- list(a = c("---", "title: The sem engine", "---",
+                   "## 11. A latent mediator, sem engine {#a-latent-mediator-native-engine}",
                    "## The native two-level route"))
   expect_identical(native_heading_problems(ok), character())  # the id attribute and 'native two-level' are fine
   expect_match(native_heading_problems(list(a = c("## 11. A latent mediator, native engine"))), "a heading names")
@@ -441,8 +442,9 @@ test_that("planted defects: the native-heading gate catches a heading, a title a
   expect_identical(native_heading_problems(list(`guide-changes` = "## native engine")), character())
   expect_identical(native_heading_problems(list(a = c("```{r}", "## native engine", "```"))), character())
   # an explicit exception passes only for its exact heading
-  expect_identical(native_heading_problems(list(a = "## A native fit"), exempt = c(`A native fit` = "reason")), character())
-  expect_match(native_heading_problems(list(a = "## Another native fit"), exempt = c(`A native fit` = "reason")), "native fit")
+  keep <- c(`A native fit` = "reason")
+  expect_identical(native_heading_problems(list(a = "## A native fit"), exempt = keep), character())
+  expect_match(native_heading_problems(list(a = "## Another native fit"), exempt = keep), "native fit")
 })
 
 test_that("every export has an Rd alias", {
