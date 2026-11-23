@@ -117,7 +117,9 @@ menu_problems <- function(components, left, articles, shared = "models") {
     }
   }
   for (pg in names(seen)) {
-    if (length(seen[[pg]]) > 1L && !pg %in% shared) bad <- c(bad, paste(pg, "is in menus", paste(seen[[pg]], collapse = " and ")))
+    if (length(seen[[pg]]) > 1L && !pg %in% shared) {
+      bad <- c(bad, paste(pg, "is in menus", paste(seen[[pg]], collapse = " and ")))
+    }
   }
   miss <- setdiff(articles, c(names(seen), "index"))
   if (length(miss)) bad <- c(bad, paste("in no menu:", paste(miss, collapse = ", ")))
