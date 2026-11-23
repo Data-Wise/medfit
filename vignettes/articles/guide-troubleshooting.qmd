@@ -16,12 +16,34 @@ Find your message in the tables below (use your browser's search), read the caus
 and apply the fix. Every message here is quoted from the package and checked by a
 test, so the wording matches what you see.
 
-::: {.callout-tip}
+::: {.callout-note title="At a glance"}
+**Use this when:** a call stopped with an error or printed a warning.\
+**You get:** the message, its likely cause and the fix, with the most common errors first.\
+**Reading time:** 25 min
+:::
+
+::: {#first-check-your-version .callout-tip}
 ## First, check your version
 Examples on this site need the GitHub or r-universe build of medfit, not
 CRAN's. If `mediation_demo` or `fit_sem()` is "not found", you have CRAN's 0.3.2. See
 [What changed since CRAN 0.3.2](guide-changes.html).
 :::
+
+## Most common errors
+
+| You see | Likely cause | Go to |
+|---|---|---|
+| `object 'mediation_demo' not found` or `could not find function "fit_sem"` (R's own messages) | you have CRAN's 0.3.2, which lacks them | [First, check your version](#first-check-your-version) |
+| `Treatment variable 'treatment' must be in formula_m` | the treatment (or the mediator, in `formula_y`) is missing from a formula | [Fitting with `fit_mediation()` and `med()`](#fitting-with-fit_mediation-and-med) |
+| `no start converged` | the sem engine's solver found no solution that passes its checks; the tail of the message says why | [The sem engine](#native-engine) |
+| `The between level is not identified, so only the within-level paths are returned` (a warning) | the ICC of the treatment or of a mediator is below 0.01, so the between effects are `NA` | [Two-level mediation](#two-level-mediation) |
+| `clusters: inference on the cluster-level paths is unreliable` (a warning) | fewer than 10 clusters, too few for a model-based interval | [Cluster engine](#cluster-engine) |
+| `A product (interaction) term is not supported for a two-level fit` | a `:` term or `interaction =` on a two-level fit, which refuses it | [Two-level mediation](#two-level-mediation) |
+
+**Jump to:** [Fitting](#fitting-with-fit_mediation-and-med) | [regmedint](#the-regmedint-engine) |
+[Extracting](#extracting-from-fitted-models) | [Bootstrap](#bootstrap-and-intervals) | [Cluster](#cluster-engine) |
+[Two-level](#two-level-mediation) | [sem engine](#native-engine) | [FIML](#bounded-fiml-refusals) |
+[Not errors](#messages-that-are-not-errors) | [Still stuck?](#still-stuck)
 
 ## Fitting with `fit_mediation()` and `med()`
 
@@ -253,3 +275,7 @@ Run the failing call on `mediation_demo` with the same arguments. If that works,
 the difference is in your data. If it fails the same way, open an
 [issue](https://github.com/Data-Wise/medfit/issues) with the call and the full
 message.
+
+::: {.next-action}
+**Next:** Back to your model: [Models](models.html). Or try a recipe: [Cookbook](cookbook.html)
+:::
