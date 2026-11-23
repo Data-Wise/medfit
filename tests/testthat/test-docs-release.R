@@ -101,6 +101,30 @@ navbar_problems <- function(yml, max_items = 8L) {
   n <- length(strsplit(sub("left: +\\[", "", sub("\\]$", "", m)), ",")[[1L]])
   if (n > max_items) sprintf("navbar has %d items, limit %d", n, max_items) else character()
 }
+# every article is in exactly one navbar menu and every menu link resolves; `shared` pages (the model picker is both
+# the Start entry and the head of the Models menu) may appear twice
+menu_problems <- function(components, left, articles, shared = "models") {
+  bad <- character()
+  seen <- list()
+  for (m in left) {
+    items <- components[[m]]$menu
+    for (i in items) {
+      h <- i$href
+      if (is.null(h) || !grepl("^articles/[a-z0-9-]+\\.html", h)) next
+      pg <- sub("\\.html.*$", "", sub("^articles/", "", h))
+      if (!pg %in% articles && pg != "index") bad <- c(bad, paste(m, "links to a missing article:", pg))
+      seen[[pg]] <- unique(c(seen[[pg]], m))
+    }
+  }
+  for (pg in names(seen)) {
+    if (length(seen[[pg]]) > 1L && !pg %in% shared) {
+      bad <- c(bad, paste(pg, "is in menus", paste(seen[[pg]], collapse = " and ")))
+    }
+  }
+  miss <- setdiff(articles, c(names(seen), "index"))
+  if (length(miss)) bad <- c(bad, paste("in no menu:", paste(miss, collapse = ", ")))
+  bad
+}
 lum <- function(hex) {
   rgb <- strtoi(substring(sub("#", "", hex), c(1, 3, 5), c(2, 4, 6)), 16L) / 255
   sum(c(0.2126, 0.7152, 0.0722) * ifelse(rgb <= 0.03928, rgb / 12.92, ((rgb + 0.055) / 1.055)^2.4))
@@ -208,6 +232,10 @@ test_that("model pages follow the template, the navbar is short and its colors a
   expect_identical(page_problems(pages), character())
   yml <- paste(readLines(root_path("_pkgdown.yml"), warn = FALSE), collapse = "\n")
   expect_identical(navbar_problems(yml), character())
+  cfg <- yaml::yaml.load(yml)$navbar
+  left <- cfg$structure$left
+  arts <- sub("\\.qmd$", "", list.files(dir, "\\.qmd$"))
+  expect_identical(menu_problems(cfg$components, setdiff(left, "home"), arts), character())
   skip_if_not(file.exists(root_path("pkgdown", "extra.scss")), "extra.scss not available")
   expect_identical(contrast_problems(readLines(root_path("pkgdown", "extra.scss"), warn = FALSE)), character())
 })
@@ -220,6 +248,12 @@ test_that("planted defects: layout gates catch a missing Next block, shown setup
   expect_match(page_problems(list(`model-sem` = "no template yet")), "no Next block")  # no pending list
   expect_match(navbar_problems("left:  [a, b, c, d, e, f, g, h, i]"), "9 items")
   expect_identical(navbar_problems("left:  [a, b, c, d, e, f, g, h]"), character())
+  comp <- list(a = list(menu = list(list(href = "articles/x.html"), list(href = "articles/y.html#top"))),
+               b = list(menu = list(list(href = "articles/y.html"), list(href = "https://example.org"))))
+  expect_identical(menu_problems(comp, c("a", "b"), c("x", "y")), "y is in menus a and b")
+  expect_identical(menu_problems(comp, c("a", "b"), c("x", "y"), shared = "y"), character())
+  expect_match(menu_problems(comp, c("a", "b"), c("x", "y", "z"), shared = "y"), "in no menu: z")
+  expect_match(menu_problems(comp, "a", "x"), "missing article: y")
   expect_match(contrast_problems("a { color: #909294; }"), "below 4.5:1")
   expect_identical(contrast_problems("a { color: #3f4244; }"), character())
 })

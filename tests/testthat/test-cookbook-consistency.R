@@ -25,6 +25,33 @@ test_that("the cookbook has twenty-four numbered recipes and every article link 
   expect_identical(missing, character())
 })
 
+# pandoc heading id: lowercase, backticks and punctuation dropped (underscores, dots, hyphens kept), spaces to hyphens
+recipe_id <- function(h) {
+  h <- gsub("[^a-z0-9 _.-]", "", gsub("`", "", tolower(h)))
+  gsub(" +", "-", trimws(h))
+}
+# recipes whose heading id is not linked from the "Find your recipe" table above the first recipe
+recipe_link_problems <- function(cb_lines) {
+  first <- grep("^## [0-9]+\\. ", cb_lines)[1L]
+  heads <- sub("^## [0-9]+\\. ", "", grep("^## [0-9]+\\. ", cb_lines, value = TRUE))
+  nums <- sub("^## ([0-9]+)\\. .*$", "\\1", grep("^## [0-9]+\\. ", cb_lines, value = TRUE))
+  top <- paste(cb_lines[seq_len(first - 1L)], collapse = "\n")
+  linked <- vapply(seq_along(heads), function(i) {
+    grepl(paste0("[", nums[i], "](#", recipe_id(heads[i]), ")"), top, fixed = TRUE)
+  }, logical(1))
+  nums[!linked]
+}
+
+test_that("every recipe is linked from the Find your recipe table, and a missing row is caught", {
+  cb <- strsplit(article_text("cookbook.qmd"), "\n")[[1]]
+  expect_identical(recipe_link_problems(cb), character())
+  expect_true(any(grepl("^\\*\\*Find your recipe\\*\\*$", cb)))
+  planted <- cb[!grepl("^\\| .* \\| \\[13\\]\\(#", cb)]
+  expect_identical(recipe_link_problems(planted), "13")
+  wrong <- sub("](#binary-outcome)", "](#binary-outcom)", cb, fixed = TRUE)
+  expect_identical(recipe_link_problems(wrong), "3")
+})
+
 test_that("the cookbook's cluster recipe simulates the same data as methods.qmd", {
   cb <- article_text("cookbook.qmd")
   mx <- article_text("methods.qmd")
