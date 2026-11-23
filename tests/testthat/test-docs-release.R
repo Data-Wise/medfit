@@ -37,7 +37,7 @@ news_problems <- function(lines, v) {
 prose_problems <- function(texts, v) {
   bad <- character()
   for (n in names(texts)) {
-    pat <- "(documents|describes) medfit [0-9]+(\\.[0-9]+){2,3}"
+    pat <- "\\b(documents|describes|uses?) medfit [0-9]+(\\.[0-9]+){2,3}"
     claims <- regmatches(texts[[n]], gregexpr(pat, texts[[n]]))[[1L]]
     wrong <- claims[!grepl(paste0(" ", v, "$"), claims)]
     if (length(wrong)) bad <- c(bad, sprintf("%s says '%s', DESCRIPTION is %s", n, wrong[1L], v))
@@ -157,6 +157,10 @@ test_that("planted defects: the prose gate catches a stale version claim and sta
   expect_identical(prose_problems(list(a = "This site documents medfit 1.2.0.9000."), "1.2.0.9000"), character())
   expect_match(prose_problems(list(a = "This site documents medfit 1.2.0."), "1.2.0.9000"), "DESCRIPTION is 1.2.0.9000")
   expect_match(prose_problems(list(a = "This site documents medfit 1.2.0.9000."), "1.2.0"), "DESCRIPTION is 1.2.0")
+  # "use medfit X" is a version claim too (the troubleshooting callout once said "use medfit 0.13.0")
+  expect_match(prose_problems(list(a = "Examples on this site use medfit 1.1.0."), "1.2.0"), "DESCRIPTION is 1.2.0")
+  expect_identical(prose_problems(list(a = "Examples on this site use medfit 1.2.0."), "1.2.0"), character())
+  expect_identical(prose_problems(list(a = "Examples need the GitHub build, not CRAN's 0.3.2."), "1.2.0"), character())
 })
 
 test_that("README has the What's new block and CITATION takes the DESCRIPTION version", {

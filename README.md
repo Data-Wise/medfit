@@ -148,7 +148,10 @@ nie(med_data)
 <details>
 <summary><strong>What's new in 0.19.0.9000</strong></summary>
 
-* **Development version:** no user-visible changes yet since 0.19.0 (released 2026-11-17), whose highlights follow.
+* **Development version (unreleased):** the changes below are on `dev` since 0.19.0 (released 2026-11-17), and the two-level API they touch is experimental, so it may change without a deprecation period.
+* **Native two-level fit (experimental, unreleased):** `fit_sem(model, data, cluster = )` fits a two-level (1-1-1) model written in `level:` blocks with the sem engine, and `extract_mediation()` on the fit returns `TwoLevelMediationData`; `fit_mediation(engine = "sem", model = , cluster = )` returns the same object. `se_type = "sandwich"` gives cluster-robust standard errors. See the [model page](https://data-wise.github.io/medfit/articles/model-twolevel.html).
+* **Tests on native two-level fits (experimental, unreleased):** `mbco_sem()` tests the indirect effect at one level, and `twolevel_equal_indirect()` tests that the within and between indirect effects are equal; a pair-sign twin certificate stops a worse local optimum from standing in the equality refit.
+* **Behavior change (experimental, unreleased):** the within-only rule for a two-level fit now reads the unrestricted (h1) ICC on both routes, so within-only results are rarer. See the [NEWS](https://data-wise.github.io/medfit/news/index.html).
 * **Two-level parallel mediation (0.19.0, experimental):** `extract_mediation()` on a two-level `lavaan` fit with two or more mediators returns `TwoLevelParallelMediationData`, with per-mediator and total effects at each level, delta-method SEs and `twolevel_statistic()` for the bootstrap. One-mediator results are unchanged. See the [model page](https://data-wise.github.io/medfit/articles/model-twolevel.html#several-parallel-mediators).
 * **The sem engine (0.18.0):** `fit_mediation(engine = "sem")` names medfit's own SEM fitter; `engine = "native"` still works, with identical results. `sem_control()` collects its optimizer settings. See [Which engine should I use?](https://data-wise.github.io/medfit/articles/guide-engines.html).
 * **Renamed pages (0.18.0):** the sem engine articles moved (`native-guide` is now `sem-guide`, and so on); old links redirect.
@@ -329,13 +332,14 @@ See [Ecosystem Coordination](https://github.com/Data-Wise/mediation-planning/blo
 
 ## Development Status
 
-medfit is on CRAN. Current development adds mediation structures and inference
-on the `dev` branch; see `NEWS.md` for what each release contains.
+CRAN has an older release (0.3.2), and this site documents the GitHub build (see
+the callout under Install). Current development adds mediation structures and
+inference on the `dev` branch; see `NEWS.md` for what each release contains.
 
 ### Code Quality
 
 - **Defensive Programming**: checkmate for input validation, S7 validators for class integrity
-- **Testing**: 2,200+ `test_that()` blocks (>90% coverage, enforced via codecov)
+- **Testing**: 2,600+ `test_that()` blocks (>90% coverage, enforced via codecov)
 - **CI/CD**: R CMD check, lintr, coverage reporting via GitHub Actions
 
 See the [NEWS](https://data-wise.github.io/medfit/news/index.html) for what changed in each release.
@@ -362,11 +366,11 @@ GPL (>= 3)
 If you use medfit in your research, please cite:
 
 ```
-Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.19.0. https://data-wise.github.io/medfit/
+Tofighi, D. (2026). medfit: Infrastructure for Mediation Model Fitting and Extraction.
+R package version x.y.z. https://data-wise.github.io/medfit/
 ```
 
-For the entry matching your installed version, run `citation("medfit")`.
+Replace `x.y.z` with your installed version, or run `citation("medfit")` for the exact entry.
 
 ## Related Resources
 
