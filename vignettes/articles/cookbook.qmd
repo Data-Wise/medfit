@@ -20,6 +20,40 @@ These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 2
 `mediation_demo` and the native, joint and cluster functions; install from
 GitHub or r-universe (see the [home page](https://data-wise.github.io/medfit/#install)).
 
+**Find your recipe**
+
+| I want to ... | Recipe |
+|---|---|
+| **Basics (1-4)** | |
+| Get a mediation answer from a data frame fast | [1](#one-line-mediation) |
+| Reuse mediator and outcome models I already fitted with lm | [2](#i-already-have-lm-fits) |
+| Analyze a binary outcome with a logistic model | [3](#binary-outcome) |
+| Weight cases and get robust standard errors | [4](#weights-and-robust-standard-errors) |
+| **Several mediators and interactions (5-8)** | |
+| Fit two mediators linked in a chain | [5](#two-mediators-in-a-chain) |
+| Fit two mediators side by side | [6](#two-mediators-side-by-side) |
+| Let the mediator interact with the treatment | [7](#treatment-by-mediator-interaction) |
+| Handle many mediators with treatment-by-mediator products | [8](#many-mediators-with-products) |
+| **Clusters, two-level and lavaan (9, 10, 23, 24)** | |
+| Analyze a cluster-randomized trial with mixed models | [9](#cluster-randomized-trial) |
+| Extract mediation effects from an existing lavaan fit | [10](#i-use-lavaan) |
+| Separate within and between effects in a two-level fit | [23](#a-two-level-lavaan-fit-within-and-between) |
+| Use two parallel mediators in a two-level fit | [24](#two-parallel-mediators-in-a-two-level-lavaan-fit) |
+| **The sem engine (11, 12, 14-21)** | |
+| Fit a latent mediator from model syntax | [11](#a-latent-mediator-native-engine) |
+| Impose a nonlinear constraint or a longer chain | [12](#a-nonlinear-constraint-or-a-longer-chain-native-engine) |
+| Compare two sem engine models with a likelihood-ratio test | [14](#compare-two-native-models) |
+| Get an interval for a defined parameter | [15](#a-defined-parameter-and-its-interval) |
+| Bound a variance or fix a path | [16](#bound-a-variance-or-fix-a-path) |
+| Check a sem engine fit before trusting it | [17](#check-a-native-fit-before-trusting-it) |
+| Fix exogenous covariates at their sample values (fixed_x) | [18](#fix-exogenous-covariates-fixed_x) |
+| Estimate observed intercepts and means in a sem fit | [19](#observed-intercepts-and-means) |
+| Split the effect into the four-way decomposition | [20](#four-way-decomposition-from-a-native-fit) |
+| Include a categorical covariate in a sem engine fit | [21](#a-categorical-covariate-in-a-native-fit) |
+| **Inference and missing data (13, 22)** | |
+| Test joint significance for a binary or count outcome | [13](#joint-significance-for-a-binary-or-count-outcome) |
+| Handle missing data with bounded FIML | [22](#missing-data-bounded-fiml) |
+
 ```{r}
 #| label: setup
 library(medfit)
