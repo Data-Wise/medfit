@@ -45,16 +45,24 @@ logo:
 
 navbar:
   structure:
-    left:  [home, reference, models, guides, cookbook, articles, project, news]
+    left:  [home, start, models, cookbook, guides, reference, learn, news]
     right: [search, github]
   components:
     home:
       icon: fas fa-home fa-lg
       href: index.html
       aria-label: Home
-    reference:
-      text: Reference
-      href: reference/index.html
+    start:
+      text: Start
+      menu:
+      - text: "Getting Started"
+        href: articles/getting-started.html
+      - text: "The 60-second example"
+        href: index.html#start-here-in-60-seconds
+      - text: "Install"
+        href: index.html#install
+      - text: "Which model?"
+        href: articles/models.html
     models:
       text: Models
       menu:
@@ -100,31 +108,52 @@ navbar:
         href: articles/model-sem-factors.html
       - text: "Missing data: bounded FIML"
         href: articles/model-fiml.html
+    cookbook:
+      text: Cookbook
+      menu:
+      - text: "All 24 recipes"
+        href: articles/cookbook.html
+      - text: "─────────────"
+      - text: "Recipes by task"
+      - text: "Basics: one line, lm fits, binary outcome, weights (1-4)"
+        href: articles/cookbook.html#one-line-mediation
+      - text: "Several mediators and interactions (5-8)"
+        href: articles/cookbook.html#two-mediators-in-a-chain
+      - text: "Clusters, two-level and lavaan (9, 10, 23, 24)"
+        href: articles/cookbook.html#cluster-randomized-trial
+      - text: "The sem engine: latent, constraints, checks, four-way (11, 12, 14-21)"
+        href: articles/cookbook.html#a-latent-mediator-native-engine
+      - text: "Inference and missing data (13, 22)"
+        href: articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome
     guides:
       text: Guides
       menu:
-      - text: "What changed since CRAN 0.3.2"
-        href: articles/guide-changes.html
-      - text: "Troubleshooting"
+      - text: "When something fails"
         href: articles/guide-troubleshooting.html
+      - text: "─────────────"
+      - text: "Choose"
       - text: "Which engine should I use?"
         href: articles/guide-engines.html
       - text: "Which interval should I use?"
         href: articles/guide-intervals.html
       - text: "Glossary and symbols"
         href: articles/guide-glossary.html
+      - text: "─────────────"
+      - text: "Upgrade and learn"
+      - text: "Upgrading: what changed since CRAN 0.3.2"
+        href: articles/guide-changes.html
       - text: "Two-level workflow, step by step"
         href: articles/guide-twolevel-tutorial.html
-      - text: "How medfit is organized"
-        href: articles/guide-architecture.html
-      - text: "Native defaults in 0.15.0"
-        href: articles/sem-defaults-0-15.html
       - text: "The sem engine in five minutes"
         href: articles/sem-quickstart.html
       - text: "The sem engine, step by step"
         href: articles/sem-tutorial.html
       - text: "The sem engine guide"
         href: articles/sem-guide.html
+      - text: "Worked example: study hours and GPA"
+        href: articles/example-gpa.html
+      - text: "─────────────"
+      - text: "Compare"
       - text: "lavaan and the sem engine"
         href: articles/lavaan-comparison.html
       - text: "probmed and medfit"
@@ -133,96 +162,42 @@ navbar:
         href: articles/rmediation-comparison.html
       - text: "One model in medfit, lavaan, OpenMx and semopy"
         href: articles/syntax-crosswalk.html
-      - text: "Worked example: study hours and GPA"
-        href: articles/example-gpa.html
-    cookbook:
-      text: Cookbook
+    reference:
+      text: Reference
       menu:
-      - text: "All recipes"
-        href: articles/cookbook.html
-      - text: "─────────────"
-      - text: "1. One-line mediation"
-        href: articles/cookbook.html#one-line-mediation
-      - text: "2. I already have lm fits"
-        href: articles/cookbook.html#i-already-have-lm-fits
-      - text: "3. Binary outcome"
-        href: articles/cookbook.html#binary-outcome
-      - text: "4. Weights and robust SEs"
-        href: articles/cookbook.html#weights-and-robust-standard-errors
-      - text: "5. Two mediators in a chain"
-        href: articles/cookbook.html#two-mediators-in-a-chain
-      - text: "6. Two mediators side by side"
-        href: articles/cookbook.html#two-mediators-side-by-side
-      - text: "7. Treatment-by-mediator interaction"
-        href: articles/cookbook.html#treatment-by-mediator-interaction
-      - text: "8. Many mediators with products"
-        href: articles/cookbook.html#many-mediators-with-products
-      - text: "9. Cluster-randomized trial"
-        href: articles/cookbook.html#cluster-randomized-trial
-      - text: "10. I use lavaan"
-        href: articles/cookbook.html#i-use-lavaan
-      - text: "11. A latent mediator"
-        href: articles/cookbook.html#a-latent-mediator-native-engine
-      - text: "12. A nonlinear constraint or a longer chain"
-        href: articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine
-      - text: "13. Joint significance for a glm"
-        href: articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome
-      - text: "14. Compare two native models"
-        href: articles/cookbook.html#compare-two-native-models
-      - text: "15. A defined parameter and its interval"
-        href: articles/cookbook.html#a-defined-parameter-and-its-interval
-      - text: "16. Bound a variance or fix a path"
-        href: articles/cookbook.html#bound-a-variance-or-fix-a-path
-      - text: "17. Check a native fit before trusting it"
-        href: articles/cookbook.html#check-a-native-fit-before-trusting-it
-      - text: "18. Fix exogenous covariates (fixed_x)"
-        href: articles/cookbook.html#fix-exogenous-covariates-fixed_x
-      - text: "19. Observed intercepts and means"
-        href: articles/cookbook.html#observed-intercepts-and-means
-      - text: "20. Four-way decomposition (native)"
-        href: articles/cookbook.html#four-way-decomposition-from-a-native-fit
-      - text: "21. Categorical covariate (native)"
-        href: articles/cookbook.html#a-categorical-covariate-in-a-native-fit
-      - text: "22. Missing data: bounded FIML"
-        href: articles/cookbook.html#missing-data-bounded-fiml
-      - text: "23. Two-level lavaan fit (1-1-1)"
-        href: articles/cookbook.html#a-two-level-lavaan-fit-within-and-between
-      - text: "24. Two parallel mediators (two-level)"
-        href: articles/cookbook.html#two-parallel-mediators-in-a-two-level-lavaan-fit
-    articles:
-      text: Articles
-      menu:
-      - text: "Getting Started"
-        href: articles/getting-started.html
-      - text: "─────────────"
-      - text: "Quick Reference"
+      - text: "Functions"
+        href: reference/index.html
       - text: "Reference Card"
         href: articles/refcard.html
-      - text: "Cookbook"
-        href: articles/cookbook.html
+    learn:
+      text: Learn more
+      menu:
+      - text: "All articles"
+        href: articles/index.html
       - text: "─────────────"
-      - text: "Detailed Guides"
+      - text: "How medfit works"
       - text: "Introduction to medfit"
         href: articles/introduction.html
-      - text: "Model Extraction"
+      - text: "Model extraction"
         href: articles/extraction.html
-      - text: "Bootstrap Inference"
+      - text: "Bootstrap inference"
         href: articles/bootstrap.html
-      - text: "Methods and Formulas"
+      - text: "Methods and formulas"
         href: articles/methods.html
       - text: "Computation algorithms"
         href: articles/computation-algorithms.html
+      - text: "How medfit is organized"
+        href: articles/guide-architecture.html
+      - text: "Quality control of the optimizer"
+        href: articles/quality-control.html
+      - text: "─────────────"
+      - text: "Release history"
       - text: "What's new in 0.11"
         href: articles/whats-new-0-11.html
       - text: "What's new in 0.15: native defaults"
         href: articles/sem-defaults-0-15.html
-      - text: "Quality control of the optimizer"
-        href: articles/quality-control.html
-    project:
-      text: Project
-      menu:
-      - text: "Quality control of the optimizer"
-        href: articles/quality-control.html
+      - text: "─────────────"
+      - text: "Project"
       - text: "Ecosystem"
         href: https://data-wise.github.io/mediationverse/articles/ecosystem.html
       - text: "Package Status Dashboard"
