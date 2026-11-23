@@ -13,14 +13,9 @@ page_names <- function() {
 
 read_text <- function(p) paste(readLines(p, warn = FALSE), collapse = "\n")
 
-# The id pandoc gives a heading: leading number dropped, lowercased, punctuation
-# removed (underscores, hyphens and periods stay), spaces to hyphens.
-heading_id <- function(h) {
-  h <- sub("^[0-9]+\\.\\s*", "", h)
-  h <- gsub("`", "", tolower(h))
-  h <- gsub("[^a-z0-9 _.-]", "", h)
-  gsub(" +", "-", trimws(h))
-}
+# The id pandoc gives a heading: an explicit `{#id}` wins (a renamed heading keeps its old
+# anchor that way); otherwise the auto id (see helper-docs-headings.R).
+heading_id <- function(h) docs_heading_anchor(h)
 
 cookbook_ids <- function() {
   testthat::skip_if_not(dir.exists(root_path("vignettes", "articles")),
