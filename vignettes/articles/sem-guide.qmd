@@ -19,6 +19,12 @@ constraints, model comparison, diagnostics and the route to the mediation
 objects. For a first look, read
 [the five-minute quickstart](sem-quickstart.html).
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you want the whole sem engine workflow in one place: syntax, fitting, inference, constraints, comparison and diagnostics.\
+**You get:** the workflow from model syntax to the mediation objects, with the limits stated.\
+**Reading time:** 19 min | **Status:** stable
+:::
+
 | | |
 |---|---|
 | **Entry points** | `fit_sem(syntax, data)`; `fit_mediation(model = syntax, engine = "sem")` for one mediator |
@@ -486,3 +492,7 @@ RNG or worker launch; opaque user callbacks are outside this guarantee. AIC/BIC
 comparisons dispatched with SEMFit first require compatible FIML contexts and
 refuse external/mixed objects before external likelihood calls. Calls dispatched
 first through another class are outside medfit's guard.
+
+::: {.next-action}
+**Next:** Compare it with lavaan: [lavaan and the sem engine](lavaan-comparison.html)
+:::

@@ -142,6 +142,90 @@ contrast_problems <- function(scss, bg = "#d9dadb", min = 4.5) {
   if (length(low)) paste("colors below 4.5:1 on", bg, ":", paste(low, collapse = " ")) else character()
 }
 
+# RD-10: every non-model article opens with a "Use this when" line before its first section and closes with a Next
+# block (the model pages have their own gate above). The exemption list is explicit and small: a page named here skips
+# the opener only, with the reason on the entry.
+opener_exempt <- c(models = "the model picker is itself an index: its first table is the opener")
+
+outside_code <- function(lines) {
+  fence <- grepl("^\\s*(```|~~~)", lines)
+  !(cumsum(fence) %% 2L == 1L | fence)
+}
+body_lines <- function(lines) {
+  if (length(lines) && lines[1L] == "---") lines <- lines[-seq_len(which(lines[-1L] == "---")[1L] + 1L)]
+  lines
+}
+article_problems <- function(pages, exempt = names(opener_exempt)) {
+  bad <- character()
+  for (n in names(pages)) {
+    p <- pages[[n]]
+    if (!any(grepl("{.next-action}", p, fixed = TRUE))) bad <- c(bad, paste(n, "has no Next block"))
+    if (n %in% exempt) next
+    b <- body_lines(p)
+    live <- outside_code(b)
+    open <- which(grepl("^\\*\\*Use this when:\\*\\*", b) & live)
+    h2 <- which(grepl("^## ", b) & live & outside_div(b))
+    if (!length(open)) {
+      bad <- c(bad, paste(n, "has no 'Use this when' opener"))
+    } else if (length(h2) && open[1L] > h2[1L]) {
+      bad <- c(bad, paste(n, "has its 'Use this when' opener after the first section"))
+    }
+    rt <- grep("^\\*\\*Reading time:\\*\\*", b, value = TRUE)
+    if (length(rt) && !all(grepl("^\\*\\*Reading time:\\*\\* [1-9][0-9]* min", rt))) {
+      bad <- c(bad, paste(n, "has a malformed reading time"))
+    }
+  }
+  bad
+}
+
+# pandoc ids of the headings at `level` ("##" for sections), outside code and outside a ::: div (a callout title is
+# not a section and gets no id): an explicit {#id} wins, else lower case, punctuation dropped except _-., spaces to
+# hyphens
+outside_div <- function(lines) {
+  depth <- cumsum(grepl("^:::+ *[{A-Za-z.]", lines)) - cumsum(grepl("^:::+ *$", lines))
+  depth <= 0L
+}
+heading_ids_at <- function(lines, level = "##") {
+  h <- lines[outside_code(lines) & outside_div(lines) & grepl(paste0("^", level, " +\\S"), lines)]
+  h <- sub(paste0("^", level, " +"), "", h)
+  explicit <- grepl("\\{[^}]*#[A-Za-z0-9_.:-]+[^}]*\\}\\s*$", h)
+  txt <- gsub("[`*]", "", sub("\\s*\\{[^}]*\\}\\s*$", "", h))
+  auto <- gsub("\\s+", "-", gsub("[^a-z0-9_ .-]", "", tolower(txt)))
+  ifelse(explicit, sub("^.*\\{[^}]*#([A-Za-z0-9_.:-]+)[^}]*\\}\\s*$", "\\1", h), auto)
+}
+# explicit ids anywhere (a heading or a div attribute such as `::: {#first-check-your-version .callout-tip}`)
+explicit_ids <- function(lines) {
+  x <- lines[outside_code(lines)]
+  m <- unlist(regmatches(x, gregexpr("\\{[^}]*#[A-Za-z0-9_.:-]+", x)))
+  sub("^.*#", "", m)
+}
+anchor_ids <- function(x) gsub("^\\]\\(#|\\)$", "", unlist(regmatches(x, gregexpr("\\]\\(#[^)]+\\)", x))))
+
+# the Troubleshooting page leads with a table of the most common errors, each row linking to its section, and a
+# "Jump to" list that covers every section
+trouble_problems <- function(lines) {
+  start <- grep("^## Most common errors$", lines)
+  if (!length(start)) return("guide-troubleshooting has no 'Most common errors' section")
+  h2 <- grep("^## ", lines)
+  sec <- lines[start:(c(h2[h2 > start], length(lines) + 1L)[1L] - 1L)]
+  rows <- grep("^\\|", sec, value = TRUE)
+  rows <- rows[-seq_len(min(2L, length(rows)))]
+  bad <- character()
+  if (length(rows) < 6L) bad <- c(bad, sprintf("'Most common errors' has %d rows, expected at least 6", length(rows)))
+  one_link <- vapply(rows, function(r) length(anchor_ids(r)) == 1L, logical(1))
+  if (!all(one_link)) bad <- c(bad, "a 'Most common errors' row lacks exactly one section link")
+  ids <- unique(c(heading_ids_at(lines, "##"), heading_ids_at(lines, "###"), explicit_ids(lines)))
+  dead <- setdiff(anchor_ids(sec), ids)
+  if (length(dead)) bad <- c(bad, paste("dead link near the top:", paste(dead, collapse = ", ")))
+  j <- grep("^\\*\\*Jump to:\\*\\*", sec)
+  if (!length(j)) return(c(bad, "no 'Jump to' list"))
+  k <- j[1L]
+  while (k < length(sec) && nzchar(sec[k + 1L])) k <- k + 1L
+  miss <- setdiff(setdiff(heading_ids_at(lines, "##"), "most-common-errors"), anchor_ids(sec[j[1L]:k]))
+  if (length(miss)) bad <- c(bad, paste("'Jump to' lacks:", paste(miss, collapse = ", ")))
+  bad
+}
+
 # documentation coverage: every export has an Rd alias
 export_problems <- function(namespace, aliases) {
   ex <- sub("^export\\((.*)\\)$", "\\1", grep("^export\\(", namespace, value = TRUE))
@@ -256,6 +340,58 @@ test_that("planted defects: layout gates catch a missing Next block, shown setup
   expect_match(menu_problems(comp, "a", "x"), "missing article: y")
   expect_match(contrast_problems("a { color: #909294; }"), "below 4.5:1")
   expect_identical(contrast_problems("a { color: #3f4244; }"), character())
+})
+
+test_that("non-model articles open with 'Use this when' and end with a Next block; Troubleshooting leads well", {
+  skip_if_not(have_tree(), "source tree not available")
+  fs <- list.files(root_path("vignettes", "articles"), "\\.qmd$", full.names = TRUE)
+  fs <- fs[!startsWith(basename(fs), "model-")]
+  pages <- stats::setNames(lapply(fs, readLines, warn = FALSE), sub("\\.qmd$", "", basename(fs)))
+  expect_gt(length(pages), 20L)
+  expect_true(all(names(opener_exempt) %in% names(pages)))  # an exemption for a page that is gone is stale
+  expect_identical(article_problems(pages), character())
+  expect_identical(trouble_problems(pages[["guide-troubleshooting"]]), character())
+})
+
+test_that("planted defects: the article gate catches a missing opener, a late one, a missing Next block, a bad time", {
+  good <- c("---", "title: x", "---", "Intro.", "", "::: {.callout-note}", "**Use this when:** you need x.\\",
+            "**Reading time:** 3 min", ":::", "", "## Section", "", "::: {.next-action}", "**Next:** y", ":::")
+  expect_identical(article_problems(list(a = good)), character())
+  no_open <- good[!grepl("Use this when", good, fixed = TRUE)]
+  expect_match(article_problems(list(a = no_open)), "a has no 'Use this when' opener")
+  late <- c(good[1:5], "## Section", "", good[6:9], good[13:15])
+  expect_match(article_problems(list(a = late)), "after the first section")
+  expect_match(article_problems(list(a = good[1:12])), "a has no Next block")
+  expect_match(article_problems(list(a = sub("3 min", "0 min", good))), "malformed reading time")
+  expect_match(article_problems(list(a = sub("3 min", "soon", good))), "malformed reading time")
+  # the explicit exemption skips the opener only: a page without a Next block is still caught
+  bare <- no_open[1:11]
+  expect_identical(article_problems(list(a = bare), exempt = "a"), "a has no Next block")
+  expect_identical(article_problems(list(a = c(bare, "::: {.next-action}")), exempt = "a"), character())
+  # an opener inside a code chunk does not count
+  fenced <- c(good[1:5], "```", "**Use this when:** x", "```", "## Section", "::: {.next-action}")
+  expect_match(article_problems(list(a = fenced)), "has no 'Use this when' opener")
+})
+
+test_that("planted defects: the Troubleshooting gate catches dead and missing links and a lost section", {
+  skip_if_not(have_tree(), "source tree not available")
+  tr <- read_lines("vignettes", "articles", "guide-troubleshooting.qmd")
+  expect_identical(trouble_problems(tr), character())
+  dead_row <- trouble_problems(sub("(#two-level-mediation)", "\\1-x", tr))  # also breaks the jump link: two problems
+  expect_true(any(grepl("dead link near the top: two-level-mediation-x", dead_row, fixed = TRUE)))
+  # the callout title is not a section: a link to its auto id is dead unless the div carries the id
+  no_id <- sub("{#first-check-your-version .callout-tip}", "{.callout-tip}", tr, fixed = TRUE)
+  expect_match(trouble_problems(no_id), "dead link near the top: first-check-your-version")
+  jump <- grep("^\\*\\*Jump to:", tr)
+  no_jump <- sub("\\| \\[Cluster\\]\\(#cluster-engine\\) ", "", tr)
+  expect_match(trouble_problems(no_jump), "'Jump to' lacks: cluster-engine")
+  expect_length(jump, 1L)
+  new_section <- append(tr, c("## A new section", "", "text", ""), after = length(tr))
+  expect_match(trouble_problems(new_section), "'Jump to' lacks: a-new-section")
+  renamed <- sub("## Most common errors", "## Common errors", tr, fixed = TRUE)
+  expect_match(trouble_problems(renamed), "no 'Most common errors'")
+  first_row <- grep("^\\| `object 'mediation_demo'", tr)
+  expect_match(trouble_problems(tr[-first_row]), "at least 6")
 })
 
 test_that("every export has an Rd alias", {

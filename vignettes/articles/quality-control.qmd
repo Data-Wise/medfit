@@ -20,6 +20,12 @@ so they cannot drift from them. Plan and ledger:
 The model syntax for the external oracles (lavaan, OpenMx, and semopy) is on
 [One model in medfit, lavaan, OpenMx and semopy](syntax-crosswalk.html).
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you want to see how the sem engine's optimizer is tested and where its decisions are recorded.\
+**You get:** tables of the gates, the model structures and the decision records, generated from the repository files at site build.\
+**Reading time:** 12 min
+:::
+
 ```{r}
 #| label: qc-sources
 root <- normalizePath(file.path("..", ".."), mustWork = FALSE)
@@ -247,3 +253,7 @@ cannot find it under `covr`; those mutants skip under coverage and run in every 
 MBCO root ledger without a validator was an adversarial review, a reader independent of the slice's own QA,
 looking for what the author's tests assume. The record of the release is
 `planning/specs/RESULT-qc-0.14.1-d1-d4-2026-10-25.md`.
+
+::: {.next-action}
+**Next:** The same model in four packages' syntax: [One model in medfit, lavaan, OpenMx and semopy](syntax-crosswalk.html)
+:::

@@ -25,6 +25,12 @@ the later fixes improve the reliability and interpretation of its results.
 Examples use the bundled `mediation_demo` data. Native fits are marked
 `eval: false` because optimization can take longer than a quick site build.
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you are upgrading across 0.11.0 and 0.11.1 and want the practical consequences.\
+**You get:** each change with what and why, and a check you can run.\
+**Reading time:** 4 min
+:::
+
 ## Reproducible bootstrap resamples (0.11.1)
 
 **What:** Nonparametric row and cluster resample indices are drawn in the
@@ -173,3 +179,7 @@ example inspects one fit's user-visible verdict:
 fit <- fit_sem(base, mediation_demo)
 fit@diagnostics$optimum$status
 ```
+
+::: {.next-action}
+**Next:** The whole upgrade table: [What changed since CRAN 0.3.2](guide-changes.html)
+:::

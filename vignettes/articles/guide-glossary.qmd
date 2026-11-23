@@ -16,6 +16,12 @@ Every term and symbol medfit prints, in one place. Each links to the page that
 uses it. The formulas are the ones in [Methods and Formulas](methods.html), which
 also states the assumptions.
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you meet a term, a symbol or an output name and want its meaning.\
+**You get:** one table per area, each entry linked to the page that uses it.\
+**Reading time:** 8 min
+:::
+
 ## Variables and paths
 
 | Symbol | Meaning |
@@ -136,6 +142,10 @@ See [Two-level mediation](model-twolevel.html).
 | **nested comparison** (`anova()`) | the likelihood-ratio test of a restricted fit against a fuller one; it refits nothing and refuses fits that are not nested | [Compare nested fits](model-sem-constraints.html#compare-nested-fits) |
 | **conditional log likelihood** | the log likelihood given the fixed variables under `fixed_x` (the default since 0.15.0), so `logLik()`, AIC and BIC of fits with different fixed sets cannot be compared | [Limits](model-sem.html#limits) |
 | **outcome ledger** (`fit@diagnostics$ledger`) | the record of how a native fit, each zero-product branch and each `mbco_sem()` null was reached; an unresolved node is unknown, and only a literal contradiction is certified empty | [Errors that carry evidence](guide-troubleshooting.html#errors-that-carry-evidence) |
+
+::: {.next-action}
+**Next:** See the formulas behind the terms: [Methods and Formulas](methods.html)
+:::
 
 ## Related
 

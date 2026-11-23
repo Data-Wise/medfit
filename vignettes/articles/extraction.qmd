@@ -11,6 +11,12 @@ execute:
   eval: true
 ---
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you already have fitted `lm`, `glm`, `lmer`, `lavaan` or `fit_sem()` models and want the mediation object.\
+**You get:** the S7 class that matches the structure, ready for `nie()`, `tidy()` and `bootstrap_mediation()`.\
+**Reading time:** 15 min
+:::
+
 ## Overview
 
 The `extract_mediation()` function provides a standardized interface for extracting mediation structures from fitted models. It works with:
@@ -989,6 +995,10 @@ Model extraction is **complete**:
 - ✅ Native SEM extraction (`fit_sem()` to `SEMFit` to `extract_mediation()`)
 
 See `NEWS.md` for updates.
+
+::: {.next-action}
+**Next:** Add an interval: [Bootstrap Inference](bootstrap.html)
+:::
 
 ## Next Steps
 

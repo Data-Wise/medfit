@@ -17,6 +17,12 @@ This page lists what a 0.3.2 user needs to know before upgrading: numbers that
 change, calls that now stop with an error, and what is new. The full record is
 [NEWS](https://data-wise.github.io/medfit/news/index.html).
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you used CRAN's 0.3.2 and want to know what changes before you upgrade.\
+**You get:** the results that changed, the calls that now stop with an error, and what is new, release by release.\
+**Reading time:** 13 min
+:::
+
 ::: {.callout-note}
 ## The short version
 - **Two results were wrong in 0.3.2 and are fixed:** serial `te()`/`pm()`, and
@@ -124,6 +130,10 @@ reuses one of medfit's alias names for a different path (0.5.0).
 0.7.0 adds `lifecycle` and `nloptr (>= 1.0.4)` to `Imports`, and `OpenMx` to
 `Suggests` (the tests use it as an independent check). 0.8.0 adds `withr` to
 `Suggests` (tests only).
+
+::: {.next-action}
+**Next:** A call now stops with an error: [Troubleshooting](guide-troubleshooting.html)
+:::
 
 ## Related
 

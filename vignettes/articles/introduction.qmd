@@ -11,6 +11,12 @@ execute:
   eval: true
 ---
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you want the package's design in one read: the entry points and the S7 classes.\
+**You get:** an overview of the entry points, effects and one class for each mediation structure.\
+**Reading time:** 3 min
+:::
+
 ## Overview
 
 **medfit** provides unified infrastructure for mediation analysis in R. It offers:
@@ -361,6 +367,10 @@ medfit serves as the foundation for specialized mediation packages:
 4. **Extensibility**: Easy to add new model engines and methods
 5. **Minimal dependencies**: Core functionality with minimal external dependencies
 6. **Infrastructure focus**: Provides tools, not effect sizes
+
+::: {.next-action}
+**Next:** Fit your first model: [Getting Started](getting-started.html)
+:::
 
 ## Next Steps
 

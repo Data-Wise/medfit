@@ -11,6 +11,12 @@ execute:
   eval: true
 ---
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you need an interval for an indirect effect and must choose between the parametric, nonparametric and plugin methods.\
+**You get:** a `BootstrapResult` with the estimate, a percentile interval and the resample draws.\
+**Reading time:** 6 min
+:::
+
 ## Overview
 
 Bootstrap inference provides confidence intervals for indirect effects without assuming normality. medfit implements three bootstrap methods:
@@ -628,3 +634,7 @@ confint(boot_result, level = 0.90)
 - Percentile intervals only; BCa intervals are not implemented.
 
 See `NEWS.md` for updates.
+
+::: {.next-action}
+**Next:** Choose between the intervals: [Which interval should I use?](guide-intervals.html)
+:::
