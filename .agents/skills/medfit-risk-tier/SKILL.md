@@ -22,8 +22,8 @@ An `n/a` needs a real reason (for example, "the gates run on the release PR to `
 structure needs at least items 1, 2 and 3 for real (`test-gate-coverage.R` enforces registration).
 
 ## 2. Evidence
-- Full suite with counts:
-  `NOT_CRAN=true Rscript -e 'r <- as.data.frame(devtools::test(reporter="silent", stop_on_failure=FALSE)); cat(nrow(r), sum(r$nb), sum(r$failed), sum(r$error), sum(r$skipped))'`
+- Full suite with counts: `scripts/check-local.sh --full-tests`. Reuse a successful receipt only for the same
+  verified tree, run mode and environment. Record the log, counts and exit status.
 - Local gate for `dev` work: `scripts/check-local.sh`.
 - A failure blocks only if it fails on the branch and passes on `dev`. Reproduce on `dev` first. A failure that
   also fails on `dev` is not hidden: name it in the PR body as a pre-existing failure with the `dev` reproduction, and
