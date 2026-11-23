@@ -210,11 +210,11 @@ mediator works through the same call.
 - **ML only**, plus the HC0 sandwich; no robust chi-square, no fit indices beyond
   the chi-square, AIC and BIC.
 - **Products** (`x:m`, which give the four-way decomposition) work for two observed variables inside a
-  supported class; the table of limits and messages is on [the native model page](model-sem.html#product-terms).
+  supported class; the table of limits and messages is on [the sem engine model page](model-sem.html#product-terms).
   The model test is `NA` when a product factor is a regression target.
 - **AIC and BIC of a fit with a product are not comparable** with those of a fit without one (the product
   column enters the likelihood), so `AIC(fit_a, fit_b)` and `BIC()` refuse such a pair; see
-  [the native model page](model-sem.html#limits).
+  [the sem engine model page](model-sem.html#limits).
 - For latent means, groups, categorical outcomes or fit indices use lavaan; the extraction
   route accepts a `lavaan` fit as well. See
   [lavaan and the sem engine](lavaan-comparison.html).

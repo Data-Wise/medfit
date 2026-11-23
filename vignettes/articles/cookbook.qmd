@@ -215,7 +215,7 @@ decompose(extract_mediation(sem_i, treatment = "treatment", mediator = "mediator
                             outcome = "outcome_int"))
 ```
 
-More: [Model Extraction](extraction.html), [the native product term](model-sem.html#product-terms).
+More: [Model Extraction](extraction.html), [the sem engine product term](model-sem.html#product-terms).
 
 ## 8. Many mediators with products
 
@@ -315,7 +315,7 @@ tidy(xl, type = "effects", conf_int = TRUE)
 
 More: [Model Extraction](extraction.html).
 
-## 11. A latent mediator, native engine
+## 11. A latent mediator, sem engine {#a-latent-mediator-native-engine}
 
 *When:* the mediator is a construct measured by several indicators, and you want
 its indirect effect without first averaging the indicators into a score. The
@@ -360,7 +360,7 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")
 Optimizer settings for either call go in `control = sem_control()` (for example
 `sem_control(nloptr = list(maxeval = 20000L))`); a plain list of `nloptr` options still works.
 
-## 12. A nonlinear constraint or a longer chain, native engine
+## 12. A nonlinear constraint or a longer chain, sem engine {#a-nonlinear-constraint-or-a-longer-chain-native-engine}
 
 *When:* you want to fix the direct effect at the indirect effect (`cp == a*b`), or
 test the indirect effect of a three-mediator-step chain, which is a product of
@@ -426,7 +426,7 @@ joint_test(fit_a, "treatment", fit_b, "mediator1")
 
 More: [GLM families](model-glm-families.html#joint-significance-test-for-the-indirect-effect).
 
-## 14. Compare two native models
+## 14. Compare two sem engine models {#compare-two-native-models}
 
 *When:* you want to know whether a path or a constraint is needed, on the native
 engine. `anova()` is the likelihood-ratio test for nested `SEMFit`s; it refits
@@ -504,7 +504,7 @@ round(coef(bounded)[c("a", "b")], 3)
 `lower(2)` is above the variance the data want (about 1.2), so the bound binds and
 is reported. `0 * treatment` fixes the direct effect at zero.
 
-## 17. Check a native fit before trusting it
+## 17. Check a sem engine fit before trusting it {#check-a-native-fit-before-trusting-it}
 
 *When:* before you report a native fit. Read the diagnostics, then ask whether the
 model fits when it has restrictions (`df > 0`).
@@ -622,7 +622,7 @@ Pass `meanstructure = NULL` to fit a mean structure only when the model writes `
 
 More: [The sem engine, intercepts](model-sem.html#intercepts).
 
-## 20. Four-way decomposition from a native fit
+## 20. Four-way decomposition from a sem engine fit {#four-way-decomposition-from-a-native-fit}
 
 *When:* the outcome depends on the treatment, the mediator and their product, and you want
 the controlled direct effect, the two interaction terms and the pure indirect effect. Write
@@ -683,7 +683,7 @@ c(estimate = boot20@estimate, lower = boot20@ci_lower, upper = boot20@ci_upper)
 
 More: [The sem engine, product term](model-sem.html).
 
-## 21. A categorical covariate in a native fit
+## 21. A categorical covariate in a sem engine fit {#a-categorical-covariate-in-a-native-fit}
 
 *When:* a covariate is a factor, character or logical column (a group, a site, a yes/no flag).
 Write the column name where a numeric covariate would go. The engine replaces it with one 0/1 dummy per

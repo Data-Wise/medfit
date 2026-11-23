@@ -106,7 +106,7 @@ mbco_sem(fit, paths = c("a", "b"))
 ## Products and the four-way decomposition
 
 `group:mediator1` expands to one product per dummy, each a product term under the
-rules in [the native model page](model-sem.html). The fit warns that the global
+rules in [the sem engine model page](model-sem.html). The fit warns that the global
 test is not valid with a product, so the chunk silences it and asks for the sandwich:
 
 ```{r}

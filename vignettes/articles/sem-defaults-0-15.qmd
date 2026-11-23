@@ -223,7 +223,7 @@ In released 0.15.0, the native engine drops incomplete rows (listwise deletion),
 and `fixed_x` moments are the sample moments of those rows; that release has no
 `missing =` argument. The separate bounded FIML milestone preserves
 this default but permits explicit random-X simple mediation. See the
-[native guide](sem-guide.html#bounded-fiml); bounded FIML is available from
+[sem engine guide](sem-guide.html#bounded-fiml); bounded FIML is available from
 0.16.0.
 
 ## Evidence: the oracle matrix
@@ -270,4 +270,4 @@ optimizer failure (see `?compare_lr`).
 
 - [What changed since CRAN 0.3.2](guide-changes.html) for the release-by-release table.
 - [Troubleshooting](guide-troubleshooting.html) for the warning and message texts.
-- [The native engine guide](sem-guide.html) and [medfit and lavaan](lavaan-comparison.html).
+- [The sem engine guide](sem-guide.html) and [medfit and lavaan](lavaan-comparison.html).
