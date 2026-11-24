@@ -19,14 +19,46 @@ exclusions: list(
     # two-level effect helpers use tl_* fixtures defined in helper-twolevel.R
     "tests/testthat/helper-twolevel-effects.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-docs.R" = list(object_usage_linter = Inf),
+    # the two-level row probe of the lavaan comparison uses tl_sim() and tl_model() of helper-twolevel.R
+    "tests/testthat/test-lavaan-comparison.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-contrast.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-contrast-qa.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-effects.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-hardening-qa.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-bootstrap.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-twolevel-parallel-statistic.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-sem-twolevel-guards.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-native-refusals.R" = list(object_usage_linter = Inf),
+    # IG3 T-A two-level MBCO tests use the O8 tl_* helpers of helper-twolevel-likelihood.R
+    "tests/testthat/test-sem-mbco-twolevel.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-sem-mbco-twolevel-qa.R" = list(object_usage_linter = Inf),
     # the k = 3 QA oracle's helper calls testthat expectations outside test_that()
     "tests/testthat/test-twolevel-parallel-effects-qa.R" = list(object_usage_linter = Inf),
+    # U3 three-oracle helpers (tl_mx_*) use the O8 tl_* helpers of helper-twolevel-likelihood.R
+    "tests/testthat/helper-twolevel-openmx.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-three-oracle.R" = list(object_usage_linter = Inf),
+    # S4a.2 native two-level likelihood tests use the O8 tl_* helpers of helper-twolevel-likelihood.R
+    "tests/testthat/helper-twolevel-native.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-native-loglik.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-native-gradient.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-native-gradient-qa.R" = list(object_usage_linter = Inf),
+    # S4a.4 fit tests and parity gate use the tl_*, tln_*, tl_mx_* and sem_mutate helpers of tests/testthat/helper-*.R
+    "tests/testthat/test-twolevel-native-fit.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-native-fit-qa.R" = list(object_usage_linter = Inf),
+    # S4a.5 extraction and docs tests use the tl_* and tln_* helpers of tests/testthat/helper-*.R
+    "tests/testthat/test-twolevel-native-extract.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-native-extract-qa.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-native-docs.R" = list(object_usage_linter = Inf),
+    "tests/sim/sem-twolevel-parity-gate.R" = list(object_usage_linter = Inf),
+    "tests/sim/sem-twolevel-sandwich-gate.R" = list(object_usage_linter = Inf),
+    # IG3 T-B equal-indirect tests use the tl_* O8 helpers of helper-twolevel-likelihood.R and testthat expectations
+    "tests/testthat/helper-twolevel-equal.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-equal-indirect.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-native-sandwich.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-twolevel-native-sandwich-qa.R" = list(object_usage_linter = Inf),
+    # the cookbook and model-page guards read heading anchors with docs_heading_anchor() of helper-docs-headings.R
+    "tests/testthat/test-cookbook-consistency.R" = list(object_usage_linter = Inf),
+    "tests/testthat/test-model-pages.R" = list(object_usage_linter = Inf),
     "tests/testthat/helper-fiml-golden.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g1-covariate.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g1-two-covariates.R" = list(object_usage_linter = Inf),

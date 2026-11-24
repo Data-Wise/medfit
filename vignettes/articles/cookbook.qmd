@@ -20,6 +20,46 @@ These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 2
 `mediation_demo` and the native, joint and cluster functions; install from
 GitHub or r-universe (see the [home page](https://data-wise.github.io/medfit/#install)).
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you know the task and want a short recipe you can run.\
+**You get:** short recipes, each with code on `mediation_demo` (or simulated data) and a link to the page that explains it.\
+**Reading time:** 15 min
+:::
+
+**Find your recipe**
+
+| I want to ... | Recipe |
+|---|---|
+| **Basics (1-4)** | |
+| Get a mediation answer from a data frame fast | [1](#one-line-mediation) |
+| Reuse mediator and outcome models I already fitted with lm | [2](#i-already-have-lm-fits) |
+| Analyze a binary outcome with a logistic model | [3](#binary-outcome) |
+| Weight cases and get robust standard errors | [4](#weights-and-robust-standard-errors) |
+| **Several mediators and interactions (5-8)** | |
+| Fit two mediators linked in a chain | [5](#two-mediators-in-a-chain) |
+| Fit two mediators side by side | [6](#two-mediators-side-by-side) |
+| Let the mediator interact with the treatment | [7](#treatment-by-mediator-interaction) |
+| Handle many mediators with treatment-by-mediator products | [8](#many-mediators-with-products) |
+| **Clusters, two-level and lavaan (9, 10, 23, 24)** | |
+| Analyze a cluster-randomized trial with mixed models | [9](#cluster-randomized-trial) |
+| Extract mediation effects from an existing lavaan fit | [10](#i-use-lavaan) |
+| Separate within and between effects in a two-level fit | [23](#a-two-level-lavaan-fit-within-and-between) |
+| Use two parallel mediators in a two-level fit | [24](#two-parallel-mediators-in-a-two-level-lavaan-fit) |
+| **The sem engine (11, 12, 14-21)** | |
+| Fit a latent mediator from model syntax | [11](#a-latent-mediator-native-engine) |
+| Impose a nonlinear constraint or a longer chain | [12](#a-nonlinear-constraint-or-a-longer-chain-native-engine) |
+| Compare two sem engine models with a likelihood-ratio test | [14](#compare-two-native-models) |
+| Get an interval for a defined parameter | [15](#a-defined-parameter-and-its-interval) |
+| Bound a variance or fix a path | [16](#bound-a-variance-or-fix-a-path) |
+| Check a sem engine fit before trusting it | [17](#check-a-native-fit-before-trusting-it) |
+| Fix exogenous covariates at their sample values (fixed_x) | [18](#fix-exogenous-covariates-fixed_x) |
+| Estimate observed intercepts and means in a sem fit | [19](#observed-intercepts-and-means) |
+| Split the effect into the four-way decomposition | [20](#four-way-decomposition-from-a-native-fit) |
+| Include a categorical covariate in a sem engine fit | [21](#a-categorical-covariate-in-a-native-fit) |
+| **Inference and missing data (13, 22)** | |
+| Test joint significance for a binary or count outcome | [13](#joint-significance-for-a-binary-or-count-outcome) |
+| Handle missing data with bounded FIML | [22](#missing-data-bounded-fiml) |
+
 ```{r}
 #| label: setup
 library(medfit)
@@ -175,7 +215,7 @@ decompose(extract_mediation(sem_i, treatment = "treatment", mediator = "mediator
                             outcome = "outcome_int"))
 ```
 
-More: [Model Extraction](extraction.html), [the native product term](model-sem.html#product-terms).
+More: [Model Extraction](extraction.html), [the sem engine product term](model-sem.html#product-terms).
 
 ## 8. Many mediators with products
 
@@ -275,7 +315,7 @@ tidy(xl, type = "effects", conf_int = TRUE)
 
 More: [Model Extraction](extraction.html).
 
-## 11. A latent mediator, native engine
+## 11. A latent mediator, sem engine {#a-latent-mediator-native-engine}
 
 *When:* the mediator is a construct measured by several indicators, and you want
 its indirect effect without first averaging the indicators into a score. The
@@ -320,7 +360,7 @@ mbco_sem(fit_sem(syntax, ldat), "a", "b")
 Optimizer settings for either call go in `control = sem_control()` (for example
 `sem_control(nloptr = list(maxeval = 20000L))`); a plain list of `nloptr` options still works.
 
-## 12. A nonlinear constraint or a longer chain, native engine
+## 12. A nonlinear constraint or a longer chain, sem engine {#a-nonlinear-constraint-or-a-longer-chain-native-engine}
 
 *When:* you want to fix the direct effect at the indirect effect (`cp == a*b`), or
 test the indirect effect of a three-mediator-step chain, which is a product of
@@ -386,7 +426,7 @@ joint_test(fit_a, "treatment", fit_b, "mediator1")
 
 More: [GLM families](model-glm-families.html#joint-significance-test-for-the-indirect-effect).
 
-## 14. Compare two native models
+## 14. Compare two sem engine models {#compare-two-native-models}
 
 *When:* you want to know whether a path or a constraint is needed, on the native
 engine. `anova()` is the likelihood-ratio test for nested `SEMFit`s; it refits
@@ -464,7 +504,7 @@ round(coef(bounded)[c("a", "b")], 3)
 `lower(2)` is above the variance the data want (about 1.2), so the bound binds and
 is reported. `0 * treatment` fixes the direct effect at zero.
 
-## 17. Check a native fit before trusting it
+## 17. Check a sem engine fit before trusting it {#check-a-native-fit-before-trusting-it}
 
 *When:* before you report a native fit. Read the diagnostics, then ask whether the
 model fits when it has restrictions (`df > 0`).
@@ -582,7 +622,7 @@ Pass `meanstructure = NULL` to fit a mean structure only when the model writes `
 
 More: [The sem engine, intercepts](model-sem.html#intercepts).
 
-## 20. Four-way decomposition from a native fit
+## 20. Four-way decomposition from a sem engine fit {#four-way-decomposition-from-a-native-fit}
 
 *When:* the outcome depends on the treatment, the mediator and their product, and you want
 the controlled direct effect, the two interaction terms and the pure indirect effect. Write
@@ -643,7 +683,7 @@ c(estimate = boot20@estimate, lower = boot20@ci_lower, upper = boot20@ci_upper)
 
 More: [The sem engine, product term](model-sem.html).
 
-## 21. A categorical covariate in a native fit
+## 21. A categorical covariate in a sem engine fit {#a-categorical-covariate-in-a-native-fit}
 
 *When:* a covariate is a factor, character or logical column (a group, a site, a yes/no flag).
 Write the column name where a numeric covariate would go. The engine replaces it with one 0/1 dummy per
@@ -768,6 +808,12 @@ bootstrap, or the `lavaan` fit with `treatment`, `mediator`, `outcome` and `clus
 bootstrap (report its percentile interval). A treatment or mediator with almost no between-cluster variance gives a within-only result and the classed
 warning `medfit_between_unidentified`. More: [Two-level mediation](model-twolevel.html).
 
+To test whether the within and the between indirect effects are equal, pass the `fit_sem(cluster = )` fit to
+`twolevel_equal_indirect(fit)`: a likelihood-ratio test of `a_w*b_w == a_b*b_b` against chi-square(1), experimental.
+`n_boot = 200` adds a parametric bootstrap p-value for few clusters, conditional on admissible refits (`boot$n_dropped`
+counts the rest). An inadmissible or non-converged constrained refit gives an unresolved result (statistic `NA`) with a
+warning, and the descriptive contrast of `nie(level = "contrast")` carries no p-value.
+
 ## 24. Two parallel mediators in a two-level lavaan fit
 
 *When:* as in recipe 23, but two or more mediators each carry part of the effect and none is regressed on
@@ -832,3 +878,8 @@ Every exported class and function appears in a recipe, or the table says why not
 | `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | 22 (the simple model; the parallel and serial forms are in [Bounded FIML](model-fiml.html)) |
 | `TwoLevelMediationData` | 23 (an `extract_mediation()` on a two-level `lavaan` fit, and `twolevel_statistic()` for its bootstrap; see [Two-level mediation](model-twolevel.html)) |
 | `TwoLevelParallelMediationData` | 24 (an `extract_mediation()` on a two-level `lavaan` fit with two or more mediators, and `twolevel_statistic()` for its bootstrap; see [Several parallel mediators](model-twolevel.html#several-parallel-mediators)) |
+| `twolevel_equal_indirect()` | 23 (the test that the within and between indirect effects of a `fit_sem(cluster = )` fit are equal; see [Two-level mediation](model-twolevel.html)) |
+
+::: {.next-action}
+**Next:** Look up one call: [Reference Card](refcard.html). Pick a model page: [Models](models.html)
+:::

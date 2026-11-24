@@ -435,3 +435,110 @@
   }
   invisible(p)
 }
+
+# --- Native two-level (S4a, experimental) ---
+
+# The stop for a two-level step that does not exist yet: the single-level fitter reached with `level:` lines but no
+# `cluster` (`.sem_single_level_only()`), and mediation effects from a native two-level fit until S4a.5, so that no
+# single-level code runs on the pooled rows or on the two-level parameter vector.
+.sem_twolevel_not_implemented <- function(what = "native two-level estimation") {
+  .twolevel_abort(
+    paste0(what, " needs `cluster`: fit a model with `level:` blocks with ",
+           "fit_sem(model, data, cluster = )"),
+    "medfit_error_twolevel_not_implemented"
+  )
+}
+
+# Within (W) and between-only (Z) variables of a two-level model (sketch item 1), on the complete-case rows of the
+# model's variables and the cluster column. W: the variables named in `level: 1` rows (each must also be named in a
+# `level: 2` row, so every W variable has a between part); Z: the variables named only in `level: 2` rows. Constancy
+# is read on clusters with at least two complete rows, by exact equality: a Z variable is a cluster attribute, so its
+# copies within a cluster are the same stored value, and a W variable that never varies within a cluster has no
+# within part to estimate. Size-1 clusters carry no within-cluster information and are skipped.
+.sem_twolevel_sets <- function(parsed, data, cluster) {
+  p <- parsed$parameters
+  vars_of <- function(lev) {
+    rows <- p[p$level == lev, , drop = FALSE]
+    unique(c(rows$lhs, rows$rhs[nzchar(rows$rhs)]))
+  }
+  lev1 <- vars_of(1L)
+  lev2 <- vars_of(2L)
+  within_only <- setdiff(lev1, lev2)
+  if (length(within_only)) {
+    .twolevel_abort(sprintf(
+      paste0("'%s' is named only in `level: 1` rows; every level-1 variable also needs a `level: 2` row ",
+             "(within-only variables are not supported yet)"),
+      within_only[1L]
+    ), "medfit_error_twolevel_varset")
+  }
+  within <- lev1
+  between <- setdiff(lev2, lev1)
+  vars <- c(within, between)
+  absent <- setdiff(vars, names(data))
+  if (length(absent)) {
+    .twolevel_abort(paste0("model variables are not columns of `data`: ", paste(absent, collapse = ", ")),
+                    "medfit_error_twolevel_varset")
+  }
+  rows <- stats::complete.cases(data[, c(vars, cluster), drop = FALSE])
+  cl <- data[[cluster]][rows]
+  if (length(unique(cl)) < 2L) {
+    .twolevel_abort("the complete-case rows hold fewer than 2 clusters; a two-level model needs at least 2 clusters",
+                    "medfit_error_twolevel_cluster")
+  }
+  multi <- cl %in% names(which(table(cl) >= 2L))
+  if (!any(multi)) {
+    .twolevel_abort(
+      "every cluster has one complete row, so no variable can be split into within and between parts",
+      "medfit_error_twolevel_varset"
+    )
+  }
+  varies <- function(v) {
+    x <- data[[v]][rows][multi]
+    g <- cl[multi]
+    any(vapply(split(x, g), function(xj) length(xj) && any(xj != xj[1L]), TRUE))
+  }
+  for (v in between) {
+    if (varies(v)) {
+      .twolevel_abort(sprintf(
+        paste0("'%s' is named only in `level: 2` rows but varies within a cluster; ",
+               "a between-only variable must be constant within each cluster"),
+        v
+      ), "medfit_error_twolevel_varset")
+    }
+  }
+  for (v in within) {
+    if (!varies(v)) {
+      .twolevel_abort(sprintf(
+        paste0("'%s' is constant within every cluster but is named in a `level: 1` row; ",
+               "a cluster-level variable belongs only in `level: 2` rows"),
+        v
+      ), "medfit_error_twolevel_varset")
+    }
+  }
+  list(within = within, between = between)
+}
+
+# Theta map of a two-level model (S4a.2): one RAM per level from that level's rows, completed as a single-level model
+# is (`.sem_complete()`), with no means at level 1 and the means at level 2 (Sigma_W over W; Sigma_B and mu_B over W
+# then Z). The two parameter vectors are concatenated into one theta: level-1 names as in a single-level model,
+# unlabeled level-2 names with lavaan's `.l2` suffix, and a label written at both levels is one theta entry (the label
+# rule of `.sem_ram()`). `k1` and `k2` index each level's parameters in theta.
+.sem_twolevel_ram <- function(parsed, sets) {
+  p <- parsed$parameters
+  lev <- lapply(1:2, function(l) {
+    .sem_to_ram(.sem_complete(p[p$level == l, , drop = FALSE], meanstructure = l == 2L, fixed_x = FALSE))
+  })
+  if (!setequal(lev[[1]]$ram$obs, sets$within) || !setequal(lev[[2]]$ram$obs, c(sets$within, sets$between))) {
+    stop("internal error: the level RAMs do not cover the W and Z sets", call. = FALSE)
+  }
+  n1 <- lev[[1]]$ram$par_names
+  n2 <- lev[[2]]$ram$par_names
+  labels2 <- unique(lev[[2]]$table$label[nzchar(lev[[2]]$table$label)])
+  n2 <- ifelse(n2 %in% labels2, n2, paste0(n2, ".l2"))
+  par_names <- unique(c(n1, n2))
+  list(
+    twolevel = TRUE, has_mean = TRUE, q = length(par_names), par_names = par_names,
+    ram1 = lev[[1]]$ram, ram2 = lev[[2]]$ram, k1 = match(n1, par_names), k2 = match(n2, par_names),
+    within = sets$within, between = sets$between, levels = lev
+  )
+}

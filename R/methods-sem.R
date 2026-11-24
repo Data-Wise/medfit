@@ -163,6 +163,11 @@ S7::method(logLik, SEMFit) <- function(object, ...) { # nolint: object_name_lint
          call. = FALSE)
   }
   ram <- object@internals$ram
+  if (isTRUE(ram$twolevel)) {
+    # the two-level objective is f = -2 log L / N itself (`.sem_eval_ml2()`), with the means in theta
+    return(structure(-0.5 * object@n_obs * object@f, df = .sem_n_free(object), nobs = object@n_obs,
+                     class = "logLik"))
+  }
   smp <- .sem_sample(object@data, ram)
   ll <- -0.5 * smp$n * (object@f + smp$logdet + smp$p + smp$p * log(2 * pi))
   # With `fixed_x` the likelihood is conditional on the fixed block: drop that block's marginal normal term, which
@@ -217,7 +222,7 @@ S7::method(print, SEMFit) <- function(x, ...) {
   cat(sprintf("  Parameters:    %d free, %s df\n", .sem_n_free(x), format(x@df)))
   cat(sprintf("  Information:   %s\n", x@information))
   if (!is.null(x@diagnostics$se_type)) {
-    se_label <- if (x@diagnostics$se_type == "sandwich") "sandwich (robust)" else "model-based"
+    se_label <- .sem_se_label(x@diagnostics$se_type, .sem_n_clusters(x))
     cat(sprintf("  Std. errors:   %s%s\n", se_label, if (!is.null(x@internals$weights)) ", sampling weights" else ""))
   }
   cat(sprintf("  Converged:     %s\n", ifelse(x@converged, "Yes", "No")))
@@ -244,6 +249,19 @@ S7::method(print, SEMFit) <- function(x, ...) {
   invisible(x)
 }
 
+# The standard-error label of print() and summary(): a two-level sandwich is cluster-robust (CR0) over its clusters.
+.sem_se_label <- function(se_type, n_clusters = NULL) {
+  if (se_type != "sandwich") return("model-based")
+  if (is.null(n_clusters)) return("sandwich (robust)")
+  sprintf("cluster-robust sandwich (CR0, %d clusters)", n_clusters)
+}
+
+# Number of clusters of a two-level fit (after listwise deletion); NULL for a single-level fit.
+.sem_n_clusters <- function(x) {
+  if (!isTRUE(x@internals$ram$twolevel)) return(NULL)
+  length(unique(x@internals$cluster_ids))
+}
+
 S7::method(summary, SEMFit) <- function(object, ...) {
   if (.sem_fiml_is(object)) .sem_fiml_require(object)
   fx <- .sem_fixed_rows(object@table)
@@ -261,7 +279,7 @@ S7::method(summary, SEMFit) <- function(object, ...) {
       n_dropped = object@n_dropped, model_test_note = if (!is.null(reason)) .sem_modeltest_note(reason),
       df = if (is.null(reason)) object@df else NA_real_, information = object@information,
       converged = object@converged, f = object@f,
-      diagnostics = object@diagnostics
+      diagnostics = object@diagnostics, n_clusters = .sem_n_clusters(object)
     ),
     class = "summary_SEMFit"
   )
@@ -291,8 +309,7 @@ print_summary_semfit <- function(x, ...) {
   if (!is.null(x$model_test_note)) cat("Note: ", x$model_test_note, "\n", sep = "")
   cat(sprintf("Information: %s\n", x$information))
   if (!is.null(x$diagnostics$se_type)) {
-    cat(sprintf("Standard errors: %s\n",
-                if (x$diagnostics$se_type == "sandwich") "sandwich (robust)" else "model-based"))
+    cat(sprintf("Standard errors: %s\n", .sem_se_label(x$diagnostics$se_type, x$n_clusters)))
   }
   cat(sprintf("Converged: %s\n", ifelse(x$converged, "Yes", "No")))
   optimum <- x$diagnostics$optimum
@@ -442,24 +459,42 @@ S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) 
 # `converged` column: a SEMFit exists only for a solution that passed the acceptance gate (otherwise fit_sem()
 # errors), so `@converged` is TRUE for every fit and would carry no information. A fit with sampling weights has
 # a weighted discrepancy that is not a likelihood, so its chi-square, p-value, log likelihood, AIC and BIC are NA.
+# A two-level fit (S4a.5) has no saturated two-level model in the engine, so its chi-square and p-value are NA with a
+# note; it keeps df, the total log likelihood and the criteria, and adds the cluster count and the cluster-size range.
 .glance_semfit <- function(x, ...) {
   weighted <- !is.null(x@internals$weights)
+  twolevel <- isTRUE(x@internals$ram$twolevel)
   # a product term can make the global test invalid: chi-square, df and p-value are then NA, with a note
   note <- .sem_modeltest_reason(x)
   invalid <- !is.null(note)
-  chisq <- if (weighted || invalid) NA_real_ else .sem_chisq(x)
+  chisq <- if (weighted || invalid || twolevel) NA_real_ else .sem_chisq(x)
   ll <- if (weighted) NULL else stats::logLik(x)
   out <- data.frame(
     nobs = x@n_obs, npar = .sem_n_free(x), df = if (invalid) NA_real_ else x@df, chisq = chisq,
-    p_value = if (!weighted && !invalid && x@df > 0) stats::pchisq(chisq, df = x@df, lower.tail = FALSE) else NA_real_,
+    p_value = if (!weighted && !invalid && !twolevel && x@df > 0) {
+      stats::pchisq(chisq, df = x@df, lower.tail = FALSE)
+    } else {
+      NA_real_
+    },
     logLik = if (weighted) NA_real_ else as.numeric(ll),
     AIC = if (weighted) NA_real_ else stats::AIC(ll), BIC = if (weighted) NA_real_ else stats::BIC(ll),
     fixed_x = paste(x@internals$fixed_x, collapse = ", "), stringsAsFactors = FALSE
   )
+  if (twolevel) {
+    sizes <- as.integer(table(x@internals$cluster_ids))
+    out$n_clusters <- length(sizes)
+    out$cluster_size_min <- min(sizes)
+    out$cluster_size_max <- max(sizes)
+    out$se_type <- x@diagnostics$se_type
+  }
   if (requireNamespace("tibble", quietly = TRUE)) {
     out <- tibble::as_tibble(out)
   }
   if (invalid) attr(out, "note") <- .sem_modeltest_note(note)
+  if (twolevel && !invalid) {
+    attr(out, "note") <- paste0("chi-square test not available for a two-level fit: the engine fits no saturated ",
+                                "two-level model (experimental)")
+  }
   out
 }
 

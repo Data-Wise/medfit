@@ -16,6 +16,8 @@ Fit a path model from syntax, read it, test it, and turn it into a mediation
 object, with no package besides medfit. For
 the full picture see [the sem engine guide](sem-guide.html).
 
+**Use this when:** you want a first look at the sem engine. **Status:** stable.
+
 | | |
 |---|---|
 | **You need** | medfit 0.8.0 or later; the bundled `mediation_demo` data |
@@ -96,6 +98,10 @@ tidy(x, type = "effects", conf_int = TRUE)
 
 From here `nie()`, `confint()` and `bootstrap_mediation()` work as on any other
 fit.
+
+::: {.next-action}
+**Next:** Go step by step: [The sem engine, step by step](sem-tutorial.html)
+:::
 
 ## Where next
 

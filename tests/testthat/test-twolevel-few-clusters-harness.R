@@ -328,12 +328,15 @@ fc_t3_refusals_closure <- function(fit, defect = "") {
   }, character(1))
 }
 
-test_that("T3: the closure refuses at build time per effect exactly as the shipped constructor (J = 10, seeds 7, 13)", {
+test_that("T3: the closure refuses at build time per effect exactly as the shipped constructor (J = 10, seeds 95, 13)", { # nolint: line_length_linter.
   skip_on_cran()
-  cases <- fc_t3_cases(c(7, 13), J = 10)
+  cases <- fc_t3_cases(c(95, 13), J = 10)
   shipped <- lapply(cases, function(cs) fc_t3_refusals_shipped(cs$fit))
   closure <- lapply(cases, function(cs) fc_t3_refusals_closure(cs$fit))
-  # seed 7: the between level is not identified; seed 13: the original fit is unusable, every effect refused
+  # seed 95: the between level is not identified (the h1 mediator ICC is .003; the rule read the model-implied ICC
+  # before 2026-11-22, and seed 7 was the within-only seed then: its h1 mediator ICC is .014, so it now builds);
+  # (seed 95 is about 3x below the .01 floor; recheck it after a lavaan upgrade, whose EM stopping rule sets the h1 ICC)
+  # seed 13: the original fit is unusable, every effect refused
   expect_identical(shipped[[1]][["nie_within"]], "ok")
   expect_match(shipped[[1]][c("nie_between", "nie_contrast")], "medfit_between_unidentified")
   expect_match(shipped[[2]], "medfit_error_twolevel_unusable")
@@ -358,7 +361,7 @@ test_that("T3: the closure refuses at build time per effect exactly as the shipp
 
 test_that("T3: the closure equals three runs of the shipped callback on the J = 10 seeds that build, exactly", {
   skip_on_cran()
-  cases <- fc_t3_cases(setdiff(1:20, c(7, 13)), J = 10)
+  cases <- fc_t3_cases(setdiff(1:20, 13), J = 10)
   shipped <- fc_t3_shipped(cases)
   expect_gte(sum(stats::complete.cases(shipped$value)), 12L)
   fc_t3_check(fc_t3_closure(cases), shipped)
@@ -629,4 +632,364 @@ test_that("T4: planted defects in the paired criterion and the shift are caught"
   narrow_at <- function(f) function(r) fc_mutate_runs(r, "narrow", narrow = f) # nolint: object_usage_linter.
   expect_failure(fc_t4_check_narrow(narrow_at(.8)))
   expect_failure(fc_t4_check_narrow(narrow_at(1)))
+})
+
+# T5 (pilot): the Monte Carlo arm, the three-effect cluster bootstrap and the RNG streams they draw from. Each arm is
+# compared with the shipped bootstrap_mediation() under the same RNG state; each check has a planted defect.
+fc_t5_case <- function(cell_id = 1022, rep = 1) {
+  g <- fc_grid() # nolint: object_usage_linter. (sourced from tests/sim)
+  cell <- g[g$cell_id == cell_id, ]
+  d <- fc_simulate(cell, rep) # nolint: object_usage_linter.
+  fit <- fc_fit(d, "p0")$fit # nolint: object_usage_linter.
+  obj <- suppressWarnings(extract_mediation(fit, treatment = "X", mediator = "M", outcome = "Y"))
+  list(cell = cell, rep = rep, data = d, fit = fit, obj = obj)
+}
+
+# The shipped parametric (MC) bootstrap per effect, each effect started from the same RNG state.
+fc_t5_shipped_mc <- function(obj, stream, n_boot) {
+  vapply(fc_boot_effects, function(e) { # nolint: object_usage_linter.
+    stat <- twolevel_statistic(obj, e) # nolint: object_usage_linter.
+    r <- fc_with_stream(stream, bootstrap_mediation( # nolint: object_usage_linter.
+      stat, method = "parametric", mediation_data = obj, n_boot = n_boot
+    ))
+    c(r@ci_lower, r@ci_upper)
+  }, numeric(2))
+}
+
+fc_t5_check_mc <- function(mc_fun, cs, n_boot = 200L) {
+  st <- fc_streams(fc_seed(cs$cell$cell_id, cs$rep)) # nolint: object_usage_linter.
+  got <- mc_fun(cs$obj, n_boot = n_boot, stream = st$mc)
+  want <- fc_t5_shipped_mc(cs$obj, st$mc, n_boot)
+  testthat::expect_identical(unname(rbind(got$lo, got$hi)), unname(want))
+}
+
+fc_t5_check_streams <- function(streams_fun) {
+  withr::local_seed(99)
+  rng <- function() get(".Random.seed", envir = globalenv())
+  before <- rng()
+  seed <- fc_seed(1022, 1) # nolint: object_usage_linter. (sourced from tests/sim)
+  st <- streams_fun(seed)
+  data_state <- fc_with_seed(seed, "L'Ecuyer-CMRG", rng()) # nolint: object_usage_linter.
+  testthat::expect_identical(
+    list(session = rng(), distinct = length(unique(list(data_state, st$mc, st$boot))), mc = st$mc, boot = st$boot),
+    list(session = before, distinct = 3L, mc = parallel::nextRNGStream(data_state),
+         boot = parallel::nextRNGStream(parallel::nextRNGStream(data_state)))
+  )
+}
+
+test_that("T5: the RNG streams differ from the dataset seed and from each other, and leave the session RNG alone", {
+  fc_t5_check_streams(fc_streams) # nolint: object_usage_linter.
+  # planted defect: the MC arm drawing from the dataset's own stream
+  same <- function(seed) {
+    s <- fc_with_seed(seed, "L'Ecuyer-CMRG", get(".Random.seed", envir = globalenv())) # nolint: object_usage_linter.
+    list(mc = s, boot = parallel::nextRNGStream(s))
+  }
+  expect_failure(fc_t5_check_streams(same))
+})
+
+test_that("T5: the MC arm equals the shipped parametric bootstrap per effect from the same stream", {
+  cs <- fc_t5_case()
+  expect_true(cs$obj@between_identified)
+  fc_t5_check_mc(fc_mc, cs) # nolint: object_usage_linter.
+  # planted defect: the stream not reset between effects (the second and third effects draw on)
+  drift <- function(obj, n_boot, stream) {
+    out <- fc_with_stream(stream, {
+      v <- lapply(fc_boot_effects, function(e) { # nolint: object_usage_linter.
+        bootstrap_mediation(twolevel_statistic(obj, e), method = "parametric", mediation_data = obj, n_boot = n_boot)
+      })
+      v
+    })
+    list(lo = vapply(out, function(r) r@ci_lower, numeric(1)), hi = vapply(out, function(r) r@ci_upper, numeric(1)),
+         err = rep(NA_character_, 3L))
+  }
+  expect_failure(fc_t5_check_mc(drift, cs))
+})
+
+test_that("T5: the MC arm records a refused effect instead of stopping", {
+  withr::local_options(medfit.between_icc_error = .9)
+  cs <- fc_t5_case()
+  obj <- cs$obj
+  expect_false(obj@between_identified)
+  st <- fc_streams(fc_seed(1022, 1)) # nolint: object_usage_linter.
+  got <- fc_mc(obj, n_boot = 50L, stream = st$mc) # nolint: object_usage_linter.
+  expect_true(is.finite(got$lo[["nie_within"]]))
+  expect_true(all(is.na(got$lo[c("nie_between", "nie_contrast")])))
+  expect_match(got$err[["nie_between"]], "needs the between level")
+  expect_true(is.na(got$err[["nie_within"]]))
+})
+
+# The shipped cluster bootstrap per effect under set.seed(seed): interval, kept count and the kept estimates.
+fc_t5_shipped_boot <- function(cs, n_boot, seed) {
+  lapply(fc_boot_effects, function(e) { # nolint: object_usage_linter.
+    fn <- twolevel_statistic(cs$fit, e, treatment = "X", mediator = "M", outcome = "Y") # nolint: object_usage_linter.
+    r <- tryCatch(suppressWarnings(bootstrap_mediation(fn, method = "nonparametric", data = cs$data, cluster = "id",
+                                                       n_boot = n_boot, seed = seed)),
+                  error = function(err) err)
+    if (inherits(r, "error")) return(list(ci = c(NA_real_, NA_real_), kept = NA_integer_, est = NULL))
+    list(ci = c(r@ci_lower, r@ci_upper), kept = r@n_boot, est = r@boot_estimates)
+  })
+}
+
+fc_t5_check_boot <- function(boot_fun, cs, n_boot = 20L, seed = 7L) {
+  got <- withr::with_seed(seed, boot_fun(cs$fit, cs$data, n_boot = n_boot))
+  want <- fc_t5_shipped_boot(cs, n_boot, seed)
+  mine <- lapply(fc_boot_effects, function(e) { # nolint: object_usage_linter.
+    list(ci = c(got$lo[[e]], got$hi[[e]]), kept = got$kept[[e]], est = got$est[[e]])
+  })
+  testthat::expect_identical(mine, want)
+}
+
+test_that("T5: the three-effect cluster bootstrap equals three shipped cluster bootstraps under the same seed", {
+  skip_on_cran()
+  cs <- fc_t5_case()
+  fc_t5_check_boot(fc_cluster_boot, cs) # nolint: object_usage_linter.
+  # planted defect: the clusters drawn without replacement
+  no_repl <- fc_cluster_boot # nolint: object_usage_linter.
+  environment(no_repl) <- list2env(
+    list(sample = function(x, size, replace = FALSE, prob = NULL) base::sample(x, size, replace = FALSE)),
+    parent = environment(fc_cluster_boot) # nolint: object_usage_linter.
+  )
+  expect_failure(fc_t5_check_boot(no_repl, cs))
+})
+
+test_that("T5: fewer than 10 kept replicates gives an NA interval with a reason, where the shipped one stops", {
+  skip_on_cran()
+  cs <- fc_t5_case()
+  got <- withr::with_seed(7L, fc_cluster_boot(cs$fit, cs$data, n_boot = 5L)) # nolint: object_usage_linter.
+  expect_true(all(is.na(c(got$lo, got$hi))))
+  expect_true(all(grepl("fewer than 10", got$err)))
+  fn <- twolevel_statistic(cs$fit, "nie_within", treatment = "X", mediator = "M", outcome = "Y")
+  expect_error(suppressWarnings(bootstrap_mediation(fn, method = "nonparametric", data = cs$data, cluster = "id",
+                                                    n_boot = 5L, seed = 7L)), "Too many bootstrap samples failed")
+  # planted defect: a threshold of 5 keeps the five replicates and reports an interval
+  boot5 <- function() fc_cluster_boot(cs$fit, cs$data, n_boot = 5L, min_kept = 5L) # nolint: object_usage_linter.
+  five <- withr::with_seed(7L, boot5())
+  expect_failure(expect_true(all(is.na(five$lo))))
+})
+
+test_that("T5: the row builder adds the ICC columns and, when asked, the MC and bootstrap columns", {
+  skip_on_cran()
+  cell <- fc_grid()[fc_grid()$cell_id == 1022, ] # nolint: object_usage_linter.
+  base <- fc_row(cell, 1, "p0") # nolint: object_usage_linter.
+  expect_false(any(grepl("^(mc|bt)_", names(base))))
+  expect_equal(base$icc_x_shipped, base$icc_x_lav, tolerance = 1e-3)
+  expect_equal(base$icc_m_shipped, base$icc_m_lav, tolerance = 1e-3)
+  r <- fc_row(cell, 1, "p0", mc_b = 50L, boot_b = 12L) # nolint: object_usage_linter.
+  expect_identical(r[names(base)][setdiff(names(base), "fit_time")], base[setdiff(names(base), "fit_time")])
+  for (e in fc_boot_effects) { # nolint: object_usage_linter.
+    expect_true(all(c(paste0("mc_lo_", e), paste0("mc_hi_", e), paste0("bt_lo_", e), paste0("bt_kept_", e),
+                      paste0("bt_err_", e)) %in% names(r)))
+  }
+  cs <- fc_t5_case()
+  st <- fc_streams(fc_seed(1022, 1)) # nolint: object_usage_linter.
+  mc <- fc_mc(cs$obj, n_boot = 50L, stream = st$mc) # nolint: object_usage_linter.
+  expect_identical(r$mc_lo_nie_between, mc$lo[["nie_between"]])
+  bt <- fc_with_stream(st$boot, fc_cluster_boot(cs$fit, cs$data, n_boot = 12L)) # nolint: object_usage_linter.
+  expect_identical(r$bt_hi_nie_contrast, bt$hi[["nie_contrast"]])
+})
+
+# T6: the main delta and MC run (R = 1000) and P1 on its subset. The aggregation helpers live in
+# tests/sim/twolevel-few-clusters-t6-lib.R; these checks run on synthetic rows, so they need no lavaan fit.
+fc_t6_lib <- test_path("..", "sim", "twolevel-few-clusters-t6-lib.R")
+source(fc_t6_lib, local = TRUE)
+fc_t6_dir <- test_path("..", "..", "planning", "studies", "few-clusters")
+
+# Synthetic per-dataset rows in the driver's layout: every fit clean, delta and MC intervals est -/+ 1.96 se.
+fc_t6_rows <- function(cells = c(1001L, 1002L), reps = 4L, arms = c("p0"), seed = 1L) {
+  g <- fc_grid() # nolint: object_usage_linter.
+  jobs <- expand.grid(rep = seq_len(reps), arm = arms, cell_id = cells, stringsAsFactors = FALSE,
+                      KEEP.OUT.ATTRS = FALSE)
+  rows <- cbind(g[match(jobs$cell_id, g$cell_id), ], jobs[c("rep", "arm")])
+  rownames(rows) <- NULL
+  k <- nrow(rows)
+  rows$lavaan_error <- NA_character_
+  rows$adapter_error <- NA_character_
+  rows$converged <- TRUE
+  rows$between_identified <- TRUE
+  rows$admissible <- TRUE
+  rows$neg_l2_var <- FALSE
+  rows$at_bound <- ifelse(rows$arm == "p1", FALSE, NA)
+  rows$fit_time <- .5
+  rows$mc_time <- .05
+  withr::with_seed(seed, {
+    for (e in fc_estimands) { # nolint: object_usage_linter.
+      truth <- vapply(rows$nie_b, function(b) fc_truth(b)[[e]], numeric(1)) # nolint: object_usage_linter.
+      se <- rep(.1, k)
+      est <- truth + stats::rnorm(k, sd = .1)
+      rows[[paste0("truth_", e)]] <- truth
+      rows[[paste0("est_", e)]] <- est
+      rows[[paste0("se_", e)]] <- se
+      rows[[paste0("lo_", e)]] <- est - 1.96 * se
+      rows[[paste0("hi_", e)]] <- est + 1.96 * se
+    }
+  })
+  for (e in fc_boot_effects) { # nolint: object_usage_linter.
+    rows[[paste0("mc_lo_", e)]] <- rows[[paste0("lo_", e)]]
+    rows[[paste0("mc_hi_", e)]] <- rows[[paste0("hi_", e)]]
+    rows[[paste0("mc_err_", e)]] <- NA_character_
+  }
+  rows
+}
+
+test_that("T6: the P1 subset is the T5 cells with an inadmissible rate above 10%, 49 cells, as committed", {
+  t5 <- file.path(fc_t6_dir, "T5-cells.csv")
+  p1 <- file.path(fc_t6_dir, "T6-p1-cells.csv")
+  skip_if_not(file.exists(t5) && file.exists(p1), "planning/ is not shipped with the installed tests")
+  cells <- utils::read.csv(t5, stringsAsFactors = FALSE)
+  got <- fc_t6_p1_cells(cells) # nolint: object_usage_linter.
+  expect_identical(nrow(got), 49L)
+  expect_true(all(got$t5_inadmissible > .10))
+  expect_true(all(cells$inadmissible[!cells$cell_id %in% got$cell_id] <= .10))
+  committed <- utils::read.csv(p1, stringsAsFactors = FALSE)
+  expect_identical(as.integer(committed$cell_id), as.integer(got$cell_id))
+  expect_equal(committed$t5_inadmissible, got$t5_inadmissible)
+  # planted defects: a cutoff that admits the .098 cell, and the negative-variance rate in place of the
+  # inadmissible rate, each change the set
+  expect_false(identical(fc_t6_p1_cells(cells, cutoff = .097)$cell_id, got$cell_id)) # nolint: object_usage_linter.
+  wrong_col <- transform(cells, inadmissible = neg_l2_var)
+  expect_false(identical(fc_t6_p1_cells(wrong_col)$cell_id, got$cell_id)) # nolint: object_usage_linter.
+})
+
+test_that("T6: the row check passes a complete run and errors on a short, duplicated or stray cell", {
+  rows <- rbind(fc_t6_rows(c(1001L, 1002L), 4L, "p0"), fc_t6_rows(1001L, 4L, "p1"))
+  cells <- c(1001L, 1002L)
+  expect_invisible(fc_t6_check_rows(rows, reps = 4L, cells = cells, p1_cells = 1001L)) # nolint: object_usage_linter.
+  # planted short cell: one P1 dataset missing
+  short <- rows[!(rows$cell_id == 1001L & rows$arm == "p1" & rows$rep == 3L), ]
+  expect_error(fc_t6_check_rows(short, 4L, cells, 1001L), "1001/p1.*3 rows") # nolint: object_usage_linter.
+  # a duplicated replicate with the count still short of nothing: rep 2 twice, rep 4 missing
+  dup <- rows
+  dup$rep[dup$cell_id == 1002L & dup$rep == 4L] <- 2L
+  expect_error(fc_t6_check_rows(dup, 4L, cells, 1001L), "1002/p0.*replicates") # nolint: object_usage_linter.
+  # P1 rows in a cell outside the subset, and a missing cell
+  stray <- rbind(rows, fc_t6_rows(1002L, 4L, "p1"))
+  expect_error(fc_t6_check_rows(stray, 4L, cells, 1001L), "1002/p1") # nolint: object_usage_linter.
+  expect_error(fc_t6_check_rows(rows, 4L, c(cells, 1003L), 1001L), "1003/p0") # nolint: object_usage_linter.
+})
+
+test_that("T6: the row check holds each cell to the launch's replicate range REP_START to REP_START + R - 1", {
+  rows <- rbind(fc_t6_rows(c(1001L, 1002L), 4L, "p0"), fc_t6_rows(1001L, 4L, "p1"))
+  cells <- c(1001L, 1002L)
+  late <- rows
+  late$rep <- late$rep + 500L
+  expect_invisible(fc_t6_check_rows(late, 4L, cells, 1001L, rep_start = 501L)) # nolint: object_usage_linter.
+  # planted wrong ranges: replicates 1 to 4 against a launch at 501, 501 to 504 against the default start, and a
+  # range shifted by one
+  expect_error(fc_t6_check_rows(rows, 4L, cells, 1001L, rep_start = 501L), "replicates 501 to 504") # nolint
+  expect_error(fc_t6_check_rows(late, 4L, cells, 1001L), "replicates 1 to 4") # nolint: object_usage_linter.
+  expect_error(fc_t6_check_rows(late, 4L, cells, 1001L, rep_start = 502L), "replicates 502 to 505") # nolint
+  # the seed formula cell_id * 1e5 + rep needs the last replicate below 1e5
+  expect_error(fc_t6_check_rows(late, 4L, cells, 1001L, rep_start = 99998L), "1e5") # nolint: object_usage_linter.
+})
+
+test_that("T6: the aggregation refuses rows from mixed builds or another lavaan than the launch's", {
+  rows <- fc_t6_rows(1001L, 4L, "p0")
+  rows$medfit_version <- "0.18.0.9000"
+  rows$lavaan_version <- "0.6.19"
+  expect_invisible(fc_t6_check_versions(rows, medfit = "0.18.0.9000", lavaan = "0.6.19")) # nolint
+  # planted defects: a row file from another medfit, one from another lavaan, a lavaan other than the one recorded at
+  # launch, and a row file without the version columns
+  mixed_m <- rows
+  mixed_m$medfit_version[2] <- "0.7.0"
+  expect_error(fc_t6_check_versions(mixed_m, "0.18.0.9000", "0.6.19"), "medfit_version.*2 values") # nolint
+  mixed_l <- rows
+  mixed_l$lavaan_version[3] <- "0.6.17"
+  expect_error(fc_t6_check_versions(mixed_l, "0.18.0.9000", "0.6.19"), "lavaan_version.*2 values") # nolint
+  expect_error(fc_t6_check_versions(rows, "0.18.0.9000", "0.6.17"), "lavaan_version.*0.6.19.*0.6.17") # nolint
+  expect_error(fc_t6_check_versions(rows, "0.17.0", "0.6.19"), "medfit_version.*0.18.0.9000.*0.17.0") # nolint
+  expect_error(fc_t6_check_versions(rows[setdiff(names(rows), "lavaan_version")], "0.18.0.9000", "0.6.19"), # nolint
+               "lavaan_version")
+})
+
+test_that("T6: the launch manifest is read as text and a missing one or a missing key is an error", {
+  f <- withr::local_tempfile()
+  writeLines(c("sha=abc123", "rep_start=501", "mc_b=2000", "eps=1e-3", "medfit_version=0.18.0.9000",
+               "lavaan_version=1.0"), f)
+  man <- fc_t6_read_manifest(f) # nolint: object_usage_linter.
+  expect_identical(man$rep_start, "501")
+  expect_identical(man$lavaan_version, "1.0")
+  expect_error(fc_t6_read_manifest(paste0(f, "-absent")), "no launch manifest") # nolint: object_usage_linter.
+  writeLines(c("sha=abc123", "rep_start=501", "mc_b=2000", "eps=1e-3"), f)
+  expect_error(fc_t6_read_manifest(f), "lacks medfit_version, lavaan_version") # nolint: object_usage_linter.
+})
+
+test_that("T6: failure categories partition the rows and the aggregation errors when they do not sum to R", {
+  rows <- fc_t6_rows(1001L, 6L, "p0")
+  rows$lavaan_error[1] <- "boom"
+  rows[1, c("converged", "between_identified", "admissible")] <- NA
+  rows$converged[2] <- FALSE
+  rows$adapter_error[2] <- "lavaan did not converge"
+  rows[2, c("between_identified", "admissible")] <- NA
+  rows$adapter_error[3] <- "other refusal"
+  rows[3, c("between_identified", "admissible")] <- NA
+  rows$between_identified[4] <- FALSE
+  rows$admissible[5] <- FALSE
+  cnt <- fc_t6_status_counts(rows, reps = 6L) # nolint: object_usage_linter.
+  expect_identical(unlist(cnt[1, fc_t6_status_levels]), stats::setNames(rep(1L, 6), fc_t6_status_levels)) # nolint
+  # planted mis-summed cells: a row in no category (identified status lost) and a row in two (an adapter error on
+  # an identified fit)
+  gap <- rows
+  gap$between_identified[6] <- NA
+  expect_error(fc_t6_status_counts(gap, 6L), "1001/p0.*sum to 5") # nolint: object_usage_linter.
+  both <- rows
+  both$adapter_error[6] <- "late refusal"
+  expect_error(fc_t6_status_counts(both, 6L), "1001/p0.*sum to 7") # nolint: object_usage_linter.
+  # the top-level aggregation stops (not warns) on both
+  expect_error(fc_t6_aggregate(gap, reps = 6L, cells = 1001L, p1_cells = integer(0)), "sum to") # nolint
+  expect_error(fc_t6_aggregate(rows[-6, ], reps = 6L, cells = 1001L, p1_cells = integer(0)), "5 rows") # nolint
+})
+
+test_that("T6: MCSEs match a hand calculation, and the cell summary carries them", {
+  expect_equal(fc_t6_mcse_prop(.95, 1000), 0.0068920243760451, tolerance = 1e-12) # nolint: object_usage_linter.
+  # sd(c(1, 2, 3, 6)) = sqrt(14 / 3); divided by sqrt(4)
+  expect_equal(fc_t6_mcse_mean(c(1, 2, 3, 6)), sqrt(14 / 3) / 2, tolerance = 1e-12) # nolint: object_usage_linter.
+  expect_equal(fc_t6_mcse_mean(c(1, NA, 2, 3, 6)), sqrt(14 / 3) / 2, tolerance = 1e-12) # nolint
+  # planted defects: the variance over R instead of its square root, and n - 1 in the mean's denominator
+  expect_failure(expect_equal(sqrt(.95 * .05) / 1000, 0.0068920243760451, tolerance = 1e-12))
+  expect_failure(expect_equal(stats::sd(c(1, 2, 3, 6)) / sqrt(3), sqrt(14 / 3) / 2, tolerance = 1e-12))
+
+  rows <- fc_t6_rows(1001L, 120L, "p0")
+  e <- "nie_within"
+  # 30 of 120 intervals moved off the truth: coverage .75 at most, counted by hand
+  rows[[paste0("lo_", e)]][1:30] <- rows[[paste0("truth_", e)]][1:30] + .5
+  rows[[paste0("hi_", e)]][1:30] <- rows[[paste0("truth_", e)]][1:30] + .6
+  truth <- rows[[paste0("truth_", e)]]
+  hit <- rows[[paste0("lo_", e)]] <= truth & truth <= rows[[paste0("hi_", e)]]
+  p <- mean(hit)
+  s <- fc_t6_summary(rows) # nolint: object_usage_linter.
+  r <- s[s$estimand == e & s$interval == "delta", ]
+  expect_identical(nrow(r), 1L)
+  expect_identical(r$R, 120L)
+  expect_equal(r$coverage, p)
+  expect_equal(r$coverage_mcse, sqrt(p * (1 - p) / 120))
+  # the 30 planted misses plus any clean interval that misses high by chance, counted by hand
+  miss_high <- mean(rows[[paste0("lo_", e)]] > rows[[paste0("truth_", e)]])
+  expect_gte(miss_high, 30 / 120)
+  expect_equal(r$miss_high, miss_high)
+  err <- rows[[paste0("est_", e)]] - rows[[paste0("truth_", e)]]
+  expect_equal(r$bias, mean(err))
+  expect_equal(r$bias_mcse, stats::sd(err) / sqrt(120))
+  expect_equal(r$ccov, p)
+  expect_equal(r$ccov_mcse, sqrt(p * (1 - p) / 120))
+  # conditional coverage needs 100 intervals: 99 gives NA
+  s99 <- fc_t6_summary(rows[1:99, ]) # nolint: object_usage_linter.
+  expect_true(is.na(s99$ccov[s99$estimand == e & s99$interval == "delta"]))
+  # the MC rows exist for the three effects only
+  expect_setequal(s$estimand[s$interval == "mc"], fc_boot_effects) # nolint: object_usage_linter.
+})
+
+test_that("T6: the P0/P1 comparison pairs datasets and reports the at-bound sensitivity coverage", {
+  p0 <- fc_t6_rows(1001L, 10L, "p0")
+  p1 <- fc_t6_rows(1001L, 10L, "p1")
+  e <- "nie_between"
+  p1[[paste0("lo_", e)]][1:2] <- p1[[paste0("truth_", e)]][1:2] + 1
+  p1$at_bound[3:4] <- TRUE
+  cmp <- fc_t6_parametrization(rbind(p0, p1), p1_cells = 1001L) # nolint: object_usage_linter.
+  r <- cmp[cmp$estimand == e & cmp$interval == "delta", ]
+  ind0 <- fc_covered(p0)[[e]] # nolint: object_usage_linter.
+  ind1 <- fc_covered(p1)[[e]] # nolint: object_usage_linter.
+  expect_equal(r$coverage_diff, mean(ind1) - mean(ind0))
+  expect_equal(r$coverage_diff_mcse, stats::sd(ind1 - ind0) / sqrt(10))
+  expect_equal(r$at_bound_p1, .2)
+  expect_equal(r$sens_coverage_p1, mean(ind1 & !p1$at_bound))
 })

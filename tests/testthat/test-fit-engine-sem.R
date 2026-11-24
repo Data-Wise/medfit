@@ -36,7 +36,7 @@ test_that("engine = 'native' stays silent (no warning, message or lifecycle sign
 test_that("engine = 'sem' reports the same guard messages as engine = 'native'", {
   for (eng in c("sem", "native")) {
     expect_error(fit_mediation(data = mediation_demo, treatment = "treatment", mediator = "mediator1", engine = eng),
-                 "engine = \"native\" needs `model`", fixed = TRUE)
+                 "engine = \"sem\" needs `model`", fixed = TRUE)
   }
 })
 
@@ -52,5 +52,5 @@ test_that("an unknown engine errors with the checkmate choice message, which lis
 test_that("`model` with the glm engine still errors", {
   expect_error(fit_mediation(outcome ~ treatment + mediator1, mediator1 ~ treatment, mediation_demo,
                              "treatment", "mediator1", model = sem_demo_model),
-               "`model` is only used with engine = \"native\".", fixed = TRUE)
+               "`model` is only used with engine = \"sem\".", fixed = TRUE)
 })

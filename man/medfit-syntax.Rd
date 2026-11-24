@@ -187,6 +187,58 @@ product are not comparable with those of a fit without one, so \code{AIC(fit_a, 
 exogenous variables with the block free keeps the ordinary test.
 }
 
+\section{Two-level models (experimental)}{
+
+A two-level model of observed variables is written in \verb{level:} blocks and fitted with
+\code{fit_sem(model, data, cluster = "<cluster column>")}. \code{level: 1} and \code{level: within} open the within block;
+\code{level: 2}, \code{level: between} and \verb{level: <cluster column>} (as lavaan writes it) open the between block. Every
+row belongs to a block, each level appears once, and level 1 comes first. A variable named in \code{level: 1} rows
+(a within variable) must also appear in \code{level: 2} rows and must vary within clusters; a variable named only in
+\code{level: 2} rows is a cluster-level variable and must be constant within each cluster. The same label at both
+levels is an equality constraint across levels. Paths have fixed slopes (no random slopes), and the between part of
+each within variable is a latent cluster mean. Level-2 variances are fitted without a floor: an inadmissible
+solution (a negative variance or a non-positive-definite implied covariance at either level) is the error
+\code{medfit_error_twolevel_inadmissible}, which carries the fit (\code{fit}) and its outcome ledger (\code{ledger}). Unset
+\code{fixed_x} means \code{FALSE} and unset \code{meanstructure} means \code{TRUE} on this route.\tabular{ll}{
+   Limit \tab Message (starts with, or contains) \cr
+   \verb{cluster =} without \verb{level:} blocks \tab "is given but the model has no \verb{level:} blocks" \cr
+   \verb{level:} blocks without \verb{cluster =} \tab "the model uses \verb{level:} blocks but \code{cluster} is not given" \cr
+   A cluster column that is not in \code{data} \tab "is not a column of \code{data}" \cr
+   Missing values in the cluster column \tab "has missing values; drop those rows first" \cr
+   Fewer than two clusters \tab "has fewer than 2 clusters" \cr
+   More than two levels \tab "the model has more than two levels" \cr
+   An unknown level name (\code{level: school} with another cluster column) \tab "malformed level line" \cr
+   A row before the first \verb{level:} line \tab "has statements before the first \verb{level:} line" \cr
+   A level written twice \tab "appears more than once" \cr
+   \code{level: 2} without \code{level: 1} \tab "rows but no \code{level: 1} block" \cr
+   A variable named only in \code{level: 1} rows \tab "every level-1 variable also needs a \code{level: 2} row" \cr
+   A within variable constant within every cluster \tab "a cluster-level variable belongs only in \code{level: 2} rows" \cr
+   A \code{level: 2}-only variable that varies within a cluster \tab "must be constant within each cluster" \cr
+   Latent variables (\verb{=~}) \tab "latent variables (\verb{=~}) are not supported in a two-level model" \cr
+   A product term (\code{x:m}) \tab "a product term (\code{x:m}) is not supported in a two-level model" \cr
+   \code{weights} \tab "\code{weights} are not supported in a two-level model" \cr
+   \code{missing = "fiml"} \tab "missing = ... incomplete rows are dropped (listwise)" \cr
+   Nonlinear constraints (not \code{a_w*b_w == a_b*b_b}) \tab "nonlinear constraints (including a product of labels" \cr
+   An explicit \code{fixed_x = TRUE} or a name vector \tab "a two-level model takes \code{fixed_x = FALSE} only" \cr
+   \code{meanstructure = FALSE} \tab "\code{meanstructure = FALSE} is refused" \cr
+   \code{information = "expected"} \tab "information = ... is not supported in a two-level model; use" \cr
+   An inadmissible solution \tab "the two-level solution is inadmissible" \cr
+   \code{compare_lr()} on the fit \tab "is not available for a native two-level fit yet" \cr
+   \code{mbco_sem()} with paths from different levels \tab "tests a product of paths at one level of a two-level fit" \cr
+}
+
+
+\code{mbco_sem(fit, "a_w", "b_w")} and \code{mbco_sem(fit, "a_b", "b_b")} test the indirect effect at one level: the minimum
+likelihood ratio over the refits with each labeled path set to 0, referred to chi-square(1), as for a single-level
+fit. The test is conservative when both paths are zero, and it is not a test of the between-minus-within
+contrast. The result adds \code{level} and \code{n_clusters}; see \code{\link[=mbco_sem]{mbco_sem()}}.
+
+\code{extract_mediation()} on the fit returns a \code{TwoLevelMediationData}, the same class as the lavaan two-level adapter
+gives, with \verb{@source} \code{"native"}. \code{glance()} reports \code{df}, the total log likelihood, \code{nobs}, \code{n_clusters} and the
+cluster-size range; \code{chisq} and \code{p_value} are \code{NA} with a note, because the engine fits no saturated two-level
+model. The model page "Two-level mediation (1-1-1)" has a worked example.
+}
+
 \section{Defaults changed in 0.15.0}{
 
 Since medfit 0.15.0 an unset \code{fixed_x} means the exogenous observed variables (as lavaan's \code{fixed.x = TRUE}) and an

@@ -12,6 +12,12 @@ This page follows the implementation in `R/effect-se.R`, `R/bootstrap.R`,
 `R/sem-mbco.R`. The [Methods and Formulas](methods.html) article defines the
 mediation effects; here the focus is how the computer obtains their estimates.
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you want to know how medfit computes a standard error, a bootstrap draw or a sem engine fit, for example to check or reproduce a number.\
+**You get:** the algorithm behind each estimate, with the source file that implements it.\
+**Reading time:** 7 min
+:::
+
 ## Delta-method standard errors
 
 Let $\hat\theta$ be a vector of fitted path parameters, $V$ its estimated
@@ -81,7 +87,7 @@ boot <- bootstrap_mediation(function(d) mean(d$mediator1),
 c(estimate = boot@estimate, lower = boot@ci_lower, upper = boot@ci_upper)
 ```
 
-## Native SEM: from a model to a discrepancy
+## The sem engine: from a model to a discrepancy {#native-sem-from-a-model-to-a-discrepancy}
 
 The sem engine translates syntax into RAM matrices. Let $A$ contain
 directed paths, $S_R$ contain model variances and covariances, $I$ be the
@@ -245,3 +251,7 @@ mbco_sem(full, paths = c("a", "b"))
 null <- fit_sem(paste(base, "a*b == 0", sep = "\n"), mediation_demo)
 null@internals$branch
 ```
+
+::: {.next-action}
+**Next:** See how the algorithms are tested: [Quality control of the optimizer](quality-control.html)
+:::

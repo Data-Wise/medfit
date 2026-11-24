@@ -213,6 +213,18 @@ lc_probes <- function() {
       mb <- mbco_sem(f, "a", "b")
       me <- extract_mediation(f, treatment = "treatment", mediator = "mediator1", outcome = "outcome")
       if (is.numeric(mb$p.value) && inherits(me, "medfit::MediationData")) "Supported" else "Unsupported"
+    },
+    "Two-level models (`level:` blocks, `cluster =`)" = function() {
+      # experimental, observed variables only: agrees with lavaan under the TL-3 settings and refuses weights
+      dt <- tl_sim()
+      mt <- tl_model()
+      nat <- fit_sem(mt, dt, cluster = "id", fixed_x = FALSE)
+      lvt <- suppressWarnings(lavaan::sem(mt, dt, cluster = "id", fixed.x = FALSE, information = "observed",
+                                          h1.information = "structured"))
+      p <- c("a", "b", "cp", "a2", "b2", "cp2")
+      agrees <- close(coef(nat)[p], lavaan::coef(lvt)[p], 1e-4)
+      refuses <- lc_err(fit_sem(mt, dt, cluster = "id", fixed_x = FALSE, weights = rep(1, nrow(dt))))
+      if (!agrees) "Unsupported" else if (refuses) "Partial" else "Supported"
     }
   )
 }

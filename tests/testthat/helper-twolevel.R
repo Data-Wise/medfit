@@ -291,8 +291,13 @@ tlp_fixture <- function(name = "base") {
       equal_row_a1 = tl_fit(tlp_sim(), tlp_model(extra = "  a1 == a1B\n")),
       # M1's b equated algebraically (lavaan keeps two parameters): the numeric detector only
       nl_b1 = tl_fit(tlp_sim(), tlp_model(extra = "  b1^2 - b1B^2 == 0\n")),
-      # M2 has no between part (ICC near 0): a real within-only fit (D2)
-      low_icc_m2 = tl_fit(tlp_sim(m2_between = FALSE), tlp_model()),
+      # M2 has no between part and its h1 ICC is .0025 (native EM .0019), four times below the .01 floor: a real
+      # within-only fit (D2). Seed 76 was chosen by scan (2026-11-22); recheck after a lavaan upgrade, since lavaan's
+      # default EM stopping rule sets how far above the maximum its h1 ICC can sit
+      low_icc_m2 = tl_fit(tlp_sim(m2_between = FALSE, seed = 76L), tlp_model()),
+      # Same DGP, default seed: M2's h1 ICC is about .013 (its model-implied ICC is 0, a negative level-2 variance),
+      # inside the weak band, so the call is weak, not within-only
+      weak_icc_m2 = tl_fit(tlp_sim(m2_between = FALSE), tlp_model()),
       serial_within = tl_fit(tlp_sim(), sub("M2 ~ a2*X", "M2 ~ a2*X + d*M1", tlp_model(), fixed = TRUE)),
       serial_between = tl_fit(tlp_sim(), sub("M2 ~ a2B*X", "M2 ~ a2B*X + dB*M1", tlp_model(), fixed = TRUE)),
       # a covariate W predicts M1 at both levels (W is not regressed on X): W is not a mediator

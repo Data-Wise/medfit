@@ -18,6 +18,12 @@ pair of fits. medfit supplies the fitting and extraction, its own delta-method i
 runs both on one fit and lists what RMediation accepts from medfit, with a status for each row that a test checks
 against a live call on each build.
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you are deciding whether you need RMediation's exact-product intervals or `mbco()` on top of a medfit fit.\
+**You get:** both run on one fit and a table of what RMediation accepts from medfit, each row checked against a live call.\
+**Reading time:** 3 min
+:::
+
 | | |
 |---|---|
 | **Use medfit when** | you want every effect and path from one object, a native `SEMFit`, or an interval from the bootstrap infrastructure |
@@ -89,7 +95,7 @@ Status describes RMediation 1.11.1 acting on the medfit object in the first colu
 
 "Unsupported" means the call fails today with a message that names the missing method, not that it never will;
 check RMediation's own `NEWS.md` before relying on a row. medfit's `ClusterMediationData`,
-`TwoLevelMediationData`, `JointMediationData` and the FIML classes are not in the table: they were not exercised here.
+`TwoLevelMediationData`, `TwoLevelParallelMediationData`, `JointMediationData` and the FIML classes are not in the table: they were not exercised here.
 
 ## What RMediation adds, and what it does not
 
@@ -100,3 +106,7 @@ check RMediation's own `NEWS.md` before relying on a row. medfit's `ClusterMedia
 
 Back to the [Reference Card](refcard.html), the [Cookbook](cookbook.html) or
 [the probmed comparison](probmed-comparison.html).
+
+::: {.next-action}
+**Next:** The same comparison for probmed: [probmed and medfit](probmed-comparison.html)
+:::

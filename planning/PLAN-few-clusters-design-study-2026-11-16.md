@@ -208,3 +208,53 @@ B = 2000), cluster-bootstrap percentile (`method = "nonparametric", cluster = "i
 - **M7** P1 trigger cutoff (inadmissible rate above 10%) and `eps`.
 - **M8** Decision-table cutoffs (failure 5% and 20%, kept/B .9), fixed before T6.
 - **M9** Whether the gaps plan's Q8/D-11 wording should be corrected to section 2's reading.
+
+### Decisions recorded 2026-11-17 (before T6)
+
+- **M2** stays open. T6 proceeds under scope S2: the delta and MC arms on all 120 cells plus P1 on its subset, no
+  cluster-bootstrap arm. T7 stays no-go until M2 is decided.
+- **M7** P1 runs where P0's inadmissible rate in the T5 pilot rows (`inadmissible` in
+  `studies/few-clusters/T5-cells.csv`) exceeds 10%: 49 of 120 cells, listed in `studies/few-clusters/T6-p1-cells.csv`
+  and reproduced by `tests/sim/twolevel-few-clusters-t6-p1.R`. `eps` stays at 1e-3, as in T2 and the driver default.
+- **M8** Decision-table cutoffs fixed before T6: failure rate 5% and 20%; kept/B below .9 (P2X section 4.5). They are
+  design choices, not values from the literature.
+- Unequal-cluster n = 5 cells stay in the grid; their non-convergence is reported as a finding, not dropped.
+- Replicates (2026-11-17, after the T6 QA): T6 runs replicates 501 to 1500 (R = 1000, seeds still
+  `cell_id * 1e5 + rep`), the runner's default `REP_START = 501`. The T5 pilot ran replicates 1 to 500 of the same
+  cells and chose the P1 cells from them; reusing them would make T6 half the pilot data and select P1 on the rows it
+  then reports (section 9: the main study runs on fresh seeds).
+- Cell 1106 (T5 P0 inadmissible rate .102, within one MCSE of about .013 of the .10 cutoff) stays in P1 and is
+  provisional: T8 reports it as borderline.
+- MC B is 2000, as in section 6 and the T5 runner; the T5 memo's "MC B = 1000" is a typo, to be fixed in T8.
+
+### Decision recorded 2026-11-21 (after T6)
+
+- **M2** decided: **drop T7 for the next release.** Both bootstrap scopes from the T5 pilot exceed the S2 stop rule
+  (9,160 core-h at plan scope, 5,171 at the cut scope, cap 5,000). T8 proceeds on T6 alone: the decision table and
+  U4 package report the delta and MC arms (and P1), and state that the cluster-bootstrap arm was not run beyond the
+  six T5 pilot cells. T7 stays in this plan as later work; it is not a release gate.
+
+### Decision recorded 2026-11-22 (ICC source)
+
+- **ICC source** decided: **h1 (unrestricted) on both routes** for the within-only rule (T5 memo, open item 2; branch
+  `feature/twolevel-icc-h1`). Records made before the change used the model-implied ICC; runs after it read h1. About
+  2% of boundary-heavy datasets can differ between routes at the .01 and .05 cuts (lavaan's default h1 EM stops
+  early), accepted and documented.
+
+### Decision recorded 2026-11-23 (P1 interpretation, unequal n = 5)
+
+- **P1 interpretation** decided: **report a floor-bound fit with a warning** (not as a failure). T8's headline coverage is
+  P1 unconditional coverage; beside it the at-bound rate and the coverage of floor-bound fits; sensitivity coverage stays
+  as a worst-case column only. Basis (INFERENCE from `T6-parametrization.csv`, floor-bound coverage =
+  (coverage_p1 - sens_coverage_p1) / at_bound_p1, not checked against the per-dataset rows): NIE_W floor-bound coverage
+  median .94; NIE_B floor-bound .73 (range .63 to .97) against about 1.0 for fits off the floor, overall .82. The T6
+  memo's reading of the conditional .993 to .997 as floor-bound coverage is wrong: it describes the fits off the floor.
+- **Unequal n = 5**: the guidance names a minimum J, derived from `T6-cells.csv` under the M8 cutoffs; it does not
+  recommend P1 there.
+
+### Status recorded 2026-11-23 (T8 done; not a decision)
+
+- T8 is done: the U4 package is `studies/few-clusters/T8-README.md` (generator `T8-tables.R`, manifest `T8-manifest-sha256.txt`); the gaps plan's U4 line is updated (met, with limits). The task table has no status column, so no tick is added.
+- Two readings above were checked against `T6-cells.csv` and are corrected in the T6 memo (dated notes): `ccov_p1` is over every identified, admissible P1 fit with an interval, floor-bound ones included, not the off-floor fits (the 2026-11-23 decision itself stands); and the memo's "six cells fall below .10" compares the overlapping rate on T6 data with the exclusive rate (under M7's own definition no selected cell falls below .10; five do under the exclusive rate; 1099 was never selected). Cell 1106 stays borderline (T5 .102, T6 overlapping .104, exclusive .096).
+- The T5 memo's "MC B = 1000" is fixed to 2000 with a dated note.
+

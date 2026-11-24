@@ -8,3 +8,6 @@ tests/sim/gates.csv
 R/fit-sem.R
 R/sem-fiml.R
 R/sem-fiml-interface.R
+R/sem-se.R
+R/sem-sandwich.R
+R/sem-sandwich-twolevel.R

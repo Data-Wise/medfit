@@ -95,7 +95,7 @@ test_that("the errors the guide lists are real", {
       data = mediation_demo,
       treatment = "treatment", mediator = "mediator1", mod = FALSE
     ),
-    "is only used with engine = \"native\"",
+    "is only used with engine = \"sem\"",
     fixed = TRUE
   )
 })
@@ -266,7 +266,7 @@ test_that("the guide quotes the message fragments this test file checks", {
     "Found function-wrapped treatment-by-mediator product term(s)",
     "Multi-mediator (serial or parallel) extraction supports only treatment-by-mediator product terms",
     "Four-way decomposition requires the identity link",
-    "is only used with engine = \"native\"",
+    "is only used with engine = \"sem\"",
     "does not support a treatment product",
     "is deprecated as of medfit 0.9.0",
     "std_error", "conf_low", "p_value", "summary_MediationData", "sampling_weights",

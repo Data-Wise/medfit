@@ -88,7 +88,7 @@ fit_rm <- fit_mediation(
 all.equal(decompose(fit_rm), decompose(fit))
 ```
 
-## The native engine
+## The sem engine {#the-native-engine}
 
 `fit_sem()` reads the product as `treatment:mediator1` (the colon, no spaces) and
 fits it by maximum likelihood with no other package. A product turns the mean

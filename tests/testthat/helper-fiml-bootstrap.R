@@ -43,8 +43,12 @@ fb_constructor_state <- function(x) {
 
 fb_snapshot <- function(fit) {
   attrs <- attributes(fit)
-  constructor <- attrs$S7_class
-  attrs$S7_class <- NULL
+  # S7 1.0.0 renamed the class attribute to `_S7_class` (and added `_S7_version`); S7 0.2.2 calls it `S7_class`.
+  # Keep the class object out of the serialized attributes under either name: it is compared separately below, and
+  # serializing it byte for byte as a plain attribute failed on the hosted runners (0.20.0 release PR).
+  class_keys <- intersect(c("S7_class", "_S7_class"), names(attrs))
+  constructor <- attrs[[class_keys[1L]]]
+  attrs[class_keys] <- NULL
   list(properties = lapply(S7::props(fit), serialize, connection = NULL),
        attributes = lapply(attrs, serialize, connection = NULL),
        constructor_address = rlang::obj_address(constructor),

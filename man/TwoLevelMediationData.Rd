@@ -33,7 +33,10 @@ cross-level covariances are carried.}
 
 \item{cluster_sizes}{Integer vector of cluster sizes (length \code{n_clusters}).}
 
-\item{icc}{Named numeric vector: intraclass correlation of treatment, mediator and outcome.}
+\item{icc}{Named numeric vector: intraclass correlation of treatment, mediator and outcome. It is the
+unrestricted (h1) estimate, the between variance over the total in the saturated two-level model
+(\code{lavaan::lavInspect(fit, "icc")} for a lavaan fit), not the ratio the fitted model implies; the
+within-only rule reads it.}
 
 \item{between_identified}{Logical scalar: whether the between level is identified.}
 
@@ -56,8 +59,9 @@ cross-level covariances are carried.}
 \item{data}{Data frame or \code{NULL}: always \code{NULL} for the lavaan adapter (the fit is never refit and the data
 are not copied); kept for the contract shared with the other mediation classes, which read \verb{@data}.}
 
-\item{source_package}{Character scalar: \code{"lavaan"}; kept for the dependents contract shared with the other
-mediation classes (\code{tests/testthat/test-dependents-contract.R} pins it across classes).}
+\item{source_package}{Character scalar: \code{"lavaan"}, or \code{"medfit"} for a native two-level fit; kept for the
+dependents contract shared with the other mediation classes (\code{tests/testthat/test-dependents-contract.R} pins it
+across classes).}
 
 \item{source_version}{Character: \code{character(0)} (the default) or one non-empty string, the version of the
 package that made the fit. The lavaan adapter stores the lavaan version here and in \code{lavaan_version};

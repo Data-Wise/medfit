@@ -43,7 +43,7 @@ cases <- list(
     "Must be element of set {'glm','regmedint','lmer','sem','native'}",
     fit_glm(engine = "foo")
   ),
-  case("is only used with engine = \"native\"", fit_glm(model = "y ~ x")),
+  case("is only used with engine = \"sem\"", fit_glm(model = "y ~ x")),
   case("engine = \"lmer\" needs", fit_glm(engine = "lmer")),
   case("is only used with engine = \"lmer\"", fit_glm(cluster = "covariate1")),
   case(

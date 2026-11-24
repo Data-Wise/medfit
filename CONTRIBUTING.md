@@ -17,11 +17,13 @@ pull requests into `dev`; release pull requests from `dev` to `main` use a merge
 
 ## Check your change locally first
 
-`dev` is gated locally, because `R-CMD-check` runs on GitHub only for pull requests and pushes to `main`.
+Use the local gates for `dev`. The hosted `R-CMD-check` matrix runs automatically on pull requests
+to `main` and pushes to `main`, including merges.
 
 ```bash
 scripts/check-local.sh            # quick tests, then R CMD check on a built tarball
 scripts/check-local.sh --tests-only
+scripts/check-local.sh --full-tests
 ```
 
 In R:
@@ -32,9 +34,11 @@ devtools::test()
 lintr::lint_package()
 ```
 
-Tests that need `NOT_CRAN=true` (simulation tests) are skipped by `check-local.sh`; run the suite with
-`NOT_CRAN=true` before a pull request that changes numbers. Verify a numeric claim against an independent
-oracle (lavaan, a hand calculation, a fit without the feature) and plant a defect the test must catch.
+Use `--full-tests` on the final candidate to include tests that require `NOT_CRAN=true`.
+Record the test counts and link to the run log in the pull request.
+See [local verification](https://github.com/Data-Wise/medfit/blob/dev/scripts/README.md#local-verification) for the run modes and receipt guidance.
+Verify a numeric claim against an independent oracle (lavaan, a hand calculation, a fit without
+the feature) and plant a defect the test must catch.
 
 ## What the hosted checks do
 
@@ -43,7 +47,9 @@ oracle (lavaan, a hand calculation, a fit without the feature) and plant a defec
 | `lint` | pull requests | pinned to `ubuntu-24.04`; timeout 35 minutes (a cold package cache compiles OpenMx from source) |
 | `pkgdown` | pull requests | pinned to `ubuntu-24.04`; articles evaluate their code, so an article that breaks fails here; not run for changes only under `planning/`, `tests/` or `.claude/` |
 | `risk-tier` | pull requests to `dev` and `main` | a change to the objective, parameters, constraints, bounds or solver path needs the admission checklist in the pull request body |
-| `R-CMD-check`, `gates`, `test-coverage` | pull requests to `main` and pushes to `main` only | the platform matrix, the simulation gates (`gates (rest)`, `gates (reliability)`) and hosted coverage are release-time cost |
+| `R-CMD-check`, `test-coverage` | pull requests to `main` and pushes to `main` | platform matrix and hosted coverage. The matrix also supports manual dispatch. |
+| `gates` | pull requests to `main` and manual dispatch | two simulation shards, `gates (rest)` and `gates (reliability)` |
+| `qc-monthly` | `dev` pull requests labeled `run-qc`, schedule and manual dispatch | runs the simulation gates on the selected ref |
 
 Pinning to `ubuntu-24.04` fixed a stall where `setup-r` hung at `apt-get update` on a newer image. If a
 hosted job stalls in its setup step, rerun it once; a second failure is a real problem.

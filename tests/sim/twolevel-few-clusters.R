@@ -6,6 +6,7 @@
 #   CELLS   required: comma-separated cell ids from fc_grid() (1001 to 1120) or "all"; no default, so the full
 #           campaign never starts by accident
 #   REPS    replicates per cell (default 1000); seeds cell_id * 1e5 + rep
+#   REP_START first replicate (default 1): replicates REP_START to REP_START + REPS - 1, the last below 1e5
 #   ARMS    "p0", "p1" or "p0,p1" (default "p0"); P0 lavaan defaults, P1 the syntax floor at EPS
 #   EPS     P1 floor (default 1e-3; decision M7 is open)
 #   CORES   parallel::mclapply cores (default 1)
@@ -16,6 +17,10 @@
 #           fc_paired_catch(); they need no MUTANT run
 #   SCALE_X k (default 1): analyze each dataset with X times k and every truth divided by k (T4 metamorphic rescale;
 #           the same seeds, so rows pair with an unscaled run by cell_id, rep and arm)
+#   MC_B    MC (parametric) draws per dataset (default 0, no MC arm; T5 uses 2000): `mc_*` columns, percentile
+#           intervals for NIE_W, NIE_B and the contrast from the stream after the dataset's (fc_streams())
+#   BOOT_B  cluster-bootstrap replicates per dataset (default 0, no bootstrap arm; T5 uses 499 in the six P2X
+#           cells): `bt_*` columns, one refit per replicate for the three effects (fc_cluster_boot())
 #
 # Uses the installed medfit: install it from the source at a recorded SHA into a scratch library first (section 9),
 # e.g. R CMD INSTALL -l <lib> . then R_LIBS=<lib> CELLS=1001 REPS=2 Rscript tests/sim/twolevel-few-clusters.R
@@ -35,21 +40,32 @@ grid <- fc_grid()
 cell_ids <- if (cells_env == "all") grid$cell_id else as.integer(strsplit(cells_env, ",", fixed = TRUE)[[1]])
 if (anyNA(cell_ids) || !all(cell_ids %in% grid$cell_id)) stop("unknown cell id in CELLS", call. = FALSE)
 reps <- as.integer(Sys.getenv("REPS", "1000"))
+rep_start <- as.integer(Sys.getenv("REP_START", "1"))
+if (is.na(reps) || reps < 1L || is.na(rep_start) || rep_start < 1L) {
+  stop("REPS and REP_START must be positive counts", call. = FALSE)
+}
+if (rep_start + reps - 1 >= 1e5) {
+  stop("REP_START + REPS - 1 must stay below 1e5 (seed cell_id * 1e5 + rep)", call. = FALSE)
+}
 arms <- strsplit(Sys.getenv("ARMS", "p0"), ",", fixed = TRUE)[[1]]
 if (!length(arms) || !all(arms %in% c("p0", "p1"))) stop("ARMS must be p0, p1 or p0,p1", call. = FALSE)
 eps <- as.numeric(Sys.getenv("EPS", "1e-3"))
 cores <- as.integer(Sys.getenv("CORES", "1"))
 mutant <- Sys.getenv("MUTANT", "")
 scale_x <- as.numeric(Sys.getenv("SCALE_X", "1"))
+mc_b <- as.integer(Sys.getenv("MC_B", "0"))
+boot_b <- as.integer(Sys.getenv("BOOT_B", "0"))
+if (is.na(mc_b) || mc_b < 0L || is.na(boot_b) || boot_b < 0L) stop("MC_B and BOOT_B must be counts", call. = FALSE)
 if (!is.finite(scale_x) || scale_x <= 0) stop("SCALE_X must be a positive number", call. = FALSE)
 invisible(fc_apply_mutant(data.frame(truth_x = 0, est_x = 0, lo_x = 0, hi_x = 0), mutant)) # unknown names error
 out <- Sys.getenv("OUT", file.path(tempdir(), sprintf("twolevel-few-clusters-%s.csv", format(Sys.Date()))))
 
-jobs <- expand.grid(rep = seq_len(reps), cell_id = cell_ids, KEEP.OUT.ATTRS = FALSE)
+jobs <- expand.grid(rep = seq(rep_start, length.out = reps), cell_id = cell_ids, KEEP.OUT.ATTRS = FALSE)
 run_job <- function(k) {
   cell <- grid[grid$cell_id == jobs$cell_id[k], ]
   rows <- lapply(arms, function(a) {
-    fc_row(cell, jobs$rep[k], a, eps = eps, mutant = mutant, scale_x = scale_x) # nolint: object_usage_linter.
+    fc_row(cell, jobs$rep[k], a, eps = eps, mutant = mutant, scale_x = scale_x, # nolint: object_usage_linter.
+           mc_b = mc_b, boot_b = boot_b)
   })
   do.call(rbind, rows)
 }
@@ -65,5 +81,5 @@ res <- do.call(rbind, res)
 res$medfit_version <- format(utils::packageVersion("medfit"))
 res$lavaan_version <- format(utils::packageVersion("lavaan"))
 utils::write.csv(res, out, row.names = FALSE)
-cat(sprintf("%d rows (%d cells x %d reps x %d arms) in %.1f s -> %s\n", nrow(res), length(cell_ids), reps,
-            length(arms), proc.time()[["elapsed"]] - t0, out))
+cat(sprintf("%d rows (%d cells x %d reps from %d x %d arms) in %.1f s -> %s\n", nrow(res), length(cell_ids), reps,
+            rep_start, length(arms), proc.time()[["elapsed"]] - t0, out))

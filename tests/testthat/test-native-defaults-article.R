@@ -1,4 +1,4 @@
-# Consistency guard for vignettes/articles/sem-defaults-0-15.qmd: the page is in the Guides menu and the articles
+# Consistency guard for vignettes/articles/sem-defaults-0-15.qmd: the page is in the navbar and the articles
 # index, its article links resolve, and the numeric claims of its worked example hold (four explicit combinations of
 # fixed_x and meanstructure: identical structural estimates and SEs, the stated npar differences, equal logLik and
 # AIC across meanstructure, the unconditional lenient message, the obsolete-option note and the 2k AIC gap against
@@ -12,7 +12,7 @@ article <- function() {
   p
 }
 
-test_that("the article is in the Guides menu and the articles index, and its links resolve", {
+test_that("the article is in the navbar and the articles index, and its links resolve", {
   txt <- read_text(article())
   pk <- read_text(root_path("_pkgdown.yml"))
   expect_true(grepl("articles/sem-defaults-0-15`", pk, fixed = TRUE))

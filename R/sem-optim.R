@@ -90,6 +90,11 @@
 # A start is valid when its implied covariance is positive definite, never by
 # the objective value (the sentinel is finite and large values can be valid).
 .sem_start_valid <- function(theta, ram) {
+  if (isTRUE(ram$twolevel)) {
+    mom <- tryCatch(.sem_twolevel_implied(ram, theta), error = function(e) NULL)
+    return(!is.null(mom) && all(is.finite(mom$sigma_w)) && all(is.finite(mom$sigma_b)) &&
+             .sem_sigma_pd(mom$sigma_w) && .sem_sigma_pd(mom$sigma_b))
+  }
   sigma <- tryCatch(.sem_implied(ram, theta), error = function(e) NULL)
   !is.null(sigma) && all(is.finite(sigma)) && .sem_sigma_pd(sigma)
 }
@@ -145,6 +150,11 @@
 .sem_polish_centered_maxit <- 8L
 .sem_polish_centered <- function(theta, ram, smp, lb, ub) {
   ctr <- .sem_center_map(ram, smp)
+  # two-level (S4a.4): the means are free parameters of the between level with no path-intercept tie to undo, so the
+  # Newton steps run in theta itself (identity map); SLSQP alone stops about 1e-6 short there
+  if (is.null(ctr) && isTRUE(ram$twolevel)) {
+    ctr <- list(t = diag(ram$q), c = matrix(0, ram$q, ram$q), c0 = numeric(ram$q))
+  }
   if (is.null(ctr)) {
     return(theta)
   }
@@ -281,6 +291,9 @@
 # Improper solutions: negative variances and non-positive-definite latent
 # covariance blocks. Reported, never silently bounded.
 .sem_improper <- function(theta, ram) {
+  if (isTRUE(ram$twolevel)) {
+    return(.sem_improper_ml2(theta, ram))
+  }
   msgs <- character()
   var_k <- ram$k_s[ram$s_weight == 1]
   neg <- unique(var_k[theta[var_k] < 0])
@@ -295,6 +308,38 @@
     }
   }
   msgs
+}
+
+# Two-level admissibility (S4a.4, per level since S4a.5): a negative variance at a level, or that level's implied
+# covariance (Sigma_W within, Sigma_B between) not positive definite. Level-2 variances are fitted with no floor (S4b
+# decides floor vs unconstrained), so the fit route turns any reason here into `medfit_error_twolevel_inadmissible`.
+# `.sem_admissibility_ml2()` is the record the outcome ledger keeps (`admissibility`), one `state` and its `reasons`
+# per level; `.sem_improper_ml2()` is the flat list of reasons.
+.sem_admissibility_ml2 <- function(theta, tl) {
+  rams <- list(tl$ram1, tl$ram2)
+  ks <- list(tl$k1, tl$k2)
+  mom <- .sem_twolevel_implied(tl, theta)
+  sigma <- list(mom$sigma_w, mom$sigma_b)
+  pd_name <- c("within covariance Sigma_W", "between covariance Sigma_B")
+  out <- lapply(1:2, function(l) {
+    ram <- rams[[l]]
+    var_k <- ks[[l]][ram$k_s[ram$s_weight == 1]]
+    neg <- unique(var_k[theta[var_k] < 0])
+    reasons <- character()
+    if (length(neg)) {
+      reasons <- sprintf("negative level-%d variance: %s", l, paste(tl$par_names[neg], collapse = ", "))
+    }
+    if (min(eigen(sigma[[l]], symmetric = TRUE, only.values = TRUE)$values) <= 0) {
+      reasons <- c(reasons, sprintf("the implied %s is not positive definite", pd_name[l]))
+    }
+    list(state = if (length(reasons)) "inadmissible" else "admissible", reasons = reasons)
+  })
+  stats::setNames(out, c("within", "between"))
+}
+
+.sem_improper_ml2 <- function(theta, tl) {
+  adm <- .sem_admissibility_ml2(theta, tl)
+  c(adm$within$reasons, adm$between$reasons)
 }
 
 # The floor for the variances in a nonlinear row (#213), relative to the parameter's natural unit so that it does not
@@ -545,7 +590,8 @@
     ), call. = FALSE)
   }
   improper <- .sem_improper(fit$theta, ram)
-  if (length(improper)) {
+  # a two-level fit does not warn: its caller refuses an inadmissible solution with a classed error (S4a.4)
+  if (length(improper) && !isTRUE(ram$twolevel)) {
     warning("improper solution: ", paste(improper, collapse = "; "), call. = FALSE)
   }
   for (w in fit$sign_warnings) warning(w, call. = FALSE)
@@ -564,6 +610,9 @@
 # mean observed variance), covariances zero. Equivariant: rescaling the data
 # rescales the start exactly as it rescales the parameters.
 .sem_default_start <- function(ram, smp) {
+  if (isTRUE(ram$twolevel)) {
+    return(stats::setNames(.sem_ml2_per_level(ram, smp, .sem_default_start, 0), ram$par_names))
+  }
   u <- .sem_step_floor(ram, smp)
   start <- numeric(ram$q)
   start[ram$k_a] <- 0.1 * u[ram$k_a]

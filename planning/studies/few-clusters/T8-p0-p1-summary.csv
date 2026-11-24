@@ -1,0 +1,6 @@
+"estimand","cells","cov_p0_median","cov_p1_median","at_bound_median","at_bound_min","at_bound_max","floor_bound_median","floor_bound_min","floor_bound_max","floor_bound_with_interval_lo_min","floor_bound_with_interval_lo_median","floor_bound_with_interval_hi_median","w_off_max_max","off_floor_median","sens_median","ccov_p1_median","availability_p1_median"
+"c_prime_between",49,0.633,0.813,0.7,0.203,0.982,0.6988,0.6093,0.8847,0.572,0.9661,0.9661,0.055,0.9943,0.299,0.9768,0.826
+"c_prime_within",49,0.844,0.946,0.7,0.203,0.982,0.9456,0.9163,0.9655,,,,,0.951,0.287,0.9444,1
+"nie_between",49,0.639,0.824,0.7,0.203,0.982,0.7271,0.6277,0.969,0.7841,0.9924,0.9938,0.039,1,0.3,0.9956,0.826
+"nie_contrast",49,0.641,0.824,0.7,0.203,0.982,0.7257,0.6277,0.969,0.8136,0.9909,0.9942,0.032,0.9987,0.3,0.9959,0.826
+"nie_within",49,0.828,0.94,0.7,0.203,0.982,0.9381,0.899,0.9598,,,,,0.9427,0.282,0.9385,1

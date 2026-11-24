@@ -15,7 +15,8 @@ fit_sem(
   meanstructure = TRUE,
   fixed_x = TRUE,
   sampling_weights = lifecycle::deprecated(),
-  missing = c("listwise", "fiml")
+  missing = c("listwise", "fiml"),
+  cluster = NULL
 )
 }
 \arguments{
@@ -73,7 +74,10 @@ sandwich covariance \eqn{A^{-1} B A^{-1}}{A^-1 B A^-1} with casewise scores
 (HC0-type: it equals \code{sandwich::vcovHC(type = "HC0")} per equation and
 lavaan's robust standard errors with \code{sampling.weights}, and is smaller
 than the HC3 default of the glm route by a factor that shrinks like
-\eqn{1/n}{1/n}). Model-based standard errors are not valid under weights.}
+\eqn{1/n}{1/n}). Model-based standard errors are not valid under weights. In a two-level model (\code{cluster})
+\code{"sandwich"} is the cluster-robust sandwich: per-cluster scores, \eqn{B = \sum_j s_j s_j'}{B = sum_j s_j s_j'}
+with no small-sample factor (CR0), the observed information as \eqn{A}{A}, projected under active linear
+constraints; it matches lavaan's \code{se = "robust.huber.white"} for the same two-level model.}
 
 \item{meanstructure}{Logical or \code{NULL}. \code{TRUE} (default) fits a mean structure;
 \code{NULL} fits one only when the model writes
@@ -106,6 +110,28 @@ statement names, which are left free with a message of class \code{medfit_messag
 \item{missing}{Exact missing-data method: \code{listwise} (default) or bounded Gaussian
 \code{fiml} (no abbreviations). FIML requires explicit \code{fixed_x = FALSE}; see
 the Bounded FIML section. The argument is appended to preserve existing positional calls.}
+
+\item{cluster}{\strong{Experimental.} \code{NULL} (default) or a string: the name of the cluster column
+of \code{data}, for a two-level model written with \verb{level:} blocks (\code{level: 1} or \code{level: within}; \code{level: 2},
+\code{level: between} or the cluster variable's name). Two-level only: \code{cluster} without \verb{level:} blocks, and
+\verb{level:} blocks without \code{cluster}, are errors (\code{medfit_error_twolevel_cluster}, which also covers more than two
+levels, fewer than two clusters and a missing or incomplete cluster column); misordered \verb{level:} blocks are
+\code{medfit_error_twolevel_syntax}; a within variable constant in every cluster, or a cluster-level variable in a
+\code{level: 1} row, is \code{medfit_error_twolevel_varset}. A model that passes the two-level checks is fitted by maximum
+likelihood (experimental); an inadmissible solution (a negative variance or a non-positive-definite implied
+covariance at either level) stops with \code{medfit_error_twolevel_inadmissible}, which keeps the fit and its outcome
+ledger. \code{extract_mediation()} on a native two-level fit returns a \code{TwoLevelMediationData} (\verb{@source} is
+\code{"native"}), with the warnings of the lavaan two-level adapter. \code{glance()} adds \code{n_clusters},
+\code{cluster_size_min} and \code{cluster_size_max} (counted after listwise deletion); its \code{chisq} and \code{p_value} are \code{NA}
+with a note, because the engine fits no saturated two-level model. See the "Two-level models" section of
+\link{medfit-syntax}. Unset \code{fixed_x}
+means \code{FALSE} on this route; an explicit \code{fixed_x = TRUE}, \code{meanstructure = FALSE}, \code{weights},
+\code{missing = "fiml"}, \code{information = "expected"}, latent variables, product terms and
+nonlinear constraints are refused with classed errors (\verb{medfit_error_twolevel_*}); the one nonlinear row admitted
+is the equality of the within and between indirect effects (\code{a_w*b_w == a_b*b_b}, the null of
+\code{\link[=twolevel_equal_indirect]{twolevel_equal_indirect()}}). \code{se_type = "sandwich"} gives
+the cluster-robust sandwich (see \code{se_type}), and \code{glance()} then reports \code{se_type}. Appended last to preserve
+positional calls.}
 }
 \value{
 A \link{SEMFit} object. With a product term whose factor is a regression target (\code{x:m} with

@@ -16,12 +16,34 @@ Find your message in the tables below (use your browser's search), read the caus
 and apply the fix. Every message here is quoted from the package and checked by a
 test, so the wording matches what you see.
 
-::: {.callout-tip}
+::: {.callout-note title="At a glance"}
+**Use this when:** a call stopped with an error or printed a warning.\
+**You get:** the message, its likely cause and the fix, with the most common errors first.\
+**Reading time:** 25 min
+:::
+
+::: {#first-check-your-version .callout-tip}
 ## First, check your version
-Examples on this site use medfit 0.13.0. If `mediation_demo` or
-`fit_sem()` is "not found", you have CRAN's 0.3.2. See
+Examples on this site need the GitHub or r-universe build of medfit, not
+CRAN's. If `mediation_demo` or `fit_sem()` is "not found", you have CRAN's 0.3.2. See
 [What changed since CRAN 0.3.2](guide-changes.html).
 :::
+
+## Most common errors
+
+| You see | Likely cause | Go to |
+|---|---|---|
+| `object 'mediation_demo' not found` or `could not find function "fit_sem"` (R's own messages) | you have CRAN's 0.3.2, which lacks them | [First, check your version](#first-check-your-version) |
+| `Treatment variable 'treatment' must be in formula_m` | the treatment (or the mediator, in `formula_y`) is missing from a formula | [Fitting with `fit_mediation()` and `med()`](#fitting-with-fit_mediation-and-med) |
+| `no start converged` | the sem engine's solver found no solution that passes its checks; the tail of the message says why | [The sem engine](#native-engine) |
+| `The between level is not identified, so only the within-level paths are returned` (a warning) | the ICC of the treatment or of a mediator is below 0.01, so the between effects are `NA` | [Two-level mediation](#two-level-mediation) |
+| `clusters: inference on the cluster-level paths is unreliable` (a warning) | fewer than 10 clusters, too few for a model-based interval | [Cluster engine](#cluster-engine) |
+| `A product (interaction) term is not supported for a two-level fit` | a `:` term or `interaction =` on a two-level fit, which refuses it | [Two-level mediation](#two-level-mediation) |
+
+**Jump to:** [Fitting](#fitting-with-fit_mediation-and-med) | [regmedint](#the-regmedint-engine) |
+[Extracting](#extracting-from-fitted-models) | [Bootstrap](#bootstrap-and-intervals) | [Cluster](#cluster-engine) |
+[Two-level](#two-level-mediation) | [sem engine](#native-engine) | [FIML](#bounded-fiml-refusals) |
+[Not errors](#messages-that-are-not-errors) | [Still stuck?](#still-stuck)
 
 ## Fitting with `fit_mediation()` and `med()`
 
@@ -31,7 +53,7 @@ Examples on this site use medfit 0.13.0. If `mediation_demo` or
 | `Mediator variable 'mediator1' must be in formula_y` | the mediator is missing from the outcome formula | add it: `outcome ~ treatment + mediator1 + ...` |
 | `must be in data` | `med()` was given a variable name that is not a column | check the spelling; the message lists the valid names |
 | `Must be element of set {'glm','regmedint','lmer','sem','native'}` | `engine` is misspelled | use one of the four engines: `"glm"`, `"regmedint"`, `"lmer"` or `"sem"` (the sem engine; `"native"` is its legacy spelling) |
-| `is only used with engine = "native"` | `model =` was given to another engine | use `engine = "sem"`, or pass formulas instead of `model` |
+| `is only used with engine = "sem"` | `model =` was given to another engine | use `engine = "sem"`, or pass formulas instead of `model` |
 | `engine = "lmer" needs` | the `lmer` engine has no `cluster` | add `cluster = "school"` (the cluster variable's name) |
 | `is only used with engine = "lmer"` | `cluster =` was given to another engine | add `engine = "lmer"`, or drop `cluster` |
 | `contains the random-effect term` | a random-effect term (written with a vertical bar) is in a formula for the `lmer` engine | write fixed effects only; the engine adds the random intercept. For a slope use `engine_args = list(random_y = ~ M)` |
@@ -86,6 +108,9 @@ carries a class, so you can handle or silence one kind.
 |---|---|---|---|
 | `The between level is not identified, so only the within-level paths are returned` (a warning) | `medfit_between_unidentified` | the ICC of the treatment or of any mediator is below 0.01, a between covariance is not finite or not positive definite, or the fit did not converge | read the within results, or fix the design; the between effects and the contrast are `NA` |
 | `The between-level variance of the treatment or the mediator is small` (a warning) | `medfit_warning_between_weak` | an ICC between 0.01 and 0.05 | the between results are kept but may be imprecise |
+| `The unrestricted (h1) ICC is not available from this fit` (a warning, lavaan route) | `medfit_warning_twolevel_icc_h1_unavailable` | the lavaan fit has no h1 estimate (`h1 = FALSE`) | the within-only rule used the model-implied ICC; refit without `h1 = FALSE` |
+| `The unrestricted (h1) ICC could not be estimated from these data` (a warning, native route) | `medfit_warning_twolevel_icc_h1_unavailable` | too few clusters for the between-level variables, or collinear variables | the within-only rule used the model-implied ICC; check the data |
+| `The unrestricted (h1) EM did not converge` (a warning, native route) | `medfit_warning_twolevel_icc_h1_unconverged` | the EM for the h1 ICC hit its iteration limit | an ICC near 0.01 or 0.05 may be on the wrong side of the cut; treat the within-only or weak call as provisional |
 | `The contrast NIE_within - NIE_between is NA` (a warning) | `medfit_warning_twolevel_constrained` | both a and b are equated across levels (a shared label, an `==` row or an algebraic equality), so the contrast is zero by constraint; with only one of them equated the contrast is returned. With several mediators the rule is per mediator: a specific contrast is `NA` when both a and b of that mediator are equated, the total contrast only when that holds for every mediator | free `a` or `b` across levels to compare the levels |
 | `The lavaan fit is not admissible` (a warning) | `medfit_warning_twolevel_inadmissible` | lavaan's `post.check` is `FALSE`, for example a negative variance | inspect the fit before using the numbers |
 | `is negative or missing; its standard error is NA` (a warning) | `medfit_warning_vcov_diagonal` | a variance on the diagonal of the two-level covariance matrix is negative, missing or not finite; one warning covers the whole vector | the affected standard errors are `NA`, not guessed; inspect the lavaan fit (often an inadmissible fit, see the row above) before using them |
@@ -136,7 +161,7 @@ carries a class, so you can handle or silence one kind.
 | `a product ':' needs a variable name on each side` | a space around the colon in a product (`x :m`) | write the product without spaces: `x:m` |
 | `(rule 8: no outcome-derived regressors)` | a product has a factor that is its own outcome or downstream of it (`y ~ x + x:y`) | build the product from variables that are not outcomes of that equation |
 | `cannot have a residual covariance (rule 9)` | a model with a product has `m1 ~~ m2` between outcomes | drop the residual covariance, or fit without the product |
-| `has a fixed coefficient (rule 9)` | a regression in a model with a product has a fixed value (`0.3*x`, `0*x`); the same rule covers bounds, shared labels and loops | free the coefficient; the full list is in the table in [the native model page](model-sem.html#product-terms) |
+| `has a fixed coefficient (rule 9)` | a regression in a model with a product has a fixed value (`0.3*x`, `0*x`); the same rule covers bounds, shared labels and loops | free the coefficient; the full list is in the table in [the sem engine model page](model-sem.html#product-terms) |
 | `names the coefficient label` | `==`, `<` or `>` in a model with a product names a coefficient label (`a == b`) | constrain a defined parameter (`:=`) instead, or fit without the product |
 | `the model test is not valid for this model` (a warning) | a product has a factor that is itself an outcome, so the chi-square is not valid | the test is reported as NA and `anova()` and `mbco_sem()` refuse; the coefficients and the sandwich standard errors are unaffected |
 | `model-based standard errors assume normality, which a product violates` (a warning) | a model with a product was fitted without `se_type = "sandwich"` | add `se_type = "sandwich"` |
@@ -170,7 +195,7 @@ reference, its verdict is `"unresolved"` and `reference$lr` is `NA`.
 ### Errors that carry evidence {#errors-that-carry-evidence}
 
 A native fit that cannot be trusted stops with a classed error, never with a fit. Several of these errors carry
-the outcome ledger as `$ledger` (what a ledger is: [the native guide](sem-guide.html#the-outcome-ledger)); read
+the outcome ledger as `$ledger` (what a ledger is: [the sem engine guide](sem-guide.html#the-outcome-ledger)); read
 it before you rerun anything. An unresolved branch means unknown, not infeasible: only a literal contradiction is
 a proof of emptiness.
 
@@ -217,7 +242,7 @@ which case you hit:
 | `medfit_error_fiml_serial_source_fit` | a serial FIML fit was passed as the source of a bootstrap (reached only if the guard above is lifted) | not available for serial fits |
 
 An extracted FIML object also refuses `quick()`, `pm()` and `glance()`; see the
-[native guide](sem-guide.html#bounded-fiml) for the full list.
+[sem engine guide](sem-guide.html#bounded-fiml) for the full list.
 
 ## Messages that are not errors
 
@@ -250,3 +275,7 @@ Run the failing call on `mediation_demo` with the same arguments. If that works,
 the difference is in your data. If it fails the same way, open an
 [issue](https://github.com/Data-Wise/medfit/issues) with the call and the full
 message.
+
+::: {.next-action}
+**Next:** Back to your model: [Models](models.html). Or try a recipe: [Cookbook](cookbook.html)
+:::

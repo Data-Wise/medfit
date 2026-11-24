@@ -19,8 +19,10 @@ jobs:
     runs-on: ${{ matrix.config.os }}
     # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default. The 0.17.0 suite
     # runs about 22 minutes on a laptop (FIML files are 71% of it) and 30 minutes on the macOS runner; 45 cancelled
-    # the Linux and Windows jobs on the 0.17.0 release PR.
-    timeout-minutes: 90
+    # the Linux and Windows jobs on the 0.17.0 release PR. The 0.20.0 suite (244 test files, the native two-level
+    # tests) took 95 minutes on Ubuntu release, 147 on Windows and 157 on oldrel-1, and cancelled devel and macOS at
+    # 180 minutes (probe runs of 2026-11-24), so the limit is 300 (the hosted maximum is 360).
+    timeout-minutes: 300
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 

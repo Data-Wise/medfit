@@ -200,20 +200,22 @@ test_that("every native-route guard names its cause", {
   expect_error(call_native(model = mod, weights = rep(1, 99)), "weights")
   expect_error(call_native(model = mod, weights = rep(-1, 100)), "weights")
   expect_error(call_native(model = mod, se_type = "kr"), "only used with engine = \"lmer\"")
-  expect_error(call_native(model = mod, cluster = "C"), "`cluster` is only used with engine = \"lmer\"")
+  # `cluster` goes to fit_sem() (two-level, experimental): a model without `level:` blocks is refused there
+  expect_error(call_native(model = mod, cluster = "C"), "`cluster` is given but the model has no `level:` blocks",
+               class = "medfit_error_twolevel_cluster")
   expect_error(call_native(model = mod, family_y = stats::binomial()), "Gaussian")
   expect_error(call_native(model = mod, engine_args = list(bogus = 1)), "unknown `engine_args`.*bogus")
-  expect_error(call_native(model = mod, zzz = 1), "unused arguments for engine = \"native\": zzz")
+  expect_error(call_native(model = mod, zzz = 1), "unused arguments for engine = \"sem\": zzz")
   expect_error(fit_mediation(data = dat, treatment = "X", mediator = "Q", engine = "native", model = mod),
                "'Q' is not a variable in `model`")
   expect_error(fit_mediation(Y ~ X + M, M ~ X, dat, "X", "M", model = mod),
-               "`model` is only used with engine = \"native\"")
+               "`model` is only used with engine = \"sem\"")
   # a glm() argument spelled `model`, or partially matching it, binds to
   # `model` and errors on the glm engine, so it cannot be forwarded
   expect_error(fit_mediation(Y ~ X + M, M ~ X, dat, "X", "M", model = FALSE),
-               "`model` is only used with engine = \"native\"")
+               "`model` is only used with engine = \"sem\"")
   expect_error(fit_mediation(Y ~ X + M, M ~ X, dat, "X", "M", mod = FALSE),
-               "`model` is only used with engine = \"native\"")
+               "`model` is only used with engine = \"sem\"")
   # no planning ids in user-facing text
   msgs <- c(
     tryCatch(call_native(model = mod, se_type = "kr"), error = conditionMessage),

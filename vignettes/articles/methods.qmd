@@ -21,6 +21,12 @@ interpretation depends on identification assumptions (no unmeasured
 confounding of the relevant relations), which medfit does not check. Each
 section says which assumptions the estimand needs.
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you need the formula, the assumption or the standard-error derivation behind an estimate.\
+**You get:** the notation, the estimand and the formula for every effect and interval, with references.\
+**Reading time:** 52 min
+:::
+
 ## Notation and conventions
 
 | Symbol | Meaning |
@@ -158,7 +164,7 @@ unmeasured treatment–outcome and mediator–outcome confounding. With
 $\theta_3 = 0$ the decomposition reduces to simple mediation. The
 `InteractionMediationData` validator checks each identity when the object is
 built. A native `fit_sem()` fit with the product `x:m` in the outcome equation
-gives the same object ([the native product term](#products-and-observed-information)).
+gives the same object ([the sem engine product term](#products-and-observed-information)).
 
 ## Several mediators with products: joint natural effects
 
@@ -474,14 +480,16 @@ total contrast is `NA` only when every mediator's contrast is, because otherwise
   2008). Observed cluster means are a different model with a different causal story (Preacher et al., 2010);
   medfit does not offer it.
 - **The contrast is descriptive.** No source supports $\text{NIE}_w - \text{NIE}_b$ as a named test; its
-  standard error is a delta-method standard error, not a test of equal indirect effects.
+  standard error is a delta-method standard error, not a test of equal indirect effects. That test is
+  `twolevel_equal_indirect()`, a likelihood-ratio test of $a_w b_w = a_b b_b$.
 - **Few clusters.** No source gives a cluster count below which the estimates or the between standard errors
   can be trusted. The warning below 50 clusters is a judgment, and the threshold is an option.
 - **`fixed.x = TRUE`.** The between standard errors are conditional on the sample between-level moments of the
   treatment.
 - **Identification.** The between slopes need between variance in the treatment and the mediator. The adapter
   treats an ICC below 0.01 as unidentified (a within-only result) and warns between 0.01 and 0.05; both cutoffs
-  are judgments.
+  are judgments. The ICC is the unrestricted (h1) one, the between variance over the total in the saturated
+  two-level model, not the ratio the fitted model implies.
 
 ### What is not supported
 
@@ -637,7 +645,7 @@ exogenous covariance, or with two parallel mediators, alone or with one or two s
 (the parallel form also allows a free mediator residual covariance), free intercepts and a free or exactly zero direct path. It assumes
 ignorable missingness under that model; choosing FIML does not validate MAR or
 protect against nonignorable missingness. See the
-[native guide](sem-guide.html#bounded-fiml) for settings and API limits.
+[sem engine guide](sem-guide.html#bounded-fiml) for settings and API limits.
 
 For retained row $i$, let $O_i$ select its observed components, with implied mean
 $\mu_{O_i}(\theta)$ and covariance $\Sigma_{O_i O_i}(\theta)$. The minimized total
@@ -1247,6 +1255,10 @@ test. Subsetting or binding rows drops this attribute.
 fit0 <- fit_sem(paste0(fit@model, "\nb == 0"), data = mediation_demo)
 anova(fit, fit0)
 ```
+
+::: {.next-action}
+**Next:** See how the numbers are computed: [Computation algorithms](computation-algorithms.html)
+:::
 
 ## References
 

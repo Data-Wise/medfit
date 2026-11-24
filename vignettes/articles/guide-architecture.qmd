@@ -16,6 +16,12 @@ an `extract_mediation()` method) and from what you ask of it (generics such as `
 maps those three layers. The [Reference Card](refcard.html) lists every function; this page shows how they
 connect.
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you want a map of how classes, engines and generics connect before you read or extend the source.\
+**You get:** a diagram of the three layers and a table from each layer to its source files.\
+**Reading time:** 2 min
+:::
+
 ## From a model to an object
 
 ```{mermaid}
@@ -52,6 +58,7 @@ never refits. Native fits return a `SEMFit` first, which `extract_mediation()` t
 | `JointMediationData` | several mediators with X by M products | `lm` |
 | `ClusterMediationData` | cluster-level treatment (2-1-1) | `lmer`, `fit_mediation(engine = "lmer")` |
 | `TwoLevelMediationData` | X, M and Y on level-1 units (1-1-1), within and between effects | two-level `lavaan` fit |
+| `TwoLevelParallelMediationData` | the same with two or more parallel mediators (experimental) | two-level `lavaan` fit |
 | `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | bounded full-information ML for missing data | sem engine with `missing = "fiml"` |
 | `SEMFit` | a native structural equation fit (the input to extraction) | `fit_sem()` |
 | `BootstrapResult` | an interval and its draws | `bootstrap_mediation()` |
@@ -87,3 +94,7 @@ a statistic function (for two-level objects, `twolevel_statistic()`) and returns
 
 S7 generics load before their methods (the `aab-` file prefix), and the classes are registered with S4 in
 `.onLoad()` so that they dispatch in installed packages.
+
+::: {.next-action}
+**Next:** Look up a function: [Reference Card](refcard.html)
+:::

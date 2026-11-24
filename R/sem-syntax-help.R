@@ -175,6 +175,56 @@
 #' [mbco_sem()] refuse such a pair. A product of
 #' exogenous variables with the block free keeps the ordinary test.
 #'
+#' @section Two-level models (experimental):
+#' A two-level model of observed variables is written in `level:` blocks and fitted with
+#' `fit_sem(model, data, cluster = "<cluster column>")`. `level: 1` and `level: within` open the within block;
+#' `level: 2`, `level: between` and `level: <cluster column>` (as lavaan writes it) open the between block. Every
+#' row belongs to a block, each level appears once, and level 1 comes first. A variable named in `level: 1` rows
+#' (a within variable) must also appear in `level: 2` rows and must vary within clusters; a variable named only in
+#' `level: 2` rows is a cluster-level variable and must be constant within each cluster. The same label at both
+#' levels is an equality constraint across levels. Paths have fixed slopes (no random slopes), and the between part of
+#' each within variable is a latent cluster mean. Level-2 variances are fitted without a floor: an inadmissible
+#' solution (a negative variance or a non-positive-definite implied covariance at either level) is the error
+#' `medfit_error_twolevel_inadmissible`, which carries the fit (`fit`) and its outcome ledger (`ledger`). Unset
+#' `fixed_x` means `FALSE` and unset `meanstructure` means `TRUE` on this route.
+#'
+#' | Limit | Message (starts with, or contains) |
+#' |:--|:--|
+#' | `cluster =` without `level:` blocks | "is given but the model has no `level:` blocks" |
+#' | `level:` blocks without `cluster =` | "the model uses `level:` blocks but `cluster` is not given" |
+#' | A cluster column that is not in `data` | "is not a column of `data`" |
+#' | Missing values in the cluster column | "has missing values; drop those rows first" |
+#' | Fewer than two clusters | "has fewer than 2 clusters" |
+#' | More than two levels | "the model has more than two levels" |
+#' | An unknown level name (`level: school` with another cluster column) | "malformed level line" |
+#' | A row before the first `level:` line | "has statements before the first `level:` line" |
+#' | A level written twice | "appears more than once" |
+#' | `level: 2` without `level: 1` | "rows but no `level: 1` block" |
+#' | A variable named only in `level: 1` rows | "every level-1 variable also needs a `level: 2` row" |
+#' | A within variable constant within every cluster | "a cluster-level variable belongs only in `level: 2` rows" |
+#' | A `level: 2`-only variable that varies within a cluster | "must be constant within each cluster" |
+#' | Latent variables (`=~`) | "latent variables (`=~`) are not supported in a two-level model" |
+#' | A product term (`x:m`) | "a product term (`x:m`) is not supported in a two-level model" |
+#' | `weights` | "`weights` are not supported in a two-level model" |
+#' | `missing = "fiml"` | "missing = ... incomplete rows are dropped (listwise)" |
+#' | Nonlinear constraints (not `a_w*b_w == a_b*b_b`) | "nonlinear constraints (including a product of labels" |
+#' | An explicit `fixed_x = TRUE` or a name vector | "a two-level model takes `fixed_x = FALSE` only" |
+#' | `meanstructure = FALSE` | "`meanstructure = FALSE` is refused" |
+#' | `information = "expected"` | "information = ... is not supported in a two-level model; use" |
+#' | An inadmissible solution | "the two-level solution is inadmissible" |
+#' | `compare_lr()` on the fit | "is not available for a native two-level fit yet" |
+#' | `mbco_sem()` with paths from different levels | "tests a product of paths at one level of a two-level fit" |
+#'
+#' `mbco_sem(fit, "a_w", "b_w")` and `mbco_sem(fit, "a_b", "b_b")` test the indirect effect at one level: the minimum
+#' likelihood ratio over the refits with each labeled path set to 0, referred to chi-square(1), as for a single-level
+#' fit. The test is conservative when both paths are zero, and it is not a test of the between-minus-within
+#' contrast. The result adds `level` and `n_clusters`; see [mbco_sem()].
+#'
+#' `extract_mediation()` on the fit returns a `TwoLevelMediationData`, the same class as the lavaan two-level adapter
+#' gives, with `@source` `"native"`. `glance()` reports `df`, the total log likelihood, `nobs`, `n_clusters` and the
+#' cluster-size range; `chisq` and `p_value` are `NA` with a note, because the engine fits no saturated two-level
+#' model. The model page "Two-level mediation (1-1-1)" has a worked example.
+#'
 #' @section Defaults changed in 0.15.0:
 #' Since medfit 0.15.0 an unset `fixed_x` means the exogenous observed variables (as lavaan's `fixed.x = TRUE`) and an
 #' unset `meanstructure` means `TRUE`, so every observed intercept is free without a `~1` statement. Against 0.14.x the

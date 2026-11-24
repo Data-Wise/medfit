@@ -643,6 +643,7 @@ BootstrapResult <- S7::new_class(
     NULL
   }
 )
+BootstrapResult <- .s7_call_safe(BootstrapResult)
 
 # Register with S4 for compatibility
 S7::S4_register(BootstrapResult)
@@ -2314,6 +2315,7 @@ SEMFit <- S7::new_class(
     NULL
   }
 )
+SEMFit <- .s7_call_safe(SEMFit)
 
 
 # Internal subclass: downstream methods must retain the likelihood provenance.

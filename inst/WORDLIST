@@ -12,6 +12,7 @@ CRAN's
 ClusterMediationData
 Codecov
 Cov
+Davood
 DOP
 De
 Deprecations
@@ -39,6 +40,7 @@ Longleftrightarrow
 Lüdtke
 MBCO
 MacKinnon
+medfit
 MediationData
 Mediationverse
 Miočević
@@ -64,12 +66,14 @@ SEM's
 SEMFit
 SEs
 SLSQP
+SQUAREM
 SRMR
 SUR
 Satorra
 SerialMediationData
 Talloen
 Tidyverse
+Tofighi
 Trautwein
 Validator
 VanderWeele
@@ -93,6 +97,7 @@ cdots
 codecov
 codoc
 coef
+collinear
 confint
 confounder
 counterfactuals
@@ -147,9 +152,11 @@ nie
 nloptr
 noSuggests
 nonparametrically
+null's
 nullable
 odot
 operatorname
+orthant
 packageStartupMessage
 pkgdown
 pmatrix
@@ -231,3 +238,4 @@ jb
 jw
 TwoLevelParallelMediationData
 undiagnosed
+asymptotics

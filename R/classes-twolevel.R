@@ -30,7 +30,10 @@
 #' @param treatment,mediator,outcome,cluster Character scalars: variable names.
 #' @param n_obs,n_clusters Integer scalars: rows used and number of clusters.
 #' @param cluster_sizes Integer vector of cluster sizes (length `n_clusters`).
-#' @param icc Named numeric vector: intraclass correlation of treatment, mediator and outcome.
+#' @param icc Named numeric vector: intraclass correlation of treatment, mediator and outcome. It is the
+#'   unrestricted (h1) estimate, the between variance over the total in the saturated two-level model
+#'   (`lavaan::lavInspect(fit, "icc")` for a lavaan fit), not the ratio the fitted model implies; the
+#'   within-only rule reads it.
 #' @param between_identified Logical scalar: whether the between level is identified.
 #' @param admissible Logical scalar: `lavaan::lavInspect(fit, "post.check")`.
 #' @param converged Logical scalar: whether the fit converged.
@@ -42,8 +45,9 @@
 #' @param between_parameterization Character scalar: `"latent"` (cluster means are latent).
 #' @param data Data frame or `NULL`: always `NULL` for the lavaan adapter (the fit is never refit and the data
 #'   are not copied); kept for the contract shared with the other mediation classes, which read `@data`.
-#' @param source_package Character scalar: `"lavaan"`; kept for the dependents contract shared with the other
-#'   mediation classes (`tests/testthat/test-dependents-contract.R` pins it across classes).
+#' @param source_package Character scalar: `"lavaan"`, or `"medfit"` for a native two-level fit; kept for the
+#'   dependents contract shared with the other mediation classes (`tests/testthat/test-dependents-contract.R` pins it
+#'   across classes).
 #' @param source_version Character: `character(0)` (the default) or one non-empty string, the version of the
 #'   package that made the fit. The lavaan adapter stores the lavaan version here and in `lavaan_version`;
 #'   `lavaan_version` may be `character(0)` for a fit lavaan did not make. Both are checked on construction
@@ -269,6 +273,7 @@ TwoLevelMediationData <- S7::new_class(
     NULL
   }
 )
+TwoLevelMediationData <- .s7_call_safe(TwoLevelMediationData)
 
 
 # The version of the package that made the fit: `source_version` when set, else `lavaan_version` for a lavaan
@@ -499,7 +504,8 @@ print_summary_twolevel_mediation_data <- function(x, ...) {
 #'   path vectors.
 #' @param n_obs,n_clusters Integer scalars: rows used and number of clusters.
 #' @param cluster_sizes Integer vector of cluster sizes (length `n_clusters`).
-#' @param icc Named numeric vector: intraclass correlation of the treatment, each mediator and the outcome.
+#' @param icc Named numeric vector: intraclass correlation of the treatment, each mediator and the outcome. It is
+#'   the unrestricted (h1) estimate, as for [TwoLevelMediationData]; the within-only rule reads it.
 #' @param between_identified Logical scalar: whether the between level is identified.
 #' @param admissible Logical scalar: `lavaan::lavInspect(fit, "post.check")`.
 #' @param converged Logical scalar: whether the fit converged.
@@ -510,7 +516,7 @@ print_summary_twolevel_mediation_data <- function(x, ...) {
 #' @param lavaan_version,call Character scalars: provenance of the fit.
 #' @param between_parameterization Character scalar: `"latent"` (cluster means are latent).
 #' @param data Data frame or `NULL`: always `NULL` for the lavaan adapter.
-#' @param source_package Character scalar: `"lavaan"`.
+#' @param source_package Character scalar: `"lavaan"`, or `"medfit"` for a native two-level fit.
 #' @param source_version Character: `character(0)` (the default) or one non-empty string, the version of the
 #'   package that made the fit.
 #'
@@ -730,6 +736,7 @@ TwoLevelParallelMediationData <- S7::new_class(
     NULL
   }
 )
+TwoLevelParallelMediationData <- .s7_call_safe(TwoLevelParallelMediationData)
 
 # The paths of one level of a TwoLevelParallelMediationData, named by their alias rows: a_<M>_<level> for each
 # mediator, then b_<M>_<level>, then c_prime_<level> (SPEC-IG5 section 5).

@@ -1,5 +1,5 @@
 # Consistency guard for the Guides pages: each guide-*.qmd is in the articles index
-# and the Guides menu, and every article link on a guide resolves. The interval
+# and the navbar, and every article link on a guide resolves. The interval
 # guide's statements are checked against the same fit it uses.
 
 root_path <- function(...) testthat::test_path("..", "..", ...)
@@ -12,7 +12,7 @@ guide_names <- function() {
 
 read_text <- function(p) paste(readLines(p, warn = FALSE), collapse = "\n")
 
-test_that("every guide is in the articles index and the Guides menu", {
+test_that("every guide is in the articles index and the navbar", {
   guides <- guide_names()
   expect_length(guides, 7L)
   pk <- read_text(root_path("_pkgdown.yml"))

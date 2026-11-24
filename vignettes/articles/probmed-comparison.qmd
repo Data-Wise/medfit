@@ -17,6 +17,12 @@ shift (P_med), a standardized effect size, with its sensitivity and alternative 
 fitting, extraction, effects and bootstrap. This page runs both on one fit and lists which medfit objects probmed
 accepts, with a status for each row that a test checks against a live call on each build.
 
+::: {.callout-note title="At a glance"}
+**Use this when:** you are deciding whether you need P_med from probmed on top of a medfit fit.\
+**You get:** both run on one fit and a table of the medfit objects probmed accepts, each row checked against a live call.\
+**Reading time:** 3 min
+:::
+
 | | |
 |---|---|
 | **Use medfit when** | you want the indirect, direct and total effects with delta-method or bootstrap intervals, or any model class medfit supports |
@@ -74,7 +80,7 @@ Status describes probmed 0.4.1 acting on the medfit object in the first column.
 
 "Unsupported" means the call fails today with a message that names the missing method, not that it never will;
 check the `NEWS.md` of probmed before relying on a row. medfit's `ClusterMediationData`, `TwoLevelMediationData`,
-`JointMediationData` and the FIML classes are not in the table: they have no probmed workflow and were not exercised
+`TwoLevelParallelMediationData`, `JointMediationData` and the FIML classes are not in the table: they have no probmed workflow and were not exercised
 here.
 
 ## What probmed adds, and what it does not
@@ -88,3 +94,7 @@ here.
 
 Back to the [Reference Card](refcard.html), the [Cookbook](cookbook.html) or
 [the RMediation comparison](rmediation-comparison.html).
+
+::: {.next-action}
+**Next:** The same comparison for RMediation: [RMediation and medfit](rmediation-comparison.html)
+:::

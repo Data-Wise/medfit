@@ -120,7 +120,7 @@
     list(
       param_table = function(standardized = FALSE) {
         if (standardized) {
-          stop("standardized estimates are not supported by engine = \"native\" in this version", call. = FALSE)
+          stop("standardized estimates are not supported by the sem engine in this version", call. = FALSE)
         }
         ptab
       },
@@ -197,6 +197,7 @@
 S7::method(extract_mediation, SEMFit) <- function(object, treatment, mediator, ...) {
   args <- list(...)
   if (.sem_fiml_is(object)) return(.sem_fiml_extract(object, treatment, mediator, args))
+  if (isTRUE(object@internals$ram$twolevel)) return(.sem_extract_twolevel(object, treatment, mediator, args))
   # a factor was expanded to dummies, so the effects have no single column to read (D9)
   as_factor <- intersect(c(treatment, mediator), names(object@internals$factors))
   if (length(as_factor)) {
@@ -231,4 +232,83 @@ S7::method(extract_mediation, SEMFit) <- function(object, treatment, mediator, .
                  c(list(.sem_accessors_native(object), treatment = treatment, mediator = mediator), args))
   out@source_package <- "medfit"
   out
+}
+
+# `extract_mediation()` on a native two-level fit (S4a.5, experimental): the lavaan adapter's object from the sem
+# engine's fit. The ledger is read first: an inadmissible level refuses the fit whatever `@converged` says, and a
+# ledger that does not describe this fit is `medfit_error_ledger`. The parameter table takes the adapter's shape, each
+# row keyed by its free-parameter index (`par_map`; a label shared across levels is one index), so the 6x6 block of
+# `@vcov` is read by position, never by name; the ICCs are the h1 (unrestricted) ones.
+.sem_extract_twolevel <- function(object, treatment, mediator, args) {
+  ledger <- object@diagnostics$ledger
+  states <- vapply(ledger$admissibility, function(l) as.character(l$state)[1L], "")
+  if (any(states != "admissible")) {
+    bad <- names(states)[states != "admissible"]
+    reasons <- unlist(lapply(ledger$admissibility[bad], `[[`, "reasons"), use.names = FALSE)
+    .twolevel_abort(
+      paste0("The two-level fit is inadmissible at the ", paste(bad, collapse = " and "), " level: ",
+             paste(reasons, collapse = "; "), ". Its effects are not extracted."),
+      "medfit_error_twolevel_inadmissible"
+    )
+  }
+  .sem_require_outcome(list(
+    ledger = ledger, f = object@f, converged = object@converged, data = object@data, n_obs = object@n_obs,
+    constraints = object@internals$constraints, status = object@diagnostics$status,
+    information = object@information, weights = object@internals$weights, fixed_x = object@internals$fixed_x,
+    factors = object@internals$factors, ram = object@internals$ram, n_starts = object@internals$n_starts,
+    control = object@internals$control, se_type = object@diagnostics$se_type
+  ), object@model)
+  tab <- object@table
+  pm <- object@internals$par_map
+  pt <- data.frame(
+    lhs = tab$lhs, op = tab$op, rhs = tab$rhs, level = as.integer(tab$level),
+    label = ifelse(is.na(tab$label), "", tab$label), plabel = "",
+    free = ifelse(tab$free & !is.na(pm), as.integer(pm), 0L), est = tab$est, stringsAsFactors = FALSE
+  )
+  cons <- object@internals$constraints
+  if (NROW(cons)) {
+    pt <- rbind(pt, data.frame(lhs = cons$lhs, op = cons$op, rhs = cons$rhs, level = 0L, label = "", plabel = "",
+                               free = 0L, est = NA_real_, stringsAsFactors = FALSE))
+  }
+  outcome <- args$outcome
+  .twolevel_check_args(pt, treatment, mediator, outcome, isTRUE(args$standardized), args$interaction,
+                       args$structure %||% "auto", args$decomposition %||% "auto", args$m_star,
+                       args$a_label, args$b_label, args$cp_label)
+  if (is.null(outcome)) outcome <- .twolevel_find_outcome(pt, treatment, mediator)
+  .twolevel_check_levels(pt, c(treatment, mediator))
+  key <- .twolevel_key_rows(pt, treatment, mediator, outcome)
+  V6 <- .twolevel_subvcov(object@vcov, key)
+  converged <- isTRUE(object@converged)
+  .twolevel_check_within(key, V6, converged)
+  ident <- .twolevel_identification(NULL, treatment, mediator, outcome, converged, V6,
+                                    icc = .sem_twolevel_h1_icc(object))
+  ids <- object@internals$cluster_ids
+  sizes <- as.integer(table(factor(ids, levels = unique(ids))))
+  version <- as.character(utils::packageVersion("medfit"))
+  .twolevel_assemble(
+    pt, key, V6, ident, converged = converged, admissible = TRUE, n_obs = as.integer(object@n_obs),
+    n_clusters = length(sizes), cluster_sizes = sizes, treatment = treatment, mediator = mediator,
+    outcome = outcome,
+    provenance = list(
+      cluster = object@internals$cluster, source = "native",
+      fixed_x = length(object@internals$fixed_x) > 0L, information = object@information,
+      h1_information = "structured", se_type = object@diagnostics$se_type %||% "model", estimator = "ML",
+      missing = "listwise", lavaan_version = character(0), call = paste(deparse(object@call), collapse = " "),
+      between_parameterization = "latent", data = NULL, source_package = "medfit", source_version = version
+    )
+  )
+}
+
+# ICC per variable from a within and a between covariance (the unrestricted h1 pair, `.sem_twolevel_h1_icc()`; the
+# model-implied pair only as the fallback): a variable absent at a level has variance 0 there, and a non-finite ratio
+# is 0 (clamped to [0, 1]).
+.sem_twolevel_icc <- function(w, b) {
+  vars <- union(rownames(w), rownames(b))
+  icc <- vapply(vars, function(v) {
+    sw <- if (v %in% rownames(w)) w[v, v] else 0
+    sb <- if (v %in% rownames(b)) b[v, v] else 0
+    value <- sb / (sb + sw)
+    if (is.finite(value)) min(max(value, 0), 1) else 0
+  }, numeric(1))
+  stats::setNames(icc, vars)
 }

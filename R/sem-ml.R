@@ -205,6 +205,7 @@
 # the implied covariance is not usable (singular I - A, non-finite, or not
 # positive definite), which the wrappers turn into the sentinel.
 .sem_eval <- function(theta, ram, smp, deriv) {
+  if (isTRUE(ram$twolevel)) return(.sem_eval_ml2(theta, ram, smp, deriv))
   m <- .sem_ram_mats(ram, theta)
   b <- tryCatch(solve(ram$eye - m$a), error = function(e) NULL)
   if (is.null(b)) return(NULL)
@@ -228,25 +229,36 @@
   out <- list(f = f)
   if (deriv) {
     w <- sigma_inv - sigma_inv %*% s_eff %*% sigma_inv
-    pm <- matrix(0, ram$nv, ram$nv)
-    pm[ram$obs_idx, ram$obs_idx] <- w
-    g_a <- 2 * t(bs %*% t(b) %*% pm %*% b)
-    g_s <- crossprod(b, pm %*% b)
-    vals <- c(g_a[ram$pos_a], ram$s_weight * g_s[ram$pos_s])
-    if (ram$has_mean) {
-      # d/dtheta of d' Sigma^-1 d through mu: -2 (dmu/dtheta)' Sigma^-1 d, with
-      # dmu/dm_j = F B e_j and dmu/dA_rc = F B[, r] (B m)_c.
-      bo <- b[ram$obs_idx, , drop = FALSE]
-      sbo <- as.vector(sinv_d %*% bo)
-      nv <- ram$nv
-      cc <- (ram$pos_a - 1L) %/% nv + 1L
-      r <- (ram$pos_a - 1L) %% nv + 1L
-      vals[seq_along(ram$pos_a)] <- vals[seq_along(ram$pos_a)] - 2 * sbo[r] * bm[cc]
-      vals <- c(vals, -2 * sbo[ram$pos_m])
-    }
-    out$g <- as.vector(ram$gmap %*% vals)
+    # d' Sigma^-1 d with d = xbar - mu has dF/dmu = -2 Sigma^-1 d
+    out$g <- .sem_ram_chain(ram, b, bs, w, if (ram$has_mean) -2 * sinv_d, if (ram$has_mean) bm)
   }
   out
+}
+
+# Chain rule from the moments of the observed variables to the parameters of one RAM. `w` is dF/dSigma (p x p,
+# symmetric, the derivative with every entry of Sigma treated as free, in the order of `ram$obs`), `gmu` is dF/dmu
+# (length p; NULL without a mean structure), `b` = (I - A)^-1, `bs` = B S_ram and `bm` = B m. With Sigma_full = B S B'
+# and mu_full = B m:
+#   dF/dA_rc = 2 [B' P B Sigma_full]_rc + (gmu' F B)_r (B m)_c,  dF/dS_rc = [B' P B]_rc (twice off the diagonal),
+#   dF/dm_j = (gmu' F B)_j,
+# with P the p x p matrix `w` embedded in the full variable set. Equal labels sum through `ram$gmap`.
+.sem_ram_chain <- function(ram, b, bs, w, gmu = NULL, bm = NULL) {
+  pm <- matrix(0, ram$nv, ram$nv)
+  pm[ram$obs_idx, ram$obs_idx] <- w
+  g_a <- 2 * t(bs %*% t(b) %*% pm %*% b)
+  g_s <- crossprod(b, pm %*% b)
+  vals <- c(g_a[ram$pos_a], ram$s_weight * g_s[ram$pos_s])
+  if (ram$has_mean) {
+    # through mu: (dmu/dtheta)' gmu, with dmu/dm_j = F B e_j and dmu/dA_rc = F B[, r] (B m)_c.
+    bo <- b[ram$obs_idx, , drop = FALSE]
+    gbo <- as.vector(gmu %*% bo)
+    nv <- ram$nv
+    cc <- (ram$pos_a - 1L) %/% nv + 1L
+    r <- (ram$pos_a - 1L) %% nv + 1L
+    vals[seq_along(ram$pos_a)] <- vals[seq_along(ram$pos_a)] + gbo[r] * bm[cc]
+    vals <- c(vals, gbo[ram$pos_m])
+  }
+  as.vector(ram$gmap %*% vals)
 }
 
 # ML discrepancy F(theta); the sentinel 1e10 for an unusable implied covariance.
@@ -414,6 +426,9 @@
 # for a (co)variance, with a latent variable's sd taken as the mean observed sd.
 # Under a rescaling of the observed variables the floor scales like the parameter.
 .sem_step_floor <- function(ram, smp) {
+  if (isTRUE(ram$twolevel)) {
+    return(.sem_ml2_per_level(ram, smp, .sem_step_floor, 1))
+  }
   sd_all <- rep(mean(sqrt(diag(smp$s))), ram$nv)
   sd_all[ram$obs_idx] <- sqrt(diag(smp$s))
   rc <- function(pos) cbind((pos - 1L) %% ram$nv + 1L, (pos - 1L) %/% ram$nv + 1L)
@@ -426,4 +441,198 @@
   # an intercept moves in the units of its variable
   fl[rev(ram$k_m)] <- rev(sd_all[ram$pos_m])
   fl
+}
+
+# --- Native two-level likelihood (S4a.2, experimental) ---
+#
+# Cluster j has n_j rows y_ji over the within set W (p_w variables) and one value z_j over the between-only set Z
+# (p_z variables). With y_ji = mu_W + u_Wj + e_ji, z_j = mu_Z + u_Zj, (u_W, u_Z) ~ N(0, Sigma_B) over W then Z and
+# e_ji ~ N(0, Sigma_W), the within contrasts of a cluster are independent of its mean vector c_j = (ybar_j, z_j),
+# which is N(mu_B, V_j) with V_j = Sigma_B + diag(Sigma_W / n_j, 0). The cluster log-likelihood (sketch item 2, O8) is
+#   -1/2 [ (n_j p_w + p_z) log 2 pi + (n_j - 1) log|Sigma_W| + p_w log n_j + tr(Sigma_W^-1 SSW_j)
+#          + log|V_j| + (c_j - mu_B)' V_j^-1 (c_j - mu_B) ],
+# with SSW_j the within cross-products about ybar_j. Clusters of one size share V_j, so the statistics are grouped by
+# size: the count, the pooled SSW and the matrix of cluster vectors c_j.
+
+# Per-size sufficient statistics from the complete rows of the model variables and the cluster column (the rows
+# `.sem_twolevel_sets()` reads). `sizes` is one entry per cluster size: `n`, `count`, `ssw` (p_w x p_w, pooled over
+# the clusters of that size) and `c` (count x (p_w + p_z), the cluster vectors, columns W then Z).
+.sem_sample_ml2 <- function(data, sets, cluster) {
+  checkmate::assert_data_frame(data, min.rows = 1, .var.name = "data")
+  w <- sets$within
+  z <- sets$between
+  rows <- stats::complete.cases(data[, c(w, z, cluster), drop = FALSE])
+  y <- as.matrix(data[rows, w, drop = FALSE])
+  zm <- as.matrix(data[rows, z, drop = FALSE])
+  g <- data[[cluster]][rows]
+  idx <- split(seq_len(nrow(y)), factor(g))
+  n_j <- lengths(idx, use.names = FALSE)
+  per <- lapply(idx, function(i) {
+    yj <- y[i, , drop = FALSE]
+    ybar <- colMeans(yj)
+    list(c = c(ybar, zm[i[1L], ]), ssw = crossprod(sweep(yj, 2L, ybar)))
+  })
+  sizes <- lapply(sort(unique(n_j)), function(n) {
+    sel <- per[n_j == n]
+    list(n = n, count = length(sel), ssw = Reduce(`+`, lapply(sel, `[[`, "ssw")),
+         c = do.call(rbind, lapply(sel, `[[`, "c")))
+  })
+  list(within = w, between = z, p_w = length(w), p_z = length(z), n = nrow(y), j = length(idx), sizes = sizes)
+}
+
+# The per-cluster log-determinant terms of the within part: (n - 1) log|Sigma_W| + p_w log n.
+.sem_ml2_det_terms <- function(n, p_w, ld_w) {
+  (n - 1) * ld_w + p_w * log(n)
+}
+
+# Covariance of the cluster vector (ybar_j, z_j) for clusters of size n: Sigma_B with Sigma_W / n added on the W
+# block (`w_idx`); the W-Z block of Sigma_B stays in.
+.sem_ml2_between_cov <- function(sigma_b, sigma_w, n, w_idx) {
+  sigma_b[w_idx, w_idx] <- sigma_b[w_idx, w_idx] + sigma_w / n
+  sigma_b
+}
+
+# Two-level log-likelihood at given moments: `sigma_w` over W, `sigma_b` and `mu_b` over W then Z (in the order of
+# `smp$within`, `smp$between`, or named by variable). NULL when Sigma_W or some V_n is not positive definite.
+.sem_loglik_ml2 <- function(smp, sigma_w, sigma_b, mu_b) {
+  w <- smp$within
+  b <- c(w, smp$between)
+  if (!is.null(dimnames(sigma_w))) sigma_w <- sigma_w[w, w, drop = FALSE]
+  if (!is.null(dimnames(sigma_b))) sigma_b <- sigma_b[b, b, drop = FALSE]
+  if (!is.null(names(mu_b))) mu_b <- mu_b[b]
+  mu_b <- unname(mu_b)
+  if (!all(is.finite(sigma_w)) || !all(is.finite(sigma_b)) || !.sem_sigma_pd(sigma_w)) return(NULL)
+  ch_w <- chol(sigma_w)
+  ld_w <- 2 * sum(log(diag(ch_w)))
+  sw_inv <- chol2inv(ch_w)
+  w_idx <- seq_len(smp$p_w)
+  total <- 0
+  for (s in smp$sizes) {
+    v <- .sem_ml2_between_cov(sigma_b, sigma_w, s$n, w_idx)
+    v <- (v + t(v)) / 2
+    if (!.sem_sigma_pd(v)) return(NULL)
+    ch_v <- chol(v)
+    dev <- sweep(s$c, 2L, mu_b)
+    total <- total - 0.5 * (
+      s$count * ((s$n * smp$p_w + smp$p_z) * log(2 * pi) + .sem_ml2_det_terms(s$n, smp$p_w, ld_w) +
+                   2 * sum(log(diag(ch_v)))) +
+        sum(sw_inv * s$ssw) + sum(chol2inv(ch_v) * crossprod(dev))
+    )
+  }
+  total
+}
+
+# Per-level stand-ins for the single-level sample (S4a.4), for the scale rules that read `smp$s` and `smp$xbar` in a
+# RAM's `obs` order (`.sem_step_floor()`, `.sem_default_start()`): level 1 gets the pooled within covariance
+# SSW / (N - J); level 2 the covariance and the mean of the cluster vectors (ybar_j, z_j). These set units and starts
+# only; the likelihood never reads them.
+.sem_ml2_level_moments <- function(tl, smp) {
+  b <- c(smp$within, smp$between)
+  ssw <- Reduce(`+`, lapply(smp$sizes, `[[`, "ssw"))
+  sw <- ssw / (smp$n - smp$j)
+  dimnames(sw) <- list(smp$within, smp$within)
+  cm <- do.call(rbind, lapply(smp$sizes, `[[`, "c"))
+  colnames(cm) <- b
+  sb <- if (nrow(cm) > 1L) stats::cov(cm) else diag(1, length(b))
+  dimnames(sb) <- list(b, b)
+  o1 <- tl$ram1$obs
+  o2 <- tl$ram2$obs
+  list(
+    list(s = sw[o1, o1, drop = FALSE], xbar = numeric(length(o1)), n = smp$n),
+    list(s = sb[o2, o2, drop = FALSE], xbar = unname(colMeans(cm)[o2]), n = smp$j)
+  )
+}
+
+# Apply a single-level rule (`fun(ram, smp)`, a vector over that RAM's parameters) to each level of a two-level RAM
+# and gather the results into theta; for a label shared across levels the level-1 value wins.
+.sem_ml2_per_level <- function(tl, smp, fun, init) {
+  mom <- .sem_ml2_level_moments(tl, smp)
+  out <- rep(init, tl$q)
+  out[tl$k2] <- fun(tl$ram2, mom[[2]])
+  out[tl$k1] <- fun(tl$ram1, mom[[1]])
+  out
+}
+
+# Implied two-level moments for theta: Sigma_W from the level-1 RAM; Sigma_B and mu_B from the level-2 RAM.
+.sem_twolevel_implied <- function(tl, theta) {
+  t1 <- theta[tl$k1]
+  t2 <- theta[tl$k2]
+  b <- c(tl$within, tl$between)
+  list(sigma_w = .sem_implied(tl$ram1, t1)[tl$within, tl$within, drop = FALSE],
+       sigma_b = .sem_implied(tl$ram2, t2)[b, b, drop = FALSE],
+       mu_b = .sem_implied_mean(tl$ram2, t2)[b])
+}
+
+# Derivatives of the two-level log-likelihood with respect to the moments (S4a.3), every matrix entry treated as free
+# (the convention `.sem_ram_chain()` expects). With V_n = Sigma_B + diag(Sigma_W / n, 0), c_n the count and
+# C_n = sum_j (c_j - mu_B)(c_j - mu_B)' over the clusters of size n, G_n = dlogL/dV_n
+# = -1/2 (c_n V_n^-1 - V_n^-1 C_n V_n^-1), and
+#   dlogL/dSigma_B = sum_n G_n,
+#   dlogL/dSigma_W = -1/2 [(N - J) Sigma_W^-1 - Sigma_W^-1 SSW Sigma_W^-1] + sum_n G_n[W, W] / n,
+#   dlogL/dmu_B    = sum_n V_n^-1 sum_j (c_j - mu_B),
+# with SSW pooled over all clusters. Inputs and outputs are in the order of `smp$within` (then `smp$between`); the
+# point is known to be usable (the log-likelihood was finite there).
+.sem_ml2_grad_moments <- function(smp, sigma_w, sigma_b, mu_b) {
+  w_idx <- seq_len(smp$p_w)
+  sw_inv <- chol2inv(chol(sigma_w))
+  g_b <- matrix(0, nrow(sigma_b), ncol(sigma_b))
+  g_w <- matrix(0, smp$p_w, smp$p_w)
+  g_mu <- numeric(length(mu_b))
+  ssw <- g_w
+  for (s in smp$sizes) {
+    n <- s$n
+    v <- .sem_ml2_between_cov(sigma_b, sigma_w, n, w_idx)
+    v_inv <- chol2inv(chol((v + t(v)) / 2))
+    dev <- sweep(s$c, 2L, mu_b)
+    g_v <- -0.5 * (s$count * v_inv - v_inv %*% crossprod(dev) %*% v_inv)
+    g_b <- g_b + g_v
+    g_w <- g_w + g_v[w_idx, w_idx] / n
+    g_mu <- g_mu + as.vector(v_inv %*% colSums(dev))
+    ssw <- ssw + s$ssw
+  }
+  g_w <- g_w - 0.5 * ((smp$n - smp$j) * sw_inv - sw_inv %*% ssw %*% sw_inv)
+  list(sigma_w = g_w, sigma_b = g_b, mu_b = g_mu)
+}
+
+# Two-level worker of `.sem_eval()`: the log-likelihood, the objective f = -2 log L / N (N level-1 rows) and, when
+# `deriv`, its gradient `g` over theta (S4a.3): the moment derivatives of `.sem_ml2_grad_moments()` scaled by -2 / N,
+# put in each RAM's `obs` order and chained through that level's RAM (`.sem_ram_chain()`), then accumulated into theta
+# through `k1` and `k2`, so a label shared across levels sums both contributions. NULL for an unusable point, as in
+# the single-level worker.
+.sem_eval_ml2 <- function(theta, tl, smp, deriv) {
+  levels <- list(
+    list(ram = tl$ram1, th = theta[tl$k1], k = tl$k1),
+    list(ram = tl$ram2, th = theta[tl$k2], k = tl$k2)
+  )
+  lv <- lapply(levels, function(l) {
+    l$mats <- .sem_ram_mats(l$ram, l$th)
+    l$b <- tryCatch(solve(l$ram$eye - l$mats$a), error = function(e) NULL)
+    l
+  })
+  # as in the single-level worker, only a singular I - A makes the point unusable; any other error propagates
+  if (is.null(lv[[1]]$b) || is.null(lv[[2]]$b)) return(NULL)
+  mom <- .sem_twolevel_implied(tl, theta)
+  ll <- .sem_loglik_ml2(smp, mom$sigma_w, mom$sigma_b, mom$mu_b)
+  if (is.null(ll)) return(NULL)
+  out <- list(f = -2 * ll / smp$n, loglik = ll)
+  if (deriv) {
+    gm <- .sem_ml2_grad_moments(smp, unname(mom$sigma_w), unname(mom$sigma_b), unname(mom$mu_b))
+    bv <- c(tl$within, tl$between)
+    dimnames(gm$sigma_w) <- list(tl$within, tl$within)
+    dimnames(gm$sigma_b) <- list(bv, bv)
+    names(gm$mu_b) <- bv
+    gm_sigma <- list(gm$sigma_w, gm$sigma_b)
+    scale <- -2 / smp$n
+    g <- numeric(tl$q)
+    for (i in 1:2) {
+      l <- lv[[i]]
+      o <- l$ram$obs
+      w <- unname(scale * gm_sigma[[i]][o, o, drop = FALSE])
+      gmu <- if (l$ram$has_mean) unname(scale * gm$mu_b[o])
+      bm <- if (l$ram$has_mean) as.vector(l$b %*% .sem_ram_m(l$ram, l$th))
+      g[l$k] <- g[l$k] + .sem_ram_chain(l$ram, l$b, l$b %*% l$mats$s, w, gmu, bm)
+    }
+    out$g <- g
+  }
+  out
 }

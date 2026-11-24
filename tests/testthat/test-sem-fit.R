@@ -78,8 +78,10 @@ test_that("planted defect: without the listwise deletion the sample builder refu
 test_that("every error row names its cause", {
   dat <- sem_sim(sem_model_observed(), n = 200, seed = 9)
   fit_err <- function(m, d = dat) .sem_fit_syntax(m, d)
-  expect_error(fit_err("level: 1\nY ~ X\nlevel: 2\nY ~ M"), "two-level estimation is not implemented")
-  expect_error(fit_err("level: 2\nY ~ X"), "two-level estimation is not implemented")
+  expect_error(fit_err("level: 1\nY ~ X\nlevel: 2\nY ~ M"), "native two-level estimation needs `cluster`",
+               class = "medfit_error_twolevel_not_implemented")
+  expect_error(fit_err("level: 2\nY ~ X"), "native two-level estimation needs `cluster`",
+               class = "medfit_error_twolevel_not_implemented")
   expect_error(.sem_fit_syntax("M ~ 1\nY ~ M + X", dat, meanstructure = FALSE),
                "meanstructure = FALSE.*writes an intercept")
   expect_error(fit_err("M ~ a*X\nY ~ b*M\na == 1\na == 2"), "no start converged.*constraint 'a == [12]' is violated")

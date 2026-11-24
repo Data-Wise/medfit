@@ -118,14 +118,12 @@ test_that("the quality-control article is in the articles index and menu and sou
   pk <- paste(readLines(file.path(root, "_pkgdown.yml"), warn = FALSE), collapse = "\n")
   expect_true(grepl("articles/quality-control`", pk, fixed = TRUE))
   expect_true(grepl("articles/quality-control.html", pk, fixed = TRUE))
-  # one item of the Project menu (the navbar folds qc, ecosystem and status into it)
-  expect_true(grepl("left: +\\[[^]]*\\bproject\\b", pk))
-  item <- paste0(
-    "    project:\n      text: Project\n      menu:\n",
-    "      - text: \"Quality control of the optimizer\"\n",
-    "        href: articles/quality-control.html"
-  )
-  expect_true(grepl(item, pk, fixed = TRUE))
+  # one item of the Learn more menu (the navbar folds qc, the release history and the project links into it)
+  expect_true(grepl("left: +\\[[^]]*\\blearn\\b", pk))
+  learn <- yaml::yaml.load(pk)$navbar$components$learn
+  expect_identical(learn$text, "Learn more")
+  hrefs <- vapply(learn$menu, function(i) if (is.null(i$href)) NA_character_ else i$href, character(1))
+  expect_identical(sum(hrefs == "articles/quality-control.html", na.rm = TRUE), 1L)
   expect_true(grepl("qc_gate_table", txt, fixed = TRUE))
   expect_true(grepl("qc_decision_table", txt, fixed = TRUE))
   # the admission table in the article lists the same seven checks as the risk-tier rule

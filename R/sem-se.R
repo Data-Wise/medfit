@@ -13,6 +13,8 @@
 
 # `se_type = "sandwich"` replaces the bread-only inverse A^-1 by A^-1 B A^-1 with B from `.sem_scores()`
 # (robust to the weights and to misspecified normality; projected the same way, Z (Z'AZ)^-1 Z'BZ (Z'AZ)^-1 Z').
+# A caller with its own meat passes it as `meat` (theta units): the two-level fit's per-cluster CR0 meat from
+# `.sem_meat_ml2()`, since `.sem_scores()` is single-level and casewise.
 # `cons` (from `.sem_constraint_rows()`) and the bounds `lb`, `ub` enter as the
 # active set at `theta`: the covariance is projected onto the directions that keep
 # every active equality, active inequality (as an equality) and active bound,
@@ -20,9 +22,11 @@
 # Q5). With nothing active Z spans everything and the plain inverse is used, so an
 # unconstrained fit is unchanged. A pinned coordinate gets zero variance.
 .sem_vcov <- function(theta, ram, smp, information = c("observed", "expected"), cons = NULL,
-                      lb = rep(-Inf, ram$q), ub = rep(Inf, ram$q), se_type = c("model", "sandwich")) {
+                      lb = rep(-Inf, ram$q), ub = rep(Inf, ram$q), se_type = c("model", "sandwich"),
+                      meat = NULL) {
   information <- match.arg(information)
   se_type <- match.arg(se_type)
+  checkmate::assert_matrix(meat, mode = "numeric", nrows = ram$q, ncols = ram$q, null.ok = TRUE, .var.name = "meat")
   ctr <- .sem_center_map(ram, smp)
   # With a mean structure the information is built, inverted and checked in the centered coordinates (see
   # `.sem_center_map()`) and mapped back exactly: V = T V_phi T', since I = T^-T I_phi T^-1.
@@ -43,7 +47,7 @@
   }
   pinned <- !all(act$free) || any(act$active_row)
   z <- if (pinned) act$z_theta else NULL
-  meat <- if (se_type == "sandwich") crossprod(.sem_scores(theta, ram, smp))
+  meat <- if (se_type == "model") NULL else if (is.null(meat)) crossprod(.sem_scores(theta, ram, smp)) else meat
   vc <- if (is.null(z)) {
     bread <- .sem_checked_invert_info(info)
     if (!is.null(bread) && !is.null(tmat)) bread <- tmat %*% bread %*% t(tmat)
