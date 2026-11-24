@@ -1889,11 +1889,18 @@ mediators (IG5s, decision only). Unchanged: IG4 and IG6 NO-GO, FIML admission un
 arm beyond six pilot cells, the lavaan P1 arm a proxy); the 0.20.0 release grill (#521,
 [decisions](DECISIONS-0.20.0-release-grill-2026-11-23.md), R20-1 to R20-5); the few-clusters note and the Known limits
 draft (#522); the local verification runner (#519) and the rforge non-publishing branch declaration (#470). Listed as
-merged-dev: S4a (#486, #489, #491 to #493, #495), IG2 (#499), IG3 (#501, #502, #505, #507) and T8 (#520). **0.20.0 is
+merged-dev on 2026-11-23, released in 0.20.0 on 2026-11-24: S4a (#486, #489, #491 to #493, #495), IG2 (#499), IG3 (#501, #502, #505, #507) and T8 (#520). **0.20.0 is
 released** (2026-11-24, tag `v0.20.0` at `4739e8e7`, release PR #526; authorized by the maintainer in words on 2026-11-23, "Release"): checklist
 [PLAN-0.20.0-release-checklist-2026-11-21.md](PLAN-0.20.0-release-checklist-2026-11-21.md). Still out of it: S4b
 (next cycle), T7 (dropped), two-level `compare_lr()`, serial two-level mediators (IG5s); IG4 and IG6 NO-GO, FIML
 admission unresolved, CRAN on hold (#83).
+
+**Board 2026-11-24 (0.20.0 released).** Released in 0.20.0 (tag `v0.20.0` at `4739e8e7`, GitHub-only; hosted checks green on the
+release PR head, tagged-install smoke passed): S4a native two-level fit (experimental), IG2 cluster-robust SEs, IG3
+`mbco_sem()` and `twolevel_equal_indirect()`, and T8 (the few-clusters records, not shipped code). `dev` is 0.20.0.9000 (back-merge #531).
+Not released: S4b (next cycle), T7 (dropped), two-level `compare_lr()`, serial two-level mediators (IG5s); IG4 and IG6
+NO-GO, FIML admission unresolved, CRAN on hold (#83). The release-ordering policy is in
+[PLAN-development-throughput-2026-11-23.md](PLAN-development-throughput-2026-11-23.md) (#529).
 
 **Reconciliation 2026-11-17 (supersedes the 2026-11-15 line that IG1 to IG7 and any 0.19.0 scope are
 unauthorized).** IG5, parallel mediators in the lavaan two-level adapter (`TwoLevelParallelMediationData`,
