@@ -1,4 +1,25 @@
-# medfit 0.19.0.9000
+# medfit 0.20.0
+
+## Release summary
+
+* **Native two-level fitting (experimental).** `fit_sem(model, data, cluster = )` and
+  `fit_mediation(engine = "sem", model = , cluster = )` fit a two-level (1-1-1) model of observed variables with
+  medfit's own sem engine, and `extract_mediation()` returns `TwoLevelMediationData` (#486, #489, #491 to #493).
+  Estimates and standard errors match lavaan fitted with `fixed.x = FALSE`; the three-way oracle (O8, lavaan,
+  OpenMx) and its tolerances are #482 and #483.
+* **Cluster-robust standard errors.** `se_type = "sandwich"` gives the CR0 cluster sandwich for the native
+  two-level fit, matching lavaan's `robust.huber.white` (#499).
+* **Tests at two levels.** `mbco_sem()` accepts native two-level fits (#501), and `twolevel_equal_indirect()` tests
+  that the within and between indirect effects are equal (#502, #505, #507, #510).
+* **Behavior change (experimental API):** the within-only rule reads the unrestricted (h1) ICC on both routes
+  (#513).
+* **Wording.** Messages and `fit_mediation(engine = "sem")` argument errors name the engine "sem" (#496, #497).
+* **Few-clusters records.** The simulation studies T5, T6 and T8 are recorded under `planning/` (#480, #484, #485,
+  #490, #520); they are not shipped, and the "Known limits" below carry what they found.
+* **Not in this release:** native two-level `compare_lr()`, the level-2 reliability cell (S4b), the cluster
+  bootstrap for native two-level fits, serial two-level mediators, random slopes and latent two-level mediators,
+  FIML statistical admission, and CRAN.
+* GitHub-only release; CRAN stays on hold (#83).
 
 ## New features
 
@@ -115,8 +136,6 @@
   name the call used.
 
 ## Known limits
-
-Draft; folded into the 0.20.0 notes when the heading is collapsed in release prep.
 
 * Native two-level fitting (`fit_sem(cluster = )`) is experimental and may change without the usual deprecation
   period. The `cluster` formal of `fit_sem()` is pinned in name and order; its behavior is experimental.

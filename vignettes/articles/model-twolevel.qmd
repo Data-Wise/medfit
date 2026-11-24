@@ -27,7 +27,7 @@ the between level. Part of the [Models](models.html) collection.
 | **Indirect effect** | $a_w b_w$ at the within level and $a_b b_b$ at the between level; their difference is a descriptive contrast |
 | **Route** | `extract_mediation()` on a two-level `lavaan` fit (`level:` blocks, `cluster =`), or on a two-level fit from medfit's sem engine, `fit_sem(model, data, cluster = )` ([The sem engine route](#the-sem-engine-route)) |
 | **Needs** | `lavaan` (Suggests) for the lavaan route; nothing extra for the sem engine |
-| **Availability** | lavaan route: version 0.17.0; sem engine route: development version (both **experimental**) |
+| **Availability** | lavaan route: version 0.17.0; sem engine route: version 0.20.0 (both **experimental**) |
 
 If the treatment is assigned to whole clusters (a 2-1-1 design), use the
 [cluster-randomized page](model-cluster.html) instead. If you have a single-level fit that only sets
