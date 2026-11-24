@@ -1,5 +1,13 @@
 # Introduction to medfit
 
+> **At a glance**
+>
+> **Use this when:** you want the package’s design in one read: the
+> entry points and the S7 classes.  
+> **You get:** an overview of the entry points, effects and one class
+> for each mediation structure.  
+> **Reading time:** 3 min
+
 ## Overview
 
 **medfit** provides unified infrastructure for mediation analysis in R.
@@ -451,7 +459,7 @@ summary(boot_result)
 
     Bootstrap Distribution Summary:
        Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
-    0.03852 0.12403 0.15057 0.15148 0.17899 0.27960 
+    0.02197 0.12135 0.14896 0.14845 0.17613 0.29547 
 
 ## Main Functions
 
@@ -672,6 +680,9 @@ medfit serves as the foundation for specialized mediation packages:
 5.  **Minimal dependencies**: Core functionality with minimal external
     dependencies
 6.  **Infrastructure focus**: Provides tools, not effect sizes
+
+**Next:** Fit your first model: [Getting
+Started](https://data-wise.github.io/medfit/articles/getting-started.md)
 
 ## Next Steps
 

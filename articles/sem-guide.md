@@ -8,6 +8,15 @@ and the route to the mediation objects. For a first look, read [the
 five-minute
 quickstart](https://data-wise.github.io/medfit/articles/sem-quickstart.md).
 
+> **At a glance**
+>
+> **Use this when:** you want the whole sem engine workflow in one
+> place: syntax, fitting, inference, constraints, comparison and
+> diagnostics.  
+> **You get:** the workflow from model syntax to the mediation objects,
+> with the limits stated.  
+> **Reading time:** 19 min \| **Status:** stable
+
 |  |  |
 |----|----|
 | **Entry points** | `fit_sem(syntax, data)`; `fit_mediation(model = syntax, engine = "sem")` for one mediator |
@@ -330,13 +339,13 @@ a chain gives a `SerialMediationData`, mediators side by side a
   indices beyond the chi-square, AIC and BIC.
 - **Products** (`x:m`, which give the four-way decomposition) work for
   two observed variables inside a supported class; the table of limits
-  and messages is on [the native model
+  and messages is on [the sem engine model
   page](https://data-wise.github.io/medfit/articles/model-sem.html#product-terms).
   The model test is `NA` when a product factor is a regression target.
 - **AIC and BIC of a fit with a product are not comparable** with those
   of a fit without one (the product column enters the likelihood), so
   `AIC(fit_a, fit_b)` and [`BIC()`](https://rdrr.io/r/stats/AIC.html)
-  refuse such a pair; see [the native model
+  refuse such a pair; see [the sem engine model
   page](https://data-wise.github.io/medfit/articles/model-sem.html#limits).
 - For latent means, groups, categorical outcomes or fit indices use
   lavaan; the extraction route accepts a `lavaan` fit as well. See
@@ -709,3 +718,6 @@ comparisons dispatched with SEMFit first require compatible FIML
 contexts and refuse external/mixed objects before external likelihood
 calls. Calls dispatched first through another class are outside medfit’s
 guard.
+
+**Next:** Compare it with lavaan: [lavaan and the sem
+engine](https://data-wise.github.io/medfit/articles/lavaan-comparison.md)

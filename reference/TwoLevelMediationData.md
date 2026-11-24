@@ -59,7 +59,10 @@ TwoLevelMediationData(
 - icc:
 
   Named numeric vector: intraclass correlation of treatment, mediator
-  and outcome.
+  and outcome. It is the unrestricted (h1) estimate, the between
+  variance over the total in the saturated two-level model
+  (`lavaan::lavInspect(fit, "icc")` for a lavaan fit), not the ratio the
+  fitted model implies; the within-only rule reads it.
 
 - between_identified:
 
@@ -106,9 +109,10 @@ TwoLevelMediationData(
 
 - source_package:
 
-  Character scalar: `"lavaan"`; kept for the dependents contract shared
-  with the other mediation classes
-  (`tests/testthat/test-dependents-contract.R` pins it across classes).
+  Character scalar: `"lavaan"`, or `"medfit"` for a native two-level
+  fit; kept for the dependents contract shared with the other mediation
+  classes (`tests/testthat/test-dependents-contract.R` pins it across
+  classes).
 
 - source_version:
 

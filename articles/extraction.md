@@ -1,5 +1,17 @@
 # Model Extraction
 
+> **At a glance**
+>
+> **Use this when:** you already have fitted `lm`, `glm`, `lmer`,
+> `lavaan` or
+> [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+> models and want the mediation object.  
+> **You get:** the S7 class that matches the structure, ready for
+> [`nie()`](https://data-wise.github.io/medfit/reference/nie.md),
+> [`tidy()`](https://generics.r-lib.org/reference/tidy.html) and
+> [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md).  
+> **Reading time:** 15 min
+
 ## Overview
 
 The
@@ -63,7 +75,7 @@ when you need more control or already have fitted models.
 | Treatment assigned to whole clusters (`lmer` fits) | [Extracting from lmer Models](#extracting-from-lmer-models-cluster-level-treatment) |
 | A `lavaan` fit | [Extracting from lavaan Models](#extracting-from-lavaan-models) |
 | A two-level `lavaan` fit (`level:` blocks) | [Two-level mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md) |
-| Model syntax with latent variables ([`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)) | [Extracting from a Native SEM Fit](#extracting-from-a-native-sem-fit) |
+| Model syntax with latent variables ([`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)) | [Extracting from a sem engine fit](#extracting-from-a-native-sem-fit) |
 
 ## Quick Comparison: med() vs extract_mediation()
 
@@ -1250,7 +1262,7 @@ would disagree with
 silently ignored. `regmedint` is a suggested package — install it with
 `install.packages("regmedint")`.
 
-## Extracting from a Native SEM Fit
+## Extracting from a sem engine fit
 
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 fits model syntax with the sem engine and returns a `SEMFit`.
@@ -1299,7 +1311,7 @@ Without the product, `decomposition = "four_way"` and `interaction =`
 are refused by name, and the message says to add the product. A
 precomputed product column is fitted as an ordinary variable, so write
 the product in the syntax. A model with a product must stay inside a
-supported class (see [the native model
+supported class (see [the sem engine model
 page](https://data-wise.github.io/medfit/articles/model-sem.html#product-terms)),
 and the global chi-square is `NA` when a product factor is a regression
 target. See
@@ -1655,6 +1667,9 @@ Model extraction is **complete**:
   [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md))
 
 See `NEWS.md` for updates.
+
+**Next:** Add an interval: [Bootstrap
+Inference](https://data-wise.github.io/medfit/articles/bootstrap.md)
 
 ## Next Steps
 

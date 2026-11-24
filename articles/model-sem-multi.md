@@ -117,7 +117,7 @@ weighting.
   mediators (parallel mediators with `m1 ~~ m2` and a product are not
   supported; see [product
   terms](https://data-wise.github.io/medfit/articles/model-sem.html#product-terms)).
-  Intercepts are estimated; see [the native model
+  Intercepts are estimated; see [the sem engine model
   page](https://data-wise.github.io/medfit/articles/model-sem.html#intercepts).
 - **The native sandwich is the HC0 type**, with casewise scores; the
   `glm` engine’s sandwich is HC3. They are different estimators, so the

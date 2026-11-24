@@ -22,7 +22,8 @@ fit_sem(
   meanstructure = TRUE,
   fixed_x = TRUE,
   sampling_weights = lifecycle::deprecated(),
-  missing = c("listwise", "fiml")
+  missing = c("listwise", "fiml"),
+  cluster = NULL
 )
 ```
 
@@ -109,7 +110,12 @@ fit_sem(
   equals `sandwich::vcovHC(type = "HC0")` per equation and lavaan's
   robust standard errors with `sampling.weights`, and is smaller than
   the HC3 default of the glm route by a factor that shrinks like
-  \\1/n\\). Model-based standard errors are not valid under weights.
+  \\1/n\\). Model-based standard errors are not valid under weights. In
+  a two-level model (`cluster`) `"sandwich"` is the cluster-robust
+  sandwich: per-cluster scores, \\B = \sum_j s_j s_j'\\ with no
+  small-sample factor (CR0), the observed information as \\A\\,
+  projected under active linear constraints; it matches lavaan's
+  `se = "robust.huber.white"` for the same two-level model.
 
 - meanstructure:
 
@@ -167,6 +173,46 @@ fit_sem(
   `fiml` (no abbreviations). FIML requires explicit `fixed_x = FALSE`;
   see the Bounded FIML section. The argument is appended to preserve
   existing positional calls.
+
+- cluster:
+
+  **Experimental.** `NULL` (default) or a string: the name of the
+  cluster column of `data`, for a two-level model written with `level:`
+  blocks (`level: 1` or `level: within`; `level: 2`, `level: between` or
+  the cluster variable's name). Two-level only: `cluster` without
+  `level:` blocks, and `level:` blocks without `cluster`, are errors
+  (`medfit_error_twolevel_cluster`, which also covers more than two
+  levels, fewer than two clusters and a missing or incomplete cluster
+  column); misordered `level:` blocks are
+  `medfit_error_twolevel_syntax`; a within variable constant in every
+  cluster, or a cluster-level variable in a `level: 1` row, is
+  `medfit_error_twolevel_varset`. A model that passes the two-level
+  checks is fitted by maximum likelihood (experimental); an inadmissible
+  solution (a negative variance or a non-positive-definite implied
+  covariance at either level) stops with
+  `medfit_error_twolevel_inadmissible`, which keeps the fit and its
+  outcome ledger.
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  on a native two-level fit returns a `TwoLevelMediationData` (`@source`
+  is `"native"`), with the warnings of the lavaan two-level adapter.
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) adds
+  `n_clusters`, `cluster_size_min` and `cluster_size_max` (counted after
+  listwise deletion); its `chisq` and `p_value` are `NA` with a note,
+  because the engine fits no saturated two-level model. See the
+  "Two-level models" section of
+  [medfit-syntax](https://data-wise.github.io/medfit/reference/medfit-syntax.md).
+  Unset `fixed_x` means `FALSE` on this route; an explicit
+  `fixed_x = TRUE`, `meanstructure = FALSE`, `weights`,
+  `missing = "fiml"`, `information = "expected"`, latent variables,
+  product terms and nonlinear constraints are refused with classed
+  errors (`medfit_error_twolevel_*`); the one nonlinear row admitted is
+  the equality of the within and between indirect effects
+  (`a_w*b_w == a_b*b_b`, the null of
+  [`twolevel_equal_indirect()`](https://data-wise.github.io/medfit/reference/twolevel_equal_indirect.md)).
+  `se_type = "sandwich"` gives the cluster-robust sandwich (see
+  `se_type`), and
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) then
+  reports `se_type`. Appended last to preserve positional calls.
 
 ## Value
 

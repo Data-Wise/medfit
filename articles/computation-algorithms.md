@@ -7,6 +7,15 @@ Formulas](https://data-wise.github.io/medfit/articles/methods.md)
 article defines the mediation effects; here the focus is how the
 computer obtains their estimates.
 
+> **At a glance**
+>
+> **Use this when:** you want to know how medfit computes a standard
+> error, a bootstrap draw or a sem engine fit, for example to check or
+> reproduce a number.  
+> **You get:** the algorithm behind each estimate, with the source file
+> that implements it.  
+> **Reading time:** 7 min
+
 ## Delta-method standard errors
 
 Let \\\hat\theta\\ be a vector of fitted path parameters, \\V\\ its
@@ -91,7 +100,7 @@ c(estimate = boot@estimate, lower = boot@ci_lower, upper = boot@ci_upper)
      estimate     lower     upper
     0.3843265 0.3386462 0.4693752 
 
-## Native SEM: from a model to a discrepancy
+## The sem engine: from a model to a discrepancy
 
 The sem engine translates syntax into RAM matrices. Let \\A\\ contain
 directed paths, \\S_R\\ contain model variances and covariances, \\I\\
@@ -266,3 +275,6 @@ mbco_sem(full, paths = c("a", "b"))
 null <- fit_sem(paste(base, "a*b == 0", sep = "\n"), mediation_demo)
 null@internals$branch
 ```
+
+**Next:** See how the algorithms are tested: [Quality control of the
+optimizer](https://data-wise.github.io/medfit/articles/quality-control.md)

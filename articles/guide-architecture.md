@@ -10,6 +10,14 @@ maps those three layers. The [Reference
 Card](https://data-wise.github.io/medfit/articles/refcard.md) lists
 every function; this page shows how they connect.
 
+> **At a glance**
+>
+> **Use this when:** you want a map of how classes, engines and generics
+> connect before you read or extend the source.  
+> **You get:** a diagram of the three layers and a table from each layer
+> to its source files.  
+> **Reading time:** 2 min
+
 ## From a model to an object
 
 ``` default
@@ -123,3 +131,6 @@ and returns a `BootstrapResult`.
 S7 generics load before their methods (the `aab-` file prefix), and the
 classes are registered with S4 in `.onLoad()` so that they dispatch in
 installed packages.
+
+**Next:** Look up a function: [Reference
+Card](https://data-wise.github.io/medfit/articles/refcard.md)

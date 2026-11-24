@@ -7,6 +7,14 @@ stops there. This page runs both on the same data, then lists what each
 does, with a status for every feature that a test checks against a live
 probe on each build.
 
+> **At a glance**
+>
+> **Use this when:** you are choosing between medfit’s sem engine and
+> lavaan for a path model, or moving a lavaan model across.  
+> **You get:** both fitted on the same data and a feature table whose
+> status a test checks against a live probe.  
+> **Reading time:** 7 min
+
 |  |  |
 |----|----|
 | **Use medfit native when** | you want the indirect effect, [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md), or a nonlinear constraint such as `cp == a*b` on a path model |
@@ -123,6 +131,7 @@ changing the behavior makes that test fail.
 | Product terms (`x:m`) and four-way effects | `x:m` is an observed exogenous column, kept as written; no mediation effects | `x:m` stored as `m:x`; coefficients and sandwich standard errors equal lavaan’s; [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) gives the four-way parts; chi-square, df and p-value are `NA` and [`anova()`](https://rdrr.io/r/stats/anova.html), [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) refuse when a factor is a regression target; a supported class only | Partial |
 | Nested model comparison | [`lavTestLRT()`](https://rdrr.io/pkg/lavaan/man/lavTestLRT.html) | [`anova()`](https://rdrr.io/r/stats/anova.html) | Supported |
 | Mediation effects and the MBCO test | no | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md), [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) | Supported |
+| Two-level models (`level:` blocks, `cluster =`) | yes, many designs | experimental, since 0.20.0: observed-variable 1-1-1 mediation through `fit_sem(cluster = )`; estimates match lavaan fitted with `fixed.x = FALSE`, `information = "observed"` and `h1.information = "structured"`; weights, latent variables, products, FIML and most constraints are refused ([page](https://data-wise.github.io/medfit/articles/model-twolevel.html#the-sem-engine-route)) | Partial |
 
 The first column names the feature; the probe for a row is in the test,
 not here, so the table cannot drift from the code without a failing
@@ -158,7 +167,7 @@ rbind(
 They differ in what follows. lavaan reports a chi-square for this model;
 medfit reports `NA`, because the product contains a regression target
 (`mediator1`) and the model treats it as exogenous, which makes the
-global test invalid (see [the native model
+global test invalid (see [the sem engine model
 page](https://data-wise.github.io/medfit/articles/model-sem.html#product-terms)).
 lavaan stores the product under the spelling you wrote
 (`treatment:mediator1`); medfit stores `mediator1:treatment`, whichever
@@ -225,3 +234,7 @@ mislabels.
 The same simple model written in OpenMx and semopy syntax, next to
 medfit and lavaan, is on [One model in medfit, lavaan, OpenMx and
 semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md).
+
+**Next:** The same model in four packages’ syntax: [One model in medfit,
+lavaan, OpenMx and
+semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md)

@@ -5,6 +5,14 @@ page that uses it. The formulas are the ones in [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md), which
 also states the assumptions.
 
+> **At a glance**
+>
+> **Use this when:** you meet a term, a symbol or an output name and
+> want its meaning.  
+> **You get:** one table per area, each entry linked to the page that
+> uses it.  
+> **Reading time:** 8 min
+
 ## Variables and paths
 
 | Symbol | Meaning |
@@ -91,7 +99,7 @@ The own and spillover split is a large-cluster approximation.
 | **within effect** (`a_within`, `b_within`, `c_prime_within`) | the paths among units’ deviations from their cluster; NIE is \\a_w b_w\\ |
 | **between effect** (`a_between`, `b_between`, `c_prime_between`) | the paths among the clusters’ own levels (latent cluster means); NIE is \\a_b b_b\\ |
 | **latent cluster mean** | the cluster’s own level of a variable, treated as an unobserved quantity measured with error by the units, as in lavaan’s two-level model |
-| **ICC** | intraclass correlation: the between variance over the total, per variable (`@icc`) |
+| **ICC** | intraclass correlation: the between variance over the total, per variable (`@icc`; for a two-level fit the unrestricted h1 estimate) |
 | **contrast** | the within NIE minus the between NIE, `nie(x, level = "contrast")`; descriptive, not a test |
 | **within-only** | a `TwoLevelMediationData` or `TwoLevelParallelMediationData` whose between level is not identified: between values are `NA` |
 
@@ -129,6 +137,9 @@ mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md).
 | **nested comparison** ([`anova()`](https://rdrr.io/r/stats/anova.html)) | the likelihood-ratio test of a restricted fit against a fuller one; it refits nothing and refuses fits that are not nested | [Compare nested fits](https://data-wise.github.io/medfit/articles/model-sem-constraints.html#compare-nested-fits) |
 | **conditional log likelihood** | the log likelihood given the fixed variables under `fixed_x` (the default since 0.15.0), so [`logLik()`](https://rdrr.io/r/stats/logLik.html), AIC and BIC of fits with different fixed sets cannot be compared | [Limits](https://data-wise.github.io/medfit/articles/model-sem.html#limits) |
 | **outcome ledger** (`fit@diagnostics$ledger`) | the record of how a native fit, each zero-product branch and each [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) null was reached; an unresolved node is unknown, and only a literal contradiction is certified empty | [Errors that carry evidence](https://data-wise.github.io/medfit/articles/guide-troubleshooting.html#errors-that-carry-evidence) |
+
+**Next:** See the formulas behind the terms: [Methods and
+Formulas](https://data-wise.github.io/medfit/articles/methods.md)
 
 ## Related
 

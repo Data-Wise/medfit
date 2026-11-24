@@ -7,6 +7,9 @@ against the truth as well as against independent oracles (`lm`, lavaan,
 a hand-computed delta-method standard error, a bootstrap, and a Monte
 Carlo study). Nothing here is a finding about real students.
 
+**Use this when:** you want one complete analysis, checked against the
+known truth, from data to interval.
+
 |  |  |
 |----|----|
 | **You need** | medfit 0.11.0 or later; lavaan is used for one cross-check and the page skips that row when it is absent |
@@ -659,13 +662,16 @@ c(medfit = as.character(utils::packageVersion("medfit")),
 ```
 
       medfit        R   lavaan
-    "0.19.0"  "4.6.2"  "0.7.3" 
+    "0.20.0"  "4.6.2"  "0.7.3" 
 
 Seeds: data `20261017`; bootstrap `123`; Monte Carlo `1` (n = 500) and
 `2` (n = 100). The simulation functions use
 [`stats::rnorm()`](https://rdrr.io/r/stats/Normal.html) and
 [`stats::rbinom()`](https://rdrr.io/r/stats/Binomial.html) only, so the
 numbers are stable across platforms up to the last printed digits.
+
+**Next:** Run the same fit on your own `lm` objects: [Model
+Extraction](https://data-wise.github.io/medfit/articles/extraction.md)
 
 ## Where next
 

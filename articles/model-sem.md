@@ -22,8 +22,8 @@ and [categorical
 covariates](https://data-wise.github.io/medfit/articles/model-sem-factors.md).
 
 These examples use the default listwise path. For the separate bounded
-FIML opt-in (0.16.0 and 0.17.0) and its narrower support, see the
-[native
+FIML opt-in (0.16.0 and 0.17.0) and its narrower support, see the [sem
+engine
 guide](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml).
 
 ## Fit it

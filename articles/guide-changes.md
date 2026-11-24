@@ -1,10 +1,18 @@
 # What changed since CRAN 0.3.2
 
-CRAN has medfit 0.3.2; this site documents 0.19.0 (GitHub and
+CRAN has medfit 0.3.2; this site documents 0.20.0 (GitHub and
 r-universe). This page lists what a 0.3.2 user needs to know before
 upgrading: numbers that change, calls that now stop with an error, and
 what is new. The full record is
 [NEWS](https://data-wise.github.io/medfit/news/index.html).
+
+> **At a glance**
+>
+> **Use this when:** you used CRAN’s 0.3.2 and want to know what changes
+> before you upgrade.  
+> **You get:** the results that changed, the calls that now stop with an
+> error, and what is new, release by release.  
+> **Reading time:** 13 min
 
 > **The short version**
 >
@@ -70,7 +78,7 @@ Each of these was accepted before and gave a wrong or ignored result.
 | 0.5.0 | a product written inside a function, such as `I(X * M)` | `Found function-wrapped treatment-by-mediator product term(s)` | write it as `X * M` or `X:M` |
 | 0.5.0 | a product among mediators in a multi-mediator model | `Multi-mediator (serial or parallel) extraction supports only treatment-by-mediator product terms` | refit without it; a treatment-by-mediator product in the outcome model is supported (see [Joint mediation](https://data-wise.github.io/medfit/articles/model-joint.md)) |
 | 0.5.0 | four-way decomposition with a non-identity link | `Four-way decomposition requires the identity link` | refit with `gaussian(link = "identity")` |
-| 0.7.0 | a [`glm()`](https://rdrr.io/r/stats/glm.html) argument passed through `...` that partly matches `model`, such as `mod = FALSE` | `is only used with engine = "native"` | drop the argument; [`glm()`](https://rdrr.io/r/stats/glm.html)’s own `model` cannot be passed through [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md) |
+| 0.7.0 | a [`glm()`](https://rdrr.io/r/stats/glm.html) argument passed through `...` that partly matches `model`, such as `mod = FALSE` | `is only used with engine = "sem"` (`engine = "native"` in 0.19.0 and earlier) | drop the argument; [`glm()`](https://rdrr.io/r/stats/glm.html)’s own `model` cannot be passed through [`fit_mediation()`](https://data-wise.github.io/medfit/reference/fit_mediation.md) |
 | 0.9.0 | a lavaan four-way fit that has a product of the treatment with a covariate in the mediator or the outcome equation (`m ~ x + xc`) | `does not support a treatment product` | it changed the effects without changing a coefficient the decomposition reads, and 0.8.0 returned a decomposition without a message; remove the product, or fit without the four-way decomposition |
 | 0.11.0 | [`AIC()`](https://rdrr.io/r/stats/AIC.html) or [`BIC()`](https://rdrr.io/r/stats/AIC.html) of several `SEMFit`s over different observed variables, such as a fit with a product term and one without | `different observed variables` | the likelihoods describe different data, so they are not comparable; compare fits over the same variables ([`anova()`](https://rdrr.io/r/stats/anova.html) and [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) refuse the same pair) |
 | 0.11.1 | [`anova()`](https://rdrr.io/r/stats/anova.html) of two `SEMFit`s where a nonzero fixed parameter (for example `M1 ~~ 0.5*M2`) is in one fit and absent from the other | `nonzero fixed parameters differ` | fit the restricted model by fixing or constraining parameters of the larger one, so both fits carry the same fixed values |
@@ -111,12 +119,16 @@ path (0.5.0).
 | 0.17.0 | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a two-level `lavaan` fit (`level:` blocks) returns the new `TwoLevelMediationData`: the a, b and c’ paths at the within and the between level, with `nie(level = )`, [`tidy()`](https://generics.r-lib.org/reference/tidy.html), [`confint()`](https://rdrr.io/r/stats/confint.html) and [`summary()`](https://rdrr.io/r/base/summary.html), and [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md) builds the callback for [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md) (parametric, or a cluster bootstrap that refits the `lavaan` fit) ([page](https://data-wise.github.io/medfit/articles/model-twolevel.md)). Before 0.17.0 this call stopped with `medfit_error_lavaan_multilevel`, and earlier it returned the within level only with the total sample size. Three-level and multigroup fits are still refused. Also, bounded FIML now fits one or two covariates, two parallel mediators and two serial mediators (the saturated graph or the pure chain) with up to two covariates; these refuse in 0.16.0 and are new, not a change to an existing result ([page](https://data-wise.github.io/medfit/articles/model-fiml.md)) |
 | 0.18.0 | `fit_mediation(engine = "sem")` names the native SEM fitter; `engine = "native"` still works, with identical results and no warning; [`sem_control()`](https://data-wise.github.io/medfit/reference/sem_control.md) collects its optimizer settings for [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) and [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) (a plain `control` list keeps its meaning); `TwoLevelMediationData` gains an optional `source_version`; the sem engine articles moved (`native-guide` is now `sem-guide`), and old links redirect ([guide](https://data-wise.github.io/medfit/articles/guide-engines.md)). Additions only: no result changes |
 | 0.19.0 | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a two-level `lavaan` fit with two or more mediators returns the new, experimental `TwoLevelParallelMediationData`: per-mediator and total effects at each level with delta-method standard errors, and [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md) builds the bootstrap callback for it ([page](https://data-wise.github.io/medfit/articles/model-twolevel.html#several-parallel-mediators)). A mediator regressed on another mediator (serial) is refused. Additions only: a fit with one mediator still returns `TwoLevelMediationData`, and no result changes |
+| 0.20.0 | experimental two-level API only: `fit_sem(model, data, cluster = )` fits a two-level (1-1-1) model with the sem engine and [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) returns `TwoLevelMediationData` (`se_type = "sandwich"` gives cluster-robust SEs; [page](https://data-wise.github.io/medfit/articles/model-twolevel.html#the-sem-engine-route)); [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) tests the indirect effect at one level and [`twolevel_equal_indirect()`](https://data-wise.github.io/medfit/reference/twolevel_equal_indirect.md) tests within = between. Behavior change: the within-only rule reads the unrestricted (h1) ICC on both routes, so within-only results are rarer. No change outside the experimental two-level API |
 
 ## Dependencies
 
 0.7.0 adds `lifecycle` and `nloptr (>= 1.0.4)` to `Imports`, and
 `OpenMx` to `Suggests` (the tests use it as an independent check). 0.8.0
 adds `withr` to `Suggests` (tests only).
+
+**Next:** A call now stops with an error:
+[Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.md)
 
 ## Related
 

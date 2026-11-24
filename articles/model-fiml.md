@@ -84,7 +84,7 @@ In the serial forms all three disturbance covariances (`M1 ~~ 0*M2`,
 `M1 ~~ 0*Y`, `M2 ~~ 0*Y`) must be written. With covariates, every
 covariate predicts every equation and the exogenous covariances are all
 written or none. The syntax rules, parameter counts and the extraction
-details are in the [native
+details are in the [sem engine
 guide](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml).
 
 In a serial fit,

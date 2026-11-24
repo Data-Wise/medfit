@@ -1,7 +1,7 @@
 # medfit Reference Card
 
 Quick lookup for users who already know medfit. This card describes
-medfit 0.19.0 (CRAN has 0.3.2; install from GitHub or r-universe, see
+medfit 0.20.0 (CRAN has 0.3.2; install from GitHub or r-universe, see
 the [home page](https://data-wise.github.io/medfit/#install)).
 Explanations are in the
 [articles](https://data-wise.github.io/medfit/articles/getting-started.md);
@@ -11,6 +11,14 @@ recipes are in the
 [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md); one
 page per model type is in
 [Models](https://data-wise.github.io/medfit/articles/models.md).
+
+> **At a glance**
+>
+> **Use this when:** you already know medfit and want the call, the
+> class or the warning in one lookup.  
+> **You get:** one-page tables of the calls, the classes and the
+> warnings.  
+> **Reading time:** 7 min
 
 ## Start here
 
@@ -67,7 +75,8 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | `lmer` pair, cluster treatment | `extract_mediation(..., cluster = )` |
 | Formulas, cluster treatment | `fit_mediation(engine = "lmer", cluster = )` with plain formulas, no `(1 \| id)` |
 | `lavaan` fit | `extract_mediation(lavaan_fit, ...)` |
-| Two-level `lavaan` fit (`level:` blocks, `cluster =`), X, M, Y on level-1 units | `extract_mediation(lavaan_fit, treatment = , mediator = , outcome = )`, a `TwoLevelMediationData`; `nie(x, level = "within" \| "between" \| "contrast" \| "both")` |
+| Two-level `lavaan` fit (`level:` blocks, `cluster =`), X, M, Y on level-1 units (experimental) | `extract_mediation(lavaan_fit, treatment = , mediator = , outcome = )`, a `TwoLevelMediationData`; `nie(x, level = "within" \| "between" \| "contrast" \| "both")` |
+| The same two-level model fitted by the sem engine (0.20.0, experimental) | `fit_sem(model, data, cluster = )` or `fit_mediation(engine = "sem", model = , cluster = )`, then `extract_mediation(fit)`; `se_type = "sandwich"` for cluster-robust SEs; `mbco_sem(fit, "a_w", "b_w")` tests one level |
 | Two-level `lavaan` fit, two or more parallel mediators | `extract_mediation(lavaan_fit, treatment = , mediator = c("M1", "M2"), outcome = )`, a `TwoLevelParallelMediationData` (experimental); `nie(x, level = , type = "total" \| "specific")` |
 | IPW weights | `fit_mediation(weights = , se_type = "sandwich")` |
 | Choose an engine, estimator and optimizer | [Which engine should I use?](https://data-wise.github.io/medfit/articles/guide-engines.md): `"glm"`, `"regmedint"`, `"lmer"` or `"sem"` (`"native"` is the earlier spelling) |
@@ -78,6 +87,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | Intercepts and means on a sem engine fit | on by default (`meanstructure = TRUE`), with a free intercept for every observed variable you did not write; `y ~ 0*1` restricts one; `meanstructure = NULL` or `FALSE` turns the default off |
 | Log likelihood, AIC and BIC of a `SEMFit` | `logLik(fit)`, `AIC(fit1, fit2)`, `BIC(fit1, fit2)`; [`AIC()`](https://rdrr.io/r/stats/AIC.html) of a fit with a product term and one without are not comparable; the log likelihood is conditional on the fixed exogenous variables, so compare fits only with the same `fixed_x` |
 | Test of the indirect effect on a `SEMFit` (MBCO) | `mbco_sem(fit, "a", "b")`; `paths = c("a", "d", "b")` for a serial product |
+| Test that the within and between indirect effects of a two-level fit are equal | `twolevel_equal_indirect(fit)` (likelihood ratio of `a_w*b_w == a_b*b_b`; `n_boot = 200` adds a parametric bootstrap p-value; experimental) |
 | Optimizer settings for a sem engine fit | `fit_sem(model, data, control = sem_control(n_starts = 7, nloptr = list(maxeval = 20000L)))`; a plain `nloptr` list still works; `fit@diagnostics$protocol` records what ran |
 | Rows with missing values on the mediator or outcome, continuous Gaussian model | `fit_sem(model, data, missing = "fiml", fixed_x = FALSE)`, then [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) (bounded FIML; refuses outside its scope, never falls back) |
 | Check the product-null LR against lavaan or OpenMx | `compare_lr(fit, paths = c("a", "b"), engine = "lavaan")`; warns only on observed evidence |
@@ -98,7 +108,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | Bounded FIML fit, X to M to Y | `FIMLMediationData` | \\a \\ b\\ |
 | Bounded FIML fit, two parallel mediators | `FIMLParallelMediationData` | \\\sum a_j b_j\\ |
 | Bounded FIML fit, two serial mediators | `FIMLSerialMediationData` | \\a \\ d \\ b\\ |
-| Two-level `lavaan` fit, X, M, Y on level-1 units | `TwoLevelMediationData` | \\a_w b_w\\ and \\a_b b_b\\ per level |
+| Two-level fit (`lavaan` or sem engine), X, M, Y on level-1 units (experimental) | `TwoLevelMediationData` | \\a_w b_w\\ and \\a_b b_b\\ per level |
 | Two-level `lavaan` fit, parallel mediators (experimental) | `TwoLevelParallelMediationData` | \\\sum_j a\_{jw} b\_{jw}\\ and \\\sum_j a\_{jb} b\_{jb}\\ per level |
 
 ## Effects
@@ -174,3 +184,8 @@ Every call returns a `BootstrapResult`: use
 | Native fit: the model test is not valid for this model | A product factor is a regression target or the exogenous block is restricted: [`glance()`](https://generics.r-lib.org/reference/glance.html) reports `NA`, and [`anova()`](https://rdrr.io/r/stats/anova.html) and [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) refuse |
 | Native fit: the starts disagree | Several accepted optima: the lowest was kept; raise `n_starts` |
 | Native [`anova()`](https://rdrr.io/r/stats/anova.html): not nested | The restricted model frees or drops something the larger one does not: constrain or fix parameters of the larger model instead |
+
+**Next:** Find a recipe:
+[Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md).
+Find a model page:
+[Models](https://data-wise.github.io/medfit/articles/models.md)

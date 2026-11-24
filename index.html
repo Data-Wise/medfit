@@ -19,9 +19,9 @@
   };
 </script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/Inter-0.4.10/font.css" rel="stylesheet">
-<link href="deps/Fira_Code-0.4.10/font.css" rel="stylesheet">
-<link href="deps/Montserrat-0.4.10/font.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/Inter-0.5.0/font.css" rel="stylesheet">
+<link href="deps/Fira_Code-0.5.0/font.css" rel="stylesheet">
+<link href="deps/Montserrat-0.5.0/font.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="medfit: Infrastructure for Mediation Analysis in R">
@@ -39,7 +39,7 @@
 
     <a class="navbar-brand me-2" href="index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.19.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.20.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,7 +49,15 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="active nav-item"><a class="nav-link" href="index.html" aria-label="Home"><span class="fa fas fa-home fa-lg"></span></a></li>
-<li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-start" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Start</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-start">
+<li><a class="dropdown-item" href="articles/getting-started.html">Getting Started</a></li>
+    <li><a class="dropdown-item" href="index.html#start-here-in-60-seconds">The 60-second example</a></li>
+    <li><a class="dropdown-item" href="index.html#install">Install</a></li>
+    <li><a class="dropdown-item" href="articles/models.html">Which model?</a></li>
+  </ul>
+</li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-models">
@@ -80,80 +88,69 @@
   </ul>
 </li>
 <li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook">
+<li><a class="dropdown-item" href="articles/cookbook.html">All 24 recipes</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Recipes by task</h6></li>
+    <li><a class="dropdown-item" href="articles/cookbook.html#one-line-mediation">Basics: one line, lm fits, binary outcome, weights (1-4)</a></li>
+    <li><a class="dropdown-item" href="articles/cookbook.html#two-mediators-in-a-chain">Several mediators and interactions (5-8)</a></li>
+    <li><a class="dropdown-item" href="articles/cookbook.html#cluster-randomized-trial">Clusters, two-level and lavaan (9, 10, 23, 24)</a></li>
+    <li><a class="dropdown-item" href="articles/cookbook.html#a-latent-mediator-native-engine">The sem engine: latent, constraints, checks, four-way (11, 12, 14-21)</a></li>
+    <li><a class="dropdown-item" href="articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">Inference and missing data (13, 22)</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-guides" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Guides</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-guides">
-<li><a class="dropdown-item" href="articles/guide-changes.html">What changed since CRAN 0.3.2</a></li>
-    <li><a class="dropdown-item" href="articles/guide-troubleshooting.html">Troubleshooting</a></li>
+<li><a class="dropdown-item" href="articles/guide-troubleshooting.html">When something fails</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Choose</h6></li>
     <li><a class="dropdown-item" href="articles/guide-engines.html">Which engine should I use?</a></li>
     <li><a class="dropdown-item" href="articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Upgrade and learn</h6></li>
+    <li><a class="dropdown-item" href="articles/guide-changes.html">Upgrading: what changed since CRAN 0.3.2</a></li>
     <li><a class="dropdown-item" href="articles/guide-twolevel-tutorial.html">Two-level workflow, step by step</a></li>
-    <li><a class="dropdown-item" href="articles/guide-architecture.html">How medfit is organized</a></li>
-    <li><a class="dropdown-item" href="articles/sem-defaults-0-15.html">Native defaults in 0.15.0</a></li>
     <li><a class="dropdown-item" href="articles/sem-quickstart.html">The sem engine in five minutes</a></li>
     <li><a class="dropdown-item" href="articles/sem-tutorial.html">The sem engine, step by step</a></li>
     <li><a class="dropdown-item" href="articles/sem-guide.html">The sem engine guide</a></li>
+    <li><a class="dropdown-item" href="articles/example-gpa.html">Worked example: study hours and GPA</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Compare</h6></li>
     <li><a class="dropdown-item" href="articles/lavaan-comparison.html">lavaan and the sem engine</a></li>
     <li><a class="dropdown-item" href="articles/probmed-comparison.html">probmed and medfit</a></li>
     <li><a class="dropdown-item" href="articles/rmediation-comparison.html">RMediation and medfit</a></li>
     <li><a class="dropdown-item" href="articles/syntax-crosswalk.html">One model in medfit, lavaan, OpenMx and semopy</a></li>
-    <li><a class="dropdown-item" href="articles/example-gpa.html">Worked example: study hours and GPA</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook">
-<li><a class="dropdown-item" href="articles/cookbook.html">All recipes</a></li>
-    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#one-line-mediation">1. One-line mediation</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#i-already-have-lm-fits">2. I already have lm fits</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#binary-outcome">3. Binary outcome</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#weights-and-robust-standard-errors">4. Weights and robust SEs</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#two-mediators-in-a-chain">5. Two mediators in a chain</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#two-mediators-side-by-side">6. Two mediators side by side</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#treatment-by-mediator-interaction">7. Treatment-by-mediator interaction</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#many-mediators-with-products">8. Many mediators with products</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#compare-two-native-models">14. Compare two native models</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#a-categorical-covariate-in-a-native-fit">21. Categorical covariate (native)</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#missing-data-bounded-fiml">22. Missing data: bounded FIML</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html#a-two-level-lavaan-fit-within-and-between">23. Two-level lavaan fit (1-1-1)</a></li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/getting-started.html">Getting Started</a></li>
-    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Quick Reference</h6></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-reference" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Reference</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-reference">
+<li><a class="dropdown-item" href="reference/index.html">Functions</a></li>
     <li><a class="dropdown-item" href="articles/refcard.html">Reference Card</a></li>
-    <li><a class="dropdown-item" href="articles/cookbook.html">Cookbook</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-learn-more" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Learn more</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-learn-more">
+<li><a class="dropdown-item" href="articles/index.html">All articles</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Detailed Guides</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>How medfit works</h6></li>
     <li><a class="dropdown-item" href="articles/introduction.html">Introduction to medfit</a></li>
-    <li><a class="dropdown-item" href="articles/extraction.html">Model Extraction</a></li>
-    <li><a class="dropdown-item" href="articles/bootstrap.html">Bootstrap Inference</a></li>
-    <li><a class="dropdown-item" href="articles/methods.html">Methods and Formulas</a></li>
+    <li><a class="dropdown-item" href="articles/extraction.html">Model extraction</a></li>
+    <li><a class="dropdown-item" href="articles/bootstrap.html">Bootstrap inference</a></li>
+    <li><a class="dropdown-item" href="articles/methods.html">Methods and formulas</a></li>
     <li><a class="dropdown-item" href="articles/computation-algorithms.html">Computation algorithms</a></li>
+    <li><a class="dropdown-item" href="articles/guide-architecture.html">How medfit is organized</a></li>
+    <li><a class="dropdown-item" href="articles/quality-control.html">Quality control of the optimizer</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Release history</h6></li>
     <li><a class="dropdown-item" href="articles/whats-new-0-11.html">What's new in 0.11</a></li>
     <li><a class="dropdown-item" href="articles/sem-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
-    <li><a class="dropdown-item" href="articles/quality-control.html">Quality control of the optimizer</a></li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-project" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Project</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-project">
-<li><a class="dropdown-item" href="articles/quality-control.html">Quality control of the optimizer</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Project</h6></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
     <li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/roadmap.html">Development Roadmap</a></li>
@@ -186,94 +183,74 @@
 <blockquote>
 <p><strong>In one line:</strong> <code><a href="reference/med.html">med()</a></code> runs a mediation analysis, <code><a href="reference/quick.html">quick()</a></code> prints it, and <code><a href="reference/nie.html">nie()</a></code>, <code><a href="reference/nde.html">nde()</a></code>, <code><a href="reference/te.html">te()</a></code>, <code><a href="reference/pm.html">pm()</a></code> and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> read it.</p>
 </blockquote>
-<p><strong>Next:</strong> <a href="#try-it-in-60-seconds">run the 60-second example</a>. Not sure which model you need? Jump to <a href="#pick-your-model">Pick your model</a>.</p>
-<blockquote>
-<p><strong>Missing data (FIML):</strong> the bounded FIML models are numerically verified against lavaan, not statistically admitted: no interval coverage is established. <a href="https://data-wise.github.io/medfit/articles/model-fiml.html">Details</a></p>
-</blockquote>
+<p><strong>Next:</strong> <a href="#install">install</a>, then <a href="#start-here-in-60-seconds">run the example</a>.</p>
 <div class="section level2">
 <h2 id="install">Install<a class="anchor" aria-label="anchor" href="#install"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span></span>
-<span>  <span class="st">"medfit"</span>,</span>
-<span>  repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://data-wise.r-universe.dev"</span>, <span class="st">"https://cloud.r-project.org"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>This installs the version currently built by r-universe; check <code>packageVersion("medfit")</code> after installation. Binaries are available for supported R/platform combinations; a source installation can require a compiler for dependencies such as <code>nloptr</code>. From GitHub instead: <code>pak::pak("data-wise/medfit")</code>.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"medfit"</span>,</span>
+<span>  repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://data-wise.r-universe.dev"</span>, <span class="st">"https://cloud.r-project.org"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>From GitHub instead: <code>pak::pak("data-wise/medfit")</code>. This installs the version currently built by r-universe; check <code>packageVersion("medfit")</code> afterward. Binaries exist for supported R and platform combinations; a source installation can need a compiler for dependencies such as <code>nloptr</code>.</p>
 <blockquote>
 <p><strong>CRAN has 0.3.2, which does not run the examples on this site.</strong> It lacks <code>mediation_demo</code>, <code><a href="reference/fit_sem.html">fit_sem()</a></code>, <code><a href="reference/mbco_sem.html">mbco_sem()</a></code> and the joint and cluster classes. Its two known issues, serial <code><a href="reference/te.html">te()</a></code>/<code><a href="reference/pm.html">pm()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> path rows, are fixed in 0.5.0; see <a href="https://github.com/Data-Wise/medfit/issues/83" class="external-link">#83</a>.</p>
 </blockquote>
 </div>
 <div class="section level2">
-<h2 id="try-it-in-60-seconds">Try it in 60 seconds<a class="anchor" aria-label="anchor" href="#try-it-in-60-seconds"></a>
+<h2 id="start-here-in-60-seconds">Start here in 60 seconds<a class="anchor" aria-label="anchor" href="#start-here-in-60-seconds"></a>
 </h2>
+<p><code>mediation_demo</code> ships with the package, so this runs as written:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://data-wise.github.io/medfit/">medfit</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Simulate data</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">200</span></span>
-<span><span class="va">mydata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">mydata</span><span class="op">$</span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span><span class="va">mydata</span><span class="op">$</span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">X</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">mydata</span><span class="op">$</span><span class="va">M</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/med.html">med</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">mydata</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span>, outcome <span class="op">=</span> <span class="st">"Y"</span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/med.html">med</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">mediation_demo</span>,</span>
+<span>  treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span>, outcome <span class="op">=</span> <span class="st">"outcome"</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"covariate1"</span>, <span class="st">"covariate2"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/quick.html">quick</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
-<span><span class="co">#&gt; NIE = 0.164  | NDE = 0.293 | PM = 36 %</span></span></code></pre></div>
-<p>NIE is the indirect effect through the mediator, NDE the direct effect, PM the share mediated. Next: read the pieces, then add an interval.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<span><span class="co">#&gt; NIE = 0.333  | NDE = 0.206 | PM = 61.8 %</span></span></code></pre></div>
+<p><strong>You should see</strong> one line. NIE is the indirect effect through the mediator, NDE the direct effect, PM the share mediated. If you get an error instead, see <a href="#when-something-fails">When something fails</a>.</p>
+<details><summary><b>Then: read the pieces, get a table, add an interval</b>
+</summary><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/nie.html">nie</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>   <span class="co"># indirect effect (a * b)</span></span>
 <span><span class="fu"><a href="reference/nde.html">nde</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>   <span class="co"># direct effect (c')</span></span>
 <span><span class="fu"><a href="reference/te.html">te</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>    <span class="co"># total effect</span></span>
 <span><span class="fu"><a href="reference/pm.html">pm</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>    <span class="co"># proportion mediated</span></span>
-<span><span class="fu"><a href="reference/paths.html">paths</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span> <span class="co"># a, b, c'</span></span></code></pre></div>
-<div class="section level3">
-<h3 id="read-it-as-a-table">Read it as a table<a class="anchor" aria-label="anchor" href="#read-it-as-a-table"></a>
-</h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://generics.r-lib.org" class="external-link">generics</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/paths.html">paths</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span> <span class="co"># a, b, c'</span></span>
 <span></span>
-<span><span class="co"># Tidy tibble of all effects</span></span>
-<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://generics.r-lib.org" class="external-link">generics</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>   <span class="co"># every effect with its standard error</span></span>
 <span><span class="co">#&gt; # A tibble: 6 × 3</span></span>
 <span><span class="co">#&gt;   term    estimate std_error</span></span>
 <span><span class="co">#&gt;   &lt;chr&gt;      &lt;dbl&gt;     &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 a          0.471    0.0750</span></span>
-<span><span class="co">#&gt; 2 b          0.349    0.0689</span></span>
-<span><span class="co">#&gt; 3 c_prime    0.293    0.0797</span></span>
-<span><span class="co">#&gt; 4 nie        0.164    0.0417</span></span>
-<span><span class="co">#&gt; 5 nde        0.293    0.0797</span></span>
-<span><span class="co">#&gt; 6 te         0.457    0.0773</span></span>
+<span><span class="co">#&gt; 1 a          0.583    0.0989</span></span>
+<span><span class="co">#&gt; 2 b          0.571    0.0535</span></span>
+<span><span class="co">#&gt; 3 c_prime    0.206    0.110 </span></span>
+<span><span class="co">#&gt; 4 nie        0.333    0.0645</span></span>
+<span><span class="co">#&gt; 5 nde        0.206    0.110 </span></span>
+<span><span class="co">#&gt; 6 te         0.539    0.119 </span></span>
 <span></span>
-<span><span class="co"># One-row model summary</span></span>
-<span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>  <span class="co"># one-row model summary</span></span>
 <span><span class="co">#&gt; # A tibble: 1 × 6</span></span>
 <span><span class="co">#&gt;     nie   nde    te    pm  nobs converged</span></span>
-<span><span class="co">#&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;lgl&gt;</span></span>
-<span><span class="co">#&gt; 1 0.164 0.293 0.457 0.360   200 TRUE</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="add-an-interval">Add an interval<a class="anchor" aria-label="anchor" href="#add-an-interval"></a>
-</h3>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># With bootstrap CI</span></span>
-<span><span class="va">result_boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/med.html">med</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">mydata</span>,</span>
-<span>  treatment <span class="op">=</span> <span class="st">"X"</span>,</span>
-<span>  mediator <span class="op">=</span> <span class="st">"M"</span>,</span>
-<span>  outcome <span class="op">=</span> <span class="st">"Y"</span>,</span>
-<span>  boot <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  n_boot <span class="op">=</span> <span class="fl">1000</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">42</span></span>
-<span><span class="op">)</span></span>
+<span><span class="co">#&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;lgl&gt;    </span></span>
+<span><span class="co">#&gt; 1 0.333 0.206 0.539 0.618   400 TRUE     </span></span>
 <span></span>
+<span><span class="co"># With a bootstrap interval</span></span>
+<span><span class="va">result_boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/med.html">med</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">mediation_demo</span>,</span>
+<span>  treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span>, outcome <span class="op">=</span> <span class="st">"outcome"</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"covariate1"</span>, <span class="st">"covariate2"</span><span class="op">)</span>,</span>
+<span>  boot <span class="op">=</span> <span class="cn">TRUE</span>, n_boot <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">42</span></span>
+<span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/quick.html">quick</a></span><span class="op">(</span><span class="va">result_boot</span><span class="op">)</span></span>
-<span><span class="co">#&gt; NIE = 0.164  [0.0867, 0.256] | NDE = 0.293 | PM = 36 %</span></span></code></pre></div>
-</div>
+<span><span class="co">#&gt; NIE = 0.333  [0.208, 0.458] | NDE = 0.206 | PM = 61.8 %</span></span></code></pre></div>
+</details>
 </div>
 <div class="section level2">
 <h2 id="pick-your-model">Pick your model<a class="anchor" aria-label="anchor" href="#pick-your-model"></a>
 </h2>
-<p>Find the row that matches your data, then open its page. All of them are on the <a href="https://data-wise.github.io/medfit/articles/models.html">Models page</a>.</p>
+<p>Find your data, open its page.</p>
 <table class="table">
 <colgroup>
 <col width="50%">
@@ -293,58 +270,62 @@
 <td><a href="https://data-wise.github.io/medfit/articles/model-glm-families.html">Binary and non-normal variables</a></td>
 </tr>
 <tr>
-<td>An effect of the mediator that depends on treatment</td>
-<td><a href="https://data-wise.github.io/medfit/articles/model-interaction.html">Treatment-by-mediator interaction</a></td>
+<td>Several mediators</td>
+<td>
+<a href="https://data-wise.github.io/medfit/articles/model-parallel.html">Parallel</a>, <a href="https://data-wise.github.io/medfit/articles/model-serial.html">serial</a> or <a href="https://data-wise.github.io/medfit/articles/model-joint.html">joint</a> mediation</td>
 </tr>
 <tr>
-<td>Inverse-probability or case weights</td>
-<td><a href="https://data-wise.github.io/medfit/articles/model-weights.html">Weights and robust SEs</a></td>
+<td>Clusters (schools, clinics) or two-level data</td>
+<td>
+<a href="https://data-wise.github.io/medfit/articles/model-cluster.html">Cluster-randomized trials</a>, <a href="https://data-wise.github.io/medfit/articles/model-twolevel.html">two-level mediation</a> (experimental)</td>
 </tr>
 <tr>
-<td>Mediators in a chain</td>
-<td><a href="https://data-wise.github.io/medfit/articles/model-serial.html">Serial mediation</a></td>
+<td>A lavaan fit, or a latent mediator</td>
+<td>
+<a href="https://data-wise.github.io/medfit/articles/model-lavaan.html">lavaan fits</a>, <a href="https://data-wise.github.io/medfit/articles/model-sem-latent.html">the sem engine: a latent mediator</a>
+</td>
 </tr>
 <tr>
-<td>Mediators side by side</td>
-<td><a href="https://data-wise.github.io/medfit/articles/model-parallel.html">Parallel mediation</a></td>
-</tr>
-<tr>
-<td>Several mediators with products</td>
-<td><a href="https://data-wise.github.io/medfit/articles/model-joint.html">Joint mediation</a></td>
-</tr>
-<tr>
-<td>Treatment assigned to whole clusters</td>
-<td><a href="https://data-wise.github.io/medfit/articles/model-cluster.html">Cluster-randomized trials</a></td>
-</tr>
-<tr>
-<td>A lavaan fit</td>
-<td><a href="https://data-wise.github.io/medfit/articles/model-lavaan.html">lavaan fits</a></td>
-</tr>
-<tr>
-<td>A latent mediator</td>
-<td><a href="https://data-wise.github.io/medfit/articles/model-sem-latent.html">The sem engine: a latent mediator</a></td>
-</tr>
-<tr>
-<td>Constraints, or a test of the indirect effect</td>
-<td><a href="https://data-wise.github.io/medfit/articles/model-sem-constraints.html">The sem engine: constraints and MBCO</a></td>
-</tr>
-<tr>
-<td>Serial or parallel mediators written as syntax</td>
-<td><a href="https://data-wise.github.io/medfit/articles/model-sem-multi.html">The sem engine: several mediators and weights</a></td>
+<td>Missing data</td>
+<td>
+<a href="https://data-wise.github.io/medfit/articles/model-fiml.html">Bounded FIML</a>: numerically verified against lavaan, not statistically admitted (no interval coverage is established)</td>
 </tr>
 </tbody>
 </table>
-<p>Already have fitted <code>lm</code>, <code>glm</code>, <code>lmer</code> or lavaan models? <code><a href="reference/extract_mediation.html">extract_mediation()</a></code> turns them into the same objects:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">M</span> <span class="op">~</span> <span class="va">X</span>, data <span class="op">=</span> <span class="va">mydata</span><span class="op">)</span></span>
-<span><span class="va">fit_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">X</span> <span class="op">+</span> <span class="va">M</span>, data <span class="op">=</span> <span class="va">mydata</span><span class="op">)</span></span>
-<span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">fit_m</span>, model_y <span class="op">=</span> <span class="va">fit_y</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/nie.html">nie</a></span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span></span></code></pre></div>
-<p><strong>More:</strong> <a href="https://data-wise.github.io/medfit/articles/cookbook.html">Cookbook</a> | <a href="https://data-wise.github.io/medfit/articles/refcard.html">Reference card</a> | <a href="https://data-wise.github.io/medfit/articles/guide-troubleshooting.html">Troubleshooting</a> | <a href="https://data-wise.github.io/medfit/articles/guide-changes.html">What changed since CRAN 0.3.2</a> | <a href="https://data-wise.github.io/medfit/articles/methods.html">Methods</a></p>
-<details><summary><strong>What’s new in 0.19.0</strong>
+<p>Other cases (interaction, weights, constraints and MBCO, serial or parallel models written as syntax) are on the <a href="https://data-wise.github.io/medfit/articles/models.html">full Models table</a>. Not sure which engine? See <a href="https://data-wise.github.io/medfit/articles/guide-engines.html">Which engine should I use?</a></p>
+</div>
+<div class="section level2">
+<h2 id="when-something-fails">When something fails<a class="anchor" aria-label="anchor" href="#when-something-fails"></a>
+</h2>
+<ul>
+<li>
+<a href="https://data-wise.github.io/medfit/articles/guide-troubleshooting.html">Troubleshooting</a>: each error and warning, with the fix.</li>
+<li>
+<a href="https://data-wise.github.io/medfit/articles/guide-glossary.html">Glossary and symbols</a>: what a term or symbol means.</li>
+<li>
+<a href="https://data-wise.github.io/medfit/articles/guide-changes.html">What changed since CRAN 0.3.2</a>: if the CRAN version behaves differently.</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="go-further">Go further<a class="anchor" aria-label="anchor" href="#go-further"></a>
+</h2>
+<p><a href="https://data-wise.github.io/medfit/articles/getting-started.html">Get Started</a> | <a href="https://data-wise.github.io/medfit/articles/cookbook.html">Cookbook</a> (twenty-four recipes) | <a href="https://data-wise.github.io/medfit/articles/refcard.html">Reference Card</a> | <a href="https://data-wise.github.io/medfit/articles/methods.html">Methods and Formulas</a> | <a href="https://data-wise.github.io/medfit/articles/guide-intervals.html">Which interval should I use?</a></p>
+</div>
+<div class="section level2">
+<h2 id="more-when-you-need-it">More, when you need it<a class="anchor" aria-label="anchor" href="#more-when-you-need-it"></a>
+</h2>
+<details><summary><strong>What’s new in 0.20.0</strong>
 </summary><ul>
 <li>
-<strong>Two-level parallel mediation (experimental):</strong> <code><a href="reference/extract_mediation.html">extract_mediation()</a></code> on a two-level <code>lavaan</code> fit with two or more mediators returns <code>TwoLevelParallelMediationData</code>, with per-mediator and total effects at each level, delta-method SEs and <code><a href="reference/twolevel_statistic.html">twolevel_statistic()</a></code> for the bootstrap. One-mediator results are unchanged. See the <a href="https://data-wise.github.io/medfit/articles/model-twolevel.html#several-parallel-mediators">model page</a>.</li>
+<strong>0.20.0 (2026-11-23, GitHub only):</strong> adds the native two-level route below since 0.19.0 (released 2026-11-17). The two-level API is experimental, so it may change without a deprecation period.</li>
+<li>
+<strong>Native two-level fit (0.20.0, experimental):</strong> <code>fit_sem(model, data, cluster = )</code> fits a two-level (1-1-1) model written in <code>level:</code> blocks with the sem engine, and <code><a href="reference/extract_mediation.html">extract_mediation()</a></code> on the fit returns <code>TwoLevelMediationData</code>; <code>fit_mediation(engine = "sem", model = , cluster = )</code> returns the same object. <code>se_type = "sandwich"</code> gives cluster-robust standard errors. See the <a href="https://data-wise.github.io/medfit/articles/model-twolevel.html">model page</a>.</li>
+<li>
+<strong>Tests on native two-level fits (0.20.0, experimental):</strong> <code><a href="reference/mbco_sem.html">mbco_sem()</a></code> tests the indirect effect at one level, and <code><a href="reference/twolevel_equal_indirect.html">twolevel_equal_indirect()</a></code> tests that the within and between indirect effects are equal; a pair-sign twin certificate stops a worse local optimum from standing in the equality refit.</li>
+<li>
+<strong>Behavior change (0.20.0, experimental):</strong> the within-only rule for a two-level fit now reads the unrestricted (h1) ICC on both routes, so within-only results are rarer. See the <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</li>
+<li>
+<strong>Two-level parallel mediation (0.19.0, experimental):</strong> <code><a href="reference/extract_mediation.html">extract_mediation()</a></code> on a two-level <code>lavaan</code> fit with two or more mediators returns <code>TwoLevelParallelMediationData</code>, with per-mediator and total effects at each level, delta-method SEs and <code><a href="reference/twolevel_statistic.html">twolevel_statistic()</a></code> for the bootstrap. One-mediator results are unchanged. See the <a href="https://data-wise.github.io/medfit/articles/model-twolevel.html#several-parallel-mediators">model page</a>.</li>
 <li>
 <strong>The sem engine (0.18.0):</strong> <code>fit_mediation(engine = "sem")</code> names medfit’s own SEM fitter; <code>engine = "native"</code> still works, with identical results. <code><a href="reference/sem_control.html">sem_control()</a></code> collects its optimizer settings. See <a href="https://data-wise.github.io/medfit/articles/guide-engines.html">Which engine should I use?</a>.</li>
 <li>
@@ -359,14 +340,16 @@
 <p>Every release is listed in <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>; upgrading from CRAN 0.3.2? See <a href="https://data-wise.github.io/medfit/articles/guide-changes.html">What changed since CRAN 0.3.2</a>.</p>
 </details><details><summary><strong>Bounded FIML (0.16.0 and 0.17.0): settings and limits</strong>
 </summary><p>medfit 0.16.0 added explicit <code>fit_sem(missing = "fiml", fixed_x = FALSE)</code> for three-variable Gaussian random-X mediation, preserving listwise defaults. medfit 0.17.0 also fits one or two covariates, two parallel mediators (with zero, one or two covariates) and two-mediator serial models (the saturated graph or the pure chain, with up to two covariates; implemented and verified against lavaan, not calibrated for coverage). It is unavailable in 0.15.0 and earlier. Observed/model SEs and unstandardized effects and normal intervals are supported. The model requires continuous X, M and Y, a free or exactly zero direct path, independent Gaussian disturbances, free intercepts and ignorable missingness under that joint model. Native <code><a href="reference/fit_mediation.html">fit_mediation()</a></code> uses <code>engine_args</code> for the same opt-in. Extracted FIML objects refuse <code><a href="reference/quick.html">quick()</a></code>, <code><a href="reference/pm.html">pm()</a></code> and <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>; fit tests, profiles and MBCO remain unavailable. Source-fit retained-row and Gaussian parameter-draw intervals (<code>bootstrap_mediation(source_fit = ...)</code>) are implemented but withheld: the call is refused until statistical admission is decided. <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> on the source SEMFit retains likelihood/IC fields. See the <a href="https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml">native guide</a> for settings and limits.</p>
-</details>
-</div>
-<div class="section level2">
-<h2 id="more-examples">More examples<a class="anchor" aria-label="anchor" href="#more-examples"></a>
-</h2>
-<details><summary><b>Cluster-randomized trial</b> (treatment assigned to schools, clinics)
+</details><details><summary><b>Already have fitted models?</b> (<code>lm</code>, <code>glm</code>, <code>lmer</code>, lavaan)
+</summary><p><code><a href="reference/extract_mediation.html">extract_mediation()</a></code> turns fitted models into the same objects (see <a href="https://data-wise.github.io/medfit/articles/extraction.html">Model Extraction</a>):</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">mediator1</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>, data <span class="op">=</span> <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="va">fit_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">outcome</span> <span class="op">~</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">mediator1</span> <span class="op">+</span> <span class="va">covariate1</span> <span class="op">+</span> <span class="va">covariate2</span>, data <span class="op">=</span> <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="va">med_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">fit_m</span>, model_y <span class="op">=</span> <span class="va">fit_y</span>, treatment <span class="op">=</span> <span class="st">"treatment"</span>, mediator <span class="op">=</span> <span class="st">"mediator1"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/nie.html">nie</a></span><span class="op">(</span><span class="va">med_data</span><span class="op">)</span></span></code></pre></div>
+</details><details><summary><b>Cluster-randomized trial</b> (treatment assigned to schools, clinics)
 </summary><p>When the treatment is assigned to whole clusters (such as schools), use the <code>lmer</code> engine (needs the suggested <code>lme4</code>; add <code>se_type = "kr"</code> with <code>pbkrtest</code> for few clusters):</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># 40 schools of 10 students, treatment assigned by school</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
 <span><span class="va">J</span> <span class="op">&lt;-</span> <span class="fl">40</span></span>
@@ -390,7 +373,7 @@
 <p>See <a href="https://data-wise.github.io/medfit/articles/methods.html">Methods and Formulas</a> for the estimand and the assumptions each effect needs.</p>
 </details><details><summary><b>Latent mediator</b> (sem engine)
 </summary><p>When the mediator is a construct measured by several indicators, write the model as syntax. The sem engine needs no other package:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># a latent mediator `eta` with three indicators, simulated</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">11</span><span class="op">)</span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">400</span></span>
@@ -420,12 +403,8 @@
 <span><span class="co">#&gt;</span></span>
 <span><span class="co">#&gt; data:  a * b = 0</span></span>
 <span><span class="co">#&gt; MBCO = 46.753, df = 1, p-value = 8.054e-12</span></span></code></pre>
-</details>
-</div>
-<div class="section level2">
-<h2 id="what-is-in-the-box">What is in the box<a class="anchor" aria-label="anchor" href="#what-is-in-the-box"></a>
-</h2>
-<table class="table">
+</details><details><summary><b>Classes and functions</b>
+</summary><table class="table">
 <colgroup>
 <col width="50%">
 <col width="50%">
@@ -534,12 +513,9 @@
 </tr>
 </tbody>
 </table>
-<p>Every function is on the <a href="https://data-wise.github.io/medfit/articles/refcard.html">Reference Card</a>.</p>
-</div>
-<div class="section level2">
-<h2 id="mediationverse-ecosystem">Mediationverse Ecosystem<a class="anchor" aria-label="anchor" href="#mediationverse-ecosystem"></a>
-</h2>
-<p>medfit is the foundation for the <strong>mediationverse</strong> ecosystem:</p>
+<p>Every function is on the <a href="https://data-wise.github.io/medfit/articles/refcard.html">Reference Card</a>. For the classes, see the <a href="https://data-wise.github.io/medfit/articles/introduction.html">Introduction</a>; for resampling, <a href="https://data-wise.github.io/medfit/articles/bootstrap.html">Bootstrap Inference</a>.</p>
+</details><details><summary><b>Mediationverse ecosystem and related packages</b>
+</summary><p>medfit is the foundation for the <strong>mediationverse</strong> ecosystem:</p>
 <table class="table">
 <colgroup>
 <col width="37%">
@@ -586,88 +562,21 @@
 </tbody>
 </table>
 <p>See <a href="https://github.com/Data-Wise/mediation-planning/blob/main/docs/ECOSYSTEM-COORDINATION.md" class="external-link">Ecosystem Coordination</a> for version compatibility and development guidelines.</p>
+<p>Also: <a href="https://data-wise.github.io/medfit/">Package documentation</a>, <a href="https://github.com/data-wise/medfit/blob/main/CLAUDE.md" class="external-link">Development Guide</a>, <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p>
+</details><hr>
 </div>
 <div class="section level2">
-<h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
+<h2 id="development-status">Development status<a class="anchor" aria-label="anchor" href="#development-status"></a>
 </h2>
-<table class="table">
-<colgroup>
-<col width="50%">
-<col width="50%">
-</colgroup>
-<thead><tr>
-<th>If you want to</th>
-<th>Read</th>
-</tr></thead>
-<tbody>
-<tr>
-<td>Run your first model</td>
-<td><a href="https://data-wise.github.io/medfit/articles/getting-started.html">Get Started</a></td>
-</tr>
-<tr>
-<td>Find the page for your model</td>
-<td><a href="https://data-wise.github.io/medfit/articles/models.html">Models</a></td>
-</tr>
-<tr>
-<td>Copy a short recipe</td>
-<td>
-<a href="https://data-wise.github.io/medfit/articles/cookbook.html">Cookbook</a> (twenty-four recipes)</td>
-</tr>
-<tr>
-<td>Look up a function or class</td>
-<td><a href="https://data-wise.github.io/medfit/articles/refcard.html">Reference Card</a></td>
-</tr>
-<tr>
-<td>Understand the classes</td>
-<td><a href="https://data-wise.github.io/medfit/articles/introduction.html">Introduction</a></td>
-</tr>
-<tr>
-<td>Extract from fitted models</td>
-<td><a href="https://data-wise.github.io/medfit/articles/extraction.html">Model Extraction</a></td>
-</tr>
-<tr>
-<td>Run a bootstrap</td>
-<td><a href="https://data-wise.github.io/medfit/articles/bootstrap.html">Bootstrap Inference</a></td>
-</tr>
-<tr>
-<td>Check the math</td>
-<td><a href="https://data-wise.github.io/medfit/articles/methods.html">Methods and Formulas</a></td>
-</tr>
-<tr>
-<td>Upgrade from CRAN 0.3.2</td>
-<td><a href="https://data-wise.github.io/medfit/articles/guide-changes.html">What changed since CRAN 0.3.2</a></td>
-</tr>
-<tr>
-<td>Fix an error or warning</td>
-<td><a href="https://data-wise.github.io/medfit/articles/guide-troubleshooting.html">Troubleshooting</a></td>
-</tr>
-<tr>
-<td>Choose an engine</td>
-<td><a href="https://data-wise.github.io/medfit/articles/guide-engines.html">Which engine should I use?</a></td>
-</tr>
-<tr>
-<td>Choose an interval</td>
-<td><a href="https://data-wise.github.io/medfit/articles/guide-intervals.html">Which interval should I use?</a></td>
-</tr>
-<tr>
-<td>Look up a term or symbol</td>
-<td><a href="https://data-wise.github.io/medfit/articles/guide-glossary.html">Glossary and symbols</a></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section level2">
-<h2 id="development-status">Development Status<a class="anchor" aria-label="anchor" href="#development-status"></a>
-</h2>
-<p>medfit is on CRAN. Current development adds mediation structures and inference on the <code>dev</code> branch; see <code>NEWS.md</code> for what each release contains.</p>
+<p>CRAN has an older release (0.3.2), and this site documents the GitHub build (see the callout under Install). Current development adds mediation structures and inference on the <code>dev</code> branch; see <code>NEWS.md</code> for what each release contains.</p>
 <div class="section level3">
-<h3 id="code-quality">Code Quality<a class="anchor" aria-label="anchor" href="#code-quality"></a>
+<h3 id="code-quality">Code quality<a class="anchor" aria-label="anchor" href="#code-quality"></a>
 </h3>
 <ul>
 <li>
 <strong>Defensive Programming</strong>: checkmate for input validation, S7 validators for class integrity</li>
 <li>
-<strong>Testing</strong>: 2,200+ <code>test_that()</code> blocks (&gt;90% coverage, enforced via codecov)</li>
+<strong>Testing</strong>: 2,600+ <code>test_that()</code> blocks (&gt;90% coverage, enforced via codecov)</li>
 <li>
 <strong>CI/CD</strong>: R CMD check, lintr, coverage reporting via GitHub Actions</li>
 </ul>
@@ -701,19 +610,9 @@
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
 <p>If you use medfit in your research, please cite:</p>
-<pre><code>Tofighi, D. (2026). medfit: Infrastructure for mediation analysis in R.
-R package version 0.19.0. https://data-wise.github.io/medfit/</code></pre>
-<p>For the entry matching your installed version, run <code>citation("medfit")</code>.</p>
-</div>
-<div class="section level2">
-<h2 id="related-resources">Related Resources<a class="anchor" aria-label="anchor" href="#related-resources"></a>
-</h2>
-<ul>
-<li><a href="https://data-wise.github.io/medfit/">Package Documentation</a></li>
-<li><a href="https://github.com/data-wise/medfit/blob/main/CLAUDE.md" class="external-link">Development Guide</a></li>
-<li><a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a></li>
-<li><a href="https://github.com/Data-Wise/mediation-planning/blob/main/docs/ECOSYSTEM-COORDINATION.md" class="external-link">Ecosystem Strategy</a></li>
-</ul>
+<pre><code>Tofighi, D. (2026). medfit: Infrastructure for Mediation Model Fitting and Extraction.
+R package version x.y.z. https://data-wise.github.io/medfit/</code></pre>
+<p>Replace <code>x.y.z</code> with your installed version, or run <code>citation("medfit")</code> for the exact entry.</p>
 </div>
 <div class="section level2">
 <h2 id="contact">Contact<a class="anchor" aria-label="anchor" href="#contact"></a>

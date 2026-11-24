@@ -74,7 +74,9 @@ TwoLevelParallelMediationData(
 - icc:
 
   Named numeric vector: intraclass correlation of the treatment, each
-  mediator and the outcome.
+  mediator and the outcome. It is the unrestricted (h1) estimate, as for
+  [TwoLevelMediationData](https://data-wise.github.io/medfit/reference/TwoLevelMediationData.md);
+  the within-only rule reads it.
 
 - between_identified:
 
@@ -118,7 +120,8 @@ TwoLevelParallelMediationData(
 
 - source_package:
 
-  Character scalar: `"lavaan"`.
+  Character scalar: `"lavaan"`, or `"medfit"` for a native two-level
+  fit.
 
 - source_version:
 

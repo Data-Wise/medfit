@@ -81,7 +81,7 @@ all.equal(decompose(fit_rm), decompose(fit))
 
     [1] TRUE
 
-## The native engine
+## The sem engine
 
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 reads the product as `treatment:mediator1` (the colon, no spaces) and

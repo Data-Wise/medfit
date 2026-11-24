@@ -6,6 +6,15 @@ models and effects exist. The estimator decides what is minimized. The
 optimizer only searches for the minimum. The formulas are in [Methods
 and Formulas](https://data-wise.github.io/medfit/articles/methods.md).
 
+> **At a glance**
+>
+> **Use this when:** you are choosing between the `glm`, `regmedint`,
+> `lmer` and `sem` engines, or want to know what an estimator and an
+> optimizer are.  
+> **You get:** a table of the engines with the page for each, and the
+> meaning of estimator and optimizer.  
+> **Reading time:** 3 min
+
 ## Engine
 
 An engine is the fitter: it decides which models can be written and
@@ -124,6 +133,9 @@ use?](https://data-wise.github.io/medfit/articles/guide-intervals.md).
 `compare_lr(engine = )` uses the word in another sense: there it names
 the outside program, lavaan or OpenMx, that refits the model for the
 comparison. It is not a fitter of the mediation model.
+
+**Next:** Open the page for your model:
+[Models](https://data-wise.github.io/medfit/articles/models.md)
 
 ## Related
 

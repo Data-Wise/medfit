@@ -2,10 +2,16 @@
 
 > **Note**
 >
-> This site documents medfit 0.19.0. CRAN has 0.3.2, which lacks
+> This site documents medfit 0.20.0. CRAN has 0.3.2, which lacks
 > `mediation_demo` and the native, joint and cluster functions; install
 > from GitHub or r-universe (see the [home
 > page](https://data-wise.github.io/medfit/#install)).
+
+> **At a glance**
+>
+> **Use this when:** you are new to medfit and want one model fitted end
+> to end.  
+> **Reading time:** 3 min
 
 **Four steps.** By the end you will have fitted a mediation model, read
 its effects, and added an interval.
@@ -255,6 +261,9 @@ The engine is `"glm"` by default. Others:
 | `"regmedint"` | you want the closed-form regression estimator | [regmedint](https://data-wise.github.io/medfit/articles/model-regmedint.md) |
 | `"lmer"` | the treatment is assigned to whole clusters | [Cluster-randomized trials](https://data-wise.github.io/medfit/articles/model-cluster.md) |
 | `"sem"` (alias `"native"`) | a latent mediator, constraints, or a model written as syntax | [The sem engine](https://data-wise.github.io/medfit/articles/model-sem.md) |
+
+**Next:** Pick your model:
+[Models](https://data-wise.github.io/medfit/articles/models.md)
 
 ## Where next
 

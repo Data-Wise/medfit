@@ -12,7 +12,7 @@ collection.
 
 **Experimental.** The two-level API (`TwoLevelMediationData`,
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
-on two-level fits, `nie(level = )`,
+on two-level fits, `fit_sem(cluster = )`, `nie(level = )`,
 [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md))
 may change in a later release without the usual deprecation period.
 
@@ -21,9 +21,9 @@ may change in a later release without the usual deprecation period.
 | **Structure** | X, M and Y on level-1 units, with a within part and a between (cluster) part each (a “1-1-1” design) |
 | **Class returned** | `TwoLevelMediationData` |
 | **Indirect effect** | \\a_w b_w\\ at the within level and \\a_b b_b\\ at the between level; their difference is a descriptive contrast |
-| **Route** | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a two-level `lavaan` fit (`level:` blocks, `cluster =`) |
-| **Needs** | `lavaan` (Suggests) |
-| **Availability** | version 0.17.0 (**experimental**) |
+| **Route** | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a two-level `lavaan` fit (`level:` blocks, `cluster =`), or on a two-level fit from medfit’s sem engine, `fit_sem(model, data, cluster = )` ([The sem engine route](#the-sem-engine-route)) |
+| **Needs** | `lavaan` (Suggests) for the lavaan route; nothing extra for the sem engine |
+| **Availability** | lavaan route: version 0.17.0; sem engine route: version 0.20.0 (both **experimental**) |
 
 If the treatment is assigned to whole clusters (a 2-1-1 design), use the
 [cluster-randomized
@@ -360,6 +360,41 @@ keeps the between results and warns with class
 0.01 and 0.05, are judgments, not published cutoffs; they are the
 options `medfit.between_icc_error` and `medfit.between_icc_warn`.
 
+### Which ICC the rule reads
+
+The rule reads the unrestricted (h1) ICC: the between variance over the
+total in the saturated two-level model, which `@icc` stores. On the
+lavaan route it is `lavaan::lavInspect(fit, "icc")`, with a between-only
+variable counted as 1; on the native route medfit estimates the same
+saturated moments by an EM algorithm on the per-size cluster summaries.
+It is not the ratio the fitted model implies. A fit whose model-implied
+level-2 variance is negative used to have that ratio clamped to 0 and so
+came out within-only; its h1 ICC is usually above 0.01, so such a fit is
+now weak or identified (`admissible` still reports the negative
+variance). Within-only is therefore rarer than in earlier development
+builds.
+
+Two conditions cover the cases where the h1 ICC is missing or not
+settled. A lavaan fit without an h1 estimate (`h1 = FALSE`), or a native
+fit whose summaries cannot give one, uses the model-implied ICC and
+warns with class `medfit_warning_twolevel_icc_h1_unavailable`. A native
+EM that does not converge keeps its last iterate and warns with class
+`medfit_warning_twolevel_icc_h1_unconverged`.
+
+The two routes agree on the ICC to about 3e-5 when lavaan’s h1 EM is run
+to convergence, but lavaan’s default h1 EM stops early. When an ICC sits
+near 0.01 or 0.05 the routes can then fall on opposite sides of a cut:
+in about 1 of 50 boundary-heavy simulated datasets we checked, the
+within-only or weak call differed between the lavaan route and the
+native route. When an ICC is near a cut, tighten the EM in the lavaan
+fit with `em.h1.args = list(tol = 1e-10, max_iter = 100000L)` (lavaan
+0.7; lavaan 0.6 takes `em.h1.tol = 1e-10` and
+`em.h1.iter.max = 100000`), an argument of
+[`lavaan::lavaan()`](https://rdrr.io/pkg/lavaan/man/lavaan.html) and
+[`lavaan::sem()`](https://rdrr.io/pkg/lavaan/man/sem.html). The
+tolerance alone can stop at the default iteration cap and leave the ICC
+off the converged value.
+
 ## Paths equated across levels
 
 If you give the same label to a path at both levels (`M ~ a*X` in both
@@ -463,14 +498,53 @@ suppressWarnings(nie(td_eq2, level = "contrast"))
 
 ## Few clusters
 
-The adapter warns, and never errors, when the fit has fewer than 50
-clusters (class `medfit_warning_twolevel_few_clusters`). The 50 is a
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+warns, and never errors, when the fit has fewer than 50 clusters (class
+`medfit_warning_twolevel_few_clusters`), on both routes. The 50 is a
 judgment: no source gives a cluster count below which two-level
-estimates or between-level standard errors are trustworthy. In medfit’s
-development simulations with 20 clusters, lavaan’s admissibility check
-failed in a noticeable share of fits and the between indirect effect’s
-intervals covered below the nominal level. The threshold is editable
-with `options(medfit.twolevel_min_clusters = )`.
+estimates or between-level standard errors are trustworthy. The
+threshold is editable with `options(medfit.twolevel_min_clusters = )`.
+
+With few clusters the between-level results are unreliable, and the
+within-level results are less affected. Treat the warning, and
+`medfit_warning_between_weak` (an ICC below 0.05), as the signal that
+the between interval may be missing, wide or too narrow; the
+[troubleshooting
+guide](https://data-wise.github.io/medfit/articles/guide-troubleshooting.md)
+lists both.
+
+The guidance below comes from a simulation study of the lavaan two-level
+adapter, fitted with delta-method and Monte Carlo intervals and the
+settings medfit ships. It did not run the cluster bootstrap beyond a
+small pilot, so it says nothing about how well that bootstrap performs
+with few clusters. A fit counts as a failure when lavaan errors, does
+not converge or the adapter errors. The study used 5 or 20 units per
+cluster and 10 to 100 clusters, and ran before the within-only rule
+moved to the unrestricted ICC.
+
+- **Equal cluster sizes** failed in at most .18 of fits at any number of
+  clusters in the grid. With 5 units per cluster and an ICC of 0.05 the
+  rate stayed above .05 at every number of clusters tried (.097 at 50,
+  .059 at 100).
+- **Unequal cluster sizes** failed far more often, most of all with 5
+  units per cluster and an ICC of 0.05: .93 of fits at 10 clusters, .31
+  at 50 and .06 at 100. Failure first fell below .20 for every ICC
+  studied only at 100 clusters, the largest number tried. Unequal
+  clusters of 5 units therefore fail often even with 50 clusters when
+  the ICC is low.
+- **The within indirect effect** covered near the nominal level in the
+  fits that returned an interval (median .94 to .95 at every number of
+  clusters tried). Its overall coverage fell short because failed fits
+  return no interval.
+- **The between indirect effect** is the weak spot. With an ICC of 0.05
+  and 100 clusters its coverage was about .81 (median over the cells),
+  because the between interval was available in only about .69 of fits:
+  the rest were within-only, failed or inadmissible. More clusters did
+  not remove that.
+
+These are simulation results for a few designs, not guarantees. With
+fewer than about 50 clusters, and especially with unequal sizes, report
+the between-level results as exploratory.
 
 ## Standard errors under `fixed.x = TRUE`
 
@@ -483,6 +557,194 @@ the unconditional ones. medfit reads the standard errors lavaan reports
 and does not adjust them;
 [`summary()`](https://rdrr.io/r/base/summary.html) prints a note when
 `fixed_x` is `TRUE`.
+
+## The sem engine route
+
+medfit’s own maximum-likelihood SEM engine (the sem engine) fits the
+same model from the same `level:` syntax, without lavaan: give
+[`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+the cluster column. This route is experimental, and new in the
+development version. `level: 1` and `level: within` name the within
+block; `level: 2`, `level: between` and the cluster column’s name name
+the between block.
+
+``` r
+nfit <- fit_sem(model, data = d, cluster = "id")
+ntd <- extract_mediation(nfit, treatment = "X", mediator = "M", outcome = "Y")
+ntd
+```
+
+    <TwoLevelMediationData>
+      X -> M -> Y  (clusters: id; native 0.20.0 fit; between level: latent cluster means)
+      n = 500 in 100 clusters (sizes 5 to 5)   |   ICC: X 0.503, M 0.323, Y 0.400
+      a_within = +0.4432   b_within = +0.5518   c_prime_within = +0.2685
+      a_between = +0.5595   b_between = +0.9553   c_prime_between = +0.2289
+      NIE within  (a_within * b_within)   = +0.2446
+      NIE between (a_between * b_between) = +0.5344
+      Contrast (within - between)         = -0.2899  (descriptive, not a test)
+
+``` r
+ntd@source
+```
+
+    [1] "native"
+
+[`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+returns the same `TwoLevelMediationData` as the lavaan route, with
+`@source` set to `"native"`, so
+[`nie()`](https://data-wise.github.io/medfit/reference/nie.md),
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html),
+[`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md)
+and the bootstrap work on it unchanged. The engine fits every exogenous
+variable’s moments (the `fixed.x = FALSE` setting; an explicit
+`fixed_x = TRUE` is refused) and uses the observed information. It
+matches lavaan fitted with
+`fixed.x = FALSE, information = "observed", h1.information = "structured"`:
+
+``` r
+lfit <- lavaan::sem(model, data = d, cluster = "id", fixed.x = FALSE, information = "observed",
+                    h1.information = "structured")
+ltd <- extract_mediation(lfit, treatment = "X", mediator = "M", outcome = "Y")
+cbind(native = coef(ntd), lavaan = coef(ltd))
+```
+
+                       native    lavaan
+    a_within        0.4432190 0.4432169
+    b_within        0.5517596 0.5517596
+    c_prime_within  0.2684745 0.2684742
+    a_between       0.5594504 0.5594438
+    b_between       0.9552588 0.9552714
+    c_prime_between 0.2289369 0.2289345
+
+``` r
+cbind(native = sqrt(diag(ntd@vcov)), lavaan = sqrt(diag(ltd@vcov)))
+```
+
+                        native     lavaan
+    a_within        0.04954385 0.04954396
+    b_within        0.05063172 0.05063169
+    c_prime_within  0.05496003 0.05496000
+    a_between       0.07326930 0.07326872
+    b_between       0.19402040 0.19402385
+    c_prime_between 0.13375489 0.13375574
+
+The standard errors agree as well. The between-path standard errors of
+the default lavaan fit in [Fit it and extract
+it](#fit-it-and-extract-it) are slightly different, because that fit
+uses `fixed.x = TRUE` ([Standard errors under
+`fixed.x = TRUE`](#standard-errors-under-fixed-x-true)).
+
+[`glance()`](https://generics.r-lib.org/reference/glance.html) on the
+fit reports the cluster count and the range of cluster sizes, counted
+after incomplete rows are dropped. The chi-square test and its p-value
+are `NA`, with a note, because the engine fits no saturated two-level
+model; `df` and the log likelihood (of both levels together) are
+reported.
+
+``` r
+glance(nfit)[, c("nobs", "n_clusters", "cluster_size_min", "cluster_size_max", "df", "logLik", "chisq")]
+```
+
+    # A tibble: 1 × 7
+       nobs n_clusters cluster_size_min cluster_size_max    df logLik chisq
+      <int>      <int>            <int>            <int> <int>  <dbl> <dbl>
+    1   500        100                5                5     0 -2287.    NA
+
+Level-2 variances are fitted without a floor, so a between-level
+variance can come out negative, most often with few or small clusters.
+The engine then stops with class `medfit_error_twolevel_inadmissible`
+rather than return the solution; the condition carries the fit (`fit`)
+and the outcome ledger (`ledger`), whose `admissibility` entry gives the
+verdict and the reasons per level. The data below have 30 clusters of 3
+and a small between-level variance of the mediator and the outcome:
+
+``` r
+d_neg <- withr::with_seed(1, {
+  n_neg <- 30
+  cl <- sort(rep(seq_len(n_neg), 3))
+  xb <- rnorm(n_neg)
+  mb <- 0.5 * xb + rnorm(n_neg, sd = 0.3)
+  yb <- 0.3 * mb + 0.2 * xb
+  x <- xb[cl] + rnorm(length(cl))
+  m <- mb[cl] + 0.4 * x + rnorm(length(cl))
+  y <- yb[cl] + 0.3 * m + 0.2 * x + rnorm(length(cl), sd = 1.5)
+  data.frame(id = cl, X = x, M = m, Y = y)
+})
+
+err <- tryCatch(fit_sem(model, data = d_neg, cluster = "id"), error = function(e) e)
+class(err)[1]
+```
+
+    [1] "medfit_error_twolevel_inadmissible"
+
+``` r
+conditionMessage(err)
+```
+
+    [1] "the two-level solution is inadmissible: negative level-2 variance: M~~M.l2, Y~~Y.l2; the implied between covariance Sigma_B is not positive definite. Level-2 variances are fitted without a floor (experimental); the fit is kept in the condition (`fit`) as evidence"
+
+``` r
+err$ledger$admissibility$between$reasons
+```
+
+    [1] "negative level-2 variance: M~~M.l2, Y~~Y.l2"
+    [2] "the implied between covariance Sigma_B is not positive definite"
+
+The lavaan route on the same data returns the estimates with the warning
+`medfit_warning_twolevel_inadmissible` instead. The sem engine route
+refuses latent variables, product terms, `weights`, `missing = "fiml"`,
+nonlinear constraints, `fixed_x = TRUE`, `meanstructure = FALSE`,
+`information = "expected"` and a variable named only in `level: 1` rows,
+each with a classed error whose name starts `medfit_error_twolevel_`;
+the full table of messages is in the “Two-level models” section of
+[`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md).
+A labeled path, a linear equality across levels and a variable named
+only in `level: 2` rows (constant within each cluster) are accepted.
+
+### Cluster-robust standard errors
+
+`se_type = "sandwich"` on a two-level fit gives cluster-robust standard
+errors: the sandwich \\A^{-1} B A^{-1}\\ with the observed information
+as \\A\\ and \\B = \sum_j s_j s_j'\\ summed over the per-cluster scores
+\\s_j\\, with no small-sample factor (CR0). Under an active linear
+constraint, such as a path equated across levels, the sandwich is
+projected onto the constraint, as in a single-level fit. The estimates
+are the same as with the default `se_type = "model"`; only the
+covariance changes. It matches lavaan’s `se = "robust.huber.white"` for
+the same model:
+
+``` r
+nfit_r <- fit_sem(model, data = d, cluster = "id", se_type = "sandwich")
+ntd_r <- extract_mediation(nfit_r, treatment = "X", mediator = "M", outcome = "Y")
+```
+
+``` r
+lfit_r <- lavaan::sem(model, data = d, cluster = "id", fixed.x = FALSE, information = "observed",
+                      h1.information = "structured", se = "robust.huber.white")
+ltd_r <- extract_mediation(lfit_r, treatment = "X", mediator = "M", outcome = "Y")
+cbind(model = sqrt(diag(ntd@vcov)), sandwich = sqrt(diag(ntd_r@vcov)), lavaan = sqrt(diag(ltd_r@vcov)))
+```
+
+                         model   sandwich     lavaan
+    a_within        0.04954385 0.04901290 0.04901297
+    b_within        0.05063172 0.05359923 0.05359928
+    c_prime_within  0.05496003 0.05498679 0.05498685
+    a_between       0.07326930 0.07204548 0.07204560
+    b_between       0.19402040 0.20326265 0.20326800
+    c_prime_between 0.13375489 0.13829954 0.13830160
+
+[`print()`](https://rdrr.io/r/base/print.html) and
+[`summary()`](https://rdrr.io/r/base/summary.html) of the fit name the
+standard errors as cluster-robust with the number of clusters, and
+[`glance()`](https://generics.r-lib.org/reference/glance.html) reports
+`se_type`. The intervals of
+[`confint()`](https://rdrr.io/r/stats/confint.html) and
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) use the
+normal reference, and the few-clusters warning still applies: the
+cluster sandwich is biased downward with few clusters, and medfit adds
+no small-sample correction. Sampling `weights`, product terms, nonlinear
+constraints and `information = "expected"` stay refused with
+`se_type = "sandwich"` as with the default.
 
 ## Bootstrap
 
@@ -813,6 +1075,125 @@ stops with class `medfit_error_twolevel_level`; an unknown effect or a
 missing or unknown `specific` stops with class
 `medfit_error_twolevel_unsupported`.
 
+### Testing the indirect effect at one level
+
+[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+tests the indirect effect at one level of a sem engine fit. It needs
+labeled paths, so the model below labels them at each level. Each null
+refits the model with one path set to 0, on both levels and with the
+same clusters; the statistic is the smaller of the likelihood ratios,
+referred to chi-square(1) ([Methods and
+Formulas](https://data-wise.github.io/medfit/articles/methods.md)). The
+result adds `level` and `n_clusters`.
+
+``` r
+model_lab <- "
+  level: 1
+    M ~ a_w*X
+    Y ~ b_w*M + X
+  level: 2
+    M ~ a_b*X
+    Y ~ b_b*M + X
+"
+nfit_lab <- fit_sem(model_lab, data = d, cluster = "id")
+mbco_between <- mbco_sem(nfit_lab, "a_b", "b_b")
+mbco_between
+```
+
+
+        Minimum-of-two likelihood-ratio tests (MBCO) for an indirect effect
+
+    data:  a_b * b_b = 0
+    MBCO = 19.729, df = 1, p-value = 8.924e-06
+
+``` r
+mbco_between$level
+```
+
+    [1] "between"
+
+``` r
+mbco_between$n_clusters
+```
+
+    [1] 100
+
+`mbco_sem(nfit_lab, "a_w", "b_w")` tests the within indirect effect the
+same way. On these data the refit with `b_w == 0` gives the outcome a
+negative level-2 variance, so that null solution is inadmissible: the
+result is unresolved (statistic `NA`), with a warning of class
+`medfit_warning_twolevel_inadmissible` that names the refit, and
+`$tests` shows which null failed. The statistic is not taken from the
+other null alone:
+
+``` r
+mbco_within <- mbco_sem(nfit_lab, "a_w", "b_w")
+```
+
+    Warning: the refit with `b_w == 0` converged to an inadmissible solution (negative level-2 variance: Y~~Y.l2; the implied between covariance Sigma_B is not positive definite).
+    The MBCO statistic is not available (NA); `$tests` lists each refit.
+
+``` r
+mbco_within$unresolved
+```
+
+    [1] TRUE
+
+``` r
+mbco_within$tests[, c("constraint", "converged")]
+```
+
+      constraint converged
+    1   a_w == 0      TRUE
+    2   b_w == 0     FALSE
+
+The test is conservative when both paths are zero, and it is not a test
+of the between-minus-within contrast, which stays descriptive ([The
+contrast is descriptive](#the-contrast-is-descriptive)). Paths from
+different levels (`mbco_sem(fit, "a_w", "b_b")`) stop with class
+`medfit_error_twolevel_unsupported`. A null refit with an inadmissible
+solution gives statistic `NA` with the warning
+`medfit_warning_twolevel_inadmissible`; one that does not converge gives
+statistic `NA` with a warning. A warning also flags a level-2 variance
+below 0.01 of its implied between plus within variance at a refit, where
+chi-square(1) may not hold.
+[`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md)
+is not available for a two-level fit yet. A test that the two levels’
+indirect effects are equal is a separate function,
+`twolevel_equal_indirect(fit)`: the likelihood ratio of the free fit
+against the fit with `a_w*b_w == a_b*b_b`, referred to chi-square(1)
+(singular where all four paths are 0, and asymptotic in the number of
+clusters; `n_boot` gives a parametric bootstrap p-value for few
+clusters; replications whose refit is not admissible are dropped and
+counted in `boot$n_dropped`, so that p-value is conditional on
+admissible refits). The constrained surface has sign twins (flipping the
+signs of the within pair, the between pair or both keeps the equality),
+which are worse optima of the same constraint: the optimizer’s
+starts-disagree warning is not raised when every disagreeing start is
+such a twin, and the best start is kept. The twins of the kept fit are
+also tried from its estimates (a twin certificate): up to three
+single-start local solves at every `n_starts`, a twin refit that fails
+is skipped, and the result is not a proof of a global optimum. A worse
+twin is therefore not kept with `n_starts = 1`; a twin that ends
+inadmissible below the kept fit (a level-2 variance on its boundary) or
+with a covariance that is not positive definite makes the result
+unresolved, as it does with more starts. The row allows eight sign
+patterns; the certificate flips pairs together and reaches the four of
+the kept fit’s orbit. The other orbit does hold local optima (30 of 35
+small cells, closest gap 0.02 LR), and the kept orbit still won every
+time tested (evidence, not a proof). The result’s `twin` element records
+what the certificate did (`tried`, `replaced`, `flipped`, `f_gain`,
+`unresolved`); `flipped` is read from the signs of the adopted fit
+against the kept fit’s: `"within"` or `"between"` when both paths of
+that pair changed sign, `"other"` once for any other sign change
+(including a path that reaches or leaves zero), and empty when no sign
+changed. It costs about 3 to 4 times the time at `n_starts = 1`, about
+twice at the default and about 1.3 times at 30 starts; `n_boot` p-values
+for a given `seed` can differ from 0.19.0. A constrained fit that is
+inadmissible, not positive definite or not converged gives an unresolved
+result (statistic `NA`) with a warning, never a number. The descriptive
+contrast carries no p-value.
+
 ## Limits
 
 - **One mediator or several parallel ones, linear paths, observed
@@ -828,6 +1209,9 @@ missing or unknown `specific` stops with class
 - **No product terms.** A `:` term in a regression, or `interaction =`,
   stops extraction with class `medfit_error_twolevel_product`.
 - **No random slopes.** See the estimand above.
+- **The sem engine route has its own refusals** (latent variables,
+  products, weights, FIML and more); see [The sem engine
+  route](#the-sem-engine-route).
 - **Three-level and multigroup fits are refused**, with classes
   `medfit_error_lavaan_multilevel` and `medfit_error_lavaan_multigroup`.
 - **The treatment and the mediator must be in the model at both
@@ -859,9 +1243,12 @@ class (see
 |----|----|----|
 | `medfit_between_unidentified` | warning (error from [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md)) | the between level is not identified: the result is within-only. Also from a between accessor on a within-only object; [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md) stops with this class for a between effect or the contrast |
 | `medfit_warning_between_weak` | warning | the ICC of the treatment or of a mediator is in \[0.01, 0.05) |
+| `medfit_warning_twolevel_icc_h1_unavailable` | warning | no h1 ICC (a lavaan fit with `h1 = FALSE`, or native summaries too thin or collinear): the model-implied ICC is used for the within-only rule |
+| `medfit_warning_twolevel_icc_h1_unconverged` | warning | native route: the EM for the h1 ICC did not converge; its last iterate is used |
 | `medfit_warning_twolevel_constrained` | warning | the contrast is `NA` because both a and b are equated across levels (with several mediators, those of that mediator, or of every mediator for the total) |
 | `medfit_warning_twolevel_inadmissible` | warning | lavaan’s `post.check` is `FALSE` (for example a negative variance) |
 | `medfit_warning_twolevel_few_clusters` | warning | fewer than 50 clusters |
+| `medfit_error_twolevel_inadmissible` | error | sem engine route only: a negative level-2 variance or a non-positive-definite implied covariance at either level. Level-2 variances are fitted without a floor; the condition carries the fit (`fit`) and the ledger (`ledger`). Its message is shown in [The sem engine route](#the-sem-engine-route) |
 | `medfit_warning_twolevel_labels_ignored` | warning | `a_label`, `b_label` or `cp_label` was set: the paths are read by variable names and level, not by label |
 | `medfit_error_twolevel_standardized` | error | `standardized = TRUE` |
 | `medfit_error_twolevel_product` | error | a product term or `interaction =` |

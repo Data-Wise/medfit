@@ -19,9 +19,9 @@
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet">
-<link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet">
-<link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.5.0/font.css" rel="stylesheet">
+<link href="../deps/Fira_Code-0.5.0/font.css" rel="stylesheet">
+<link href="../deps/Montserrat-0.5.0/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="model-twolevel_files/libs/quarto-html/popper.min.js"></script><script src="model-twolevel_files/libs/quarto-html/tippy.umd.min.js"></script><link href="model-twolevel_files/libs/quarto-html/tippy.css" rel="stylesheet">
@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.19.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.20.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -47,7 +47,15 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../index.html" aria-label="Home"><span class="fa fas fa-home fa-lg"></span></a></li>
-<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-start" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Start</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-start">
+<li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
+    <li><a class="dropdown-item" href="../index.html#start-here-in-60-seconds">The 60-second example</a></li>
+    <li><a class="dropdown-item" href="../index.html#install">Install</a></li>
+    <li><a class="dropdown-item" href="../articles/models.html">Which model?</a></li>
+  </ul>
+</li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-models">
@@ -78,80 +86,69 @@
   </ul>
 </li>
 <li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook">
+<li><a class="dropdown-item" href="../articles/cookbook.html">All 24 recipes</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Recipes by task</h6></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#one-line-mediation">Basics: one line, lm fits, binary outcome, weights (1-4)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#two-mediators-in-a-chain">Several mediators and interactions (5-8)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">Clusters, two-level and lavaan (9, 10, 23, 24)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">The sem engine: latent, constraints, checks, four-way (11, 12, 14-21)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">Inference and missing data (13, 22)</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-guides" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Guides</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-guides">
-<li><a class="dropdown-item" href="../articles/guide-changes.html">What changed since CRAN 0.3.2</a></li>
-    <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
+<li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">When something fails</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Choose</h6></li>
     <li><a class="dropdown-item" href="../articles/guide-engines.html">Which engine should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Upgrade and learn</h6></li>
+    <li><a class="dropdown-item" href="../articles/guide-changes.html">Upgrading: what changed since CRAN 0.3.2</a></li>
     <li><a class="dropdown-item" href="../articles/guide-twolevel-tutorial.html">Two-level workflow, step by step</a></li>
-    <li><a class="dropdown-item" href="../articles/guide-architecture.html">How medfit is organized</a></li>
-    <li><a class="dropdown-item" href="../articles/sem-defaults-0-15.html">Native defaults in 0.15.0</a></li>
     <li><a class="dropdown-item" href="../articles/sem-quickstart.html">The sem engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/sem-tutorial.html">The sem engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/sem-guide.html">The sem engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Compare</h6></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the sem engine</a></li>
     <li><a class="dropdown-item" href="../articles/probmed-comparison.html">probmed and medfit</a></li>
     <li><a class="dropdown-item" href="../articles/rmediation-comparison.html">RMediation and medfit</a></li>
     <li><a class="dropdown-item" href="../articles/syntax-crosswalk.html">One model in medfit, lavaan, OpenMx and semopy</a></li>
-    <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook">
-<li><a class="dropdown-item" href="../articles/cookbook.html">All recipes</a></li>
-    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#one-line-mediation">1. One-line mediation</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#i-already-have-lm-fits">2. I already have lm fits</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#binary-outcome">3. Binary outcome</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#weights-and-robust-standard-errors">4. Weights and robust SEs</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#two-mediators-in-a-chain">5. Two mediators in a chain</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#two-mediators-side-by-side">6. Two mediators side by side</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#treatment-by-mediator-interaction">7. Treatment-by-mediator interaction</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#many-mediators-with-products">8. Many mediators with products</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#compare-two-native-models">14. Compare two native models</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#a-categorical-covariate-in-a-native-fit">21. Categorical covariate (native)</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#missing-data-bounded-fiml">22. Missing data: bounded FIML</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#a-two-level-lavaan-fit-within-and-between">23. Two-level lavaan fit (1-1-1)</a></li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
-    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Quick Reference</h6></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-reference" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Reference</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-reference">
+<li><a class="dropdown-item" href="../reference/index.html">Functions</a></li>
     <li><a class="dropdown-item" href="../articles/refcard.html">Reference Card</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html">Cookbook</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-learn-more" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Learn more</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-learn-more">
+<li><a class="dropdown-item" href="../articles/index.html">All articles</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Detailed Guides</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>How medfit works</h6></li>
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
-    <li><a class="dropdown-item" href="../articles/extraction.html">Model Extraction</a></li>
-    <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap Inference</a></li>
-    <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
+    <li><a class="dropdown-item" href="../articles/extraction.html">Model extraction</a></li>
+    <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap inference</a></li>
+    <li><a class="dropdown-item" href="../articles/methods.html">Methods and formulas</a></li>
     <li><a class="dropdown-item" href="../articles/computation-algorithms.html">Computation algorithms</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-architecture.html">How medfit is organized</a></li>
+    <li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Release history</h6></li>
     <li><a class="dropdown-item" href="../articles/whats-new-0-11.html">What's new in 0.11</a></li>
     <li><a class="dropdown-item" href="../articles/sem-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
-    <li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-project" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Project</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-project">
-<li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Project</h6></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
     <li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/roadmap.html">Development Roadmap</a></li>
@@ -178,7 +175,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/dev/vignettes/articles/model-twolevel.qmd" class="external-link"><code>vignettes/articles/model-twolevel.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/model-twolevel.qmd" class="external-link"><code>vignettes/articles/model-twolevel.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -191,13 +188,8 @@
 <a href="models.html">Models</a> › Clusters and latent variables › Two-level mediation (1-1-1)
 </p>
 <p>Treatment, mediator and outcome are all measured on the same level-1 units (students, patients, days) nested in clusters (schools, clinics, people), and you want the indirect effect at the within level and at the between level. Part of the <a href="models.html">Models</a> collection.</p>
-<p><strong>Experimental.</strong> The two-level API (<code>TwoLevelMediationData</code>, <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on two-level fits, <code>nie(level = )</code>, <code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code>) may change in a later release without the usual deprecation period.</p>
-<table class="table caption-top">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<tbody>
+<p><strong>Experimental.</strong> The two-level API (<code>TwoLevelMediationData</code>, <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on two-level fits, <code>fit_sem(cluster = )</code>, <code>nie(level = )</code>, <code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code>) may change in a later release without the usual deprecation period.</p>
+<table class="table caption-top"><tbody>
 <tr class="odd">
 <td><strong>Structure</strong></td>
 <td>X, M and Y on level-1 units, with a within part and a between (cluster) part each (a “1-1-1” design)</td>
@@ -214,19 +206,18 @@
 <tr class="even">
 <td><strong>Route</strong></td>
 <td>
-<code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on a two-level <code>lavaan</code> fit (<code>level:</code> blocks, <code>cluster =</code>)</td>
+<code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on a two-level <code>lavaan</code> fit (<code>level:</code> blocks, <code>cluster =</code>), or on a two-level fit from medfit’s sem engine, <code>fit_sem(model, data, cluster = )</code> (<a href="#the-sem-engine-route">The sem engine route</a>)</td>
 </tr>
 <tr class="odd">
 <td><strong>Needs</strong></td>
 <td>
-<code>lavaan</code> (Suggests)</td>
+<code>lavaan</code> (Suggests) for the lavaan route; nothing extra for the sem engine</td>
 </tr>
 <tr class="even">
 <td><strong>Availability</strong></td>
-<td>version 0.17.0 (<strong>experimental</strong>)</td>
+<td>lavaan route: version 0.17.0; sem engine route: version 0.20.0 (both <strong>experimental</strong>)</td>
 </tr>
-</tbody>
-</table>
+</tbody></table>
 <p>If the treatment is assigned to whole clusters (a 2-1-1 design), use the <a href="model-cluster.html">cluster-randomized page</a> instead. If you have a single-level fit that only sets <code>cluster =</code> for robust standard errors, nothing changes: it still extracts as a <code>MediationData</code>.</p>
 <section class="level2"><h2 id="what-is-estimated">What is estimated<a class="anchor" aria-label="anchor" href="#what-is-estimated"></a>
 </h2>
@@ -459,7 +450,12 @@ c_prime_between
 </div>
 </div>
 <p>A treatment ICC between 0.01 and 0.05 (or the same for the mediator) keeps the between results and warns with class <code>medfit_warning_between_weak</code>: they may be imprecise. These thresholds, 0.01 and 0.05, are judgments, not published cutoffs; they are the options <code>medfit.between_icc_error</code> and <code>medfit.between_icc_warn</code>.</p>
-</section><section class="level2"><h2 id="paths-equated-across-levels">Paths equated across levels<a class="anchor" aria-label="anchor" href="#paths-equated-across-levels"></a>
+<section class="level3"><h3 id="which-icc-the-rule-reads">Which ICC the rule reads<a class="anchor" aria-label="anchor" href="#which-icc-the-rule-reads"></a>
+</h3>
+<p>The rule reads the unrestricted (h1) ICC: the between variance over the total in the saturated two-level model, which <code>@icc</code> stores. On the lavaan route it is <code>lavaan::lavInspect(fit, "icc")</code>, with a between-only variable counted as 1; on the native route medfit estimates the same saturated moments by an EM algorithm on the per-size cluster summaries. It is not the ratio the fitted model implies. A fit whose model-implied level-2 variance is negative used to have that ratio clamped to 0 and so came out within-only; its h1 ICC is usually above 0.01, so such a fit is now weak or identified (<code>admissible</code> still reports the negative variance). Within-only is therefore rarer than in earlier development builds.</p>
+<p>Two conditions cover the cases where the h1 ICC is missing or not settled. A lavaan fit without an h1 estimate (<code>h1 = FALSE</code>), or a native fit whose summaries cannot give one, uses the model-implied ICC and warns with class <code>medfit_warning_twolevel_icc_h1_unavailable</code>. A native EM that does not converge keeps its last iterate and warns with class <code>medfit_warning_twolevel_icc_h1_unconverged</code>.</p>
+<p>The two routes agree on the ICC to about 3e-5 when lavaan’s h1 EM is run to convergence, but lavaan’s default h1 EM stops early. When an ICC sits near 0.01 or 0.05 the routes can then fall on opposite sides of a cut: in about 1 of 50 boundary-heavy simulated datasets we checked, the within-only or weak call differed between the lavaan route and the native route. When an ICC is near a cut, tighten the EM in the lavaan fit with <code>em.h1.args = list(tol = 1e-10, max_iter = 100000L)</code> (lavaan 0.7; lavaan 0.6 takes <code>em.h1.tol = 1e-10</code> and <code>em.h1.iter.max = 100000</code>), an argument of <code><a href="https://rdrr.io/pkg/lavaan/man/lavaan.html" class="external-link">lavaan::lavaan()</a></code> and <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">lavaan::sem()</a></code>. The tolerance alone can stop at the default iteration cap and leave the ICC off the converged value.</p>
+</section></section><section class="level2"><h2 id="paths-equated-across-levels">Paths equated across levels<a class="anchor" aria-label="anchor" href="#paths-equated-across-levels"></a>
 </h2>
 <p>If you give the same label to a path at both levels (<code>M ~ a*X</code> in both blocks) or add <code>a == a2</code>, lavaan estimates one parameter for both. The object lists the equated paths in <code>cross_level_equal</code>. medfit finds an equated path three ways: a shared free parameter or label, an <code>==</code> row between the two labels, and a numeric check of the fit itself. The numeric check records a path as equated when the estimated difference of its two level estimates and the variance of that difference are both effectively zero: <span class="math inline">\(|\hat\theta_w - \hat\theta_b| \le 10^{-6} \max(1, |\hat\theta_w|, |\hat\theta_b|)\)</span> and <span class="math inline">\(\operatorname{Var}(\hat\theta_w - \hat\theta_b) \le 10^{-10} (V_{ww} + V_{bb})\)</span>. Those two defaults are the options <code>medfit.twolevel_equal_diff</code> and <code>medfit.twolevel_equal_var</code>. The check finds an algebraic equality that lavaan keeps as two parameters (for example <code>a^2 - a2^2 == 0</code>). A constant offset between the two levels (<code>a2 == a + 0.01</code>) is a constraint but not an equality, so it is not flagged unless it is smaller than the tolerance, where the paths are equal to that precision. It never uses the correlation of the two estimates: a correlation of <span class="math inline">\(-1\)</span>, or of <span class="math inline">\(+1\)</span> between proportional but unequal paths, does not mean the paths are equal, and the contrast would silently become <code>NA</code>.</p>
 <p>The contrast follows the equated paths. With <strong>only one</strong> of <code>a</code> or <code>b</code> equated, the contrast stays an estimate: with <code>a</code> equated it is <span class="math inline">\(a (b_w - b_b)\)</span>, with <code>b</code> equated it is <span class="math inline">\((a_w - a_b) b\)</span>, each with a delta-method standard error from the joint covariance (the cross-level covariance of the equated pair enters the gradient). It is still descriptive, not a test. Only when <strong>both</strong> <code>a</code> and <code>b</code> are equated is the contrast zero by constraint, not an estimate: it is <code>NA</code> and carries the warning <code>medfit_warning_twolevel_constrained</code>. The chunk below checks the <code>a</code>-only contrast and its standard error against lavaan’s own <code>:=</code> definition.</p>
@@ -521,12 +517,137 @@ c_prime_between
 </div>
 </section><section class="level2"><h2 id="few-clusters">Few clusters<a class="anchor" aria-label="anchor" href="#few-clusters"></a>
 </h2>
-<p>The adapter warns, and never errors, when the fit has fewer than 50 clusters (class <code>medfit_warning_twolevel_few_clusters</code>). The 50 is a judgment: no source gives a cluster count below which two-level estimates or between-level standard errors are trustworthy. In medfit’s development simulations with 20 clusters, lavaan’s admissibility check failed in a noticeable share of fits and the between indirect effect’s intervals covered below the nominal level. The threshold is editable with <code>options(medfit.twolevel_min_clusters = )</code>.</p>
+<p><code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> warns, and never errors, when the fit has fewer than 50 clusters (class <code>medfit_warning_twolevel_few_clusters</code>), on both routes. The 50 is a judgment: no source gives a cluster count below which two-level estimates or between-level standard errors are trustworthy. The threshold is editable with <code>options(medfit.twolevel_min_clusters = )</code>.</p>
+<p>With few clusters the between-level results are unreliable, and the within-level results are less affected. Treat the warning, and <code>medfit_warning_between_weak</code> (an ICC below 0.05), as the signal that the between interval may be missing, wide or too narrow; the <a href="guide-troubleshooting.html">troubleshooting guide</a> lists both.</p>
+<p>The guidance below comes from a simulation study of the lavaan two-level adapter, fitted with delta-method and Monte Carlo intervals and the settings medfit ships. It did not run the cluster bootstrap beyond a small pilot, so it says nothing about how well that bootstrap performs with few clusters. A fit counts as a failure when lavaan errors, does not converge or the adapter errors. The study used 5 or 20 units per cluster and 10 to 100 clusters, and ran before the within-only rule moved to the unrestricted ICC.</p>
+<ul>
+<li>
+<strong>Equal cluster sizes</strong> failed in at most .18 of fits at any number of clusters in the grid. With 5 units per cluster and an ICC of 0.05 the rate stayed above .05 at every number of clusters tried (.097 at 50, .059 at 100).</li>
+<li>
+<strong>Unequal cluster sizes</strong> failed far more often, most of all with 5 units per cluster and an ICC of 0.05: .93 of fits at 10 clusters, .31 at 50 and .06 at 100. Failure first fell below .20 for every ICC studied only at 100 clusters, the largest number tried. Unequal clusters of 5 units therefore fail often even with 50 clusters when the ICC is low.</li>
+<li>
+<strong>The within indirect effect</strong> covered near the nominal level in the fits that returned an interval (median .94 to .95 at every number of clusters tried). Its overall coverage fell short because failed fits return no interval.</li>
+<li>
+<strong>The between indirect effect</strong> is the weak spot. With an ICC of 0.05 and 100 clusters its coverage was about .81 (median over the cells), because the between interval was available in only about .69 of fits: the rest were within-only, failed or inadmissible. More clusters did not remove that.</li>
+</ul>
+<p>These are simulation results for a few designs, not guarantees. With fewer than about 50 clusters, and especially with unequal sizes, report the between-level results as exploratory.</p>
 </section><section class="level2"><h2 id="standard-errors-under-fixed-x-true">Standard errors under <code>fixed.x = TRUE</code>
 <a class="anchor" aria-label="anchor" href="#standard-errors-under-fixed-x-true"></a>
 </h2>
 <p>lavaan’s <code><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem()</a></code> fixes the exogenous variables at their sample values by default (<code>fixed.x = TRUE</code>), and the object records this as <code>fixed_x</code>. Under it the between-path standard errors are conditional on the sample between-level moments of the treatment; refit with <code>fixed.x = FALSE</code> for the unconditional ones. medfit reads the standard errors lavaan reports and does not adjust them; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> prints a note when <code>fixed_x</code> is <code>TRUE</code>.</p>
-</section><section class="level2"><h2 id="bootstrap">Bootstrap<a class="anchor" aria-label="anchor" href="#bootstrap"></a>
+</section><section class="level2"><h2 id="the-sem-engine-route">The sem engine route<a class="anchor" aria-label="anchor" href="#the-sem-engine-route"></a>
+</h2>
+<p>medfit’s own maximum-likelihood SEM engine (the sem engine) fits the same model from the same <code>level:</code> syntax, without lavaan: give <code><a href="../reference/fit_sem.html">fit_sem()</a></code> the cluster column. This route is experimental, and new in the development version. <code>level: 1</code> and <code>level: within</code> name the within block; <code>level: 2</code>, <code>level: between</code> and the cluster column’s name name the between block.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">nfit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">model</span>, data <span class="op">=</span> <span class="va">d</span>, cluster <span class="op">=</span> <span class="st">"id"</span><span class="op">)</span></span>
+<span><span class="va">ntd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">nfit</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span>, outcome <span class="op">=</span> <span class="st">"Y"</span><span class="op">)</span></span>
+<span><span class="va">ntd</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;TwoLevelMediationData&gt;
+  X -&gt; M -&gt; Y  (clusters: id; native 0.20.0 fit; between level: latent cluster means)
+  n = 500 in 100 clusters (sizes 5 to 5)   |   ICC: X 0.503, M 0.323, Y 0.400
+  a_within = +0.4432   b_within = +0.5518   c_prime_within = +0.2685
+  a_between = +0.5595   b_between = +0.9553   c_prime_between = +0.2289
+  NIE within  (a_within * b_within)   = +0.2446
+  NIE between (a_between * b_between) = +0.5344
+  Contrast (within - between)         = -0.2899  (descriptive, not a test)</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="va">ntd</span><span class="op">@</span><span class="va">source</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "native"</code></pre>
+</div>
+</div>
+<p><code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> returns the same <code>TwoLevelMediationData</code> as the lavaan route, with <code>@source</code> set to <code>"native"</code>, so <code><a href="../reference/nie.html">nie()</a></code>, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="../reference/decompose.html">decompose()</a></code> and the bootstrap work on it unchanged. The engine fits every exogenous variable’s moments (the <code>fixed.x = FALSE</code> setting; an explicit <code>fixed_x = TRUE</code> is refused) and uses the observed information. It matches lavaan fitted with <code>fixed.x = FALSE, information = "observed", h1.information = "structured"</code>:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">lfit</span> <span class="op">&lt;-</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem</a></span><span class="op">(</span><span class="va">model</span>, data <span class="op">=</span> <span class="va">d</span>, cluster <span class="op">=</span> <span class="st">"id"</span>, fixed.x <span class="op">=</span> <span class="cn">FALSE</span>, information <span class="op">=</span> <span class="st">"observed"</span>,</span>
+<span>                    h1.information <span class="op">=</span> <span class="st">"structured"</span><span class="op">)</span></span>
+<span><span class="va">ltd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">lfit</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span>, outcome <span class="op">=</span> <span class="st">"Y"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>native <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">ntd</span><span class="op">)</span>, lavaan <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">ltd</span><span class="op">)</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>                   native    lavaan
+a_within        0.4432190 0.4432169
+b_within        0.5517596 0.5517596
+c_prime_within  0.2684745 0.2684742
+a_between       0.5594504 0.5594438
+b_between       0.9552588 0.9552714
+c_prime_between 0.2289369 0.2289345</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>native <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">ntd</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span>, lavaan <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">ltd</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>                    native     lavaan
+a_within        0.04954385 0.04954396
+b_within        0.05063172 0.05063169
+c_prime_within  0.05496003 0.05496000
+a_between       0.07326930 0.07326872
+b_between       0.19402040 0.19402385
+c_prime_between 0.13375489 0.13375574</code></pre>
+</div>
+</div>
+<p>The standard errors agree as well. The between-path standard errors of the default lavaan fit in <a href="#fit-it-and-extract-it">Fit it and extract it</a> are slightly different, because that fit uses <code>fixed.x = TRUE</code> (<a href="#standard-errors-under-fixed-x-true">Standard errors under <code>fixed.x = TRUE</code></a>).</p>
+<p><code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> on the fit reports the cluster count and the range of cluster sizes, counted after incomplete rows are dropped. The chi-square test and its p-value are <code>NA</code>, with a note, because the engine fits no saturated two-level model; <code>df</code> and the log likelihood (of both levels together) are reported.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">nfit</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"nobs"</span>, <span class="st">"n_clusters"</span>, <span class="st">"cluster_size_min"</span>, <span class="st">"cluster_size_max"</span>, <span class="st">"df"</span>, <span class="st">"logLik"</span>, <span class="st">"chisq"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 7
+   nobs n_clusters cluster_size_min cluster_size_max    df logLik chisq
+  &lt;int&gt;      &lt;int&gt;            &lt;int&gt;            &lt;int&gt; &lt;int&gt;  &lt;dbl&gt; &lt;dbl&gt;
+1   500        100                5                5     0 -2287.    NA</code></pre>
+</div>
+</div>
+<p>Level-2 variances are fitted without a floor, so a between-level variance can come out negative, most often with few or small clusters. The engine then stops with class <code>medfit_error_twolevel_inadmissible</code> rather than return the solution; the condition carries the fit (<code>fit</code>) and the outcome ledger (<code>ledger</code>), whose <code>admissibility</code> entry gives the verdict and the reasons per level. The data below have 30 clusters of 3 and a small between-level variance of the mediator and the outcome:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">d_neg</span> <span class="op">&lt;-</span> <span class="fu">withr</span><span class="fu">::</span><span class="fu"><a href="https://withr.r-lib.org/reference/with_seed.html" class="external-link">with_seed</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">{</span></span>
+<span>  <span class="va">n_neg</span> <span class="op">&lt;-</span> <span class="fl">30</span></span>
+<span>  <span class="va">cl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_neg</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">xb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_neg</span><span class="op">)</span></span>
+<span>  <span class="va">mb</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">xb</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_neg</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
+<span>  <span class="va">yb</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">mb</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">xb</span></span>
+<span>  <span class="va">x</span> <span class="op">&lt;-</span> <span class="va">xb</span><span class="op">[</span><span class="va">cl</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">cl</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">m</span> <span class="op">&lt;-</span> <span class="va">mb</span><span class="op">[</span><span class="va">cl</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">cl</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">y</span> <span class="op">&lt;-</span> <span class="va">yb</span><span class="op">[</span><span class="va">cl</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">m</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">cl</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">cl</span>, X <span class="op">=</span> <span class="va">x</span>, M <span class="op">=</span> <span class="va">m</span>, Y <span class="op">=</span> <span class="va">y</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">err</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span><span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">model</span>, data <span class="op">=</span> <span class="va">d_neg</span>, cluster <span class="op">=</span> <span class="st">"id"</span><span class="op">)</span>, error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="va">e</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">err</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "medfit_error_twolevel_inadmissible"</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">conditionMessage</a></span><span class="op">(</span><span class="va">err</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "the two-level solution is inadmissible: negative level-2 variance: M~~M.l2, Y~~Y.l2; the implied between covariance Sigma_B is not positive definite. Level-2 variances are fitted without a floor (experimental); the fit is kept in the condition (`fit`) as evidence"</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="va">err</span><span class="op">$</span><span class="va">ledger</span><span class="op">$</span><span class="va">admissibility</span><span class="op">$</span><span class="va">between</span><span class="op">$</span><span class="va">reasons</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "negative level-2 variance: M~~M.l2, Y~~Y.l2"
+[2] "the implied between covariance Sigma_B is not positive definite"</code></pre>
+</div>
+</div>
+<p>The lavaan route on the same data returns the estimates with the warning <code>medfit_warning_twolevel_inadmissible</code> instead. The sem engine route refuses latent variables, product terms, <code>weights</code>, <code>missing = "fiml"</code>, nonlinear constraints, <code>fixed_x = TRUE</code>, <code>meanstructure = FALSE</code>, <code>information = "expected"</code> and a variable named only in <code>level: 1</code> rows, each with a classed error whose name starts <code>medfit_error_twolevel_</code>; the full table of messages is in the “Two-level models” section of <a href="../reference/medfit-syntax.html"><code>?"medfit-syntax"</code></a>. A labeled path, a linear equality across levels and a variable named only in <code>level: 2</code> rows (constant within each cluster) are accepted.</p>
+<section class="level3"><h3 id="cluster-robust-standard-errors">Cluster-robust standard errors<a class="anchor" aria-label="anchor" href="#cluster-robust-standard-errors"></a>
+</h3>
+<p><code>se_type = "sandwich"</code> on a two-level fit gives cluster-robust standard errors: the sandwich <span class="math inline">\(A^{-1} B A^{-1}\)</span> with the observed information as <span class="math inline">\(A\)</span> and <span class="math inline">\(B = \sum_j s_j s_j'\)</span> summed over the per-cluster scores <span class="math inline">\(s_j\)</span>, with no small-sample factor (CR0). Under an active linear constraint, such as a path equated across levels, the sandwich is projected onto the constraint, as in a single-level fit. The estimates are the same as with the default <code>se_type = "model"</code>; only the covariance changes. It matches lavaan’s <code>se = "robust.huber.white"</code> for the same model:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">nfit_r</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">model</span>, data <span class="op">=</span> <span class="va">d</span>, cluster <span class="op">=</span> <span class="st">"id"</span>, se_type <span class="op">=</span> <span class="st">"sandwich"</span><span class="op">)</span></span>
+<span><span class="va">ntd_r</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">nfit_r</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span>, outcome <span class="op">=</span> <span class="st">"Y"</span><span class="op">)</span></span></code></pre>
+</div>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">lfit_r</span> <span class="op">&lt;-</span> <span class="fu">lavaan</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/sem.html" class="external-link">sem</a></span><span class="op">(</span><span class="va">model</span>, data <span class="op">=</span> <span class="va">d</span>, cluster <span class="op">=</span> <span class="st">"id"</span>, fixed.x <span class="op">=</span> <span class="cn">FALSE</span>, information <span class="op">=</span> <span class="st">"observed"</span>,</span>
+<span>                      h1.information <span class="op">=</span> <span class="st">"structured"</span>, se <span class="op">=</span> <span class="st">"robust.huber.white"</span><span class="op">)</span></span>
+<span><span class="va">ltd_r</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_mediation.html">extract_mediation</a></span><span class="op">(</span><span class="va">lfit_r</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span>, outcome <span class="op">=</span> <span class="st">"Y"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">ntd</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span>, sandwich <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">ntd_r</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span>, lavaan <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">ltd_r</span><span class="op">@</span><span class="va">vcov</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>                     model   sandwich     lavaan
+a_within        0.04954385 0.04901290 0.04901297
+b_within        0.05063172 0.05359923 0.05359928
+c_prime_within  0.05496003 0.05498679 0.05498685
+a_between       0.07326930 0.07204548 0.07204560
+b_between       0.19402040 0.20326265 0.20326800
+c_prime_between 0.13375489 0.13829954 0.13830160</code></pre>
+</div>
+</div>
+<p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> of the fit name the standard errors as cluster-robust with the number of clusters, and <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> reports <code>se_type</code>. The intervals of <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> use the normal reference, and the few-clusters warning still applies: the cluster sandwich is biased downward with few clusters, and medfit adds no small-sample correction. Sampling <code>weights</code>, product terms, nonlinear constraints and <code>information = "expected"</code> stay refused with <code>se_type = "sandwich"</code> as with the default.</p>
+</section></section><section class="level2"><h2 id="bootstrap">Bootstrap<a class="anchor" aria-label="anchor" href="#bootstrap"></a>
 </h2>
 <p><code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code> turns one two-level effect into the scalar statistic that <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> needs. The <code>effect</code> is <code>"nie_within"</code>, <code>"nie_between"</code>, <code>"nie_contrast"</code>, the other per-level effects (<code>"nde_*"</code>, <code>"te_*"</code>, <code>"pm_*"</code>) or one of the six paths. The first argument decides the route:</p>
 <ul>
@@ -748,6 +869,56 @@ M1_within     0.2294339 0.1573649 0.3040551</code></pre>
 </div>
 </div>
 <p>For the cluster bootstrap, pass the <code>lavaan</code> fit with all the mediators, as in <code>twolevel_statistic(fit_k, "nie", level = "between", treatment = "X", mediator = c("M1", "M2"), outcome = "Y")</code>, and give <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> the data and <code>cluster =</code>, as for one mediator. A refit’s between level counts as identified only when the treatment and every mediator pass the ICC check. An invalid <code>level</code>, or a contrast asked of <code>"nde"</code> or <code>"te"</code>, stops with class <code>medfit_error_twolevel_level</code>; an unknown effect or a missing or unknown <code>specific</code> stops with class <code>medfit_error_twolevel_unsupported</code>.</p>
+</section><section class="level3"><h3 id="testing-the-indirect-effect-at-one-level">Testing the indirect effect at one level<a class="anchor" aria-label="anchor" href="#testing-the-indirect-effect-at-one-level"></a>
+</h3>
+<p><code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> tests the indirect effect at one level of a sem engine fit. It needs labeled paths, so the model below labels them at each level. Each null refits the model with one path set to 0, on both levels and with the same clusters; the statistic is the smaller of the likelihood ratios, referred to chi-square(1) (<a href="methods.html">Methods and Formulas</a>). The result adds <code>level</code> and <code>n_clusters</code>.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">model_lab</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
+<span><span class="st">  level: 1</span></span>
+<span><span class="st">    M ~ a_w*X</span></span>
+<span><span class="st">    Y ~ b_w*M + X</span></span>
+<span><span class="st">  level: 2</span></span>
+<span><span class="st">    M ~ a_b*X</span></span>
+<span><span class="st">    Y ~ b_b*M + X</span></span>
+<span><span class="st">"</span></span>
+<span><span class="va">nfit_lab</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">model_lab</span>, data <span class="op">=</span> <span class="va">d</span>, cluster <span class="op">=</span> <span class="st">"id"</span><span class="op">)</span></span>
+<span><span class="va">mbco_between</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mbco_sem.html">mbco_sem</a></span><span class="op">(</span><span class="va">nfit_lab</span>, <span class="st">"a_b"</span>, <span class="st">"b_b"</span><span class="op">)</span></span>
+<span><span class="va">mbco_between</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Minimum-of-two likelihood-ratio tests (MBCO) for an indirect effect
+
+data:  a_b * b_b = 0
+MBCO = 19.729, df = 1, p-value = 8.924e-06</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="va">mbco_between</span><span class="op">$</span><span class="va">level</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "between"</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="va">mbco_between</span><span class="op">$</span><span class="va">n_clusters</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 100</code></pre>
+</div>
+</div>
+<p><code>mbco_sem(nfit_lab, "a_w", "b_w")</code> tests the within indirect effect the same way. On these data the refit with <code>b_w == 0</code> gives the outcome a negative level-2 variance, so that null solution is inadmissible: the result is unresolved (statistic <code>NA</code>), with a warning of class <code>medfit_warning_twolevel_inadmissible</code> that names the refit, and <code>$tests</code> shows which null failed. The statistic is not taken from the other null alone:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">mbco_within</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mbco_sem.html">mbco_sem</a></span><span class="op">(</span><span class="va">nfit_lab</span>, <span class="st">"a_w"</span>, <span class="st">"b_w"</span><span class="op">)</span></span></code></pre>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: the refit with `b_w == 0` converged to an inadmissible solution (negative level-2 variance: Y~~Y.l2; the implied between covariance Sigma_B is not positive definite).
+The MBCO statistic is not available (NA); `$tests` lists each refit.</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="va">mbco_within</span><span class="op">$</span><span class="va">unresolved</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="va">mbco_within</span><span class="op">$</span><span class="va">tests</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"constraint"</span>, <span class="st">"converged"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>  constraint converged
+1   a_w == 0      TRUE
+2   b_w == 0     FALSE</code></pre>
+</div>
+</div>
+<p>The test is conservative when both paths are zero, and it is not a test of the between-minus-within contrast, which stays descriptive (<a href="#the-contrast-is-descriptive">The contrast is descriptive</a>). Paths from different levels (<code>mbco_sem(fit, "a_w", "b_b")</code>) stop with class <code>medfit_error_twolevel_unsupported</code>. A null refit with an inadmissible solution gives statistic <code>NA</code> with the warning <code>medfit_warning_twolevel_inadmissible</code>; one that does not converge gives statistic <code>NA</code> with a warning. A warning also flags a level-2 variance below 0.01 of its implied between plus within variance at a refit, where chi-square(1) may not hold. <code><a href="../reference/compare_lr.html">compare_lr()</a></code> is not available for a two-level fit yet. A test that the two levels’ indirect effects are equal is a separate function, <code>twolevel_equal_indirect(fit)</code>: the likelihood ratio of the free fit against the fit with <code>a_w*b_w == a_b*b_b</code>, referred to chi-square(1) (singular where all four paths are 0, and asymptotic in the number of clusters; <code>n_boot</code> gives a parametric bootstrap p-value for few clusters; replications whose refit is not admissible are dropped and counted in <code>boot$n_dropped</code>, so that p-value is conditional on admissible refits). The constrained surface has sign twins (flipping the signs of the within pair, the between pair or both keeps the equality), which are worse optima of the same constraint: the optimizer’s starts-disagree warning is not raised when every disagreeing start is such a twin, and the best start is kept. The twins of the kept fit are also tried from its estimates (a twin certificate): up to three single-start local solves at every <code>n_starts</code>, a twin refit that fails is skipped, and the result is not a proof of a global optimum. A worse twin is therefore not kept with <code>n_starts = 1</code>; a twin that ends inadmissible below the kept fit (a level-2 variance on its boundary) or with a covariance that is not positive definite makes the result unresolved, as it does with more starts. The row allows eight sign patterns; the certificate flips pairs together and reaches the four of the kept fit’s orbit. The other orbit does hold local optima (30 of 35 small cells, closest gap 0.02 LR), and the kept orbit still won every time tested (evidence, not a proof). The result’s <code>twin</code> element records what the certificate did (<code>tried</code>, <code>replaced</code>, <code>flipped</code>, <code>f_gain</code>, <code>unresolved</code>); <code>flipped</code> is read from the signs of the adopted fit against the kept fit’s: <code>"within"</code> or <code>"between"</code> when both paths of that pair changed sign, <code>"other"</code> once for any other sign change (including a path that reaches or leaves zero), and empty when no sign changed. It costs about 3 to 4 times the time at <code>n_starts = 1</code>, about twice at the default and about 1.3 times at 30 starts; <code>n_boot</code> p-values for a given <code>seed</code> can differ from 0.19.0. A constrained fit that is inadmissible, not positive definite or not converged gives an unresolved result (statistic <code>NA</code>) with a warning, never a number. The descriptive contrast carries no p-value.</p>
 </section></section><section class="level2"><h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
 </h2>
 <ul>
@@ -760,6 +931,8 @@ M1_within     0.2294339 0.1573649 0.3040551</code></pre>
 <li>
 <strong>No random slopes.</strong> See the estimand above.</li>
 <li>
+<strong>The sem engine route has its own refusals</strong> (latent variables, products, weights, FIML and more); see <a href="#the-sem-engine-route">The sem engine route</a>.</li>
+<li>
 <strong>Three-level and multigroup fits are refused</strong>, with classes <code>medfit_error_lavaan_multilevel</code> and <code>medfit_error_lavaan_multigroup</code>.</li>
 <li>
 <strong>The treatment and the mediator must be in the model at both levels.</strong> A treatment assigned to whole clusters is a 2-1-1 design and is fitted with <code>fit_mediation(engine = "lmer", cluster = )</code>; the error is class <code>medfit_error_twolevel_unsupported</code>.</li>
@@ -771,11 +944,6 @@ M1_within     0.2294339 0.1573649 0.3040551</code></pre>
 </h2>
 <p>Each class is a condition class, so <code><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch()</a></code> and <code><a href="https://rdrr.io/r/base/conditions.html" class="external-link">withCallingHandlers()</a></code> can target one. A warning that you have decided to accept can be muffled by class (see <a href="guide-troubleshooting.html#two-level-mediation">Troubleshooting</a>).</p>
 <table class="table caption-top">
-<colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
-</colgroup>
 <thead><tr class="header">
 <th>Class</th>
 <th>Kind</th>
@@ -793,6 +961,16 @@ M1_within     0.2294339 0.1573649 0.3040551</code></pre>
 <td>the ICC of the treatment or of a mediator is in [0.01, 0.05)</td>
 </tr>
 <tr class="odd">
+<td><code>medfit_warning_twolevel_icc_h1_unavailable</code></td>
+<td>warning</td>
+<td>no h1 ICC (a lavaan fit with <code>h1 = FALSE</code>, or native summaries too thin or collinear): the model-implied ICC is used for the within-only rule</td>
+</tr>
+<tr class="even">
+<td><code>medfit_warning_twolevel_icc_h1_unconverged</code></td>
+<td>warning</td>
+<td>native route: the EM for the h1 ICC did not converge; its last iterate is used</td>
+</tr>
+<tr class="odd">
 <td><code>medfit_warning_twolevel_constrained</code></td>
 <td>warning</td>
 <td>the contrast is <code>NA</code> because both a and b are equated across levels (with several mediators, those of that mediator, or of every mediator for the total)</td>
@@ -808,45 +986,51 @@ M1_within     0.2294339 0.1573649 0.3040551</code></pre>
 <td>fewer than 50 clusters</td>
 </tr>
 <tr class="even">
+<td><code>medfit_error_twolevel_inadmissible</code></td>
+<td>error</td>
+<td>sem engine route only: a negative level-2 variance or a non-positive-definite implied covariance at either level. Level-2 variances are fitted without a floor; the condition carries the fit (<code>fit</code>) and the ledger (<code>ledger</code>). Its message is shown in <a href="#the-sem-engine-route">The sem engine route</a>
+</td>
+</tr>
+<tr class="odd">
 <td><code>medfit_warning_twolevel_labels_ignored</code></td>
 <td>warning</td>
 <td>
 <code>a_label</code>, <code>b_label</code> or <code>cp_label</code> was set: the paths are read by variable names and level, not by label</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>medfit_error_twolevel_standardized</code></td>
 <td>error</td>
 <td><code>standardized = TRUE</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>medfit_error_twolevel_product</code></td>
 <td>error</td>
 <td>a product term or <code>interaction =</code>
 </td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>medfit_error_twolevel_unsupported</code></td>
 <td>error</td>
 <td>a mediator regressed on another mediator (serial), a covariate passed as a mediator, a duplicate or overlapping role, a variable missing at a level (2-1-1), or an argument that does not apply</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>medfit_error_twolevel_path_missing</code></td>
 <td>error</td>
 <td>a, b or c’ absent at a level</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>medfit_error_twolevel_unusable</code></td>
 <td>error</td>
 <td>the within block is unusable: the fit did not converge, or the within covariance is missing or not positive definite</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>medfit_error_twolevel_level</code></td>
 <td>error</td>
 <td>
 <code>level = "contrast"</code> for <code><a href="../reference/nde.html">nde()</a></code>, <code><a href="../reference/te.html">te()</a></code> or <code><a href="../reference/pm.html">pm()</a></code>; from <code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code> with several mediators, an invalid <code>level</code> or <code>level = "contrast"</code> with <code>"nde"</code> or <code>"te"</code>
 </td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>medfit_error_twolevel_constrained</code></td>
 <td>error</td>
 <td>

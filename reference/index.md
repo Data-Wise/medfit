@@ -85,6 +85,9 @@ Functions for fitting and extracting mediation models
   : Perform Bootstrap Inference for Mediation Statistics
 - [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md)
   : Bootstrap Callback for Two-Level Mediation
+- [`twolevel_equal_indirect()`](https://data-wise.github.io/medfit/reference/twolevel_equal_indirect.md)
+  **\[experimental\]** : Test equal indirect effects across the two
+  levels of a native two-level fit
 
 ## Methods
 

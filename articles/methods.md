@@ -10,6 +10,14 @@ causal interpretation depends on identification assumptions (no
 unmeasured confounding of the relevant relations), which medfit does not
 check. Each section says which assumptions the estimand needs.
 
+> **At a glance**
+>
+> **Use this when:** you need the formula, the assumption or the
+> standard-error derivation behind an estimate.  
+> **You get:** the notation, the estimand and the formula for every
+> effect and interval, with references.  
+> **Reading time:** 52 min
+
 ## Notation and conventions
 
 | Symbol | Meaning |
@@ -151,7 +159,7 @@ treatment–outcome and mediator–outcome confounding. With \\\theta_3 =
 object is built. A native
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
 fit with the product `x:m` in the outcome equation gives the same object
-([the native product term](#products-and-observed-information)).
+([the sem engine product term](#products-and-observed-information)).
 
 ## Several mediators with products: joint natural effects
 
@@ -554,7 +562,9 @@ otherwise it is an estimate.
   2010); medfit does not offer it.
 - **The contrast is descriptive.** No source supports \\\text{NIE}\_w -
   \text{NIE}\_b\\ as a named test; its standard error is a delta-method
-  standard error, not a test of equal indirect effects.
+  standard error, not a test of equal indirect effects. That test is
+  [`twolevel_equal_indirect()`](https://data-wise.github.io/medfit/reference/twolevel_equal_indirect.md),
+  a likelihood-ratio test of \\a_w b_w = a_b b_b\\.
 - **Few clusters.** No source gives a cluster count below which the
   estimates or the between standard errors can be trusted. The warning
   below 50 clusters is a judgment, and the threshold is an option.
@@ -563,7 +573,9 @@ otherwise it is an estimate.
 - **Identification.** The between slopes need between variance in the
   treatment and the mediator. The adapter treats an ICC below 0.01 as
   unidentified (a within-only result) and warns between 0.01 and 0.05;
-  both cutoffs are judgments.
+  both cutoffs are judgments. The ICC is the unrestricted (h1) one, the
+  between variance over the total in the saturated two-level model, not
+  the ratio the fitted model implies.
 
 ### What is not supported
 
@@ -747,7 +759,7 @@ independent disturbances (the parallel form also allows a free mediator
 residual covariance), free intercepts and a free or exactly zero direct
 path. It assumes ignorable missingness under that model; choosing FIML
 does not validate MAR or protect against nonignorable missingness. See
-the [native
+the [sem engine
 guide](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml)
 for settings and API limits.
 
@@ -1420,6 +1432,9 @@ anova(fit, fit0)
     fit0  1 102.3      102.3       1  < 2.2e-16 ***
     ---
     Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+**Next:** See how the numbers are computed: [Computation
+algorithms](https://data-wise.github.io/medfit/articles/computation-algorithms.md)
 
 ## References
 

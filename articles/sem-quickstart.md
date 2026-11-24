@@ -5,6 +5,9 @@ mediation object, with no package besides medfit. For the full picture
 see [the sem engine
 guide](https://data-wise.github.io/medfit/articles/sem-guide.md).
 
+**Use this when:** you want a first look at the sem engine. **Status:**
+stable.
+
 |              |                                                          |
 |--------------|----------------------------------------------------------|
 | **You need** | medfit 0.8.0 or later; the bundled `mediation_demo` data |
@@ -161,6 +164,9 @@ From here
 [`confint()`](https://rdrr.io/r/stats/confint.html) and
 [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)
 work as on any other fit.
+
+**Next:** Go step by step: [The sem engine, step by
+step](https://data-wise.github.io/medfit/articles/sem-tutorial.md)
 
 ## Where next
 

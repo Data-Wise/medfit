@@ -11,6 +11,14 @@ model syntax for the external oracles (lavaan, OpenMx, and semopy) is on
 [One model in medfit, lavaan, OpenMx and
 semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md).
 
+> **At a glance**
+>
+> **Use this when:** you want to see how the sem engine’s optimizer is
+> tested and where its decisions are recorded.  
+> **You get:** tables of the gates, the model structures and the
+> decision records, generated from the repository files at site build.  
+> **Reading time:** 12 min
+
 ## Principles
 
 - Every number has an independent oracle (lavaan, OpenMx, OLS, a hand
@@ -53,6 +61,10 @@ semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md).
 | semopy | semopy 2.3.11 (MLW, ftol 1e-12, observed information), cross-checked against lavaan | medfit_shift, medfit_se, perturb, swapname, driver | observed; latent; parallel; serial |
 | fiml | lavaan observed information and independent row-wise Gaussian likelihood | wrong_n, complete_case, dropped_cov, lost_provenance, missing_guard, driver | bounded random-X FIML |
 | fiml-ext | lavaan raw-data FIML with observed information (estimates; covariance; logLik; defined indirect effect and SE) | wrong_unit, no_offset, swap_b, dropped_cov, missing_guard, parcov_drop_path, parcov_orthogonal, serial_router_off, ser_swap_db, ser_drop_cross, ser_total_gradient, ser_drop_shortcut, ser_chain_free_shortcut, ser_chain_swap_db, ser_chain_origin, ser_chain_te_gradient, ser_cov_alias, ser_cov_drop_y, ser_cov_wrong_offset, ser_chain_cov_treatment, ser_cov2_drop_gy, ser_cov2_wrong_offset, ser_cov_max_narrow, ser_k2_closed, driver | bounded random-X FIML with covariates; bounded random-X FIML with parallel mediators; bounded random-X FIML with serial mediators; bounded random-X FIML with the pure chain of serial mediators; bounded random-X FIML with serial mediators and one covariate; bounded random-X FIML with the pure chain of serial mediators and one covariate; bounded random-X FIML with serial mediators and two covariates; bounded random-X FIML with the pure chain of serial mediators and two covariates |
+| twolevel-parity | lavaan two-level, TL-3 (fixed.x = FALSE, observed information, structured h1) | zero_cross, se_scale, perturb_theta, driver | two-level observed (1-1-1) |
+| twolevel-sandwich | lavaan two-level se = robust.huber.white, TL-3 (fixed.x = FALSE, observed information, structured h1) | casewise, zero_cross_meat, drop_cluster, cr1, no_projection, driver | two-level observed (1-1-1) |
+| twolevel-mbco-size | pchisq(statistic, 1) and the alpha + 3 MC SE size rule; branch minimum against lavaan in tests/testthat/test-sem-mbco-twolevel.R | max_branch, driver | two-level observed (1-1-1) |
+| twolevel-equal-size | hand O8 likelihood maximized under the constraint (lavaans nonlinear two-level fit is not an oracle: it returned an inadmissible optimum), pchisq(statistic, 1) and the alpha + 3 MC SE size rule | cross_pair, stat_doubled, df_two, driver | two-level observed (1-1-1) |
 
 A token in *Planted defects* is a `MUTANT=` value of the gate’s script;
 the driver (`tests/sim/run-gates.R --mutants`) also plants tolerance,
@@ -114,6 +126,13 @@ its script does not contain, or when a structure has no gate.
 | D-12 | The D1 outcome ledger rides on the D-11 error as \$ledger | decided | 2026-10-24 | ADR-native-solver-and-engines-2026-10-23 |
 | D-13 | semopy as a monthly third oracle for estimates and SEs | decided | 2026-10-26 | ADR-native-solver-and-engines-2026-10-23 |
 | D-14 | D18: SLSQP stays a permanent user-selectable option, never the default (#276) | decided | 2026-10-21 | ADR-native-solver-and-engines-2026-10-23 |
+| TL-1 | Two-level estimates match lavaan to 0.01 SE with a 1e-4 absolute floor; adapter arithmetic to 1e-10; a closed form to about 1e-5 | decided | 2026-11-18 | ADR-twolevel-oracle-tolerances-2026-11-18 |
+| TL-2 | Two-level SEs match to 1e-3 relative only against fixed.x = FALSE at the same information | decided | 2026-11-18 | ADR-twolevel-oracle-tolerances-2026-11-18 |
+| TL-3 | Native two-level fits are compared with lavaan fixed.x = FALSE | decided | 2026-11-18 | ADR-twolevel-oracle-tolerances-2026-11-18 |
+| TL-4 | Hand-built O8 log-likelihood: absolute logLik without Z, nested-fit differences with Z, both to 1e-6 | decided | 2026-11-18 | ADR-twolevel-oracle-tolerances-2026-11-18 |
+| TL-5 | OpenMx is a third oracle under the same rules; a disagreement beyond them stops the work | decided | 2026-11-18 | ADR-twolevel-oracle-tolerances-2026-11-18 |
+| TL-6 | Frozen SLSQP fixtures are pinned at 1e-6 across platforms | decided | 2026-11-18 | ADR-twolevel-oracle-tolerances-2026-11-18 |
+| TL-7 | Each tolerance is valid only if its matching planted defect fails it; the zeroed cross-level vcov block validates the SE bound | decided | 2026-11-18 | ADR-twolevel-oracle-tolerances-2026-11-18 |
 
 Each ADR opens with a YAML `decisions:` list (`id`, `title`, `status`,
 `date`, optional `supersedes`); `test-adr-front-matter.R` checks it. The
@@ -343,3 +362,7 @@ And the review that found the MBCO root ledger without a validator was
 an adversarial review, a reader independent of the slice’s own QA,
 looking for what the author’s tests assume. The record of the release is
 `planning/specs/RESULT-qc-0.14.1-d1-d4-2026-10-25.md`.
+
+**Next:** The same model in four packages’ syntax: [One model in medfit,
+lavaan, OpenMx and
+semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md)

@@ -122,7 +122,7 @@ mbco_sem(fit, paths = c("a", "b"))
 ## Products and the four-way decomposition
 
 `group:mediator1` expands to one product per dummy, each a product term
-under the rules in [the native model
+under the rules in [the sem engine model
 page](https://data-wise.github.io/medfit/articles/model-sem.md). The fit
 warns that the global test is not valid with a product, so the chunk
 silences it and asks for the sandwich:

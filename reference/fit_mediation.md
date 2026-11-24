@@ -168,7 +168,10 @@ fit_mediation(
 - cluster:
 
   Character string: name of the cluster variable in `data`. Required
-  with `engine = "lmer"`, an error with the other engines.
+  with `engine = "lmer"`; with `engine = "sem"` it is passed to
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  for a two-level model (experimental, see its `cluster` argument); an
+  error with the other engines.
 
 - model:
 

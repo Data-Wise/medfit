@@ -41,7 +41,7 @@ task recipes see the
 | Parallel | `ParallelMediationData` | `lm`/`glm`, lavaan, the sem engine via [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) | model | [parallel](https://data-wise.github.io/medfit/articles/model-parallel.md) |
 | Joint, with products | `JointMediationData` | `lm` fits | delta method, bootstrap | [joint](https://data-wise.github.io/medfit/articles/model-joint.md) |
 | Cluster-level treatment (2-1-1) | `ClusterMediationData` | `lmer` fits or `engine = "lmer"` | model, Kenward-Roger (`"kr"`) | [cluster](https://data-wise.github.io/medfit/articles/model-cluster.md) |
-| Two-level, within and between (1-1-1) | `TwoLevelMediationData` | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a two-level `lavaan` fit | delta method over the joint covariance (Wald) | [two-level](https://data-wise.github.io/medfit/articles/model-twolevel.md) |
+| Two-level, within and between (1-1-1, experimental) | `TwoLevelMediationData` | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a two-level `lavaan` fit, or on a `fit_sem(cluster = )` fit (the sem engine, 0.20.0) | delta method over the joint covariance (Wald); `se_type = "sandwich"` for cluster-robust SEs on the sem engine route | [two-level](https://data-wise.github.io/medfit/articles/model-twolevel.md), [sem engine route](https://data-wise.github.io/medfit/articles/model-twolevel.html#the-sem-engine-route) |
 | Two-level, parallel mediators (experimental) | `TwoLevelParallelMediationData` | [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a two-level `lavaan` fit with two or more mediators | delta method over the joint covariance (Wald) | [two-level](https://data-wise.github.io/medfit/articles/model-twolevel.html#several-parallel-mediators) |
 | Latent mediator, constraints | `SEMFit`, then extracted | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md), `engine = "sem"` | model, sandwich | [sem](https://data-wise.github.io/medfit/articles/model-sem.md), [latent](https://data-wise.github.io/medfit/articles/model-sem-latent.md) |
 | Categorical covariates (0.11.0) | `SEMFit`, then extracted | [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md) with a factor, character or logical column | model, sandwich | [categorical covariates](https://data-wise.github.io/medfit/articles/model-sem-factors.md) |
@@ -118,3 +118,6 @@ through `glm` gives a path product on the log-odds scale, while
 See [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md) for
 the assumptions behind each model.
+
+**Next:** Open the page for your model. If none fits, start with [Simple
+mediation](https://data-wise.github.io/medfit/articles/model-simple.md)

@@ -10,6 +10,14 @@ medfit. The semopy block is Python: its script and its output are saved
 in the package (`tests/sim/oracles/`), and the build checks the saved
 output against medfit.
 
+> **At a glance**
+>
+> **Use this when:** you know lavaan, OpenMx or semopy and want the same
+> model in medfit, or want to rerun a comparison.  
+> **You get:** one model written in four packages’ syntax, with the
+> estimates compared to 1e-5 or better.  
+> **Reading time:** 2 min
+
 The model: `treatment` affects `mediator1` (path `a`), `mediator1`
 affects `outcome` (path `b`), and `treatment` affects `outcome` directly
 (path `cp`), on the bundled `mediation_demo` data (n = 400).
@@ -215,3 +223,6 @@ With semopy’s default stopping rule the same script gives `a` = 0.456039
 instead of 0.455996, a gap of about 4e-5, which is why the script sets
 `ftol`. Comparing software at 1e-6 means first checking that each one
 has actually converged.
+
+**Next:** See how the sem engine is tested: [Quality control of the
+optimizer](https://data-wise.github.io/medfit/articles/quality-control.md)

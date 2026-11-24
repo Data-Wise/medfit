@@ -5,7 +5,7 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.4.10/font.css" rel="stylesheet"><link href="../deps/Fira_Code-0.4.10/font.css" rel="stylesheet"><link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Changelog"><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body>
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Inter-0.5.0/font.css" rel="stylesheet"><link href="../deps/Fira_Code-0.5.0/font.css" rel="stylesheet"><link href="../deps/Montserrat-0.5.0/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Changelog"><meta property="og:image" content="https://data-wise.github.io/medfit/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.19.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.20.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -22,7 +22,13 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../index.html" aria-label="Home"><span class="fa fas fa-home fa-lg"></span></a></li>
-<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-start" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Start</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-start"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
+    <li><a class="dropdown-item" href="../index.html#start-here-in-60-seconds">The 60-second example</a></li>
+    <li><a class="dropdown-item" href="../index.html#install">Install</a></li>
+    <li><a class="dropdown-item" href="../articles/models.html">Which model?</a></li>
+  </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-models" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Models</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-models"><li><a class="dropdown-item" href="../articles/models.html">All models at a glance</a></li>
@@ -51,73 +57,62 @@
     <li><a class="dropdown-item" href="../articles/model-fiml.html">Missing data: bounded FIML</a></li>
   </ul></li>
 <li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook"><li><a class="dropdown-item" href="../articles/cookbook.html">All 24 recipes</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Recipes by task</h6></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#one-line-mediation">Basics: one line, lm fits, binary outcome, weights (1-4)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#two-mediators-in-a-chain">Several mediators and interactions (5-8)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">Clusters, two-level and lavaan (9, 10, 23, 24)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">The sem engine: latent, constraints, checks, four-way (11, 12, 14-21)</a></li>
+    <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">Inference and missing data (13, 22)</a></li>
+  </ul></li>
+<li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-guides" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Guides</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-guides"><li><a class="dropdown-item" href="../articles/guide-changes.html">What changed since CRAN 0.3.2</a></li>
-    <li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">Troubleshooting</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-guides"><li><a class="dropdown-item" href="../articles/guide-troubleshooting.html">When something fails</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Choose</h6></li>
     <li><a class="dropdown-item" href="../articles/guide-engines.html">Which engine should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-intervals.html">Which interval should I use?</a></li>
     <li><a class="dropdown-item" href="../articles/guide-glossary.html">Glossary and symbols</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Upgrade and learn</h6></li>
+    <li><a class="dropdown-item" href="../articles/guide-changes.html">Upgrading: what changed since CRAN 0.3.2</a></li>
     <li><a class="dropdown-item" href="../articles/guide-twolevel-tutorial.html">Two-level workflow, step by step</a></li>
-    <li><a class="dropdown-item" href="../articles/guide-architecture.html">How medfit is organized</a></li>
-    <li><a class="dropdown-item" href="../articles/sem-defaults-0-15.html">Native defaults in 0.15.0</a></li>
     <li><a class="dropdown-item" href="../articles/sem-quickstart.html">The sem engine in five minutes</a></li>
     <li><a class="dropdown-item" href="../articles/sem-tutorial.html">The sem engine, step by step</a></li>
     <li><a class="dropdown-item" href="../articles/sem-guide.html">The sem engine guide</a></li>
+    <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Compare</h6></li>
     <li><a class="dropdown-item" href="../articles/lavaan-comparison.html">lavaan and the sem engine</a></li>
     <li><a class="dropdown-item" href="../articles/probmed-comparison.html">probmed and medfit</a></li>
     <li><a class="dropdown-item" href="../articles/rmediation-comparison.html">RMediation and medfit</a></li>
     <li><a class="dropdown-item" href="../articles/syntax-crosswalk.html">One model in medfit, lavaan, OpenMx and semopy</a></li>
-    <li><a class="dropdown-item" href="../articles/example-gpa.html">Worked example: study hours and GPA</a></li>
   </ul></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook"><li><a class="dropdown-item" href="../articles/cookbook.html">All recipes</a></li>
-    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#one-line-mediation">1. One-line mediation</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#i-already-have-lm-fits">2. I already have lm fits</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#binary-outcome">3. Binary outcome</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#weights-and-robust-standard-errors">4. Weights and robust SEs</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#two-mediators-in-a-chain">5. Two mediators in a chain</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#two-mediators-side-by-side">6. Two mediators side by side</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#treatment-by-mediator-interaction">7. Treatment-by-mediator interaction</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#many-mediators-with-products">8. Many mediators with products</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#cluster-randomized-trial">9. Cluster-randomized trial</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#i-use-lavaan">10. I use lavaan</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#a-latent-mediator-native-engine">11. A latent mediator</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#a-nonlinear-constraint-or-a-longer-chain-native-engine">12. A nonlinear constraint or a longer chain</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#joint-significance-for-a-binary-or-count-outcome">13. Joint significance for a glm</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#compare-two-native-models">14. Compare two native models</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#a-defined-parameter-and-its-interval">15. A defined parameter and its interval</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#bound-a-variance-or-fix-a-path">16. Bound a variance or fix a path</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#check-a-native-fit-before-trusting-it">17. Check a native fit before trusting it</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#fix-exogenous-covariates-fixed_x">18. Fix exogenous covariates (fixed_x)</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#observed-intercepts-and-means">19. Observed intercepts and means</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#four-way-decomposition-from-a-native-fit">20. Four-way decomposition (native)</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#a-categorical-covariate-in-a-native-fit">21. Categorical covariate (native)</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#missing-data-bounded-fiml">22. Missing data: bounded FIML</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html#a-two-level-lavaan-fit-within-and-between">23. Two-level lavaan fit (1-1-1)</a></li>
-  </ul></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
-    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Quick Reference</h6></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-reference" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Reference</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-reference"><li><a class="dropdown-item" href="../reference/index.html">Functions</a></li>
     <li><a class="dropdown-item" href="../articles/refcard.html">Reference Card</a></li>
-    <li><a class="dropdown-item" href="../articles/cookbook.html">Cookbook</a></li>
+  </ul></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-learn-more" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Learn more</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-learn-more"><li><a class="dropdown-item" href="../articles/index.html">All articles</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Detailed Guides</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>How medfit works</h6></li>
     <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to medfit</a></li>
-    <li><a class="dropdown-item" href="../articles/extraction.html">Model Extraction</a></li>
-    <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap Inference</a></li>
-    <li><a class="dropdown-item" href="../articles/methods.html">Methods and Formulas</a></li>
+    <li><a class="dropdown-item" href="../articles/extraction.html">Model extraction</a></li>
+    <li><a class="dropdown-item" href="../articles/bootstrap.html">Bootstrap inference</a></li>
+    <li><a class="dropdown-item" href="../articles/methods.html">Methods and formulas</a></li>
     <li><a class="dropdown-item" href="../articles/computation-algorithms.html">Computation algorithms</a></li>
+    <li><a class="dropdown-item" href="../articles/guide-architecture.html">How medfit is organized</a></li>
+    <li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Release history</h6></li>
     <li><a class="dropdown-item" href="../articles/whats-new-0-11.html">What's new in 0.11</a></li>
     <li><a class="dropdown-item" href="../articles/sem-defaults-0-15.html">What's new in 0.15: native defaults</a></li>
-    <li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
-  </ul></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-project" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Project</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-project"><li><a class="dropdown-item" href="../articles/quality-control.html">Quality control of the optimizer</a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Project</h6></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/ecosystem.html">Ecosystem</a></li>
     <li><a class="external-link dropdown-item" href="https://github.com/data-wise/mediationverse/blob/main/STATUS.md">Package Status Dashboard</a></li>
     <li><a class="external-link dropdown-item" href="https://data-wise.github.io/mediationverse/articles/roadmap.html">Development Roadmap</a></li>
@@ -135,9 +130,66 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/data-wise/medfit/blob/dev/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/data-wise/medfit/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.20.0" id="medfit-0200">medfit 0.20.0<a class="anchor" aria-label="anchor" href="#medfit-0200"></a></h2>
+<div class="section level3">
+<h3 id="release-summary-0-20-0">Release summary<a class="anchor" aria-label="anchor" href="#release-summary-0-20-0"></a></h3>
+<ul><li>
+<strong>Native two-level fitting (experimental).</strong> <code>fit_sem(model, data, cluster = )</code> and <code>fit_mediation(engine = "sem", model = , cluster = )</code> fit a two-level (1-1-1) model of observed variables with medfit’s own sem engine, and <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> returns <code>TwoLevelMediationData</code> (<a href="https://github.com/data-wise/medfit/issues/486" class="external-link">#486</a>, <a href="https://github.com/data-wise/medfit/issues/489" class="external-link">#489</a>, <a href="https://github.com/data-wise/medfit/issues/491" class="external-link">#491</a> to <a href="https://github.com/data-wise/medfit/issues/493" class="external-link">#493</a>). Estimates and standard errors match lavaan fitted with <code>fixed.x = FALSE</code>; the three-way oracle (O8, lavaan, OpenMx) and its tolerances are <a href="https://github.com/data-wise/medfit/issues/482" class="external-link">#482</a> and <a href="https://github.com/data-wise/medfit/issues/483" class="external-link">#483</a>.</li>
+<li>
+<strong>Cluster-robust standard errors.</strong> <code>se_type = "sandwich"</code> gives the CR0 cluster sandwich for the native two-level fit, matching lavaan’s <code>robust.huber.white</code> (<a href="https://github.com/data-wise/medfit/issues/499" class="external-link">#499</a>).</li>
+<li>
+<strong>Tests at two levels.</strong> <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> accepts native two-level fits (<a href="https://github.com/data-wise/medfit/issues/501" class="external-link">#501</a>), and <code><a href="../reference/twolevel_equal_indirect.html">twolevel_equal_indirect()</a></code> tests that the within and between indirect effects are equal (<a href="https://github.com/data-wise/medfit/issues/502" class="external-link">#502</a>, <a href="https://github.com/data-wise/medfit/issues/505" class="external-link">#505</a>, <a href="https://github.com/data-wise/medfit/issues/507" class="external-link">#507</a>, <a href="https://github.com/data-wise/medfit/issues/510" class="external-link">#510</a>).</li>
+<li>
+<strong>Behavior change (experimental API):</strong> the within-only rule reads the unrestricted (h1) ICC on both routes (<a href="https://github.com/data-wise/medfit/issues/513" class="external-link">#513</a>).</li>
+<li>
+<strong>Wording.</strong> Messages and <code>fit_mediation(engine = "sem")</code> argument errors name the engine “sem” (<a href="https://github.com/data-wise/medfit/issues/496" class="external-link">#496</a>, <a href="https://github.com/data-wise/medfit/issues/497" class="external-link">#497</a>).</li>
+<li>
+<strong>Few-clusters records.</strong> The simulation studies T5, T6 and T8 are recorded under <code>planning/</code> (<a href="https://github.com/data-wise/medfit/issues/480" class="external-link">#480</a>, <a href="https://github.com/data-wise/medfit/issues/484" class="external-link">#484</a>, <a href="https://github.com/data-wise/medfit/issues/485" class="external-link">#485</a>, <a href="https://github.com/data-wise/medfit/issues/490" class="external-link">#490</a>, <a href="https://github.com/data-wise/medfit/issues/520" class="external-link">#520</a>); they are not shipped, and the “Known limits” below carry what they found.</li>
+<li>
+<strong>Not in this release:</strong> native two-level <code><a href="../reference/compare_lr.html">compare_lr()</a></code>, the level-2 reliability cell (S4b), the cluster bootstrap for native two-level fits, serial two-level mediators, random slopes and latent two-level mediators, FIML statistical admission, and CRAN.</li>
+<li>GitHub-only release; CRAN stays on hold (<a href="https://github.com/data-wise/medfit/issues/83" class="external-link">#83</a>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-0-20-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-20-0"></a></h3>
+<ul><li>
+<strong>Native two-level fitting (experimental).</strong> <code>fit_sem(model, data, cluster = )</code> fits a two-level (1-1-1) model written in <code>level:</code> blocks with medfit’s own sem engine, and <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> on the fit returns a <code>TwoLevelMediationData</code> (<code>@source</code> is <code>"native"</code>), the same class as the lavaan two-level adapter, so <code><a href="../reference/nie.html">nie()</a></code>, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="../reference/decompose.html">decompose()</a></code> and the bootstrap work unchanged. <code>fit_mediation(engine = "sem", model = , cluster = )</code> returns the same object. Estimates and standard errors match lavaan fitted with <code>fixed.x = FALSE</code>, <code>information = "observed"</code> and <code>h1.information = "structured"</code>. The sem engine of 0.19.0 could not fit a model with <code>level:</code> blocks, and earlier development builds stopped one with class <code>medfit_error_twolevel_not_implemented</code>; it is now fitted. The route is experimental and may change without the deprecation period. Refused inputs (latent variables, products, <code>weights</code>, FIML, nonlinear constraints, <code>fixed_x = TRUE</code>, <code>meanstructure = FALSE</code>, expected information, within-only variables) each stop with a <code>medfit_error_twolevel_*</code> class; the “Two-level models” section of <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code> lists the messages. <code><a href="../reference/compare_lr.html">compare_lr()</a></code> refuses a native two-level fit with class <code>medfit_error_twolevel_unsupported</code>; earlier development builds failed inside the refit with a stale “not implemented yet” message.</li>
+<li>
+<strong><code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> on native two-level fits (experimental).</strong> <code>mbco_sem(fit, "a_w", "b_w")</code> and <code>mbco_sem(fit, "a_b", "b_b")</code> test the indirect effect at one level of a <code>fit_sem(cluster = )</code> fit: the minimum likelihood ratio over the refits with one path set to 0 (each refit keeps the clusters), referred to chi-square(1). Before, development builds refused the call. The test is conservative when both paths are zero and is not a test of the between-minus-within contrast. The result adds <code>level</code> and <code>n_clusters</code>. Paths from different levels stop with class <code>medfit_error_twolevel_unsupported</code>. A null refit whose solution is inadmissible (a negative level-2 variance) gives the unresolved result (statistic <code>NA</code>, <code>unresolved = TRUE</code>) with a warning of class <code>medfit_warning_twolevel_inadmissible</code> that names the refit and the reason, and a null refit that does not converge gives the same unresolved result with a warning; the statistic is never the other null’s likelihood ratio alone. A warning flags a level-2 variance below 1% of its implied between plus within variance at a refit, where chi-square(1) may not hold. A model with <code>level:</code> blocks that reaches the single-level fitter without <code>cluster</code> now says to pass <code>cluster</code> instead of calling native two-level estimation not implemented.</li>
+<li>
+<strong><code><a href="../reference/twolevel_equal_indirect.html">twolevel_equal_indirect()</a></code> (experimental).</strong> A likelihood-ratio test that the within and the between indirect effects of a <code>fit_sem(cluster = )</code> fit are equal, <code>a_w*b_w == a_b*b_b</code>: the free fit against the fit with that one nonlinear equality, which the two-level guard now admits (every other nonlinear row is still refused with <code>medfit_error_twolevel_nonlinear</code>). The statistic is referred to chi-square(1), with the caveat that the null is singular where all four paths are 0 (a warning of class <code>medfit_warning_twolevel_equal_singular</code> flags it) and that the between-level asymptotics are in the number of clusters; <code>n_boot</code> adds a parametric bootstrap p-value for few clusters. A constrained refit that is inadmissible (a negative variance, a covariance matrix that is not positive definite), does not converge or beats the free fit is unresolved (statistic <code>NA</code>, <code>unresolved = TRUE</code>, a warning), never a likelihood-ratio number. The descriptive contrast of <code>nie(level = "contrast")</code> still carries no p-value, and there is no Wald test of it. The bootstrap p-value drops replications whose refit is not admissible, so it is conditional on admissible refits, and <code>boot$n_dropped</code> reports how many. The guard admits only that within-versus-between chain pairing (the same <code>x</code>, <code>m</code>, <code>y</code> at both levels, in either written order); a serial <code>a*d</code> or <code>d*b</code> chain of that shape is admitted too, without a separate oracle. The optimizer’s “the starts disagree” warning is no longer raised when every disagreeing accepted start is a sign twin of the kept fit (flipping the signs of the within pair, the between pair or both leaves <code>a_w*b_w == a_b*b_b</code> satisfied, so the twin is a worse local optimum of the same constraint); the lowest-discrepancy start is kept. It was a false alarm for a correct fit. A disagreement that is not a sign twin, and every other optimizer warning, still surface. After the refit the pair-sign twins of the kept fit are tried too (a twin certificate, <a href="https://github.com/data-wise/medfit/issues/504" class="external-link">#504</a>): each flip of a pair with no zero is fitted once from the kept estimates with that flip, and the lowest discrepancy is kept. It is a local search of up to three single-start solves at every <code>n_starts</code>, not a proof of a global optimum (a twin refit that fails is skipped); it changes the statistic only when a twin ends lower, so a worse twin is no longer kept with <code>n_starts = 1</code>. A twin that ends inadmissible below the kept discrepancy (a level-2 variance on its boundary) or with a covariance that is not positive definite makes the result unresolved, as it does with more starts; a result that was a number in 0.19.0 can therefore now be unresolved when the better optimum sits on a level-2 variance boundary (about 2.2% of 454 stress cells at <code>n_starts = 1</code>; 2 of 160 QA cells). The result carries a <code>twin</code> element recording what the certificate did (<code>tried</code>, <code>replaced</code>, <code>flipped</code>, <code>f_gain</code>, <code>unresolved</code>); <code>flipped</code> is read from the signs of the adopted fit against the kept fit’s, not from the start that produced the twin: <code>"within"</code> or <code>"between"</code> when both paths of that pair changed sign, <code>"other"</code> once for any other sign change (including a path that reaches or leaves zero), and empty when no sign changed; <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> is unchanged. The row allows eight sign patterns; the certificate reaches the four of the kept fit’s orbit. The other orbit does hold local optima (30 of 35 small cells, closest gap 0.02 LR), and the kept orbit still won every time tested (84 stress cells, 114 QA cells with an all-orthant oracle and 715 constrained fits from signed starts), which is evidence, not a proof. A call takes about 3 to 4 times as long at <code>n_starts = 1</code>, about twice at the default and about 1.3 times at 30 starts, and a bootstrap replicate costs about 2.5 times the engine fits. Because each bootstrap replicate now uses the certificate, <code>n_boot</code> p-values for a given <code>seed</code> can differ from those of 0.19.0.</li>
+<li>
+<code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> on a two-level fit adds <code>n_clusters</code>, <code>cluster_size_min</code> and <code>cluster_size_max</code>; <code>chisq</code> and <code>p_value</code> are <code>NA</code> with a note, because the engine fits no saturated two-level model.</li>
+<li>Level-2 variances are fitted without a floor. An inadmissible two-level solution (a negative variance or a non-positive-definite implied covariance at either level) stops with class <code>medfit_error_twolevel_inadmissible</code>; the condition carries the fit and its outcome ledger, with the verdict per level. The lavaan route keeps its warning, <code>medfit_warning_twolevel_inadmissible</code>.</li>
+<li>
+<strong>Cluster-robust standard errors for native two-level fits (experimental).</strong> <code>fit_sem(model, data, cluster = , se_type = "sandwich")</code> gives the cluster-robust CR0 sandwich: per-cluster scores, the observed information as the bread and no small-sample factor. It matches lavaan’s <code>se = "robust.huber.white"</code> on the same two-level model. Under active linear constraints (for example a path equated across levels) the sandwich is projected, as in a single-level fit. Wald intervals use the normal reference, and the few-clusters warning still applies; the CR0 sandwich is biased downward with few clusters, and no correction is applied until the few-clusters study reports. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> label the standard errors with the number of clusters, and <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> on a two-level fit reports <code>se_type</code>. Development builds refused <code>se_type = "sandwich"</code> with <code>cluster</code> (class <code>medfit_error_twolevel_weights</code>, which now covers <code>weights</code> only). <code>weights</code>, products, nonlinear constraints and <code>information = "expected"</code> are still refused. Internally, the two-level branch of <code><a href="../reference/fit_sem.html">fit_sem()</a></code> now passes <code>se_type</code> to the fit; before, it dropped the argument, which had no visible effect because the sandwich was refused first.</li>
+<li>
+<strong>Behavior change (experimental two-level API): the within-only rule reads the unrestricted (h1) ICC.</strong> The ICC that decides within-only (below 0.01) and weak (below 0.05), and that <code>@icc</code> stores, was the ratio the fitted model implies; it is now the between variance over the total in the saturated two-level model, on both routes. The lavaan route reads <code>lavaan::lavInspect(fit, "icc")</code> (a between-only variable counts as 1); the native route estimates the same moments by an EM algorithm with SQUAREM acceleration on the per-size cluster summaries (about 3e-5 from lavaan’s EM run to convergence). A fit whose model-implied level-2 variance is negative had its ICC clamped to 0 and came out within-only; its h1 ICC is usually above 0.01, so within-only is rarer and such a fit is now weak or identified (<code>admissible</code> is unchanged; differences between the two sources reached .363 in the few-clusters pilot). Estimates, standard errors and the fit are unchanged. Two new warning classes: <code>medfit_warning_twolevel_icc_h1_unavailable</code> (no h1 estimate, for example <code>h1 = FALSE</code>: the model-implied ICC is used) and <code>medfit_warning_twolevel_icc_h1_unconverged</code> (native EM did not converge; the last iterate is used). Known limit: lavaan’s default h1 EM stops early, so in about 2% of boundary-heavy simulated datasets the two routes can put an ICC on opposite sides of 0.01 or 0.05 and differ on the within-only or weak call; pass <code>em.h1.args = list(tol = 1e-10, max_iter = 100000L)</code> to the lavaan fit (lavaan 0.7; lavaan 0.6 takes <code>em.h1.tol</code> and <code>em.h1.iter.max</code>) when an ICC is near a cut. The API is experimental, so no deprecation period applies.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-20-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-20-0"></a></h3>
+<ul><li>
+<strong>S7 1.0.0 compatibility for <code>@call</code>.</strong> Under S7 1.0.0, <code>new_object()</code> captured a property passed as <code>call = call</code>, so <code>TwoLevelMediationData</code> and <code>TwoLevelParallelMediationData</code> failed validation (“@call must be <character>”) and <code>SEMFit</code> and <code>BootstrapResult</code> lost their <code>@call</code> silently (it became <code>NULL</code>). These four classes now use a constructor with the same arguments that passes the properties in the form S7 1.0.0 accepts, and the named form under S7 0.2.2, so one installed medfit works with either version.</character></li>
+</ul></div>
+<div class="section level3">
+<h3 id="minor-changes-0-20-0">Minor changes<a class="anchor" aria-label="anchor" href="#minor-changes-0-20-0"></a></h3>
+<ul><li>The few-clusters warning (<code>medfit_warning_twolevel_few_clusters</code>) now ends “they are still returned.” instead of “the adapter still returns them.”, because it is raised on both two-level routes.</li>
+<li>Two messages name the engine by its current name: <code>model =</code> with another engine now says “<code>model</code> is only used with engine =”sem”” (was <code>"native"</code>), and a request for standardized estimates from a sem fit says “not supported by the sem engine”. The argument checks of <code>fit_mediation(engine = "sem")</code> (formulas instead of <code>model</code>, a missing <code>model</code>, family arguments, unused arguments, unknown <code>engine_args</code>) also say <code>engine = "sem"</code>, whichever name the call used.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="known-limits-0-20-0">Known limits<a class="anchor" aria-label="anchor" href="#known-limits-0-20-0"></a></h3>
+<ul><li>Native two-level fitting (<code>fit_sem(cluster = )</code>) is experimental and may change without the usual deprecation period. The <code>cluster</code> formal of <code><a href="../reference/fit_sem.html">fit_sem()</a></code> is pinned in name and order; its behavior is experimental.</li>
+<li>
+<code><a href="../reference/compare_lr.html">compare_lr()</a></code> refuses a native two-level fit (class <code>medfit_error_twolevel_unsupported</code>).</li>
+<li>With a <code>cluster</code>, <code>weights</code>, product terms, nonlinear constraints (except the one equality of <code><a href="../reference/twolevel_equal_indirect.html">twolevel_equal_indirect()</a></code>) and <code>information = "expected"</code> are refused, with <code>se_type = "sandwich"</code> as with the default; <code>fixed_x = TRUE</code> is an error at two levels (class <code>medfit_error_twolevel_fixed_x</code>).</li>
+<li>Few clusters (simulations of the lavaan two-level adapter, with no cluster-bootstrap arm): unequal small clusters (5 units) fail often even at 50 clusters, and the failure rate first fell below 20% at 100 clusters, the largest number tried. Between-level coverage is below nominal with few clusters. See “Few clusters” in <a href="https://data-wise.github.io/medfit/articles/model-twolevel.html">Two-level mediation</a>.</li>
+<li>A fit whose ICC for the treatment or a mediator is below 0.01 returns the within-level results only (class <code>medfit_between_unidentified</code>).</li>
+<li>S4b and the cluster bootstrap for native two-level fits are not part of this release.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.19.0" id="medfit-0190">medfit 0.19.0<a class="anchor" aria-label="anchor" href="#medfit-0190"></a></h2>
 <div class="section level3">

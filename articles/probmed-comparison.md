@@ -7,6 +7,14 @@ fitting, extraction, effects and bootstrap. This page runs both on one
 fit and lists which medfit objects probmed accepts, with a status for
 each row that a test checks against a live call on each build.
 
+> **At a glance**
+>
+> **Use this when:** you are deciding whether you need P_med from
+> probmed on top of a medfit fit.  
+> **You get:** both run on one fit and a table of the medfit objects
+> probmed accepts, each row checked against a live call.  
+> **Reading time:** 3 min
+
 |  |  |
 |----|----|
 | **Use medfit when** | you want the indirect, direct and total effects with delta-method or bootstrap intervals, or any model class medfit supports |
@@ -117,3 +125,6 @@ Card](https://data-wise.github.io/medfit/articles/refcard.md), the
 [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md) or
 [the RMediation
 comparison](https://data-wise.github.io/medfit/articles/rmediation-comparison.md).
+
+**Next:** The same comparison for RMediation: [RMediation and
+medfit](https://data-wise.github.io/medfit/articles/rmediation-comparison.md)

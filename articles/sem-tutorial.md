@@ -6,6 +6,10 @@ quickstart](https://data-wise.github.io/medfit/articles/sem-quickstart.md)
 and [the sem engine
 guide](https://data-wise.github.io/medfit/articles/sem-guide.md).
 
+**Use this when:** you have read the quickstart and want constraints, a
+test of the indirect effect and extraction in ten checked steps.
+**Status:** stable.
+
 |  |  |
 |----|----|
 | **You need** | medfit 0.8.0 or later (step 9 needs 0.15.0 for the default `fixed_x`; on 0.9.0 to 0.14.x pass `fixed_x = TRUE`; step 10 needs 0.11.0); the bundled `mediation_demo` data |
@@ -36,8 +40,8 @@ library(generics)
         setequal, union
 
 These examples use the default listwise path. For the separate bounded
-FIML opt-in (0.16.0 and 0.17.0) and its narrower support, see the
-[native
+FIML opt-in (0.16.0 and 0.17.0) and its narrower support, see the [sem
+engine
 guide](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml).
 
 ## Step 1. Write the model
@@ -290,6 +294,9 @@ itself. The [categorical covariates
 page](https://data-wise.github.io/medfit/articles/model-sem-factors.md)
 covers constraints, missing values, products and the four-way
 decomposition.
+
+**Next:** The whole workflow in one place: [The sem engine
+guide](https://data-wise.github.io/medfit/articles/sem-guide.md)
 
 ## Where next
 

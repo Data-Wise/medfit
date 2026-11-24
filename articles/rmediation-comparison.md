@@ -10,6 +10,14 @@ This page runs both on one fit and lists what RMediation accepts from
 medfit, with a status for each row that a test checks against a live
 call on each build.
 
+> **At a glance**
+>
+> **Use this when:** you are deciding whether you need RMediation’s
+> exact-product intervals or `mbco()` on top of a medfit fit.  
+> **You get:** both run on one fit and a table of what RMediation
+> accepts from medfit, each row checked against a live call.  
+> **Reading time:** 3 min
+
 |  |  |
 |----|----|
 | **Use medfit when** | you want every effect and path from one object, a native `SEMFit`, or an interval from the bootstrap infrastructure |
@@ -128,3 +136,6 @@ Card](https://data-wise.github.io/medfit/articles/refcard.md), the
 [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.md) or
 [the probmed
 comparison](https://data-wise.github.io/medfit/articles/probmed-comparison.md).
+
+**Next:** The same comparison for probmed: [probmed and
+medfit](https://data-wise.github.io/medfit/articles/probmed-comparison.md)

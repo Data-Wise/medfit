@@ -6,6 +6,15 @@ and `fit_mediation(engine = "native")`, so that a default native fit is
 posed like a default lavaan fit with `fixed.x = TRUE` and
 `meanstructure = TRUE`:
 
+> **At a glance**
+>
+> **Use this when:** a sem engine number moved after 0.15.0, or you
+> compare a default medfit fit with a default lavaan fit.  
+> **You get:** what the `fixed_x` and `meanstructure` defaults do to the
+> likelihood, which numbers move and why the structural estimates do
+> not.  
+> **Reading time:** 10 min
+
 | Argument | Default through 0.14.x | Default from 0.15.0 | lavaan equivalent |
 |----|----|----|----|
 | `fixed_x` | `FALSE` (every exogenous moment is a parameter) | the observed exogenous variables | `fixed.x = TRUE` |
@@ -305,7 +314,7 @@ In released 0.15.0, the native engine drops incomplete rows (listwise
 deletion), and `fixed_x` moments are the sample moments of those rows;
 that release has no `missing =` argument. The separate bounded FIML
 milestone preserves this default but permits explicit random-X simple
-mediation. See the [native
+mediation. See the [sem engine
 guide](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml);
 bounded FIML is available from 0.16.0.
 
@@ -363,6 +372,9 @@ line minima before reading it as a wrong line rather than an optimizer
 failure (see
 [`?compare_lr`](https://data-wise.github.io/medfit/reference/compare_lr.md)).
 
+**Next:** Read the whole sem engine workflow: [The sem engine
+guide](https://data-wise.github.io/medfit/articles/sem-guide.md)
+
 ## See also
 
 - [What changed since CRAN
@@ -370,7 +382,7 @@ failure (see
   for the release-by-release table.
 - [Troubleshooting](https://data-wise.github.io/medfit/articles/guide-troubleshooting.md)
   for the warning and message texts.
-- [The native engine
+- [The sem engine
   guide](https://data-wise.github.io/medfit/articles/sem-guide.md) and
   [medfit and
   lavaan](https://data-wise.github.io/medfit/articles/lavaan-comparison.md).

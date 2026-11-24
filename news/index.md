@@ -1,5 +1,285 @@
 # Changelog
 
+## medfit 0.20.0
+
+### Release summary
+
+- **Native two-level fitting (experimental).**
+  `fit_sem(model, data, cluster = )` and
+  `fit_mediation(engine = "sem", model = , cluster = )` fit a two-level
+  (1-1-1) model of observed variables with medfit’s own sem engine, and
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  returns `TwoLevelMediationData`
+  ([\#486](https://github.com/data-wise/medfit/issues/486),
+  [\#489](https://github.com/data-wise/medfit/issues/489),
+  [\#491](https://github.com/data-wise/medfit/issues/491) to
+  [\#493](https://github.com/data-wise/medfit/issues/493)). Estimates
+  and standard errors match lavaan fitted with `fixed.x = FALSE`; the
+  three-way oracle (O8, lavaan, OpenMx) and its tolerances are
+  [\#482](https://github.com/data-wise/medfit/issues/482) and
+  [\#483](https://github.com/data-wise/medfit/issues/483).
+- **Cluster-robust standard errors.** `se_type = "sandwich"` gives the
+  CR0 cluster sandwich for the native two-level fit, matching lavaan’s
+  `robust.huber.white`
+  ([\#499](https://github.com/data-wise/medfit/issues/499)).
+- **Tests at two levels.**
+  [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  accepts native two-level fits
+  ([\#501](https://github.com/data-wise/medfit/issues/501)), and
+  [`twolevel_equal_indirect()`](https://data-wise.github.io/medfit/reference/twolevel_equal_indirect.md)
+  tests that the within and between indirect effects are equal
+  ([\#502](https://github.com/data-wise/medfit/issues/502),
+  [\#505](https://github.com/data-wise/medfit/issues/505),
+  [\#507](https://github.com/data-wise/medfit/issues/507),
+  [\#510](https://github.com/data-wise/medfit/issues/510)).
+- **Behavior change (experimental API):** the within-only rule reads the
+  unrestricted (h1) ICC on both routes
+  ([\#513](https://github.com/data-wise/medfit/issues/513)).
+- **Wording.** Messages and `fit_mediation(engine = "sem")` argument
+  errors name the engine “sem”
+  ([\#496](https://github.com/data-wise/medfit/issues/496),
+  [\#497](https://github.com/data-wise/medfit/issues/497)).
+- **Few-clusters records.** The simulation studies T5, T6 and T8 are
+  recorded under `planning/`
+  ([\#480](https://github.com/data-wise/medfit/issues/480),
+  [\#484](https://github.com/data-wise/medfit/issues/484),
+  [\#485](https://github.com/data-wise/medfit/issues/485),
+  [\#490](https://github.com/data-wise/medfit/issues/490),
+  [\#520](https://github.com/data-wise/medfit/issues/520)); they are not
+  shipped, and the “Known limits” below carry what they found.
+- **Not in this release:** native two-level
+  [`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md),
+  the level-2 reliability cell (S4b), the cluster bootstrap for native
+  two-level fits, serial two-level mediators, random slopes and latent
+  two-level mediators, FIML statistical admission, and CRAN.
+- GitHub-only release; CRAN stays on hold
+  ([\#83](https://github.com/data-wise/medfit/issues/83)).
+
+### New features
+
+- **Native two-level fitting (experimental).**
+  `fit_sem(model, data, cluster = )` fits a two-level (1-1-1) model
+  written in `level:` blocks with medfit’s own sem engine, and
+  [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
+  on the fit returns a `TwoLevelMediationData` (`@source` is
+  `"native"`), the same class as the lavaan two-level adapter, so
+  [`nie()`](https://data-wise.github.io/medfit/reference/nie.md),
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html),
+  [`decompose()`](https://data-wise.github.io/medfit/reference/decompose.md)
+  and the bootstrap work unchanged.
+  `fit_mediation(engine = "sem", model = , cluster = )` returns the same
+  object. Estimates and standard errors match lavaan fitted with
+  `fixed.x = FALSE`, `information = "observed"` and
+  `h1.information = "structured"`. The sem engine of 0.19.0 could not
+  fit a model with `level:` blocks, and earlier development builds
+  stopped one with class `medfit_error_twolevel_not_implemented`; it is
+  now fitted. The route is experimental and may change without the
+  deprecation period. Refused inputs (latent variables, products,
+  `weights`, FIML, nonlinear constraints, `fixed_x = TRUE`,
+  `meanstructure = FALSE`, expected information, within-only variables)
+  each stop with a `medfit_error_twolevel_*` class; the “Two-level
+  models” section of
+  [`?"medfit-syntax"`](https://data-wise.github.io/medfit/reference/medfit-syntax.md)
+  lists the messages.
+  [`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md)
+  refuses a native two-level fit with class
+  `medfit_error_twolevel_unsupported`; earlier development builds failed
+  inside the refit with a stale “not implemented yet” message.
+- **[`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
+  on native two-level fits (experimental).**
+  `mbco_sem(fit, "a_w", "b_w")` and `mbco_sem(fit, "a_b", "b_b")` test
+  the indirect effect at one level of a `fit_sem(cluster = )` fit: the
+  minimum likelihood ratio over the refits with one path set to 0 (each
+  refit keeps the clusters), referred to chi-square(1). Before,
+  development builds refused the call. The test is conservative when
+  both paths are zero and is not a test of the between-minus-within
+  contrast. The result adds `level` and `n_clusters`. Paths from
+  different levels stop with class `medfit_error_twolevel_unsupported`.
+  A null refit whose solution is inadmissible (a negative level-2
+  variance) gives the unresolved result (statistic `NA`,
+  `unresolved = TRUE`) with a warning of class
+  `medfit_warning_twolevel_inadmissible` that names the refit and the
+  reason, and a null refit that does not converge gives the same
+  unresolved result with a warning; the statistic is never the other
+  null’s likelihood ratio alone. A warning flags a level-2 variance
+  below 1% of its implied between plus within variance at a refit, where
+  chi-square(1) may not hold. A model with `level:` blocks that reaches
+  the single-level fitter without `cluster` now says to pass `cluster`
+  instead of calling native two-level estimation not implemented.
+- **[`twolevel_equal_indirect()`](https://data-wise.github.io/medfit/reference/twolevel_equal_indirect.md)
+  (experimental).** A likelihood-ratio test that the within and the
+  between indirect effects of a `fit_sem(cluster = )` fit are equal,
+  `a_w*b_w == a_b*b_b`: the free fit against the fit with that one
+  nonlinear equality, which the two-level guard now admits (every other
+  nonlinear row is still refused with
+  `medfit_error_twolevel_nonlinear`). The statistic is referred to
+  chi-square(1), with the caveat that the null is singular where all
+  four paths are 0 (a warning of class
+  `medfit_warning_twolevel_equal_singular` flags it) and that the
+  between-level asymptotics are in the number of clusters; `n_boot` adds
+  a parametric bootstrap p-value for few clusters. A constrained refit
+  that is inadmissible (a negative variance, a covariance matrix that is
+  not positive definite), does not converge or beats the free fit is
+  unresolved (statistic `NA`, `unresolved = TRUE`, a warning), never a
+  likelihood-ratio number. The descriptive contrast of
+  `nie(level = "contrast")` still carries no p-value, and there is no
+  Wald test of it. The bootstrap p-value drops replications whose refit
+  is not admissible, so it is conditional on admissible refits, and
+  `boot$n_dropped` reports how many. The guard admits only that
+  within-versus-between chain pairing (the same `x`, `m`, `y` at both
+  levels, in either written order); a serial `a*d` or `d*b` chain of
+  that shape is admitted too, without a separate oracle. The optimizer’s
+  “the starts disagree” warning is no longer raised when every
+  disagreeing accepted start is a sign twin of the kept fit (flipping
+  the signs of the within pair, the between pair or both leaves
+  `a_w*b_w == a_b*b_b` satisfied, so the twin is a worse local optimum
+  of the same constraint); the lowest-discrepancy start is kept. It was
+  a false alarm for a correct fit. A disagreement that is not a sign
+  twin, and every other optimizer warning, still surface. After the
+  refit the pair-sign twins of the kept fit are tried too (a twin
+  certificate, [\#504](https://github.com/data-wise/medfit/issues/504)):
+  each flip of a pair with no zero is fitted once from the kept
+  estimates with that flip, and the lowest discrepancy is kept. It is a
+  local search of up to three single-start solves at every `n_starts`,
+  not a proof of a global optimum (a twin refit that fails is skipped);
+  it changes the statistic only when a twin ends lower, so a worse twin
+  is no longer kept with `n_starts = 1`. A twin that ends inadmissible
+  below the kept discrepancy (a level-2 variance on its boundary) or
+  with a covariance that is not positive definite makes the result
+  unresolved, as it does with more starts; a result that was a number in
+  0.19.0 can therefore now be unresolved when the better optimum sits on
+  a level-2 variance boundary (about 2.2% of 454 stress cells at
+  `n_starts = 1`; 2 of 160 QA cells). The result carries a `twin`
+  element recording what the certificate did (`tried`, `replaced`,
+  `flipped`, `f_gain`, `unresolved`); `flipped` is read from the signs
+  of the adopted fit against the kept fit’s, not from the start that
+  produced the twin: `"within"` or `"between"` when both paths of that
+  pair changed sign, `"other"` once for any other sign change (including
+  a path that reaches or leaves zero), and empty when no sign changed;
+  [`print()`](https://rdrr.io/r/base/print.html) is unchanged. The row
+  allows eight sign patterns; the certificate reaches the four of the
+  kept fit’s orbit. The other orbit does hold local optima (30 of 35
+  small cells, closest gap 0.02 LR), and the kept orbit still won every
+  time tested (84 stress cells, 114 QA cells with an all-orthant oracle
+  and 715 constrained fits from signed starts), which is evidence, not a
+  proof. A call takes about 3 to 4 times as long at `n_starts = 1`,
+  about twice at the default and about 1.3 times at 30 starts, and a
+  bootstrap replicate costs about 2.5 times the engine fits. Because
+  each bootstrap replicate now uses the certificate, `n_boot` p-values
+  for a given `seed` can differ from those of 0.19.0.
+- [`glance()`](https://generics.r-lib.org/reference/glance.html) on a
+  two-level fit adds `n_clusters`, `cluster_size_min` and
+  `cluster_size_max`; `chisq` and `p_value` are `NA` with a note,
+  because the engine fits no saturated two-level model.
+- Level-2 variances are fitted without a floor. An inadmissible
+  two-level solution (a negative variance or a non-positive-definite
+  implied covariance at either level) stops with class
+  `medfit_error_twolevel_inadmissible`; the condition carries the fit
+  and its outcome ledger, with the verdict per level. The lavaan route
+  keeps its warning, `medfit_warning_twolevel_inadmissible`.
+- **Cluster-robust standard errors for native two-level fits
+  (experimental).**
+  `fit_sem(model, data, cluster = , se_type = "sandwich")` gives the
+  cluster-robust CR0 sandwich: per-cluster scores, the observed
+  information as the bread and no small-sample factor. It matches
+  lavaan’s `se = "robust.huber.white"` on the same two-level model.
+  Under active linear constraints (for example a path equated across
+  levels) the sandwich is projected, as in a single-level fit. Wald
+  intervals use the normal reference, and the few-clusters warning still
+  applies; the CR0 sandwich is biased downward with few clusters, and no
+  correction is applied until the few-clusters study reports.
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) label the standard
+  errors with the number of clusters, and
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) on a
+  two-level fit reports `se_type`. Development builds refused
+  `se_type = "sandwich"` with `cluster` (class
+  `medfit_error_twolevel_weights`, which now covers `weights` only).
+  `weights`, products, nonlinear constraints and
+  `information = "expected"` are still refused. Internally, the
+  two-level branch of
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  now passes `se_type` to the fit; before, it dropped the argument,
+  which had no visible effect because the sandwich was refused first.
+- **Behavior change (experimental two-level API): the within-only rule
+  reads the unrestricted (h1) ICC.** The ICC that decides within-only
+  (below 0.01) and weak (below 0.05), and that `@icc` stores, was the
+  ratio the fitted model implies; it is now the between variance over
+  the total in the saturated two-level model, on both routes. The lavaan
+  route reads `lavaan::lavInspect(fit, "icc")` (a between-only variable
+  counts as 1); the native route estimates the same moments by an EM
+  algorithm with SQUAREM acceleration on the per-size cluster summaries
+  (about 3e-5 from lavaan’s EM run to convergence). A fit whose
+  model-implied level-2 variance is negative had its ICC clamped to 0
+  and came out within-only; its h1 ICC is usually above 0.01, so
+  within-only is rarer and such a fit is now weak or identified
+  (`admissible` is unchanged; differences between the two sources
+  reached .363 in the few-clusters pilot). Estimates, standard errors
+  and the fit are unchanged. Two new warning classes:
+  `medfit_warning_twolevel_icc_h1_unavailable` (no h1 estimate, for
+  example `h1 = FALSE`: the model-implied ICC is used) and
+  `medfit_warning_twolevel_icc_h1_unconverged` (native EM did not
+  converge; the last iterate is used). Known limit: lavaan’s default h1
+  EM stops early, so in about 2% of boundary-heavy simulated datasets
+  the two routes can put an ICC on opposite sides of 0.01 or 0.05 and
+  differ on the within-only or weak call; pass
+  `em.h1.args = list(tol = 1e-10, max_iter = 100000L)` to the lavaan fit
+  (lavaan 0.7; lavaan 0.6 takes `em.h1.tol` and `em.h1.iter.max`) when
+  an ICC is near a cut. The API is experimental, so no deprecation
+  period applies.
+
+### Bug fixes
+
+- **S7 1.0.0 compatibility for `@call`.** Under S7 1.0.0, `new_object()`
+  captured a property passed as `call = call`, so
+  `TwoLevelMediationData` and `TwoLevelParallelMediationData` failed
+  validation (“@call must be ”) and `SEMFit` and `BootstrapResult` lost
+  their `@call` silently (it became `NULL`). These four classes now use
+  a constructor with the same arguments that passes the properties in
+  the form S7 1.0.0 accepts, and the named form under S7 0.2.2, so one
+  installed medfit works with either version.
+
+### Minor changes
+
+- The few-clusters warning (`medfit_warning_twolevel_few_clusters`) now
+  ends “they are still returned.” instead of “the adapter still returns
+  them.”, because it is raised on both two-level routes.
+- Two messages name the engine by its current name: `model =` with
+  another engine now says “`model` is only used with engine =”sem”” (was
+  `"native"`), and a request for standardized estimates from a sem fit
+  says “not supported by the sem engine”. The argument checks of
+  `fit_mediation(engine = "sem")` (formulas instead of `model`, a
+  missing `model`, family arguments, unused arguments, unknown
+  `engine_args`) also say `engine = "sem"`, whichever name the call
+  used.
+
+### Known limits
+
+- Native two-level fitting (`fit_sem(cluster = )`) is experimental and
+  may change without the usual deprecation period. The `cluster` formal
+  of
+  [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md)
+  is pinned in name and order; its behavior is experimental.
+- [`compare_lr()`](https://data-wise.github.io/medfit/reference/compare_lr.md)
+  refuses a native two-level fit (class
+  `medfit_error_twolevel_unsupported`).
+- With a `cluster`, `weights`, product terms, nonlinear constraints
+  (except the one equality of
+  [`twolevel_equal_indirect()`](https://data-wise.github.io/medfit/reference/twolevel_equal_indirect.md))
+  and `information = "expected"` are refused, with
+  `se_type = "sandwich"` as with the default; `fixed_x = TRUE` is an
+  error at two levels (class `medfit_error_twolevel_fixed_x`).
+- Few clusters (simulations of the lavaan two-level adapter, with no
+  cluster-bootstrap arm): unequal small clusters (5 units) fail often
+  even at 50 clusters, and the failure rate first fell below 20% at 100
+  clusters, the largest number tried. Between-level coverage is below
+  nominal with few clusters. See “Few clusters” in [Two-level
+  mediation](https://data-wise.github.io/medfit/articles/model-twolevel.html).
+- A fit whose ICC for the treatment or a mediator is below 0.01 returns
+  the within-level results only (class `medfit_between_unidentified`).
+- S4b and the cluster bootstrap for native two-level fits are not part
+  of this release.
+
 ## medfit 0.19.0
 
 ### Release summary

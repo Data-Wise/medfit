@@ -21,6 +21,13 @@ unavailable. See the native guide and [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.html#fiml-source-intervals)
 for assumptions and scope.
 
+> **At a glance**
+>
+> **Use this when:** you must decide which interval to report.  
+> **You get:** a table that picks an interval by situation, the
+> intervals side by side on one dataset, and what each one assumes.  
+> **Reading time:** 4 min
+
 ## Pick by situation
 
 | Your situation | Use | Why |
@@ -161,6 +168,9 @@ A bootstrap warns when refits fail and are dropped; see
 - **Percentile intervals only.**
 - **Standard errors under weights** need `se_type = "sandwich"` (the
   sandwich treats observations as independent).
+
+**Next:** See how to run the bootstrap: [Bootstrap
+Inference](https://data-wise.github.io/medfit/articles/bootstrap.md)
 
 ## Related
 

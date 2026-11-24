@@ -13,6 +13,48 @@ needs 0.19.0). CRAN has 0.3.2, which lacks `mediation_demo` and the
 native, joint and cluster functions; install from GitHub or r-universe
 (see the [home page](https://data-wise.github.io/medfit/#install)).
 
+> **At a glance**
+>
+> **Use this when:** you know the task and want a short recipe you can
+> run.  
+> **You get:** short recipes, each with code on `mediation_demo` (or
+> simulated data) and a link to the page that explains it.  
+> **Reading time:** 15 min
+
+**Find your recipe**
+
+| I want to … | Recipe |
+|----|----|
+| **Basics (1-4)** |  |
+| Get a mediation answer from a data frame fast | [1](#one-line-mediation) |
+| Reuse mediator and outcome models I already fitted with lm | [2](#i-already-have-lm-fits) |
+| Analyze a binary outcome with a logistic model | [3](#binary-outcome) |
+| Weight cases and get robust standard errors | [4](#weights-and-robust-standard-errors) |
+| **Several mediators and interactions (5-8)** |  |
+| Fit two mediators linked in a chain | [5](#two-mediators-in-a-chain) |
+| Fit two mediators side by side | [6](#two-mediators-side-by-side) |
+| Let the mediator interact with the treatment | [7](#treatment-by-mediator-interaction) |
+| Handle many mediators with treatment-by-mediator products | [8](#many-mediators-with-products) |
+| **Clusters, two-level and lavaan (9, 10, 23, 24)** |  |
+| Analyze a cluster-randomized trial with mixed models | [9](#cluster-randomized-trial) |
+| Extract mediation effects from an existing lavaan fit | [10](#i-use-lavaan) |
+| Separate within and between effects in a two-level fit | [23](#a-two-level-lavaan-fit-within-and-between) |
+| Use two parallel mediators in a two-level fit | [24](#two-parallel-mediators-in-a-two-level-lavaan-fit) |
+| **The sem engine (11, 12, 14-21)** |  |
+| Fit a latent mediator from model syntax | [11](#a-latent-mediator-native-engine) |
+| Impose a nonlinear constraint or a longer chain | [12](#a-nonlinear-constraint-or-a-longer-chain-native-engine) |
+| Compare two sem engine models with a likelihood-ratio test | [14](#compare-two-native-models) |
+| Get an interval for a defined parameter | [15](#a-defined-parameter-and-its-interval) |
+| Bound a variance or fix a path | [16](#bound-a-variance-or-fix-a-path) |
+| Check a sem engine fit before trusting it | [17](#check-a-native-fit-before-trusting-it) |
+| Fix exogenous covariates at their sample values (fixed_x) | [18](#fix-exogenous-covariates-fixed_x) |
+| Estimate observed intercepts and means in a sem fit | [19](#observed-intercepts-and-means) |
+| Split the effect into the four-way decomposition | [20](#four-way-decomposition-from-a-native-fit) |
+| Include a categorical covariate in a sem engine fit | [21](#a-categorical-covariate-in-a-native-fit) |
+| **Inference and missing data (13, 22)** |  |
+| Test joint significance for a binary or count outcome | [13](#joint-significance-for-a-binary-or-count-outcome) |
+| Handle missing data with bounded FIML | [22](#missing-data-bounded-fiml) |
+
 ``` r
 library(medfit)
 ```
@@ -232,7 +274,7 @@ decompose(extract_mediation(sem_i, treatment = "treatment", mediator = "mediator
 
 More: [Model
 Extraction](https://data-wise.github.io/medfit/articles/extraction.md),
-[the native product
+[the sem engine product
 term](https://data-wise.github.io/medfit/articles/model-sem.html#product-terms).
 
 ## 8. Many mediators with products
@@ -374,7 +416,7 @@ tidy(xl, type = "effects", conf_int = TRUE)
 More: [Model
 Extraction](https://data-wise.github.io/medfit/articles/extraction.md).
 
-## 11. A latent mediator, native engine
+## 11. A latent mediator, sem engine
 
 *When:* the mediator is a construct measured by several indicators, and
 you want its indirect effect without first averaging the indicators into
@@ -433,7 +475,7 @@ Optimizer settings for either call go in `control = sem_control()` (for
 example `sem_control(nloptr = list(maxeval = 20000L))`); a plain list of
 `nloptr` options still works.
 
-## 12. A nonlinear constraint or a longer chain, native engine
+## 12. A nonlinear constraint or a longer chain, sem engine
 
 *When:* you want to fix the direct effect at the indirect effect
 (`cp == a*b`), or test the indirect effect of a three-mediator-step
@@ -513,7 +555,7 @@ joint_test(fit_a, "treatment", fit_b, "mediator1")
 More: [GLM
 families](https://data-wise.github.io/medfit/articles/model-glm-families.html#joint-significance-test-for-the-indirect-effect).
 
-## 14. Compare two native models
+## 14. Compare two sem engine models
 
 *When:* you want to know whether a path or a constraint is needed, on
 the native engine. [`anova()`](https://rdrr.io/r/stats/anova.html) is
@@ -630,7 +672,7 @@ round(coef(bounded)[c("a", "b")], 3)
 `lower(2)` is above the variance the data want (about 1.2), so the bound
 binds and is reported. `0 * treatment` fixes the direct effect at zero.
 
-## 17. Check a native fit before trusting it
+## 17. Check a sem engine fit before trusting it
 
 *When:* before you report a native fit. Read the diagnostics, then ask
 whether the model fits when it has restrictions (`df > 0`).
@@ -857,7 +899,7 @@ defaults](https://data-wise.github.io/medfit/articles/sem-defaults-0-15.md).
 More: [The sem engine,
 intercepts](https://data-wise.github.io/medfit/articles/model-sem.html#intercepts).
 
-## 20. Four-way decomposition from a native fit
+## 20. Four-way decomposition from a sem engine fit
 
 *When:* the outcome depends on the treatment, the mediator and their
 product, and you want the controlled direct effect, the two interaction
@@ -948,7 +990,7 @@ c(estimate = boot20@estimate, lower = boot20@ci_lower, upper = boot20@ci_upper)
 More: [The sem engine, product
 term](https://data-wise.github.io/medfit/articles/model-sem.md).
 
-## 21. A categorical covariate in a native fit
+## 21. A categorical covariate in a sem engine fit
 
 *When:* a covariate is a factor, character or logical column (a group, a
 site, a yes/no flag). Write the column name where a numeric covariate
@@ -1154,6 +1196,15 @@ almost no between-cluster variance gives a within-only result and the
 classed warning `medfit_between_unidentified`. More: [Two-level
 mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md).
 
+To test whether the within and the between indirect effects are equal,
+pass the `fit_sem(cluster = )` fit to `twolevel_equal_indirect(fit)`: a
+likelihood-ratio test of `a_w*b_w == a_b*b_b` against chi-square(1),
+experimental. `n_boot = 200` adds a parametric bootstrap p-value for few
+clusters, conditional on admissible refits (`boot$n_dropped` counts the
+rest). An inadmissible or non-converged constrained refit gives an
+unresolved result (statistic `NA`) with a warning, and the descriptive
+contrast of `nie(level = "contrast")` carries no p-value.
+
 ## 24. Two parallel mediators in a two-level lavaan fit
 
 *When:* as in recipe 23, but two or more mediators each carry part of
@@ -1266,3 +1317,9 @@ why not.
 | `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | 22 (the simple model; the parallel and serial forms are in [Bounded FIML](https://data-wise.github.io/medfit/articles/model-fiml.md)) |
 | `TwoLevelMediationData` | 23 (an [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a two-level `lavaan` fit, and [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md) for its bootstrap; see [Two-level mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md)) |
 | `TwoLevelParallelMediationData` | 24 (an [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a two-level `lavaan` fit with two or more mediators, and [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md) for its bootstrap; see [Several parallel mediators](https://data-wise.github.io/medfit/articles/model-twolevel.html#several-parallel-mediators)) |
+| [`twolevel_equal_indirect()`](https://data-wise.github.io/medfit/reference/twolevel_equal_indirect.md) | 23 (the test that the within and between indirect effects of a `fit_sem(cluster = )` fit are equal; see [Two-level mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md)) |
+
+**Next:** Look up one call: [Reference
+Card](https://data-wise.github.io/medfit/articles/refcard.md). Pick a
+model page:
+[Models](https://data-wise.github.io/medfit/articles/models.md)

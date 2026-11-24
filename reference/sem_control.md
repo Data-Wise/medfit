@@ -68,19 +68,10 @@ A top-level `n_starts` that differs in value from
 ``` r
 ctl <- sem_control(nloptr = list(maxeval = 20000L))
 ctl
-#> $optimizer
-#> [1] "auto"
-#> 
-#> $n_starts
-#> NULL
-#> 
-#> $nloptr
-#> $nloptr$maxeval
-#> [1] 20000
-#> 
-#> 
-#> attr(,"class")
-#> [1] "medfit_sem_control"
+#> <sem_control>
+#>   optimizer: auto 
+#>   n_starts:  default 
+#>   nloptr:    maxeval = 20000 
 fit <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment",
                mediation_demo, control = ctl)
 fit@diagnostics$protocol

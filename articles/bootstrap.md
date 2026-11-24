@@ -1,5 +1,14 @@
 # Bootstrap Inference
 
+> **At a glance**
+>
+> **Use this when:** you need an interval for an indirect effect and
+> must choose between the parametric, nonparametric and plugin
+> methods.  
+> **You get:** a `BootstrapResult` with the estimate, a percentile
+> interval and the resample draws.  
+> **Reading time:** 6 min
+
 ## Overview
 
 Bootstrap inference provides confidence intervals for indirect effects
@@ -20,7 +29,7 @@ explicit `method`. It provides retained-row FIML or joint Gaussian
 parameter-draw percentile intervals; the callback and extracted-data
 routes remain unavailable. This is narrower than the examples below. Any
 required failed or interrupted replicate withholds the whole interval,
-and statistical admission remains deferred. See the [native
+and statistical admission remains deferred. See the [sem engine
 guide](https://data-wise.github.io/medfit/articles/sem-guide.html#bounded-fiml)
 and [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.html#fiml-source-intervals).
@@ -827,3 +836,6 @@ confint(boot_result, level = 0.90)
 - Percentile intervals only; BCa intervals are not implemented.
 
 See `NEWS.md` for updates.
+
+**Next:** Choose between the intervals: [Which interval should I
+use?](https://data-wise.github.io/medfit/articles/guide-intervals.md)
