@@ -17,8 +17,8 @@
 > `sem_control()` and two-level provenance. **2026-11-17: 0.19.0 is released** (tag `v0.19.0` at
 > `2c334734`, GitHub-only) with IG5, two-level parallel mediators (experimental;
 > #458-#465) ([checklist](PLAN-0.19.0-release-checklist-2026-11-16.md)); dev is 0.19.0.9000. See the
-> [Current board](#current-board) reconciliations of 2026-11-15, 2026-11-17 and 2026-11-21 (native two-level
-> fit, IG2 and IG3 merged to dev; next release gated on the few-clusters T8; M2 decided, T7 dropped).
+> [Current board](#current-board) reconciliations of 2026-11-15, 2026-11-17, 2026-11-21 and 2026-11-23 (native two-level
+> fit, IG2, IG3 and the few-clusters T8 merged to dev; 0.20.0 is the next release, authorized 2026-11-23, not yet executed).
 > This file's [Current board](#current-board) owns medfit priorities; older phase
 > schedules and the extensions plan are historical design references.
 > Future feature versions/dates are unassigned. CRAN remains held; hosted
@@ -1883,6 +1883,17 @@ sem-engine wording (#496, #497); ADR 4b boundary evidence (#509). The few-cluste
 package) -> release checklist; S4b is out of the next release (decided 2026-11-21). Deferred: two-level `compare_lr()` (IG3 D6), serial two-level
 mediators (IG5s, decision only). Unchanged: IG4 and IG6 NO-GO, FIML admission unresolved, CRAN on hold (#83). Open PR:
 #470 (rforge non-publishing branch).
+
+**Reconciliation 2026-11-23 (supersedes the 2026-11-21 line on open work and the release gate).** Merged to `dev` since
+2026-11-21: T8, the few-clusters decision table and U4 package (#520; U4 marked met, with limits: no cluster-bootstrap
+arm beyond six pilot cells, the lavaan P1 arm a proxy); the 0.20.0 release grill (#521,
+[decisions](DECISIONS-0.20.0-release-grill-2026-11-23.md), R20-1 to R20-5); the few-clusters note and the Known limits
+draft (#522); the local verification runner (#519) and the rforge non-publishing branch declaration (#470). Listed as
+merged-dev: S4a (#486, #489, #491 to #493, #495), IG2 (#499), IG3 (#501, #502, #505, #507) and T8 (#520). **0.20.0 is
+the next release**, authorized by the maintainer in words on 2026-11-23 ("Release") and not yet executed: checklist
+[PLAN-0.20.0-release-checklist-2026-11-21.md](PLAN-0.20.0-release-checklist-2026-11-21.md). Still out of it: S4b
+(next cycle), T7 (dropped), two-level `compare_lr()`, serial two-level mediators (IG5s); IG4 and IG6 NO-GO, FIML
+admission unresolved, CRAN on hold (#83).
 
 **Reconciliation 2026-11-17 (supersedes the 2026-11-15 line that IG1 to IG7 and any 0.19.0 scope are
 unauthorized).** IG5, parallel mediators in the lavaan two-level adapter (`TwoLevelParallelMediationData`,
