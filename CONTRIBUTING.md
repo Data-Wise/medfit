@@ -36,7 +36,7 @@ lintr::lint_package()
 
 Use `--full-tests` on the final candidate to include tests that require `NOT_CRAN=true`.
 Record the test counts and link to the run log in the pull request.
-See [local verification](scripts/README.md#local-verification) for the run modes and receipt guidance.
+See [local verification](https://github.com/Data-Wise/medfit/blob/dev/scripts/README.md#local-verification) for the run modes and receipt guidance.
 Verify a numeric claim against an independent oracle (lavaan, a hand calculation, a fit without
 the feature) and plant a defect the test must catch.
 

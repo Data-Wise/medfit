@@ -335,7 +335,7 @@ and ran before the within-only rule moved to the unrestricted ICC.
   fits at 10 clusters, .31 at 50 and .06 at 100. Failure first fell below .20 for every ICC studied only at 100
   clusters, the largest number tried. Unequal clusters of 5 units therefore fail often even with 50 clusters when
   the ICC is low.
-- **The within indirect effect** covered near the nominal level in the fits that returned an interval (median .94
+- **The within indirect effect** covered near the nominal level in the fits that returned an interval (median .94 to .95
   at every number of clusters tried). Its overall coverage fell short because failed fits return no interval.
 - **The between indirect effect** is the weak spot. With an ICC of 0.05 and 100 clusters its coverage was about .81
   (median over the cells), because the between interval was available in only about .69 of fits: the rest were
@@ -385,7 +385,7 @@ cbind(native = sqrt(diag(ntd@vcov)), lavaan = sqrt(diag(ltd@vcov)))
 
 The standard errors agree as well. The between-path standard errors of the default lavaan fit in
 [Fit it and extract it](#fit-it-and-extract-it) are slightly different, because that fit uses `fixed.x = TRUE`
-([Standard errors under `fixed.x = TRUE`](#standard-errors-under-fixed.x-true)).
+([Standard errors under `fixed.x = TRUE`](#standard-errors-under-fixed-x-true)).
 
 `glance()` on the fit reports the cluster count and the range of cluster sizes, counted after incomplete rows
 are dropped. The chi-square test and its p-value are `NA`, with a note, because the engine fits no saturated
