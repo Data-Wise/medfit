@@ -21,7 +21,9 @@ jobs:
     # 1-2, 40053008246, 40051687109) and passed on 24.04 for the same tree (run 40109489583: reliability 22 min, rest
     # 28 min). A single gate run alone on 26.04 was fast (run 40059864450), so the cause is not yet known.
     runs-on: ubuntu-24.04
-    timeout-minutes: 75
+    # The `rest` shard took 96 minutes and `reliability` 49 on the 0.20.0 probe run (the new two-level gates landed in
+    # `rest`); 75 cancelled both release runs.
+    timeout-minutes: 150
     strategy:
       fail-fast: false
       matrix:
