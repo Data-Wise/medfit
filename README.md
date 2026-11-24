@@ -121,8 +121,9 @@ Other cases (interaction, weights, constraints and MBCO, serial or parallel mode
 ## More, when you need it
 
 <details>
-<summary><strong>What's new in 0.20.0</strong></summary>
+<summary><strong>What's new in 0.20.0.9000</strong></summary>
 
+* **Development version:** no user-visible changes yet since 0.20.0 (released 2026-11-23), whose highlights follow.
 * **0.20.0 (2026-11-23, GitHub only):** adds the native two-level route below since 0.19.0 (released 2026-11-17). The two-level API is experimental, so it may change without a deprecation period.
 * **Native two-level fit (0.20.0, experimental):** `fit_sem(model, data, cluster = )` fits a two-level (1-1-1) model written in `level:` blocks with the sem engine, and `extract_mediation()` on the fit returns `TwoLevelMediationData`; `fit_mediation(engine = "sem", model = , cluster = )` returns the same object. `se_type = "sandwich"` gives cluster-robust standard errors. See the [model page](https://data-wise.github.io/medfit/articles/model-twolevel.html).
 * **Tests on native two-level fits (0.20.0, experimental):** `mbco_sem()` tests the indirect effect at one level, and `twolevel_equal_indirect()` tests that the within and between indirect effects are equal; a pair-sign twin certificate stops a worse local optimum from standing in the equality refit.
