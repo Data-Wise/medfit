@@ -120,3 +120,33 @@ needed. The release matrix jobs spent most of their time running the
 package checks. Use the frozen release candidate to overlap independent
 pre-merge matrix, simulation, coverage and local dependent checks where
 their prerequisites permit.
+
+### Release scheduling findings, 2026-11-23 (0.20.0 release PR #526)
+
+Recorded at the maintainer's request after the first hosted run of the 0.20.0 release PR. Measured from the run logs and
+run histories unless marked INFERENCE.
+
+- **Hosted matrix.** The five full-suite matrix jobs ran their tests for about 87 minutes and hit the 90-minute job
+  timeout; `gates (rest)` and `test-coverage` hit the 75-minute timeout. Earlier release runs took 55 to 67 minutes
+  (matrix, Nov 15 and 17) and 24 to 51 minutes (gates). Setup before the tests took about 1.7 minutes on a cache hit, so
+  provisioning is not the cause. The suite grew 8 to 10% since `main` (225 to 244 test files, 48,072 to 52,802 lines),
+  too little to explain the jump alone; the new native two-level tests, Ubuntu 26.04.1 and S7 1.0.0 (new in CI since the
+  last green run) are candidates. INFERENCE: the cause is not separated. Two assertion failures were saved at
+  `test-bootstrap-fiml.R` lines 53 and 98 and pass locally under S7 1.0.0; the error text was not captured.
+- **Restarts.** Each change to `dev` restarts the 13 hosted checks on the release PR, one full cycle being 90 minutes or
+  more. On 0.20.0 the release PR was opened as a draft right after R1; the R4 site reading then found a dead anchor, and
+  its fix (#527) and the back-merge (#528) each changed the head.
+- **Local runs.** Two full-suite runs on the maintainer's machine used about 13 CPU minutes in about 3 hours of wall time
+  (sleep or throttling) and were stopped. The local gates ran as agent jobs in about 2 minutes (N1), 6 minutes (R4),
+  5 minutes (R6) and 16 minutes (R5), in parallel.
+
+**Policy (release ordering).** For a release PR:
+
+1. Run the cheap local gates first, in parallel and on a frozen head: N1, R4 (the site read and link check), R5 and R6.
+   Open the release PR as a draft only when none of them is expected to change the head, and keep the head frozen after
+   that; a fix found later is batched with any other fix into one change.
+2. Run long local jobs (full suite, site build, book render) with the machine kept awake (`caffeinate -i`, or the
+   keep-awake option of the app), so a sleep does not stretch a 40-minute job to hours.
+
+Not changed by this note: every required gate stays required; duplicate heavy jobs, the hosted timeouts and the
+two-worker test trial (T4) are separate decisions.
