@@ -1,0 +1,4 @@
+"icc_x","cells","warn_between_weak_mean","within_only_mean","within_only_J10","within_only_J100","inadmissible_mean","clean_J10","clean_J100","cov_nie_b_delta_J100_median","ccov_nie_b_delta_J100_median"
+0.05,40,0.4358,0.2124,0.2665,0.1416,0.176,0.0804,0.6872,0.806,0.9905
+0.2,40,0.0446,0.0284,0.0845,3e-04,0.0806,0.4861,0.998,0.9615,0.962
+0.4,40,0.0044,0.0034,0.0148,0,0.0237,0.7916,1,0.961,0.961

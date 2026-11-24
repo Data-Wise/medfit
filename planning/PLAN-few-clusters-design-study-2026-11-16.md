@@ -240,3 +240,21 @@ B = 2000), cluster-bootstrap percentile (`method = "nonparametric", cluster = "i
   `feature/twolevel-icc-h1`). Records made before the change used the model-implied ICC; runs after it read h1. About
   2% of boundary-heavy datasets can differ between routes at the .01 and .05 cuts (lavaan's default h1 EM stops
   early), accepted and documented.
+
+### Decision recorded 2026-11-23 (P1 interpretation, unequal n = 5)
+
+- **P1 interpretation** decided: **report a floor-bound fit with a warning** (not as a failure). T8's headline coverage is
+  P1 unconditional coverage; beside it the at-bound rate and the coverage of floor-bound fits; sensitivity coverage stays
+  as a worst-case column only. Basis (INFERENCE from `T6-parametrization.csv`, floor-bound coverage =
+  (coverage_p1 - sens_coverage_p1) / at_bound_p1, not checked against the per-dataset rows): NIE_W floor-bound coverage
+  median .94; NIE_B floor-bound .73 (range .63 to .97) against about 1.0 for fits off the floor, overall .82. The T6
+  memo's reading of the conditional .993 to .997 as floor-bound coverage is wrong: it describes the fits off the floor.
+- **Unequal n = 5**: the guidance names a minimum J, derived from `T6-cells.csv` under the M8 cutoffs; it does not
+  recommend P1 there.
+
+### Status recorded 2026-11-23 (T8 done; not a decision)
+
+- T8 is done: the U4 package is `studies/few-clusters/T8-README.md` (generator `T8-tables.R`, manifest `T8-manifest-sha256.txt`); the gaps plan's U4 line is updated (met, with limits). The task table has no status column, so no tick is added.
+- Two readings above were checked against `T6-cells.csv` and are corrected in the T6 memo (dated notes): `ccov_p1` is over every identified, admissible P1 fit with an interval, floor-bound ones included, not the off-floor fits (the 2026-11-23 decision itself stands); and the memo's "six cells fall below .10" compares the overlapping rate on T6 data with the exclusive rate (under M7's own definition no selected cell falls below .10; five do under the exclusive rate; 1099 was never selected). Cell 1106 stays borderline (T5 .102, T6 overlapping .104, exclusive .096).
+- The T5 memo's "MC B = 1000" is fixed to 2000 with a dated note.
+

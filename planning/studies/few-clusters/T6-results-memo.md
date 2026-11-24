@@ -213,3 +213,28 @@ both runs. The P1 results for these cells stay valid as data; T8 should state th
   coverage)? The two answers differ by about .5 in coverage, so S4b's floor-versus-unconstrained choice depends on it.
 - **Unequal n = 5:** P0 failure above 20% up to J = 50 in this design; decide whether the guidance names a minimum J
   for unequal small clusters or recommends P1 there.
+
+## Correction notes (2026-11-23, T8)
+
+The text above is kept as written on 2026-11-18. T8 (`T8-README.md`) corrects four readings; the numbers in the tables
+are unchanged.
+
+1. **P1 conditional coverage (.993 to .997, section "P1 (floor) against P0").** It is not the coverage of floor-bound fits
+   and not the coverage of fits off the floor. In `T6-cells.csv` for P1, `availability` equals `rate_clean` and
+   `1 - rate_within_only - rate_fail`, `rate_inadmissible` is 0, and `ccov` = `coverage` / `availability`: it is the
+   coverage over every identified, admissible P1 fit with an interval, which includes floor-bound fits. The recorded
+   columns do not split it by floor status. A bound on floor-bound NIE_B fits that have an interval (INFERENCE) is
+   .992 to .994 (median over cells), so the sentence "when the floor binds the interval is wide enough to cover almost
+   always" is consistent with it. The floor-bound figure (`coverage_p1` - `sens_coverage_p1`) / `at_bound_p1`, median .73
+   for NIE_B, counts floor-bound within-only fits (no between interval) as misses; it is mostly the within-only rate.
+2. **"P1 selection stability" table.** Its "T5" column is `inadmissible_t5` in `T6-cells.csv`, the T5 definition (overlapping
+   rate) applied to the T6 replicates, and its "T6" column is the exclusive `rate_inadmissible`. It does not compare the
+   pilot with T6. The selection (`T5-cells.csv`, `inadmissible` > .10, 49 cells) against T6 under the same overlapping
+   definition: 49 cells above in both, 70 below in both, one rising above (cell 1099, T5 .098, T6 .107, not in P1),
+   none falling below. Under the exclusive T6 rate, 44 selected cells stay above .10 and five fall to .10 or below
+   (1032, 1036, 1092, 1096, 1106); the table's "70 agree below" is 71 and "6 cells fall below" is 5 selected cells plus 1099,
+   which was not selected. Cell 1106: T5 pilot .102, T6 overlapping .104, T6 exclusive .096 (borderline).
+   `T8-p1-selection.csv` has all 120 cells.
+3. **"14 of the 24 cells above 20%"** (failure findings): 18 cells are above 20% (the bands table: 8 + 6 + 2 + 2 + 0), 14
+   of them unequal n = 5 and 4 unequal n = 20. The 24 is the count of cells between 5% and 20%.
+4. **"MC B = 1000" in the T5 memo** is a typo for 2000; see the note in `T5-pilot-memo.md`.

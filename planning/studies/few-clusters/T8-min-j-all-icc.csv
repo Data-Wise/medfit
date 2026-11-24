@@ -1,0 +1,5 @@
+"n","balance","min_J_below_20pct_all_icc","min_J_below_5pct_all_icc"
+5,"equal",10,
+20,"equal",10,30
+5,"unequal",100,
+20,"unequal",30,50
