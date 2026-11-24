@@ -114,6 +114,24 @@
   missing `model`, family arguments, unused arguments, unknown `engine_args`) also say `engine = "sem"`, whichever
   name the call used.
 
+## Known limits
+
+Draft; folded into the 0.20.0 notes when the heading is collapsed in release prep.
+
+* Native two-level fitting (`fit_sem(cluster = )`) is experimental and may change without the usual deprecation
+  period. The `cluster` formal of `fit_sem()` is pinned in name and order; its behavior is experimental.
+* `compare_lr()` refuses a native two-level fit (class `medfit_error_twolevel_unsupported`).
+* With a `cluster`, `weights`, product terms, nonlinear constraints (except the one equality of
+  `twolevel_equal_indirect()`) and `information = "expected"` are refused, with `se_type = "sandwich"` as with the
+  default; `fixed_x = TRUE` is an error at two levels (class `medfit_error_twolevel_fixed_x`).
+* Few clusters (simulations of the lavaan two-level adapter, with no cluster-bootstrap arm): unequal small clusters
+  (5 units) fail often even at 50 clusters, and the failure rate first fell below 20% at 100 clusters, the largest
+  number tried. Between-level coverage is below nominal with few clusters. See "Few clusters" in
+  [Two-level mediation](https://data-wise.github.io/medfit/articles/model-twolevel.html).
+* A fit whose ICC for the treatment or a mediator is below 0.01 returns the within-level results only (class
+  `medfit_between_unidentified`).
+* S4b and the cluster bootstrap for native two-level fits are not part of this release.
+
 # medfit 0.19.0
 
 ## Release summary

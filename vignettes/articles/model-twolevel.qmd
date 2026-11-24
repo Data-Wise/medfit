@@ -316,10 +316,33 @@ suppressWarnings(nie(td_eq2, level = "contrast"))
 
 `extract_mediation()` warns, and never errors, when the fit has fewer than 50 clusters (class
 `medfit_warning_twolevel_few_clusters`), on both routes. The 50 is a judgment: no source gives a cluster count below which
-two-level estimates or between-level standard errors are trustworthy. In medfit's development simulations
-with 20 clusters, lavaan's admissibility check failed in a noticeable share of fits and the between
-indirect effect's intervals covered below the nominal level. The threshold is editable with
+two-level estimates or between-level standard errors are trustworthy. The threshold is editable with
 `options(medfit.twolevel_min_clusters = )`.
+
+With few clusters the between-level results are unreliable, and the within-level results are less affected. Treat
+the warning, and `medfit_warning_between_weak` (an ICC below 0.05), as the signal that the between interval may be
+missing, wide or too narrow; the [troubleshooting guide](guide-troubleshooting.html) lists both.
+
+The guidance below comes from a simulation study of the lavaan two-level adapter, fitted with delta-method and
+Monte Carlo intervals and the settings medfit ships. It did not run the cluster bootstrap beyond a small pilot, so
+it says nothing about how well that bootstrap performs with few clusters. A fit counts as a failure when lavaan
+errors, does not converge or the adapter errors. The study used 5 or 20 units per cluster and 10 to 100 clusters,
+and ran before the within-only rule moved to the unrestricted ICC.
+
+- **Equal cluster sizes** failed in at most .18 of fits at any number of clusters in the grid. With 5 units per
+  cluster and an ICC of 0.05 the rate stayed above .05 at every number of clusters tried (.097 at 50, .059 at 100).
+- **Unequal cluster sizes** failed far more often, most of all with 5 units per cluster and an ICC of 0.05: .93 of
+  fits at 10 clusters, .31 at 50 and .06 at 100. Failure first fell below .20 for every ICC studied only at 100
+  clusters, the largest number tried. Unequal clusters of 5 units therefore fail often even with 50 clusters when
+  the ICC is low.
+- **The within indirect effect** covered near the nominal level in the fits that returned an interval (median .94
+  at every number of clusters tried). Its overall coverage fell short because failed fits return no interval.
+- **The between indirect effect** is the weak spot. With an ICC of 0.05 and 100 clusters its coverage was about .81
+  (median over the cells), because the between interval was available in only about .69 of fits: the rest were
+  within-only, failed or inadmissible. More clusters did not remove that.
+
+These are simulation results for a few designs, not guarantees. With fewer than about 50 clusters, and especially
+with unequal sizes, report the between-level results as exploratory.
 
 ## Standard errors under `fixed.x = TRUE`
 
