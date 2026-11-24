@@ -102,7 +102,7 @@ the behavior makes that test fail.
 | Product terms (`x:m`) and four-way effects | `x:m` is an observed exogenous column, kept as written; no mediation effects | `x:m` stored as `m:x`; coefficients and sandwich standard errors equal lavaan's; `extract_mediation()` gives the four-way parts; chi-square, df and p-value are `NA` and `anova()`, `mbco_sem()` refuse when a factor is a regression target; a supported class only | Partial |
 | Nested model comparison | `lavTestLRT()` | `anova()` | Supported |
 | Mediation effects and the MBCO test | no | `extract_mediation()`, `mbco_sem()` | Supported |
-| Two-level models (`level:` blocks, `cluster =`) | yes, many designs | experimental, unreleased: observed-variable 1-1-1 mediation through `fit_sem(cluster = )`; estimates match lavaan fitted with `fixed.x = FALSE`, `information = "observed"` and `h1.information = "structured"`; weights, latent variables, products, FIML and most constraints are refused ([page](model-twolevel.html#the-sem-engine-route)) | Partial |
+| Two-level models (`level:` blocks, `cluster =`) | yes, many designs | experimental, since 0.20.0: observed-variable 1-1-1 mediation through `fit_sem(cluster = )`; estimates match lavaan fitted with `fixed.x = FALSE`, `information = "observed"` and `h1.information = "structured"`; weights, latent variables, products, FIML and most constraints are refused ([page](model-twolevel.html#the-sem-engine-route)) | Partial |
 
 The first column names the feature; the probe for a row is in the test, not
 here, so the table cannot drift from the code without a failing test.

@@ -121,12 +121,12 @@ Other cases (interaction, weights, constraints and MBCO, serial or parallel mode
 ## More, when you need it
 
 <details>
-<summary><strong>What's new in 0.19.0.9000</strong></summary>
+<summary><strong>What's new in 0.20.0</strong></summary>
 
-* **Development version (unreleased):** the changes below are on `dev` since 0.19.0 (released 2026-11-17), and the two-level API they touch is experimental, so it may change without a deprecation period.
-* **Native two-level fit (experimental, unreleased):** `fit_sem(model, data, cluster = )` fits a two-level (1-1-1) model written in `level:` blocks with the sem engine, and `extract_mediation()` on the fit returns `TwoLevelMediationData`; `fit_mediation(engine = "sem", model = , cluster = )` returns the same object. `se_type = "sandwich"` gives cluster-robust standard errors. See the [model page](https://data-wise.github.io/medfit/articles/model-twolevel.html).
-* **Tests on native two-level fits (experimental, unreleased):** `mbco_sem()` tests the indirect effect at one level, and `twolevel_equal_indirect()` tests that the within and between indirect effects are equal; a pair-sign twin certificate stops a worse local optimum from standing in the equality refit.
-* **Behavior change (experimental, unreleased):** the within-only rule for a two-level fit now reads the unrestricted (h1) ICC on both routes, so within-only results are rarer. See the [NEWS](https://data-wise.github.io/medfit/news/index.html).
+* **0.20.0 (2026-11-23, GitHub only):** adds the native two-level route below since 0.19.0 (released 2026-11-17). The two-level API is experimental, so it may change without a deprecation period.
+* **Native two-level fit (0.20.0, experimental):** `fit_sem(model, data, cluster = )` fits a two-level (1-1-1) model written in `level:` blocks with the sem engine, and `extract_mediation()` on the fit returns `TwoLevelMediationData`; `fit_mediation(engine = "sem", model = , cluster = )` returns the same object. `se_type = "sandwich"` gives cluster-robust standard errors. See the [model page](https://data-wise.github.io/medfit/articles/model-twolevel.html).
+* **Tests on native two-level fits (0.20.0, experimental):** `mbco_sem()` tests the indirect effect at one level, and `twolevel_equal_indirect()` tests that the within and between indirect effects are equal; a pair-sign twin certificate stops a worse local optimum from standing in the equality refit.
+* **Behavior change (0.20.0, experimental):** the within-only rule for a two-level fit now reads the unrestricted (h1) ICC on both routes, so within-only results are rarer. See the [NEWS](https://data-wise.github.io/medfit/news/index.html).
 * **Two-level parallel mediation (0.19.0, experimental):** `extract_mediation()` on a two-level `lavaan` fit with two or more mediators returns `TwoLevelParallelMediationData`, with per-mediator and total effects at each level, delta-method SEs and `twolevel_statistic()` for the bootstrap. One-mediator results are unchanged. See the [model page](https://data-wise.github.io/medfit/articles/model-twolevel.html#several-parallel-mediators).
 * **The sem engine (0.18.0):** `fit_mediation(engine = "sem")` names medfit's own SEM fitter; `engine = "native"` still works, with identical results. `sem_control()` collects its optimizer settings. See [Which engine should I use?](https://data-wise.github.io/medfit/articles/guide-engines.html).
 * **Renamed pages (0.18.0):** the sem engine articles moved (`native-guide` is now `sem-guide`, and so on); old links redirect.

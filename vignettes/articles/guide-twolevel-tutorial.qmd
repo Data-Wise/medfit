@@ -16,7 +16,7 @@ This guide walks one analysis from a `lavaan` fit to a reported result, and says
 It uses the same simulated data as [Two-level mediation](model-twolevel.html), which is the reference page for
 every option; read that page when a step here needs more detail. The route needs `lavaan` (Suggests). The
 two-level API is experimental and may change without a deprecation period. To fit the same model with medfit's own
-sem engine instead of `lavaan` (`fit_sem(cluster = )`, unreleased), see
+sem engine instead of `lavaan` (`fit_sem(cluster = )`, 0.20.0), see
 [The sem engine route](model-twolevel.html#the-sem-engine-route); this guide covers the `lavaan` route only.
 
 ::: {.callout-note title="At a glance"}
