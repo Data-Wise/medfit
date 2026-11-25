@@ -10,7 +10,7 @@ freeze_prefix_broken <- function(pinned, actual) !identical(utils::head(actual, 
 pin_semfit_properties <- c("theta", "vcov", "table", "defined", "f", "n_obs", "n_dropped", "df", "information",
                            "converged", "data", "model", "diagnostics", "internals", "call")
 pin_fit_sem_args <- c("model", "data", "information", "n_starts", "control", "weights", "se_type", "meanstructure",
-                      "fixed_x", "sampling_weights", "missing", "cluster")
+                      "fixed_x", "sampling_weights", "missing", "cluster", "estimator")
 pin_mbco_sem_args <- c("object", "a", "b", "n_starts", "control", "fit", "paths")
 pin_compare_lr_args <- c("object", "paths", "engine", "tolerance")
 pin_fit_mediation_engines <- c("glm", "regmedint", "lmer", "sem", "native")

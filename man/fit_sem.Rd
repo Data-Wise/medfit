@@ -16,7 +16,8 @@ fit_sem(
   fixed_x = TRUE,
   sampling_weights = lifecycle::deprecated(),
   missing = c("listwise", "fiml"),
-  cluster = NULL
+  cluster = NULL,
+  estimator = c("ML", "MLR")
 )
 }
 \arguments{
@@ -132,6 +133,17 @@ is the equality of the within and between indirect effects (\code{a_w*b_w == a_b
 \code{\link[=twolevel_equal_indirect]{twolevel_equal_indirect()}}). \code{se_type = "sandwich"} gives
 the cluster-robust sandwich (see \code{se_type}), and \code{glance()} then reports \code{se_type}. Appended last to preserve
 positional calls.}
+
+\item{estimator}{\code{"ML"} (the default) or \code{"MLR"}. \code{"MLR"} keeps the ML estimates and, unless \code{se_type} is given,
+reports the sandwich standard errors; \code{glance()} then adds \code{chisq_scaled}, \code{scaling_factor} and \code{p_value_scaled},
+the Yuan-Bentler scaled chi-square that lavaan reports for \code{estimator = "MLR"} (\code{test = "yuan.bentler.mplus"}:
+the ML chi-square divided by the scaling factor, from the casewise scores of the model and of the saturated
+mean and covariance model). The Satorra-Bentler (\code{"MLM"}) variant and the other lavaan estimators are not
+offered. \code{"MLR"} is defined for single-level complete-data fits with linear equality constraints; \code{cluster},
+\verb{level:} blocks, \code{missing = "fiml"}, \code{weights}, and inequality or nonlinear constraints are refused with classed
+errors (\verb{medfit_error_mlr_*}, each also of class \code{medfit_error_mlr}), and an unknown estimator with
+\code{medfit_error_estimator}. A product term that makes the model test invalid leaves the scaled statistic \code{NA} too.
+Appended last to preserve positional calls.}
 }
 \value{
 A \link{SEMFit} object. With a product term whose factor is a regression target (\code{x:m} with

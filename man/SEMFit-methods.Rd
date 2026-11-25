@@ -103,7 +103,9 @@ equality constraints), \code{df}, \code{chisq} (n times the minimized discrepanc
 the test of the model against the saturated one), \code{p_value} (\code{NA} when
 \code{df} is 0), \code{logLik}, \code{AIC} and \code{BIC} (with the means free, as \code{logLik()}
 defines them) and \code{fixed_x}, the names the fit holds at their sample moments,
-comma-joined (\code{""} when none). A fit with sampling weights has no likelihood, so its
+comma-joined (\code{""} when none). A fit with \code{estimator = "MLR"} adds \code{chisq_scaled}, \code{scaling_factor} and
+\code{p_value_scaled} after \code{p_value}: the Yuan-Bentler scaled chi-square (see \code{\link[=fit_sem]{fit_sem()}}).
+A fit with sampling weights has no likelihood, so its
 \code{chisq}, \code{p_value}, \code{logLik}, \code{AIC} and \code{BIC} are \code{NA}. There is no
 \code{converged} column: \code{fit_sem()} returns a fit only for a solution that
 passed the acceptance gate and errors otherwise, so \verb{@converged} is \code{TRUE}

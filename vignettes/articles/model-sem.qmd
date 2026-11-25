@@ -237,6 +237,30 @@ with a note, and `anova()` and `mbco_sem()` refuse. A product of exogenous varia
 keeps the ordinary test. [Methods and Formulas](methods.html#products-and-observed-information) gives
 the reason.
 
+## Robust standard errors and a scaled test (MLR) {#mlr}
+
+`estimator = "MLR"` keeps the ML estimates and, as lavaan's `estimator = "MLR"` does, reports sandwich standard
+errors and the Yuan-Bentler scaled chi-square (`test = "yuan.bentler.mplus"`). `glance()` adds the scaled test after
+the plain one. The model above is saturated (`df = 0`), so this example drops the direct effect to leave one
+restriction:
+
+```{r}
+#| label: mlr
+syntax_mlr <- "
+  mediator1 ~ a * treatment + covariate1 + covariate2
+  outcome ~ b * mediator1 + covariate1 + covariate2
+"
+fit_mlr <- fit_sem(syntax_mlr, mediation_demo, estimator = "MLR")
+glance(fit_mlr)[, c("df", "chisq", "chisq_scaled", "scaling_factor", "p_value_scaled")]
+```
+
+Coefficients and `chisq` equal the default fit; the standard errors and the scaled columns differ. The same
+numbers come from `lavaan::sem(model, data, estimator = "MLR")` read with
+`lavaan::fitMeasures(fit, c("chisq.scaled", "chisq.scaling.factor", "pvalue.scaled"))`; the agreement is tested to
+1e-5. MLR needs single-level complete data and linear equality constraints; the Satorra-Bentler `"MLM"` and the
+other estimators stop with `medfit_error_estimator`. [Methods and Formulas](methods.html#mlr-scaled) gives the
+formula. `summary()` prints no chi-square, so read the scaled test from `glance()`.
+
 ## Limits
 
 - **Observed means only.** A free latent mean or intercept stops with "latent means are
