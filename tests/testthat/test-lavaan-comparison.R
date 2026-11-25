@@ -358,6 +358,44 @@ test_that("the estimators row compares behavior with lavaan; a wrong number or a
   expect_identical(lc_estimator_status(silent), "Unsupported")
 })
 
+test_that("the estimators row names MLR only because MLR agrees with lavaan; planted wrong factors are caught", {
+  skip_if_not_installed("lavaan")
+  real <- lc_estimator_evidence()
+  expect_true(real[["mlr_agrees"]])
+  expect_false(real[["mlm_accepted"]])
+  expect_identical(lc_estimator_status(real), "Partial")
+  row <- lc_rows(lc_text())
+  row <- row[row$feature == "Estimators other than ML", ]
+  expect_match(row$native, "MLR", fixed = TRUE)
+  expect_identical(row$status, "Partial")
+  # planted defect: the Satorra-Bentler factor in place of the Yuan-Bentler one
+  sb <- function(..., estimator = "ML") {
+    f <- fit_sem(..., estimator = estimator)
+    if (estimator == "MLR") {
+      mlm <- suppressWarnings(lavaan::sem(..1, ..2, estimator = "MLM", fixed.x = TRUE, meanstructure = TRUE))
+      dg <- f@diagnostics
+      dg$mlr$scaling_factor <- lavaan::fitMeasures(mlm, "chisq.scaling.factor")[[1L]]
+      dg$mlr$chisq_scaled <- dg$mlr$chisq / dg$mlr$scaling_factor
+      f@diagnostics <- dg
+    }
+    f
+  }
+  wrong <- lc_estimator_evidence(sb)
+  expect_false(wrong[["mlr_agrees"]])
+  # planted defect: an engine that returns the unscaled statistic as the scaled one
+  unscaled <- function(..., estimator = "ML") {
+    f <- fit_sem(..., estimator = estimator)
+    if (estimator == "MLR") {
+      dg <- f@diagnostics
+      dg$mlr$chisq_scaled <- dg$mlr$chisq
+      dg$mlr$scaling_factor <- 1
+      f@diagnostics <- dg
+    }
+    f
+  }
+  expect_false(lc_estimator_evidence(unscaled)[["mlr_agrees"]])
+})
+
 # S3 (V-3): compare_lr(engine = ) is the external comparison program, not a fitter of the mediation model. The Rd and
 # the article both say so; a planted edit that drops the definition is caught.
 lc_defines_engine <- function(txt) {

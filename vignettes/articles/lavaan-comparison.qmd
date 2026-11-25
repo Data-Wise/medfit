@@ -86,7 +86,7 @@ the behavior makes that test fail.
 | Several modifiers on one term | yes | one per term | Unsupported |
 | Means and intercepts | yes | observed intercepts and means (`y ~ 1`, `y ~ 1 + x`); latent means are planned | Supported |
 | Multiple groups | yes | no | Unsupported |
-| Estimators other than ML | yes | ML, plus the HC0 sandwich | Partial |
+| Estimators other than ML | yes | ML, and MLR (`estimator = "MLR"`: ML estimates, the HC0 sandwich and the Yuan-Bentler scaled chi-square `chisq_scaled` with `scaling_factor` in `glance()`, as lavaan's MLR; complete single-level data, linear equality constraints only); MLM, MLMV, WLSMV and the rest are refused | Partial |
 | Missing data | FIML | listwise by default; separate bounded random-X FIML opt-in | Partial |
 | Categorical outcomes | WLSMV and others | numeric variables only; use lavaan (WLSMV) | Unsupported |
 | Information matrix | expected | observed by default | Different by design |

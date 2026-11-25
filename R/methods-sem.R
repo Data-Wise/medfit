@@ -480,6 +480,15 @@ S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) 
     AIC = if (weighted) NA_real_ else stats::AIC(ll), BIC = if (weighted) NA_real_ else stats::BIC(ll),
     fixed_x = paste(x@internals$fixed_x, collapse = ", "), stringsAsFactors = FALSE
   )
+  if (identical(x@diagnostics$estimator, "MLR")) {
+    # estimator = "MLR": the Yuan-Bentler scaled chi-square, after the plain test (NA wherever the plain one is)
+    mlr <- x@diagnostics$mlr
+    scaled <- data.frame(chisq_scaled = if (invalid) NA_real_ else mlr$chisq_scaled,
+                         scaling_factor = if (invalid) NA_real_ else mlr$scaling_factor,
+                         p_value_scaled = if (invalid) NA_real_ else mlr$p_value_scaled)
+    at <- match("p_value", names(out))
+    out <- cbind(out[seq_len(at)], scaled, out[-seq_len(at)])
+  }
   if (twolevel) {
     sizes <- as.integer(table(x@internals$cluster_ids))
     out$n_clusters <- length(sizes)

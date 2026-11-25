@@ -112,6 +112,15 @@
 #'   [twolevel_equal_indirect()]). `se_type = "sandwich"` gives
 #'   the cluster-robust sandwich (see `se_type`), and `glance()` then reports `se_type`. Appended last to preserve
 #'   positional calls.
+#' @param estimator `"ML"` (the default) or `"MLR"`. `"MLR"` keeps the ML estimates and, unless `se_type` is given,
+#'   reports the sandwich standard errors; `glance()` then adds `chisq_scaled`, `scaling_factor` and `p_value_scaled`,
+#'   the Yuan-Bentler scaled chi-square that lavaan reports for `estimator = "MLR"` (`test = "yuan.bentler.mplus"`:
+#'   the ML chi-square divided by the scaling factor, from the casewise scores of the model and of the saturated
+#'   mean and covariance model). The Satorra-Bentler (`"MLM"`) variant and the other lavaan estimators are not
+#'   offered. `"MLR"` is defined for single-level complete-data fits with linear equality constraints; `cluster`,
+#'   `level:` blocks, `missing = "fiml"`, `weights`, and inequality or nonlinear constraints are refused with classed
+#'   errors (`medfit_error_mlr_*`), and an unknown estimator with `medfit_error_estimator`. A product term that
+#'   makes the model test invalid leaves the scaled statistic `NA` too. Appended last to preserve positional calls.
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
 #'   [fit_mediation()] uses; the old name still works with a warning.
 #'
@@ -383,7 +392,9 @@
 fit_sem <- function(model, data, information = c("observed", "expected"), n_starts = NULL,
                     control = list(), weights = NULL, se_type = c("model", "sandwich"),
                     meanstructure = TRUE, fixed_x = TRUE, sampling_weights = lifecycle::deprecated(),
-                    missing = c("listwise", "fiml"), cluster = NULL) {
+                    missing = c("listwise", "fiml"), cluster = NULL, estimator = c("ML", "MLR")) {
+  # `se_type` is unset when the caller did not pass it: MLR then defaults to the sandwich.
+  se_unset <- base::missing(se_type)
   # 0.15.0 (E-14): missing() is only reliable before either argument is reassigned.
   fx_unset <- base::missing(fixed_x)
   missing_unset <- base::missing(missing)
@@ -417,6 +428,15 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   )
   se_type <- match.arg(se_type)
   checkmate::assert_string(cluster, min.chars = 1L, null.ok = TRUE, .var.name = "cluster")
+  if (base::missing(estimator)) estimator <- "ML"
+  if (!is.character(estimator) || length(estimator) != 1L || is.na(estimator) || !estimator %in% c("ML", "MLR")) {
+    rlang::abort(paste0("`estimator` must be exactly \"ML\" or \"MLR\"; the other lavaan estimators (MLM, MLMV, ",
+                        "WLSMV, ...) are not offered"), class = "medfit_error_estimator", call = NULL)
+  }
+  if (estimator == "MLR") {
+    .sem_mlr_guard(model, weights, missing, cluster)
+    if (se_unset) se_type <- "sandwich"
+  }
   # Two-level route (S4a, experimental): before the FIML, weights and defaults dispatch, so none of them runs on a
   # model with `level:` blocks. A model that passes the guards is fitted by `.sem_fit_twolevel()` (S4a.4).
   if (!is.null(cluster) || .sem_has_level_lines(model)) {
@@ -446,7 +466,21 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   fit <- .sem_fit_syntax(model, data, information, n_starts = if (is.null(n_starts)) 5L else n_starts,
                          control = control, weights = weights, se_type = se_type, meanstructure = meanstructure,
                          fixed_x = fixed_x)
-  .sem_record_protocol(.sem_as_semfit(fit, model, match.call()), resolved_control$protocol)
+  semfit <- .sem_as_semfit(fit, model, match.call())
+  if (estimator == "MLR") {
+    # V_model for the scaling factor: the sandwich fit's model-based counterpart (same estimates), or the fit itself
+    model_fit <- semfit
+    if (se_type != "model") {
+      refit <- suppressWarnings(suppressMessages(
+        .sem_fit_syntax(model, data, information, n_starts = if (is.null(n_starts)) 5L else n_starts,
+                        control = control, weights = weights, se_type = "model", meanstructure = meanstructure,
+                        fixed_x = fixed_x)
+      ))
+      model_fit <- .sem_as_semfit(refit, model)
+    }
+    semfit <- .sem_mlr_record(semfit, model_fit)
+  }
+  .sem_record_protocol(semfit, resolved_control$protocol)
 }
 
 # Whether the syntax has a `level:` line; statements are split as the parser splits them, so comments and `;` count.
@@ -653,7 +687,7 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   if (length(dots)) {
     stop("unused arguments for engine = \"sem\": ", paste(names(dots), collapse = ", "), call. = FALSE)
   }
-  fit_args <- c("information", "n_starts", "control", "meanstructure", "fixed_x", "missing")
+  fit_args <- c("information", "n_starts", "control", "meanstructure", "fixed_x", "missing", "estimator")
   extract_args <- c("outcome", "structure", "decomposition", "interaction", "a_label", "b_label", "cp_label")
   unknown <- setdiff(names(engine_args), c(fit_args, extract_args))
   if (length(unknown)) {
