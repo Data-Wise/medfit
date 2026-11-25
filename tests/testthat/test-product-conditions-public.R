@@ -1,7 +1,7 @@
 # QA (P2(c)): the product refusals as a user reaches them. test-product-conditions.R triggers the syntax refusals
-# through the internal `.sem_parse()`; `fit_sem()` re-raises a parse error in `.sem_fit_syntax()`, and `mbco_sem()` wraps
-# a refit failure, so a class set at the source can be lost on the way out. Each case here goes through the exported
-# function a user calls and asks for the same classes.
+# through the internal `.sem_parse()`; `fit_sem()` re-raises a parse error in `.sem_fit_syntax()`, and `mbco_sem()`
+# wraps a refit failure, so a class set at the source can be lost on the way out. Each case here goes through the
+# exported function a user calls and asks for the same classes.
 
 pcp_data <- function(n = 120L, seed = 5L) {
   withr::local_seed(seed)
@@ -12,7 +12,12 @@ pcp_data <- function(n = 120L, seed = 5L) {
   d$h <- factor(sample(c("u", "v"), n, TRUE))
   d
 }
-pcp_err <- function(expr) tryCatch({ force(expr); NULL }, error = function(e) e)
+pcp_err <- function(expr) {
+  tryCatch({
+    force(expr)
+    NULL
+  }, error = function(e) e)
+}
 
 # list(class, message fragment, exported trigger)
 pcp_cases <- function() {
@@ -33,7 +38,8 @@ pcp_cases <- function() {
          function() fit_sem("eta =~ m + y + c\nw ~ eta + x\nw ~ eta:x", pcp_data())),
     list("medfit_error_product_duplicate", "are the same product", function() fit_sem("y ~ x:w + w:x", pcp_data())),
     # categorical columns (sem-factor.R): two categorical sides; fixed_x naming a column that only appears in products
-    list("medfit_error_product_syntax", "both sides are categorical columns", function() fit_sem("y ~ g:h", pcp_data())),
+    list("medfit_error_product_syntax", "both sides are categorical columns",
+         function() fit_sem("y ~ g:h", pcp_data())),
     list("medfit_error_product_syntax", "appears only inside products",
          function() fit_sem("y ~ g:x + m", pcp_data(), fixed_x = "g")),
     list("medfit_error_product_syntax", "malformed modifier", function() fit_sem("y ~ a:b*x", pcp_data())),
@@ -109,8 +115,8 @@ test_that("no stop() or warning() in the native engine's files names a product w
     if (fn %in% c("stop", "warning", "abort", ".sem_syntax_error", ".sem_product_stop")) {
       txt <- paste(deparse(e, width.cutoff = 500L), collapse = " ")
       strs <- paste(regmatches(txt, gregexpr("\"[^\"]*\"", txt))[[1L]], collapse = " ")
-      classed <- grepl("product_condition|product_reraise|medfit_error_product|medfit_warning_product|twolevel|\"product\"",
-                       txt)
+      classed <- grepl(paste0("product_condition|product_reraise|medfit_error_product|medfit_warning_product|",
+                              "twolevel|\"product\""), txt)
       if (grepl("product", strs, ignore.case = TRUE) && !classed) {
         hits <<- c(hits, paste(f, substr(gsub("\\s+", " ", txt), 1L, 90L)))
       }
@@ -119,7 +125,8 @@ test_that("no stop() or warning() in the native engine's files names a product w
   }
   for (f in files) for (e in parse(f, keep.source = FALSE)) walk(e, basename(f))
   hits <- hits[!grepl(paste0("the model has a product term|internal error: a product model|",
-                             "invalid nonzero-product search evidence|nonlinear constraints \\(including a product"), hits)]
+                             "invalid nonzero-product search evidence|",
+                             "nonlinear constraints \\(including a product"), hits)]
   expect_identical(hits, character())
 })
 
