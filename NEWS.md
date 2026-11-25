@@ -9,7 +9,7 @@
 * **Classed product refusals.** Every refusal and the model-test warning of the `:` product term carries a class
   (`medfit_error_product_*`, `medfit_warning_product_modeltest`); messages and numbers are unchanged (#540).
 * Development tooling and CI, not user-facing: `scripts/dev-preflight.sh` and `scripts/cleanup-merged.sh` (#538,
-  #539), R-CMD-check pinned to Ubuntu 24.04 with superseded runs cancelled (#536, #541).
+  #539), R-CMD-check pinned to Ubuntu 24.04 with superseded runs canceled (#536, #541).
 * **Not in this release:** fit indices and modification indices (including scaled fit indices under MLR), a valid
   scaled test for product models, two-level refusal lifts, serial two-level mediators, FIML statistical admission,
   and CRAN.
@@ -46,8 +46,8 @@
 * `estimator = "MLR"` is defined for single-level complete-data fits with linear equality constraints. The
   Satorra-Bentler `"MLM"` variant and every other estimator stop with `medfit_error_estimator`; `cluster` or
   `level:` blocks, `missing = "fiml"`, `weights`, inequality or nonlinear constraints and an estimate on a bound
-  stop with `medfit_error_mlr_*` (twolevel, missing, weights, constraints, bounds).
-* Scaled fit indices (CFI, TLI, RMSEA) are not provided under MLR; `glance()` reports the scaled chi-square, its
+  stop with `medfit_error_mlr_*` (two-level, missing, weights, constraints, bounds).
+* Scaled fit indices are not provided under MLR; `glance()` reports the scaled chi-square, its
   scaling factor and p-value only, and `summary()` prints no chi-square.
 * A model with a `:` product term still has `NA` chi-square, and `anova()` and `mbco_sem()` still refuse when a
   product factor is a regression target; MLR does not change that.
