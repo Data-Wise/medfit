@@ -499,6 +499,7 @@ block is restricted: `glance()` chi-square/df/p are `NA` with a note, `anova()` 
 (`.sem_check_modeltest()`), `information = "expected"` is refused for an endogenous factor; `.sem_chisq()` is the raw statistic (`glance()` reads it for valid fits, the gates read it when the verdict is `NA`).
 `extract_mediation(<SEMFit>)` returns `InteractionMediationData` when the outcome equation carries the
 treatment-by-mediator product (names carry the canonical `m:x`); another product on the treatment or mediator is refused.
+Every product refusal is a classed condition: `.product_condition()` (`R/utils.R`) adds the parent `medfit_error_product` to a specific `medfit_error_product_*` class (`medfit_warning_product_modeltest` for the NA test); `.product_reraise()` keeps the classes when a parse or refit error is re-raised. Messages and numbers unchanged; the class tables are pinned by `test-product-conditions.R`.
 Plan and evidence: `planning/specs/PLAN-native-four-way-2026-10-12.md`.
 
 ---

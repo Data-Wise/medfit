@@ -1,6 +1,14 @@
 # medfit 0.20.0.9000
 
-* Development version. No user-visible changes since 0.20.0.
+* Development version.
+* **Product refusals are classed conditions (sem engine).** Every refusal and the model-test warning of the `:`
+  product term now carry a class, so a handler can catch one kind instead of matching message text. All errors
+  carry the parent class `medfit_error_product` plus a specific one (`medfit_error_product_syntax`, `_latent`,
+  `_outcome_regressor`, `_residual_covariance`, `_fixed_coefficient`, `_modeltest`, `_extract` and the others
+  tabulated in `?"medfit-syntax"`); the warning that the model test is not valid has the class
+  `medfit_warning_product_modeltest`. Messages and numbers are unchanged. Code that tested
+  `class(err)` for exactly `c("simpleError", "error", "condition")` on these conditions now sees the added classes
+  first; `inherits(err, "error")` still holds. The two-level refusal `medfit_error_twolevel_product` is unchanged.
 
 # medfit 0.20.0
 
