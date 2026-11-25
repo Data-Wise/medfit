@@ -88,7 +88,6 @@ lc_estimator_evidence <- function(fitter = fit_sem) {
     if (is.null(f)) return(FALSE)
     ref <- lv(est)
     g <- generics::glance(f)
-    robust <- est != "ML"
     same <- near(coef(f), lavaan::coef(ref)) && near(g$chisq, lavaan::fitMeasures(ref, "chisq")[[1L]])
     if (est == "ML") return(same)
     sc <- lavaan::fitMeasures(ref, c("chisq.scaled", "chisq.scaling.factor"))
@@ -338,7 +337,7 @@ test_that("missing-data evidence catches removed FIML and a relaxed information 
   expect_identical(lc_missing_status(broadened), "Unsupported")
 })
 
-test_that("the estimators row compares behavior with lavaan, and plants of a wrong number or an ignored argument fail", {
+test_that("the estimators row compares behavior with lavaan; a wrong number or an ignored argument is caught", {
   skip_if_not_installed("lavaan")
   real <- lc_estimator_evidence()
   expect_true(real[["ml_agrees"]])
