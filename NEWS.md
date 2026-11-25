@@ -1,6 +1,22 @@
-# medfit 0.20.0.9000
+# medfit 0.21.0
 
-* Development version.
+## Release summary
+
+* **MLR estimator (sem engine).** `fit_sem(estimator = "MLR")` keeps the ML estimates, uses sandwich standard
+  errors and reports the Yuan-Bentler scaled chi-square (`chisq_scaled`, `scaling_factor`, `p_value_scaled` in
+  `glance()`); it matches lavaan's `estimator = "MLR"` to the tolerances in `tests/testthat/test-sem-mlr.R` (#542).
+  The default `estimator = "ML"` is unchanged to the last bit.
+* **Classed product refusals.** Every refusal and the model-test warning of the `:` product term carries a class
+  (`medfit_error_product_*`, `medfit_warning_product_modeltest`); messages and numbers are unchanged (#540).
+* Development tooling and CI, not user-facing: `scripts/dev-preflight.sh` and `scripts/cleanup-merged.sh` (#538,
+  #539), R-CMD-check pinned to Ubuntu 24.04 with superseded runs cancelled (#536, #541).
+* **Not in this release:** fit indices and modification indices (including scaled fit indices under MLR), a valid
+  scaled test for product models, two-level refusal lifts, serial two-level mediators, FIML statistical admission,
+  and CRAN.
+* GitHub-only release; CRAN stays on hold (#83).
+
+## New features
+
 * **Product refusals are classed conditions (sem engine).** Every refusal and the model-test warning of the `:`
   product term now carry a class, so a handler can catch one kind instead of matching message text. All errors
   carry the parent class `medfit_error_product` plus a specific one (`medfit_error_product_syntax`, `_latent`,
@@ -24,6 +40,21 @@
   `medfit_error_mlr_missing`, `medfit_error_mlr_weights`, `medfit_error_mlr_constraints` and
   `medfit_error_mlr_bounds` (each also of class `medfit_error_mlr`). `summary()` does not print a chi-square, so it
   shows no scaled test. The formula is in the Methods and Formulas article.
+
+## Known limits
+
+* `estimator = "MLR"` is defined for single-level complete-data fits with linear equality constraints. The
+  Satorra-Bentler `"MLM"` variant and every other estimator stop with `medfit_error_estimator`; `cluster` or
+  `level:` blocks, `missing = "fiml"`, `weights`, inequality or nonlinear constraints and an estimate on a bound
+  stop with `medfit_error_mlr_*` (twolevel, missing, weights, constraints, bounds).
+* Scaled fit indices (CFI, TLI, RMSEA) are not provided under MLR; `glance()` reports the scaled chi-square, its
+  scaling factor and p-value only, and `summary()` prints no chi-square.
+* A model with a `:` product term still has `NA` chi-square, and `anova()` and `mbco_sem()` still refuse when a
+  product factor is a regression target; MLR does not change that.
+* The native two-level route stays experimental and may change without the usual deprecation period; the 0.20.0
+  limits on it still hold. `estimator = "MLR"` with `cluster` is refused.
+* FIML is numerically verified, not statistically admitted.
+* GitHub-only release; CRAN stays on hold (#83).
 
 # medfit 0.20.0
 
