@@ -106,7 +106,7 @@ test_that("planted defect: dropping the class in .product_reraise() fails the ex
 # two-level nonlinear-constraint abort (classed by its own family; a product of labels is a constraint, not a term).
 test_that("no stop() or warning() in the native engine's files names a product without a class", {
   src <- testthat::test_path("..", "..", "R")
-  skip_if_not(dir.exists(src), "R sources are not part of the installed package")
+  skip_if_not(file.exists(file.path(src, "fit-sem.R")), "R sources are not part of the installed package")
   files <- file.path(src, c(list.files(src, "^sem-.*\\.R$"), "extract-sem.R", "methods-aic.R", "fit-sem.R"))
   hits <- character()
   walk <- function(e, f) {
