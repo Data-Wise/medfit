@@ -88,7 +88,8 @@
   if (is.null(parsed)) {
     parsed <- tryCatch(.sem_parse(model), error = function(e) {
       hint <- .sem_factor_label_hint(conditionMessage(e), data)
-      stop(if (is.null(hint)) conditionMessage(e) else hint, call. = FALSE)
+      msg <- if (is.null(hint)) conditionMessage(e) else hint
+      stop(.product_reraise(e, msg) %||% simpleError(msg))
     })
     # before factor expansion and the zero-product branch fits, which would otherwise run on pooled rows
     .sem_single_level_only(parsed)

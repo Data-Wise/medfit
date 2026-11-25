@@ -193,6 +193,9 @@ gives the limit and the start of its message.
 | `anova()` or `mbco_sem()`, endogenous factor | "is not available for" ... "a model with a product term" |
 | `extract_mediation()` with another product on the treatment or mediator | "the native extraction does not support the product" |
 | `AIC()` or `BIC()` on fits with different observed variables | "different observed variables" |
+| A product of two categorical columns (`g:h`) | "both sides are categorical columns" |
+| `fixed_x` naming a column that appears only inside products | "appears only inside products" |
+| A product in a modifier (`y ~ a:b*x`) | "malformed modifier" |
 | Four-way on a native fit without the treatment-by-mediator product | "needs the treatment-by-mediator product" |
 | `extract_mediation(interaction = )` that is not a `:` product | "must be the product written with `:`" |
 | `extract_mediation(interaction = )` that is not treatment by mediator | "is not the product of the treatment" |

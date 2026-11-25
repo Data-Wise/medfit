@@ -166,6 +166,9 @@ includes the product columns.\tabular{ll}{
    \code{anova()} or \code{mbco_sem()} on such a fit \tab "is not available for ... a model with a product term" \cr
    Another product on the treatment or mediator, in \code{extract_mediation()} \tab "does not support the product" \cr
    \code{AIC()} or \code{BIC()} on fits with different observed variables \tab "different observed variables" \cr
+   A product of two categorical columns (\code{g:h}) \tab "both sides are categorical columns" \cr
+   \code{fixed_x} naming a column that appears only inside products \tab "appears only inside products" \cr
+   A product in a modifier (\code{y ~ a:b*x}) \tab "malformed modifier" \cr
    Four-way on a native fit without the treatment-by-mediator product \tab "needs the treatment-by-mediator product" \cr
    \code{extract_mediation(interaction = )} that is not a \code{:} product \tab "must be the product written with \code{:}" \cr
    \code{extract_mediation(interaction = )} that is not treatment by mediator \tab "is not the product of the treatment" \cr

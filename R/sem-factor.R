@@ -197,9 +197,10 @@
     return(NULL)
   }
   if (all(hit) && length(sides) == 2L) {
-    stop("the product `", rhs, "`: both sides are categorical columns, which is not supported; write the dummy ",
-         "products you need, for example `", map[[sides[1L]]]$dummies[1L], ":", map[[sides[2L]]]$dummies[1L], "`",
-         call. = FALSE)
+    stop(.product_condition(paste0(
+      "the product `", rhs, "`: both sides are categorical columns, which is not supported; write the dummy ",
+      "products you need, for example `", map[[sides[1L]]]$dummies[1L], ":", map[[sides[2L]]]$dummies[1L], "`"
+    ), "medfit_error_product_syntax"))
   }
   if (length(sides) == 1L) {
     return(map[[sides]]$dummies)
@@ -253,9 +254,11 @@
   }
   only <- intersect(fixed_x, names(map)[vapply(map, function(m) isTRUE(m$product_only), TRUE)])
   if (length(only)) {
-    stop("`fixed_x` names `", only[1L], "`, which appears only inside products: its dummies are not model ",
-         "variables. Name the other variable of the product, or add `", only[1L], "` to the regression as a main ",
-         "effect.", call. = FALSE)
+    stop(.product_condition(paste0(
+      "`fixed_x` names `", only[1L], "`, which appears only inside products: its dummies are not model ",
+      "variables. Name the other variable of the product, or add `", only[1L], "` to the regression as a main ",
+      "effect."
+    ), "medfit_error_product_syntax"))
   }
   unique(unlist(lapply(fixed_x, function(v) if (v %in% names(map)) map[[v]]$dummies else v), use.names = FALSE))
 }

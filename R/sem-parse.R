@@ -177,7 +177,8 @@
       }
       set$label <- mod
     } else {
-      .sem_syntax_error(paste0("malformed modifier '", paste(mod, collapse = ""), "'"), stmt)
+      .sem_syntax_error(paste0("malformed modifier '", paste(mod, collapse = ""), "'"), stmt,
+                        if (":" %in% mod) "medfit_error_product_syntax")
     }
   }
   c(list(target = target, written = written), set)

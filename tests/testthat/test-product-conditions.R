@@ -28,6 +28,7 @@ pc_cases <- function() {
     list("medfit_error_product_syntax", "only valid on the right side of a regression",
          function() .sem_parse("eta =~ x:m")),
     list("medfit_error_product_syntax", "not inside the expression", function() .sem_parse("Y ~ a*X\nab := a*x:m")),
+    list("medfit_error_product_syntax", "malformed modifier", function() .sem_parse("y ~ a:b*x")),
     list("medfit_error_product_latent", "involves a latent variable",
          function() .sem_parse("eta =~ m1 + m2 + m3\ny ~ eta + x\ny ~ eta:x")),
     list("medfit_error_product_duplicate", "are the same product", function() .sem_parse("y ~ x:m + m:x")),
