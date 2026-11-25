@@ -203,3 +203,32 @@ test_that("each MLR refusal is a classed error with its reason", {
   expect_error(fit_sem("y ~ x\ny ~~ lower(1.5)*y", b, estimator = "MLR"), class = "medfit_error_mlr_bounds")
   expect_error(fit_sem("y ~ x\ny ~~ lower(1.5)*y", b, estimator = "MLR"), "y~~y", fixed = TRUE)
 })
+
+test_that("fit_mediation(engine = 'sem', estimator = 'MLR') defaults to the sandwich as fit_sem() does", {
+  d <- mlr_data()
+  m <- "m1 ~ x\ny ~ m1 + x"
+  fm <- function(...) {
+    fit_mediation(model = m, data = d, treatment = "x", mediator = "m1", engine = "sem", ...)
+  }
+  ea <- list(estimator = "MLR", outcome = "y")
+  dflt <- fm(engine_args = ea)
+  expect_equal(dflt@vcov, fm(se_type = "sandwich", engine_args = ea)@vcov, tolerance = 0)
+  direct <- fit_sem(m, d, estimator = "MLR")
+  expect_equal(unname(sqrt(diag(dflt@vcov))[1]), unname(sqrt(diag(vcov(direct)))["m1~x"]), tolerance = 1e-8)
+  # an explicit se_type = "model" stays model-based, and differs from the sandwich on these data
+  model_based <- fm(se_type = "model", engine_args = ea)
+  expect_equal(model_based@vcov, fm(engine_args = list(outcome = "y"))@vcov, tolerance = 0)
+  expect_gt(max(abs(model_based@vcov - dflt@vcov)), 1e-6)
+  # ML is unchanged: the default stays model-based
+  expect_equal(fm(engine_args = list(estimator = "ML", outcome = "y"))@vcov, model_based@vcov, tolerance = 0)
+})
+
+test_that("planted defect: always forwarding se_type = 'model' (the old logic) fails the MLR default test", {
+  d <- mlr_data()
+  m <- "m1 ~ x\ny ~ m1 + x"
+  old <- fit_mediation(model = m, data = d, treatment = "x", mediator = "m1", engine = "sem", se_type = "model",
+                       engine_args = list(estimator = "MLR", outcome = "y"))
+  dflt <- fit_mediation(model = m, data = d, treatment = "x", mediator = "m1", engine = "sem",
+                        engine_args = list(estimator = "MLR", outcome = "y"))
+  expect_gt(max(abs(old@vcov - dflt@vcov)), 1e-6)
+})

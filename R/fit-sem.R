@@ -704,7 +704,9 @@ fit_sem <- function(model, data, information = c("observed", "expected"), n_star
   }
   fit <- do.call(
     fit_sem,
-    c(list(model = syntax, data = data, weights = weights, se_type = se_type),
+    c(list(model = syntax, data = data, weights = weights),
+      # estimator = "MLR" with `se_type` not supplied: fit_sem()'s own default (the sandwich) applies
+      if (!(identical(engine_args$estimator, "MLR") && !isTRUE(given$se_type))) list(se_type = se_type),
       engine_args[intersect(names(engine_args), fit_args)],
       # `cluster` (two-level, experimental) only when given, so fit_sem() sees it as absent otherwise
       if (!is.null(cluster)) list(cluster = cluster))
