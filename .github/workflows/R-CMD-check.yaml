@@ -40,8 +40,11 @@ jobs:
         config:
           - {os: macos-latest,   r: 'release'}
           - {os: windows-latest, r: 'release'}
-          # Pinned to 24.04 (paired probe run 45505691085, 2026-11-24, same commit and start time: Ubuntu release
-          # 50 minutes on 24.04 against 65 on ubuntu-latest, which moved to 26.04 in Oct to Nov 2026; one pair).
+          # Pinned to 24.04 for a stable image (gates.yaml timed out on 26.04 in PR #307). Speed is NOT the reason: two
+          # paired probe runs on one commit found no consistent difference (run 45505691085: 50 min on 24.04 against 65
+          # on ubuntu-latest; run 45573883028, four jobs started together: control 24.04 46 min against control latest
+          # 42 min), and one configuration varied from 42 to 62 min between runs. Capping BLAS and OpenMP threads at 1
+          # made it slower (68 to 69 min, same run).
           - {os: ubuntu-latest,  runner: ubuntu-24.04, r: 'devel', http-user-agent: 'release'}
           - {os: ubuntu-latest,  runner: ubuntu-24.04, r: 'release'}
           - {os: ubuntu-latest,  runner: ubuntu-24.04, r: 'oldrel-1'}
