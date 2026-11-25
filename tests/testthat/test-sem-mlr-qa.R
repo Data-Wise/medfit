@@ -79,11 +79,12 @@ test_that("QA: a linear inequality row is refused with the constraints class; an
   x <- stats::rnorm(n)
   m <- 0.5 * x + stats::rnorm(n)
   d <- data.frame(x = x, m = m, y = 0.3 * m + stats::rnorm(n))
-  expect_error(fit_sem("m ~ a*x\ny ~ b*m + x\na - b > 0.1", d, estimator = "MLR"), class = "medfit_error_mlr_constraints")
+  expect_error(fit_sem("m ~ a*x\ny ~ b*m + x\na - b > 0.1", d, estimator = "MLR"),
+               class = "medfit_error_mlr_constraints")
   expect_error(fit_sem("m ~ a*x\ny ~ b*m + x\na > 0.1", d, estimator = "MLR"), NA)
 })
 
-test_that("QA: MLR through fit_mediation() defaults to the sandwich, equals fit_sem() and lavaan; explicit model stays model", {
+test_that("QA: MLR through fit_mediation() defaults to the sandwich and equals fit_sem() and lavaan", {
   d <- qa_mlr_data()
   mod <- "m1 ~ a*x + c1\ny ~ b*m1 + cp*x + c1"
   fm <- function(...) {

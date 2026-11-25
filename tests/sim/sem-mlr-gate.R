@@ -23,11 +23,12 @@
 # alter production functions in memory only and must fail.
 # Run from the package root:  Rscript tests/sim/sem-mlr-gate.R   (REPS=2000 by default; the committed rows need 2000)
 suppressMessages(pkgload::load_all(quiet = TRUE))
-source("tests/testthat/helper-sem.R")
+helpers <- new.env(parent = globalenv())
+sys.source("tests/testthat/helper-sem.R", envir = helpers)
 ns <- asNamespace("medfit")
 mutant <- Sys.getenv("MUTANT", "")
 swap <- function(name, pattern, replacement) {
-  fn <- sem_mutate(get(name, ns), pattern, replacement)
+  fn <- helpers$sem_mutate(get(name, ns), pattern, replacement)
   if (bindingIsLocked(name, ns)) unlockBinding(name, ns)
   assign(name, fn, envir = ns)
 }
@@ -55,9 +56,10 @@ if (mutant == "sfac_df1") {
 reps <- as.integer(Sys.getenv("REPS", "2000"))
 limits <- c(est = 1e-5, se = 1e-5, factor = 1e-5, scaled = 1e-5, invariance = 1e-6, reject_mlr = 0.08,
             separation = 0, refused = 0, ml_neutral = 0)
-rows <- list()
+records <- new.env(parent = emptyenv())
+records$rows <- list()
 add <- function(cell, check, value) {
-  rows[[length(rows) + 1L]] <<- data.frame(
+  records$rows[[length(records$rows) + 1L]] <- data.frame(
     cell = cell, check = check, value = value, limit = limits[[check]],
     pass = is.finite(value) && value >= 0 && value <= limits[[check]], stringsAsFactors = FALSE
   )
@@ -110,8 +112,10 @@ for (nm in names(cells)) {
 # ---- metamorphic invariance of the scaling factor and the scaled chi-square ----
 mod <- cells$cov$m
 base <- generics::glance(fit_sem(mod, d, estimator = "MLR"))
-rel <- function(g) max(abs(g$scaling_factor - base$scaling_factor) / base$scaling_factor,
-                       abs(g$chisq_scaled - base$chisq_scaled) / max(1, base$chisq_scaled))
+rel <- function(g) {
+  max(abs(g$scaling_factor - base$scaling_factor) / base$scaling_factor,
+      abs(g$chisq_scaled - base$chisq_scaled) / max(1, base$chisq_scaled))
+}
 set.seed(1)
 perm_rows <- generics::glance(fit_sem(mod, d[sample(nrow(d)), ], estimator = "MLR"))
 reordered <- paste(rev(strsplit(mod, "\n", fixed = TRUE)[[1L]]), collapse = "\n")
@@ -134,8 +138,9 @@ gen <- function(n, seed) {
   data.frame(x = x, m1 = m1, m2 = m2, y = y)
 }
 p <- parallel::mclapply(seq_len(reps), function(s) {
-  g <- tryCatch(generics::glance(suppressWarnings(fit_sem("m1 ~ x\nm2 ~ x\ny ~ m1 + m2", gen(2000L, s),
-                                                           estimator = "MLR"))), error = function(e) NULL)
+  fit <- tryCatch(suppressWarnings(fit_sem("m1 ~ x\nm2 ~ x\ny ~ m1 + m2", gen(2000L, s), estimator = "MLR")),
+                  error = function(e) NULL)
+  g <- if (is.null(fit)) NULL else generics::glance(fit)
   if (is.null(g)) c(NA_real_, NA_real_) else c(g$p_value, g$p_value_scaled)
 }, mc.cores = max(1L, min(12L, parallel::detectCores() - 1L)))
 p <- do.call(rbind, p)
@@ -165,8 +170,10 @@ add("faults", "refused", sum(!refused))
 ml_a <- fit_sem(m, d)
 ml_b <- fit_sem(m, d, estimator = "ML")
 mlr <- fit_sem(m, d, estimator = "MLR", se_type = "model")
-same <- function(a, b) identical(coef(a), coef(b)) && identical(vcov(a), vcov(b)) &&
-  identical(generics::glance(a), generics::glance(b)) && identical(generics::tidy(a), generics::tidy(b))
+same <- function(a, b) {
+  identical(coef(a), coef(b)) && identical(vcov(a), vcov(b)) &&
+    identical(generics::glance(a), generics::glance(b)) && identical(generics::tidy(a), generics::tidy(b))
+}
 scaled_cols <- c("chisq_scaled", "scaling_factor", "p_value_scaled")
 add("faults", "ml_neutral", sum(
   !same(ml_a, ml_b),
@@ -176,7 +183,7 @@ add("faults", "ml_neutral", sum(
   !identical(vcov(mlr), vcov(ml_a))
 ))
 
-results <- do.call(rbind, rows)
+results <- do.call(rbind, records$rows)
 rownames(results) <- NULL
 dir.create("tests/sim/results", recursive = TRUE, showWarnings = FALSE)
 out <- if (nzchar(mutant)) {
