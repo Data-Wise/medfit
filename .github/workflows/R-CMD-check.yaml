@@ -14,9 +14,17 @@ name: R-CMD-check
 
 permissions: read-all
 
+# A new push to a PR cancels that PR's superseded run (as lint and test-coverage do); pushes to main and manual
+# dispatches are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   R-CMD-check:
-    runs-on: ${{ matrix.config.os }}
+    # `runner` pins the image where set. The job name still comes from `os`, because main's required check is named
+    # `ubuntu-latest (release)`; renaming it would leave that check unreported and block release PRs.
+    runs-on: ${{ matrix.config.runner || matrix.config.os }}
     # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default. The 0.17.0 suite
     # runs about 22 minutes on a laptop (FIML files are 71% of it) and 30 minutes on the macOS runner; 45 cancelled
     # the Linux and Windows jobs on the 0.17.0 release PR. The 0.20.0 suite (244 test files, the native two-level
@@ -32,9 +40,11 @@ jobs:
         config:
           - {os: macos-latest,   r: 'release'}
           - {os: windows-latest, r: 'release'}
-          - {os: ubuntu-latest,  r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest,  r: 'release'}
-          - {os: ubuntu-latest,  r: 'oldrel-1'}
+          # Pinned to 24.04 (paired probe run 45505691085, 2026-11-24, same commit and start time: Ubuntu release
+          # 50 minutes on 24.04 against 65 on ubuntu-latest, which moved to 26.04 in Oct to Nov 2026; one pair).
+          - {os: ubuntu-latest,  runner: ubuntu-24.04, r: 'devel', http-user-agent: 'release'}
+          - {os: ubuntu-latest,  runner: ubuntu-24.04, r: 'release'}
+          - {os: ubuntu-latest,  runner: ubuntu-24.04, r: 'oldrel-1'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -73,7 +83,7 @@ jobs:
   # installs Suggests. (Caught the unguarded MASS use in the parametric
   # bootstrap; see rforge docs/specs/PROPOSAL-cran-incoming-hardening.)
   noSuggests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default. The 0.17.0 run took
     # 20 minutes (8 before the FIML expansion).
     timeout-minutes: 45
