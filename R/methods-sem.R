@@ -98,7 +98,9 @@
 #'   the test of the model against the saturated one), `p_value` (`NA` when
 #'   `df` is 0), `logLik`, `AIC` and `BIC` (with the means free, as `logLik()`
 #'   defines them) and `fixed_x`, the names the fit holds at their sample moments,
-#'   comma-joined (`""` when none). A fit with sampling weights has no likelihood, so its
+#'   comma-joined (`""` when none). A fit with `estimator = "MLR"` adds `chisq_scaled`, `scaling_factor` and
+#'   `p_value_scaled` after `p_value`: the Yuan-Bentler scaled chi-square (see [fit_sem()]).
+#'   A fit with sampling weights has no likelihood, so its
 #'   `chisq`, `p_value`, `logLik`, `AIC` and `BIC` are `NA`. There is no
 #'   `converged` column: `fit_sem()` returns a fit only for a solution that
 #'   passed the acceptance gate and errors otherwise, so `@converged` is `TRUE`

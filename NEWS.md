@@ -9,6 +9,21 @@
   `medfit_warning_product_modeltest`. Messages and numbers are unchanged. Code that tested
   `class(err)` for exactly `c("simpleError", "error", "condition")` on these conditions now sees the added classes
   first; `inherits(err, "error")` still holds. The two-level refusal `medfit_error_twolevel_product` is unchanged.
+* **MLR estimator (sem engine).** `fit_sem(model, data, estimator = "MLR")` and
+  `fit_mediation(engine = "sem", model = , engine_args = list(estimator = "MLR"))` keep the ML estimates and report
+  the Yuan-Bentler scaled chi-square that lavaan reports for `estimator = "MLR"` (`test = "yuan.bentler.mplus"`).
+  `glance()` adds `chisq_scaled`, `scaling_factor` and `p_value_scaled` after `p_value`; the plain `chisq` stays.
+  Standard errors are the sandwich: `fit_sem()` defaults `se_type` to `"sandwich"` under MLR, and
+  `fit_mediation()` does too unless `se_type` is given (an explicit `se_type = "model"` keeps the model-based
+  errors). Coefficients, standard errors, `chisq`, the scaling factor and `chisq_scaled` agree with lavaan's MLR
+  to the tolerances in `tests/testthat/test-sem-mlr.R`, and the `mlr` gate in `tests/sim` checks them and the
+  size of the test. The default `estimator = "ML"` is unchanged to the last bit. MLR is defined for single-level
+  complete-data fits with linear equality constraints. The Satorra-Bentler `"MLM"` variant and every other
+  estimator stop with `medfit_error_estimator`; `cluster` or `level:` blocks, `missing = "fiml"`, `weights`,
+  inequality or nonlinear constraints and an estimate on a bound stop with `medfit_error_mlr_twolevel`,
+  `medfit_error_mlr_missing`, `medfit_error_mlr_weights`, `medfit_error_mlr_constraints` and
+  `medfit_error_mlr_bounds` (each also of class `medfit_error_mlr`). `summary()` does not print a chi-square, so it
+  shows no scaled test. The formula is in the Methods and Formulas article.
 
 # medfit 0.20.0
 
