@@ -109,7 +109,7 @@ test_that("the model-test NA warning is classed", {
 
 test_that("the refusals the cases do not list are not hiding: the source names only classes the cases cover", {
   src <- testthat::test_path("..", "..", "R")
-  skip_if_not(dir.exists(src), "R sources are not part of the installed package")
+  skip_if_not(length(list.files(src, "\\.R$")) > 0L, "R sources are not part of the installed package")
   txt <- unlist(lapply(list.files(src, "\\.R$", full.names = TRUE), readLines, warn = FALSE))
   named <- unique(unlist(regmatches(txt, gregexpr("medfit_error_product_[a-z_]+", txt))))
   covered <- unique(vapply(pc_cases(), `[[`, character(1), 1L))
