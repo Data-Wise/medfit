@@ -226,3 +226,11 @@
   attr(prop, "type") <- "pm"
   prop
 }
+
+# The condition of a refused product term (`x:m`): a specific `medfit_error_product_*` class, the shared parent
+# `medfit_error_product` (dependents may match either), and the message unchanged. No call, as `stop(call. = FALSE)`
+# gave. `type` is "error" or "warning" (the warning classes are `medfit_warning_product_*`, no parent).
+.product_condition <- function(msg, class, type = "error") {
+  cls <- if (identical(type, "error")) c(class, "medfit_error_product") else class
+  structure(class = c(cls, type, "condition"), list(message = msg, call = NULL))
+}

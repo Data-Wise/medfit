@@ -156,6 +156,35 @@
 #' | `information = "expected"`, endogenous factor | "with a product of an endogenous variable" |
 #' | `anova()` or `mbco_sem()` on such a fit | "is not available for ... a model with a product term" |
 #' | Another product on the treatment or mediator, in `extract_mediation()` | "does not support the product" |
+#' | `AIC()` or `BIC()` on fits with different observed variables | "different observed variables" |
+#' | Four-way on a native fit without the treatment-by-mediator product | "needs the treatment-by-mediator product" |
+#' | `extract_mediation(interaction = )` that is not a `:` product | "must be the product written with `:`" |
+#' | `extract_mediation(interaction = )` that is not treatment by mediator | "is not the product of the treatment" |
+#'
+#' Each error has one of these classes and also the class `medfit_error_product`; the message is the
+#' reason, so a handler can match the class and a reader the message. The warning that the model test
+#' is not valid (below) has the class `medfit_warning_product_modeltest`.
+#'
+#' | Class | Raised for |
+#' |:--|:--|
+#' | `medfit_error_product_syntax` | spacing, `x:x`, three-way, left side, `=~`, constraint expression |
+#' | `medfit_error_product_latent` | a latent variable in a product |
+#' | `medfit_error_product_duplicate` | one product twice in an equation |
+#' | `medfit_error_product_outcome_regressor` | rule 8 |
+#' | `medfit_error_product_recursive` | a loop of regressions |
+#' | `medfit_error_product_residual_covariance` | residual covariance between outcomes |
+#' | `medfit_error_product_shared_label` | a label on two rows |
+#' | `medfit_error_product_fixed_coefficient` | a fixed coefficient |
+#' | `medfit_error_product_bound` | an inline bound |
+#' | `medfit_error_product_constraint` | a constraint names a coefficient label |
+#' | `medfit_error_product_intercept` | a fixed, shared or constrained intercept |
+#' | `medfit_error_product_meanstructure` | `meanstructure = FALSE` |
+#' | `medfit_error_product_column` | a data column that is not the product |
+#' | `medfit_error_product_nonnumeric` | a non-numeric product input |
+#' | `medfit_error_product_information` | `information = "expected"`, endogenous factor |
+#' | `medfit_error_product_modeltest` | `anova()` or `mbco_sem()` |
+#' | `medfit_error_product_observed` | `AIC()` or `BIC()` across observed variables |
+#' | `medfit_error_product_extract` | `extract_mediation()` refusals |
 #'
 #' Rules 8 and 9 are checked on the parsed table, so they need no data. Rule 8
 #' rejects a regressor built from the outcome (it is correlated with the equation's

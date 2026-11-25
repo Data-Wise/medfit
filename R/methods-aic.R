@@ -47,10 +47,11 @@
     if (!is.null(reason)) {
       nm <- names(models)[i]
       who <- if (length(nm) && !is.na(nm) && nzchar(nm)) paste0("'", nm, "', ") else ""
-      stop(what, " is not available for ", who, "a model with a product term: ", reason, ". The model test and a ",
-           "likelihood-ratio contrast against another fit are not chi-square there. The coefficients and the ",
-           "sandwich standard errors (`se_type = \"sandwich\"`, observed information) are unaffected.",
-           call. = FALSE)
+      stop(.product_condition(paste0(
+        what, " is not available for ", who, "a model with a product term: ", reason, ". The model test and a ",
+        "likelihood-ratio contrast against another fit are not chi-square there. The coefficients and the ",
+        "sandwich standard errors (`se_type = \"sandwich\"`, observed information) are unaffected."
+      ), "medfit_error_product_modeltest"))
     }
   }
   invisible(TRUE)
@@ -64,10 +65,12 @@
   }
   obs <- lapply(models, function(m) sort(m@internals$ram$obs))
   if (!all(vapply(obs[-1L], identical, logical(1), obs[[1L]]))) {
-    stop("the fits use different observed variables (",
-         paste(sprintf("%s: %s", names(models), vapply(obs, paste, character(1), collapse = ", ")), collapse = "; "),
-         "): their likelihoods describe different data (a product term adds a column), so AIC and BIC cannot be ",
-         "compared", call. = FALSE)
+    stop(.product_condition(paste0(
+      "the fits use different observed variables (",
+      paste(sprintf("%s: %s", names(models), vapply(obs, paste, character(1), collapse = ", ")), collapse = "; "),
+      "): their likelihoods describe different data (a product term adds a column), so AIC and BIC cannot be ",
+      "compared"
+    ), "medfit_error_product_observed"))
   }
   invisible(TRUE)
 }

@@ -368,10 +368,12 @@
 #  * one warning when the model test is unavailable, and one when a product is fitted without `se_type = "sandwich"`.
 .sem_product_refuse <- function(modeltest, information) {
   if (length(modeltest$endogenous) && identical(information, "expected")) {
-    stop("`information = \"expected\"` is not available for a model with a product of an endogenous variable (",
-         paste(modeltest$endogenous, collapse = "; "), "): the expected information assumes the product is not a ",
-         "function of the other variables, so its standard errors are wrong, the sandwich ones included. Use ",
-         "`information = \"observed\"` (the default) with `se_type = \"sandwich\"`.", call. = FALSE)
+    stop(.product_condition(paste0(
+      "`information = \"expected\"` is not available for a model with a product of an endogenous variable (",
+      paste(modeltest$endogenous, collapse = "; "), "): the expected information assumes the product is not a ",
+      "function of the other variables, so its standard errors are wrong, the sandwich ones included. Use ",
+      "`information = \"observed\"` (the default) with `se_type = \"sandwich\"`."
+    ), "medfit_error_product_information"))
   }
   invisible(NULL)
 }
@@ -385,10 +387,12 @@
   }
   reasons <- .sem_modeltest_text(modeltest)
   if (!is.null(reasons)) {
-    warning("the model test is not valid for this model: ", reasons,
-            ". `glance()` and `summary()` report the chi-square, df and p-value as NA, and `anova()` and `mbco_sem()` ",
-            "refuse. The coefficients equal equation-wise OLS, and the sandwich standard errors (observed ",
-            "information) are unaffected.", call. = FALSE)
+    warning(.product_condition(paste0(
+      "the model test is not valid for this model: ", reasons,
+      ". `glance()` and `summary()` report the chi-square, df and p-value as NA, and `anova()` and `mbco_sem()` ",
+      "refuse. The coefficients equal equation-wise OLS, and the sandwich standard errors (observed ",
+      "information) are unaffected."
+    ), "medfit_warning_product_modeltest", "warning"))
   }
   if (!identical(se_type, "sandwich")) {
     warning("the model has a product term (", paste(prods, collapse = ", "), ") and `se_type = \"", se_type,
@@ -569,8 +573,9 @@
     }
     bad <- f[!vapply(data[f], is.numeric, TRUE)]
     if (length(bad)) {
-      stop("the product '", nm, "' needs numeric variables, but ", paste(bad, collapse = ", "),
-           " is not numeric", call. = FALSE)
+      stop(.product_condition(paste0("the product '", nm, "' needs numeric variables, but ",
+                                     paste(bad, collapse = ", "), " is not numeric"),
+                              "medfit_error_product_nonnumeric"))
     }
     built <- as.numeric(data[[f[1L]]]) * as.numeric(data[[f[2L]]]) # numeric: integer columns cannot overflow to NA
     for (alt in intersect(unique(c(nm, paste(f, collapse = ":"), paste(rev(f), collapse = ":"))), names(data))) {
@@ -586,8 +591,10 @@
     given <- ck$given[keep]
     built <- ck$built[keep]
     if (!(is.numeric(given) && isTRUE(all(given == built)))) {
-      stop("the column `", ck$column, "` in `data` is not the product of ", gsub(":", " and ", ck$product),
-           " on the rows used: rename it, or drop it so medfit builds the product", call. = FALSE)
+      stop(.product_condition(paste0("the column `", ck$column, "` in `data` is not the product of ",
+                                     gsub(":", " and ", ck$product),
+                                     " on the rows used: rename it, or drop it so medfit builds the product"),
+                              "medfit_error_product_column"))
     }
   }
   invisible(TRUE)

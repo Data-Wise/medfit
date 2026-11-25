@@ -65,7 +65,18 @@ pmsg_cases <- function() {
     list("is not available for", pmsg_anova),
     list("a model with a product term", pmsg_anova),
     list("does not support the product", pmsg_extract),
-    list("the native extraction does not support the product", pmsg_extract)
+    list("the native extraction does not support the product", pmsg_extract),
+    list("different observed variables", function() stats::AIC(pmsg_fit(pmsg_endo), pmsg_fit("m ~ x\ny ~ m + x"))),
+    list("needs the treatment-by-mediator product", function() {
+      extract_mediation(pmsg_fit("m ~ x\ny ~ x + m"), treatment = "x", mediator = "m", decomposition = "four_way")
+    }),
+    list("must be the product written with `:`", function() {
+      extract_mediation(pmsg_fit(pmsg_endo), treatment = "x", mediator = "m", interaction = "x")
+    }),
+    list("is not the product of the treatment", function() {
+      extract_mediation(pmsg_fit("m ~ x + c\ny ~ x + m + x:m + c"), treatment = "x", mediator = "m",
+                        interaction = "x:c")
+    })
   )
 }
 

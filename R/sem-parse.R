@@ -20,11 +20,14 @@
   paste(sort(c(a, b), method = "radix"), collapse = ":")
 }
 
-.sem_syntax_error <- function(msg, stmt = NULL) {
+.sem_syntax_error <- function(msg, stmt = NULL, class = NULL) {
   if (!is.null(stmt)) {
     msg <- paste0(msg, " (in '", stmt, "')")
   }
-  stop(msg, call. = FALSE)
+  if (is.null(class)) {
+    stop(msg, call. = FALSE)
+  }
+  stop(.product_condition(msg, class))
 }
 
 # Statements: comments (`#` or `!`) dropped, a line continues while it ends with
@@ -87,7 +90,8 @@
         len <- 1L
       } else if (startsWith(s, ":")) {
         if (!(glued && length(out) && grepl(.sem_name_re, out[length(out)]) && grepl("^:[A-Za-z.]", s))) {
-          .sem_syntax_error("a product ':' needs a variable name on each side, written without spaces (x:m)", stmt)
+          .sem_syntax_error("a product ':' needs a variable name on each side, written without spaces (x:m)", stmt,
+                            "medfit_error_product_syntax")
         }
         len <- 1L
       } else {
@@ -127,16 +131,17 @@
     if (sum(target == ":") > 1L) {
       .sem_syntax_error(
         paste0("a three-way or higher product ('", paste(factors, collapse = ":"), "') is not supported; ",
-               "products have exactly two observed variables"), stmt
+               "products have exactly two observed variables"), stmt, "medfit_error_product_syntax"
       )
     }
     if (length(target) != 3L || any(.sem_is_num(factors))) {
-      .sem_syntax_error("malformed product; expected two variable names, as in 'x:m'", stmt)
+      .sem_syntax_error("malformed product; expected two variable names, as in 'x:m'", stmt,
+                        "medfit_error_product_syntax")
     }
     if (factors[1L] == factors[2L]) {
       .sem_syntax_error(
         paste0("the product '", paste(factors, collapse = ":"), "' of a variable with itself is not supported; ",
-               "products join two different variables"), stmt
+               "products join two different variables"), stmt, "medfit_error_product_syntax"
       )
     }
     written <- paste(factors, collapse = ":")
@@ -191,7 +196,7 @@
   if (grepl(":", lhs, fixed = TRUE)) {
     .sem_syntax_error(
       paste0("a product term ':' cannot be a left side ('", lhs, "'); products are right-side terms of a regression"),
-      st
+      st, "medfit_error_product_syntax"
     )
   }
   lhs <- trimws(strsplit(lhs, ",", fixed = TRUE)[[1L]])
@@ -218,7 +223,7 @@
   if (any(is_prod) && op != "~") {
     .sem_syntax_error(
       paste0("a product term ('", terms[is_prod][[1L]]$written, "') is only valid on the right side of a regression ",
-             "('~'), not of '", op, "'"), st
+             "('~'), not of '", op, "'"), st, "medfit_error_product_syntax"
     )
   }
   is_one <- vapply(terms, function(t) .sem_is_num(t$target), TRUE)
@@ -514,20 +519,20 @@
   latent <- parameters$lhs[parameters$op == "=~"]
   latent_hit <- is_prod & vapply(strsplit(parameters$rhs, ":", fixed = TRUE), function(f) any(f %in% latent), TRUE)
   if (any(latent_hit)) {
-    stop(sprintf(
+    stop(.product_condition(sprintf(
       "the product '%s' involves a latent variable; products with latent variables are not supported in this version",
       written[which(latent_hit)[1L]]
-    ), call. = FALSE)
+    ), "medfit_error_product_latent"))
   }
   pkey <- paste(parameters$level, parameters$lhs, parameters$rhs)
   pdup <- which(is_prod & duplicated(pkey))
   if (length(pdup)) {
     j <- pdup[1L]
     first <- which(is_prod & pkey == pkey[j])[1L]
-    stop(sprintf(
+    stop(.product_condition(sprintf(
       "'%s' and '%s' in the equation for '%s' are the same product (canonical name '%s'); keep one term per product",
       written[first], written[j], parameters$lhs[j], parameters$rhs[j]
-    ), call. = FALSE)
+    ), "medfit_error_product_duplicate"))
   }
   ccol <- function(f, type) vapply(cons, function(r) r[[f]], type)
   constraints <- data.frame(
@@ -573,8 +578,8 @@
     sides <- if (constraints$op[i] == ":=") constraints$rhs[i] else c(constraints$lhs[i], constraints$rhs[i])
     for (s in sides) {
       if (grepl("(?<!:):(?![:=])", s, perl = TRUE)) {
-        stop("a product term ':' is only valid on the right side of a regression, not inside the expression '", s,
-             "'", call. = FALSE)
+        stop(.product_condition(paste0("a product term ':' is only valid on the right side of a regression, not ",
+                                       "inside the expression '", s, "'"), "medfit_error_product_syntax"))
       }
       e <- .sem_expr_parse(s)
       .sem_expr_check(e, known)

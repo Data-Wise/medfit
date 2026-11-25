@@ -147,12 +147,16 @@
   if (!is.null(interaction)) {
     parts <- strsplit(interaction, ":", fixed = TRUE)[[1L]]
     if (length(parts) != 2L || !all(nzchar(parts))) {
-      stop("`interaction` for a native fit must be the product written with `:`, as in '", treatment, ":", mediator,
-           "'; a precomputed data column is fitted as an ordinary variable.", call. = FALSE)
+      stop(.product_condition(paste0(
+        "`interaction` for a native fit must be the product written with `:`, as in '", treatment, ":", mediator,
+        "'; a precomputed data column is fitted as an ordinary variable."
+      ), "medfit_error_product_extract"))
     }
     if (!identical(.sem_product_name(parts[1L], parts[2L]), canon)) {
-      stop("`interaction` ('", interaction, "') is not the product of the treatment '", treatment,
-           "' and the mediator '", mediator, "'.", call. = FALSE)
+      stop(.product_condition(paste0(
+        "`interaction` ('", interaction, "') is not the product of the treatment '", treatment,
+        "' and the mediator '", mediator, "'."
+      ), "medfit_error_product_extract"))
     }
   }
   if (canon %in% stored) canon else NA_character_
@@ -168,13 +172,17 @@
   if (length(hit)) {
     fac <- .sem_factor_of_product(object@internals$factors, hit[1L])
     if (!is.null(fac)) {
-      stop("the native extraction does not support the product '", hit[1L], "': it comes from the factor `", fac,
-           "`, so the effects differ by `", fac, "` and averaging over `", fac, "` is not supported. Fit the model ",
-           "without the product, or compute the effects within each level of `", fac, "`.", call. = FALSE)
+      stop(.product_condition(paste0(
+        "the native extraction does not support the product '", hit[1L], "': it comes from the factor `", fac,
+        "`, so the effects differ by `", fac, "` and averaging over `", fac, "` is not supported. Fit the model ",
+        "without the product, or compute the effects within each level of `", fac, "`."
+      ), "medfit_error_product_extract"))
     }
-    stop("the native extraction does not support the product '", hit[1L], "': a product involving the treatment ",
-         "or the mediator other than '", .sem_product_name(treatment, mediator), "' changes the effects without ",
-         "changing a coefficient the extraction reads. Remove it, or fit the model with lm/glm.", call. = FALSE)
+    stop(.product_condition(paste0(
+      "the native extraction does not support the product '", hit[1L], "': a product involving the treatment ",
+      "or the mediator other than '", .sem_product_name(treatment, mediator), "' changes the effects without ",
+      "changing a coefficient the extraction reads. Remove it, or fit the model with lm/glm."
+    ), "medfit_error_product_extract"))
   }
   invisible(NULL)
 }
@@ -220,10 +228,12 @@ S7::method(extract_mediation, SEMFit) <- function(object, treatment, mediator, .
     .sem_stop_other_products(object, treatment, mediator)
     args$interaction <- if (is.null(asked)) NULL else int
     if (is.na(int) && (identical(decomposition, "four_way") || !is.null(asked))) {
-      stop("the four-way decomposition of a native fit needs the treatment-by-mediator product in the outcome ",
-           "equation: add `", treatment, ":", mediator, "` to it, for example `y ~ ", treatment, " + ", mediator,
-           " + ", treatment, ":", mediator, "`. Native products are written in the model syntax, not as a ",
-           "precomputed data column.", call. = FALSE)
+      stop(.product_condition(paste0(
+        "the four-way decomposition of a native fit needs the treatment-by-mediator product in the outcome ",
+        "equation: add `", treatment, ":", mediator, "` to it, for example `y ~ ", treatment, " + ", mediator,
+        " + ", treatment, ":", mediator, "`. Native products are written in the model syntax, not as a ",
+        "precomputed data column."
+      ), "medfit_error_product_extract"))
     }
   } else if (!is.null(args$interaction)) {
     stop("`interaction` applies to a single mediator.", call. = FALSE)
