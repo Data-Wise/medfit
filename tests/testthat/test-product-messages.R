@@ -65,7 +65,30 @@ pmsg_cases <- function() {
     list("is not available for", pmsg_anova),
     list("a model with a product term", pmsg_anova),
     list("does not support the product", pmsg_extract),
-    list("the native extraction does not support the product", pmsg_extract)
+    list("the native extraction does not support the product", pmsg_extract),
+    list("both sides are categorical columns", function() {
+      d <- pmsg_data()
+      d$g <- factor(rep(c("a", "b", "c"), length.out = nrow(d)))
+      d$h <- factor(rep(c("u", "v"), length.out = nrow(d)))
+      fit_sem("y ~ g:h", d)
+    }),
+    list("appears only inside products", function() {
+      d <- pmsg_data()
+      d$g <- factor(rep(c("a", "b", "c"), length.out = nrow(d)))
+      fit_sem("y ~ g:x + m", d, fixed_x = "g")
+    }),
+    list("malformed modifier", function() fit_sem("y ~ a:b*x", pmsg_data())),
+    list("different observed variables", function() stats::AIC(pmsg_fit(pmsg_endo), pmsg_fit("m ~ x\ny ~ m + x"))),
+    list("needs the treatment-by-mediator product", function() {
+      extract_mediation(pmsg_fit("m ~ x\ny ~ x + m"), treatment = "x", mediator = "m", decomposition = "four_way")
+    }),
+    list("must be the product written with `:`", function() {
+      extract_mediation(pmsg_fit(pmsg_endo), treatment = "x", mediator = "m", interaction = "x")
+    }),
+    list("is not the product of the treatment", function() {
+      extract_mediation(pmsg_fit("m ~ x + c\ny ~ x + m + x:m + c"), treatment = "x", mediator = "m",
+                        interaction = "x:c")
+    })
   )
 }
 

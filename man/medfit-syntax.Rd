@@ -165,6 +165,38 @@ includes the product columns.\tabular{ll}{
    \code{information = "expected"}, endogenous factor \tab "with a product of an endogenous variable" \cr
    \code{anova()} or \code{mbco_sem()} on such a fit \tab "is not available for ... a model with a product term" \cr
    Another product on the treatment or mediator, in \code{extract_mediation()} \tab "does not support the product" \cr
+   \code{AIC()} or \code{BIC()} on fits with different observed variables \tab "different observed variables" \cr
+   A product of two categorical columns (\code{g:h}) \tab "both sides are categorical columns" \cr
+   \code{fixed_x} naming a column that appears only inside products \tab "appears only inside products" \cr
+   A product in a modifier (\code{y ~ a:b*x}) \tab "malformed modifier" \cr
+   Four-way on a native fit without the treatment-by-mediator product \tab "needs the treatment-by-mediator product" \cr
+   \code{extract_mediation(interaction = )} that is not a \code{:} product \tab "must be the product written with \code{:}" \cr
+   \code{extract_mediation(interaction = )} that is not treatment by mediator \tab "is not the product of the treatment" \cr
+}
+
+
+Each error has one of these classes and also the class \code{medfit_error_product}; the message is the
+reason, so a handler can match the class and a reader the message. The warning that the model test
+is not valid (below) has the class \code{medfit_warning_product_modeltest}.\tabular{ll}{
+   Class \tab Raised for \cr
+   \code{medfit_error_product_syntax} \tab spacing, \code{x:x}, three-way, left side, \verb{=~}, constraint expression \cr
+   \code{medfit_error_product_latent} \tab a latent variable in a product \cr
+   \code{medfit_error_product_duplicate} \tab one product twice in an equation \cr
+   \code{medfit_error_product_outcome_regressor} \tab rule 8 \cr
+   \code{medfit_error_product_recursive} \tab a loop of regressions \cr
+   \code{medfit_error_product_residual_covariance} \tab residual covariance between outcomes \cr
+   \code{medfit_error_product_shared_label} \tab a label on two rows \cr
+   \code{medfit_error_product_fixed_coefficient} \tab a fixed coefficient \cr
+   \code{medfit_error_product_bound} \tab an inline bound \cr
+   \code{medfit_error_product_constraint} \tab a constraint names a coefficient label \cr
+   \code{medfit_error_product_intercept} \tab a fixed, shared or constrained intercept \cr
+   \code{medfit_error_product_meanstructure} \tab \code{meanstructure = FALSE} \cr
+   \code{medfit_error_product_column} \tab a data column that is not the product \cr
+   \code{medfit_error_product_nonnumeric} \tab a non-numeric product input \cr
+   \code{medfit_error_product_information} \tab \code{information = "expected"}, endogenous factor \cr
+   \code{medfit_error_product_modeltest} \tab \code{anova()} or \code{mbco_sem()} \cr
+   \code{medfit_error_product_observed} \tab \code{AIC()} or \code{BIC()} across observed variables \cr
+   \code{medfit_error_product_extract} \tab \code{extract_mediation()} refusals \cr
 }
 
 

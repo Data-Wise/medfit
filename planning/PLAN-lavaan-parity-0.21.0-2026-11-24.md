@@ -112,3 +112,4 @@ constraints (default: `weights`, the smaller change).
 | Date | Event |
 |---|---|
 | 2026-11-24 | refreshed for 0.21.0 after an adversarial review; four Partial rows prioritized; corrected a wrong claim that two-level constraints were refused (only nonlinear ones are) |
+| 2026-11-25 | P2(c) done on feature/product-refusals-p2c (PR: not yet opened); product refusals and the model-test warning are classed, no number changes |

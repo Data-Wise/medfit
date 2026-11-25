@@ -322,10 +322,12 @@
   prod <- .lmer_find_product(X, m, cl, skip = c(trt, found), tol = tol,
                              extra = mf_num)
   if (!is.null(prod)) {
-    stop("The outcome model has the product term `", prod$term, "` of the ",
-         prod$mediator, " with `", prod$other, "`; treatment-by-mediator and ",
-         "covariate-by-mediator products are not supported (the natural ",
-         "indirect effect would depend on the covariate level)", call. = FALSE)
+    stop(.product_condition(paste0(
+      "The outcome model has the product term `", prod$term, "` of the ",
+      prod$mediator, " with `", prod$other, "`; treatment-by-mediator and ",
+      "covariate-by-mediator products are not supported (the natural ",
+      "indirect effect would depend on the covariate level)"
+    ), "medfit_error_product_extract"))
   }
   if (is.null(mean_t)) {
     near <- .lmer_near_miss(X, m_bar, cl, c(trt, found), tol)

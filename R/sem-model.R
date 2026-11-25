@@ -52,10 +52,12 @@
   # A product model needs the saturated mean structure (the four-way decomposition needs E[M | X = 0]),
   # whatever the extraction asks for later, so `meanstructure = FALSE` cannot be honored.
   if (product_model && identical(meanstructure, FALSE)) {
-    stop("`meanstructure = FALSE`, but the model has a product term ('",
-         p$rhs[p$op == "~" & grepl(":", p$rhs, fixed = TRUE)][1L], "'); product models need the mean structure ",
-         "(the four-way decomposition needs the mediator intercept E[M | X = 0]); leave `meanstructure` unset ",
-         "or use `TRUE`", call. = FALSE)
+    stop(.product_condition(paste0(
+      "`meanstructure = FALSE`, but the model has a product term ('",
+      p$rhs[p$op == "~" & grepl(":", p$rhs, fixed = TRUE)][1L], "'); product models need the mean structure ",
+      "(the four-way decomposition needs the mediator intercept E[M | X = 0]); leave `meanstructure` unset ",
+      "or use `TRUE`"
+    ), "medfit_error_product_meanstructure"))
   }
   # Mean structure is on when asked for, when any product term is present, or when any intercept statement is
   # written (free or fixed, as in lavaan): then every observed variable whose intercept the user did not write gets
@@ -302,8 +304,9 @@
 }
 
 # Rule 8 is a validity rule (such a regressor is built from the outcome); rule 9 names what is not yet supported.
-.sem_product_stop <- function(msg, rule = 9L) {
-  stop(msg, if (rule == 9L) " This is not yet supported with products; it works without the product.", call. = FALSE)
+.sem_product_stop <- function(msg, class, rule = 9L) {
+  msg <- paste0(msg, if (rule == 9L) " This is not yet supported with products; it works without the product.")
+  stop(.product_condition(msg, class))
 }
 
 # Directed graph of the whole parsed table (rule 8): `a -> b` for each plain regressor in `b ~ a`, `f -> b` for each
@@ -346,13 +349,14 @@
       .sem_product_stop(sprintf(
         "In the equation for '%s', the product '%s' uses '%s', which is %s (rule 8: no outcome-derived regressors).",
         target, p$rhs[i], hit[1L], how
-      ), rule = 8L)
+      ), "medfit_error_product_outcome_regressor", rule = 8L)
     }
   }
   # Rule 9: recursive, no shared or fixed regression coefficient, no constraint on a regression label.
   for (n in unique(c(edges$from, edges$to))) {
     if (n %in% .sem_reach(edges, n)) {
-      .sem_product_stop(sprintf("The model is not recursive: '%s' is part of a loop of regressions (rule 9).", n))
+      .sem_product_stop(sprintf("The model is not recursive: '%s' is part of a loop of regressions (rule 9).", n),
+                        "medfit_error_product_recursive")
     }
   }
   reg <- p$op == "~"
@@ -361,11 +365,12 @@
   shared <- lab[vapply(lab, function(l) sum(p$label == l) > 1L, TRUE)]
   if (length(shared)) {
     .sem_product_stop(sprintf("The label '%s' is used on more than one parameter, a regression among them (rule 9).",
-                              shared[1L]))
+                              shared[1L]), "medfit_error_product_shared_label")
   }
   fx <- which(reg & !is.na(p$fixed))
   if (length(fx)) {
-    .sem_product_stop(sprintf("The regression '%s' has a fixed coefficient (rule 9).", .sem_row_text(p[fx[1L], ])))
+    .sem_product_stop(sprintf("The regression '%s' has a fixed coefficient (rule 9).", .sem_row_text(p[fx[1L], ])),
+                      "medfit_error_product_fixed_coefficient")
   }
   # Labels named by an `==`, `<` or `>` constraint, directly or through a defined parameter.
   defs <- stats::setNames(cons$rhs[cons$op == ":="], cons$lhs[cons$op == ":="])
@@ -378,7 +383,8 @@
   }
   hit <- reg & nzchar(p$label) & p$label %in% used
   if (any(hit)) {
-    .sem_product_stop(sprintf("A constraint (==, < or >) names the coefficient label '%s' (rule 9).", p$label[hit][1L]))
+    .sem_product_stop(sprintf("A constraint (==, < or >) names the coefficient label '%s' (rule 9).", p$label[hit][1L]),
+                      "medfit_error_product_constraint")
   }
   # Rule 9, intercept clause: a `~1` row is free, unlabeled or uniquely labeled, and in no constraint.
   for (i in which(p$op == "~1" & nzchar(p$label))) {
@@ -387,20 +393,20 @@
         paste("The intercept '%s' shares the label '%s' with another row",
               "(rule 9, intercept clause: intercepts must be free and unshared)."),
         .sem_row_text(p[i, ]), p$label[i]
-      ))
+      ), "medfit_error_product_intercept")
     }
     if (p$label[i] %in% used) {
       .sem_product_stop(sprintf(
         "The intercept '%s' is in a constraint (rule 9, intercept clause: intercepts must be free and unconstrained).",
         .sem_row_text(p[i, ])
-      ))
+      ), "medfit_error_product_intercept")
     }
   }
   # an inline bound (`lower(0)*m`, `upper(1)*1`, or one folded from `a < 1`) constrains a coefficient or an intercept
   bnd <- which((reg | p$op == "~1") & (!is.na(p$lower) | !is.na(p$upper)))
   if (length(bnd)) {
     .sem_product_stop(sprintf("The row '%s' has a bound (rule 9: coefficients and intercepts are unconstrained).",
-                              .sem_row_text(p[bnd[1L], ])))
+                              .sem_row_text(p[bnd[1L], ])), "medfit_error_product_bound")
   }
   invisible(p)
 }
@@ -415,14 +421,14 @@
     .sem_product_stop(sprintf(
       "A product model cannot have a residual covariance (rule 9): '%s' relates two outcomes.",
       .sem_row_text(p[cv[1L], ])
-    ))
+    ), "medfit_error_product_residual_covariance")
   }
   fx <- which(p$op == "~1" & p$user == 1L & !is.na(p$fixed))
   if (length(fx)) {
     .sem_product_stop(sprintf(
       "The intercept '%s' is fixed (rule 9, intercept clause: intercepts must be free and unconstrained).",
       .sem_row_text(p[fx[1L], ])
-    ))
+    ), "medfit_error_product_intercept")
   }
   auto <- which(p$op == "~~" & p$lhs != p$rhs & p$user == 0L & !is.na(p$fixed) & p$fixed == 0 & !p$lhs %in% r$ov_x)
   if (length(auto)) {
