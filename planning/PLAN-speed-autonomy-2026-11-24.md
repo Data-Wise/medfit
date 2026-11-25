@@ -21,7 +21,7 @@ Ranked by saving per PR, then risk.
 
 | # | Item | Expected saving | Evidence | Risk | Decision needed |
 |---|---|---|---|---|---|
-| S1 | Pin R-CMD-check Ubuntu jobs to `ubuntu-24.04`; compare one pinned run with one on `latest` | possibly back to 55 to 67 min jobs | strong: #307 precedent plus the migration; cause unproven | low | OK to dispatch two hosted runs |
+| S1 | Pin R-CMD-check Ubuntu jobs to `ubuntu-24.04`; compare one pinned run with one on `latest` | none measured (done in #536 for image stability; see section 8) | two paired runs found no consistent speed difference | low | done |
 | S2 | Focused docs-route pilot (T3): fail-closed allowlist, escalate by default | about 60 min to 17 s to 6 min per docs PR | measured, single samples | low | approve the pilot |
 | S3 | Two-worker local suite (T4): `Config/testthat/parallel: true`, `Ncpus = 2`, FIML files in `start-first`, BLAS threads capped | 33 to 48 min to about 16 min | one exploratory run; the proposal's bar is 25% median gain with parity | medium: testthat does not reset state between files, so seeds and options in oracle tests can leak | approve an alternating trial against serial |
 | S4 | `concurrency` with `cancel-in-progress` on R-CMD-check and gates (neither has a block; lint, pkgdown and test-coverage do) | removes wasted restarts on repeated head changes | workflow read; restarts measured | low | none; a small diff |
@@ -73,3 +73,25 @@ Windows (agent-reported), which makes two to four test workers plausible.
 | Date | Event |
 |---|---|
 | 2026-11-24 | written from the throughput plan, the workflows on `dev` and an agent web-research pass |
+
+## 8. Corrected evidence (2026-11-25)
+
+The first paired run (45505691085: 24.04 50 min, `ubuntu-latest` 65 min) was read as an image effect. A second run
+(45573883028, four jobs started together on one commit, `R CMD check` test phase, `proc.time()` user / system /
+elapsed) did not repeat it:
+
+| Job | user (s) | system (s) | elapsed (s) |
+|---|---|---|---|
+| control, 24.04 | 3,450 | 2,442 | 2,773 |
+| control, `ubuntu-latest` | 5,450 | 9 | 2,546 |
+| BLAS and OpenMP threads = 1, 24.04 | 4,115 | 12 | 4,120 |
+| BLAS and OpenMP threads = 1, `ubuntu-latest` | 4,037 | 12 | 4,043 |
+
+- The image is not the cause of the slowdown: control jobs differ by 8% in the opposite direction, and one configuration
+  varied from 42 to 62 min between runs (runner variance is large; every number here is a single sample).
+- The suite does about 4,040 s of single-thread CPU work in one R process; default threading spreads it over about two
+  cores (elapsed about 2,550 to 2,770 s), and capping threads makes it 50 to 60% slower. Threads are not oversubscribed.
+- This supports S3: parallel test workers with BLAS threads capped per worker could use all four cores. It is a pilot
+  still to run, with the proposal's parity bar, not a measured gain.
+- S1 stays merged for image stability. Its "speed" rationale is withdrawn.
+
