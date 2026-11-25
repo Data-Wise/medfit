@@ -23,6 +23,10 @@
 # alter production functions in memory only and must fail.
 # Run from the package root:  Rscript tests/sim/sem-mlr-gate.R   (REPS=2000 by default; the committed rows need 2000)
 suppressMessages(pkgload::load_all(quiet = TRUE))
+# every fit states fixed_x and meanstructure (the 0.15 defaults), so a default change cannot move this gate
+fit_pinned <- function(model, data, fixed_x = TRUE, ...) {
+  fit_sem(model, data, fixed_x = fixed_x, meanstructure = TRUE, ...)
+}
 helpers <- new.env(parent = globalenv())
 sys.source("tests/testthat/helper-sem.R", envir = helpers)
 ns <- asNamespace("medfit")
@@ -100,7 +104,7 @@ mlr_gap <- function(fit, ref) {
 for (nm in names(cells)) {
   for (fx in c(TRUE, FALSE)) {
     cell <- paste0(nm, if (fx) ":fx" else ":free")
-    fit <- tryCatch(suppressWarnings(fit_sem(cells[[nm]]$m, cells[[nm]]$d, estimator = "MLR", fixed_x = fx)),
+    fit <- tryCatch(suppressWarnings(fit_pinned(cells[[nm]]$m, cells[[nm]]$d, estimator = "MLR", fixed_x = fx)),
                     error = function(e) NULL)
     ref <- tryCatch(suppressWarnings(lavaan::sem(cells[[nm]]$m, cells[[nm]]$d, estimator = "MLR", fixed.x = fx,
                                                  meanstructure = TRUE)), error = function(e) NULL)
@@ -111,19 +115,19 @@ for (nm in names(cells)) {
 
 # ---- metamorphic invariance of the scaling factor and the scaled chi-square ----
 mod <- cells$cov$m
-base <- generics::glance(fit_sem(mod, d, estimator = "MLR"))
+base <- generics::glance(fit_pinned(mod, d, estimator = "MLR"))
 rel <- function(g) {
   max(abs(g$scaling_factor - base$scaling_factor) / base$scaling_factor,
       abs(g$chisq_scaled - base$chisq_scaled) / max(1, base$chisq_scaled))
 }
 set.seed(1)
-perm_rows <- generics::glance(fit_sem(mod, d[sample(nrow(d)), ], estimator = "MLR"))
+perm_rows <- generics::glance(fit_pinned(mod, d[sample(nrow(d)), ], estimator = "MLR"))
 reordered <- paste(rev(strsplit(mod, "\n", fixed = TRUE)[[1L]]), collapse = "\n")
-perm_cols <- generics::glance(fit_sem(reordered, d[, rev(names(d))], estimator = "MLR"))
+perm_cols <- generics::glance(fit_pinned(reordered, d[, rev(names(d))], estimator = "MLR"))
 ds <- d
 ds$x <- ds$x * 10
 ds$m1 <- ds$m1 * 0.1
-rescaled <- generics::glance(fit_sem(mod, ds, estimator = "MLR"))
+rescaled <- generics::glance(fit_pinned(mod, ds, estimator = "MLR"))
 add("meta:rows", "invariance", rel(perm_rows))
 add("meta:columns", "invariance", rel(perm_cols))
 add("meta:rescale", "invariance", rel(rescaled))
@@ -138,7 +142,7 @@ gen <- function(n, seed) {
   data.frame(x = x, m1 = m1, m2 = m2, y = y)
 }
 p <- parallel::mclapply(seq_len(reps), function(s) {
-  fit <- tryCatch(suppressWarnings(fit_sem("m1 ~ x\nm2 ~ x\ny ~ m1 + m2", gen(2000L, s), estimator = "MLR")),
+  fit <- tryCatch(suppressWarnings(fit_pinned("m1 ~ x\nm2 ~ x\ny ~ m1 + m2", gen(2000L, s), estimator = "MLR")),
                   error = function(e) NULL)
   g <- if (is.null(fit)) NULL else generics::glance(fit)
   if (is.null(g)) c(NA_real_, NA_real_) else c(g$p_value, g$p_value_scaled)
@@ -158,18 +162,18 @@ b <- data.frame(x = stats::rnorm(200))
 b$y <- 0.01 * b$x + stats::rnorm(200)
 m <- cells$over$m
 refused <- c(
-  caught(fit_sem(m, d, estimator = "MLM"), "medfit_error_estimator"),
-  caught(fit_sem(m, d, estimator = "MLR", weights = rep(1, nrow(d))), "medfit_error_mlr_weights"),
-  caught(fit_sem(m, d, estimator = "MLR", missing = "fiml"), "medfit_error_mlr_missing"),
-  caught(fit_sem(m, dm, estimator = "MLR", cluster = "id"), "medfit_error_mlr_twolevel"),
-  caught(fit_sem("m1 ~ a*x\ny ~ b*m1 + cp*x\ncp == a*b", d, estimator = "MLR"), "medfit_error_mlr_constraints"),
-  caught(fit_sem("m1 ~ a*x\ny ~ b*m1 + x\na - b > 0.1", d, estimator = "MLR"), "medfit_error_mlr_constraints"),
-  caught(suppressWarnings(fit_sem("y ~ x\ny ~~ lower(1.5)*y", b, estimator = "MLR")), "medfit_error_mlr_bounds")
+  caught(fit_pinned(m, d, estimator = "MLM"), "medfit_error_estimator"),
+  caught(fit_pinned(m, d, estimator = "MLR", weights = rep(1, nrow(d))), "medfit_error_mlr_weights"),
+  caught(fit_pinned(m, d, estimator = "MLR", missing = "fiml"), "medfit_error_mlr_missing"),
+  caught(fit_pinned(m, dm, estimator = "MLR", cluster = "id"), "medfit_error_mlr_twolevel"),
+  caught(fit_pinned("m1 ~ a*x\ny ~ b*m1 + cp*x\ncp == a*b", d, estimator = "MLR"), "medfit_error_mlr_constraints"),
+  caught(fit_pinned("m1 ~ a*x\ny ~ b*m1 + x\na - b > 0.1", d, estimator = "MLR"), "medfit_error_mlr_constraints"),
+  caught(suppressWarnings(fit_pinned("y ~ x\ny ~~ lower(1.5)*y", b, estimator = "MLR")), "medfit_error_mlr_bounds")
 )
 add("faults", "refused", sum(!refused))
-ml_a <- fit_sem(m, d)
-ml_b <- fit_sem(m, d, estimator = "ML")
-mlr <- fit_sem(m, d, estimator = "MLR", se_type = "model")
+ml_a <- fit_pinned(m, d)
+ml_b <- fit_pinned(m, d, estimator = "ML")
+mlr <- fit_pinned(m, d, estimator = "MLR", se_type = "model")
 same <- function(a, b) {
   identical(coef(a), coef(b)) && identical(vcov(a), vcov(b)) &&
     identical(generics::glance(a), generics::glance(b)) && identical(generics::tidy(a), generics::tidy(b))
