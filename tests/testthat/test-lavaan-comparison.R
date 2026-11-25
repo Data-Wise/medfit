@@ -72,6 +72,50 @@ lc_missing_status <- function(evidence) {
   if (all(evidence)) "Partial" else "Unsupported"
 }
 
+# The estimators row compares behavior with lavaan, never the formals: the same overidentified model fitted by the
+# fitter and by lavaan under ML, MLR and MLM, comparing estimates, standard errors and the scaled chi-square with its
+# scaling factor. Injecting a fitter lets a regression plant a wrong number or a silently ignored argument.
+# `mlm_accepted` is whether an estimator the engine does not offer is taken at all; accepted, it must agree.
+lc_estimator_evidence <- function(fitter = fit_sem) {
+  d <- medfit::mediation_demo
+  model <- "mediator1 ~ treatment\nmediator2 ~ treatment\noutcome ~ mediator1 + mediator2"
+  lv <- function(est) suppressWarnings(lavaan::sem(model, d, fixed.x = TRUE, meanstructure = TRUE, estimator = est))
+  run <- function(...) tryCatch(suppressMessages(suppressWarnings(fitter(model, d, ...))), error = function(e) NULL)
+  near <- function(x, y, tol = 1e-5) {
+    length(x) == length(y) && !anyNA(c(x, y)) && isTRUE(all(abs(unname(x) - unname(y)) < tol))
+  }
+  agrees <- function(f, est) {
+    if (is.null(f)) return(FALSE)
+    ref <- lv(est)
+    g <- generics::glance(f)
+    robust <- est != "ML"
+    same <- near(coef(f), lavaan::coef(ref)) && near(g$chisq, lavaan::fitMeasures(ref, "chisq")[[1L]])
+    if (est == "ML") return(same)
+    sc <- lavaan::fitMeasures(ref, c("chisq.scaled", "chisq.scaling.factor"))
+    same && near(lc_se(f), lc_se(lv(est))) && !is.null(g$chisq_scaled) && !is.null(g$scaling_factor) &&
+      near(c(g$chisq_scaled, g$scaling_factor), unname(sc))
+  }
+  mlm <- run(estimator = "MLM")
+  c(
+    ml_agrees = agrees(run(), "ML"),
+    mlr_agrees = agrees(run(estimator = "MLR"), "MLR"),
+    mlm_accepted = !is.null(mlm),
+    mlm_agrees = agrees(mlm, "MLM")
+  )
+}
+
+# Supported only when every lavaan estimator matches; Partial when ML agrees and the unmatched estimators are refused;
+# Unsupported when ML disagrees or an estimator is taken and gives another number than lavaan's.
+lc_estimator_status <- function(evidence) {
+  if (!evidence[["ml_agrees"]] || (evidence[["mlm_accepted"]] && !evidence[["mlm_agrees"]])) {
+    "Unsupported"
+  } else if (evidence[["mlr_agrees"]] && evidence[["mlm_agrees"]]) {
+    "Supported"
+  } else {
+    "Partial"
+  }
+}
+
 lc_probes <- function() {
   d <- medfit::mediation_demo
   lab <- "mediator1 ~ a * treatment\noutcome ~ b * mediator1 + cp * treatment"
@@ -140,10 +184,7 @@ lc_probes <- function() {
     "Multiple groups" = function() {
       if ("group" %in% names(formals(fit_sem))) "Supported" else "Unsupported"
     },
-    "Estimators other than ML" = function() {
-      ml <- close(coef(fit_sem(m, d)), lavaan::coef(lv(m, estimator = "ML")))
-      if (ml && !"estimator" %in% names(formals(fit_sem))) "Partial" else "Supported"
-    },
+    "Estimators other than ML" = function() lc_estimator_status(lc_estimator_evidence()),
     "Missing data" = function() lc_missing_status(lc_missing_evidence()),
     "Categorical outcomes" = function() {
       dc <- d
@@ -295,6 +336,27 @@ test_that("missing-data evidence catches removed FIML and a relaxed information 
   expect_false(broadened[["refuses_expected"]])
   expect_true(broadened[["refuses_extra_predictor"]])
   expect_identical(lc_missing_status(broadened), "Unsupported")
+})
+
+test_that("the estimators row compares behavior with lavaan, and plants of a wrong number or an ignored argument fail", {
+  skip_if_not_installed("lavaan")
+  real <- lc_estimator_evidence()
+  expect_true(real[["ml_agrees"]])
+  expect_identical(lc_estimator_status(real), "Partial")
+  # planted defect: a fitter whose ML estimates are off by 1e-3 is no longer Partial
+  shifted <- function(...) {
+    f <- fit_sem(...)
+    f@theta <- f@theta + 1e-3
+    f
+  }
+  expect_false(lc_estimator_evidence(shifted)[["ml_agrees"]])
+  expect_identical(lc_estimator_status(lc_estimator_evidence(shifted)), "Unsupported")
+  # planted defect: an `estimator` that is silently ignored (every value fits ML) is a wrong number, not a refusal
+  ignoring <- function(..., estimator = "ML") fit_sem(...)
+  silent <- lc_estimator_evidence(ignoring)
+  expect_true(silent[["mlm_accepted"]])
+  expect_false(silent[["mlm_agrees"]])
+  expect_identical(lc_estimator_status(silent), "Unsupported")
 })
 
 # S3 (V-3): compare_lr(engine = ) is the external comparison program, not a fitter of the mediation model. The Rd and
