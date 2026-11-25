@@ -82,3 +82,28 @@ test_that("QA: a linear inequality row is refused with the constraints class; an
   expect_error(fit_sem("m ~ a*x\ny ~ b*m + x\na - b > 0.1", d, estimator = "MLR"), class = "medfit_error_mlr_constraints")
   expect_error(fit_sem("m ~ a*x\ny ~ b*m + x\na > 0.1", d, estimator = "MLR"), NA)
 })
+
+test_that("QA: MLR through fit_mediation() defaults to the sandwich, equals fit_sem() and lavaan; explicit model stays model", {
+  d <- qa_mlr_data()
+  mod <- "m1 ~ a*x + c1\ny ~ b*m1 + cp*x + c1"
+  fm <- function(...) {
+    suppressWarnings(fit_mediation(data = d, treatment = "x", mediator = "m1", engine = "sem", model = mod, ...))
+  }
+  dflt <- fm(engine_args = list(estimator = "MLR"))
+  ml <- fm()
+  fs <- fit_sem(mod, d, estimator = "MLR")
+  expect_identical(dflt@vcov[c("a", "b"), c("a", "b")], fs@vcov[c("a", "b"), c("a", "b")])
+  expect_identical(fm(se_type = "sandwich", engine_args = list(estimator = "MLR"))@vcov, dflt@vcov)
+  expect_identical(fm(se_type = "model", engine_args = list(estimator = "MLR"))@vcov, ml@vcov)
+  expect_false(isTRUE(all.equal(dflt@vcov, ml@vcov)))
+  skip_if_not_installed("lavaan")
+  ref <- suppressWarnings(lavaan::sem(mod, d, estimator = "MLR", fixed.x = TRUE, meanstructure = TRUE))
+  expect_lt(abs(sqrt(dflt@vcov["a", "a"]) - sqrt(lavaan::vcov(ref)["a", "a"])), 1e-5)
+  expect_lt(abs(sqrt(dflt@vcov["b", "b"]) - sqrt(lavaan::vcov(ref)["b", "b"])), 1e-5)
+  # planted defect: se_type always treated as given -> the default is model-based and the first check fails
+  testthat::local_mocked_bindings(
+    .fit_mediation_native = sem_mutate(medfit:::.fit_mediation_native, "!isTRUE(given$se_type)", "FALSE")
+  )
+  planted <- fm(engine_args = list(estimator = "MLR"))
+  expect_false(identical(planted@vcov[c("a", "b"), c("a", "b")], fs@vcov[c("a", "b"), c("a", "b")]))
+})
