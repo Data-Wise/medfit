@@ -141,8 +141,9 @@ the ML chi-square divided by the scaling factor, from the casewise scores of the
 mean and covariance model). The Satorra-Bentler (\code{"MLM"}) variant and the other lavaan estimators are not
 offered. \code{"MLR"} is defined for single-level complete-data fits with linear equality constraints; \code{cluster},
 \verb{level:} blocks, \code{missing = "fiml"}, \code{weights}, and inequality or nonlinear constraints are refused with classed
-errors (\verb{medfit_error_mlr_*}), and an unknown estimator with \code{medfit_error_estimator}. A product term that
-makes the model test invalid leaves the scaled statistic \code{NA} too. Appended last to preserve positional calls.}
+errors (\verb{medfit_error_mlr_*}, each also of class \code{medfit_error_mlr}), and an unknown estimator with
+\code{medfit_error_estimator}. A product term that makes the model test invalid leaves the scaled statistic \code{NA} too.
+Appended last to preserve positional calls.}
 }
 \value{
 A \link{SEMFit} object. With a product term whose factor is a regression target (\code{x:m} with

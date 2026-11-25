@@ -119,8 +119,9 @@
 #'   mean and covariance model). The Satorra-Bentler (`"MLM"`) variant and the other lavaan estimators are not
 #'   offered. `"MLR"` is defined for single-level complete-data fits with linear equality constraints; `cluster`,
 #'   `level:` blocks, `missing = "fiml"`, `weights`, and inequality or nonlinear constraints are refused with classed
-#'   errors (`medfit_error_mlr_*`), and an unknown estimator with `medfit_error_estimator`. A product term that
-#'   makes the model test invalid leaves the scaled statistic `NA` too. Appended last to preserve positional calls.
+#'   errors (`medfit_error_mlr_*`, each also of class `medfit_error_mlr`), and an unknown estimator with
+#'   `medfit_error_estimator`. A product term that makes the model test invalid leaves the scaled statistic `NA` too.
+#'   Appended last to preserve positional calls.
 #' @param sampling_weights `r lifecycle::badge("deprecated")` Renamed `weights`, the name
 #'   [fit_mediation()] uses; the old name still works with a warning.
 #'
