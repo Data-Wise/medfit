@@ -236,7 +236,7 @@
 }
 
 # Re-raise a caught product refusal `err` under a new message, keeping its classes (the call stays NULL, as the
-# original `stop(call. = FALSE)` re-raise had). Returns NULL for any other condition, so the caller keeps its own stop().
+# original `stop(call. = FALSE)` re-raise had). Returns NULL for any other condition.
 .product_reraise <- function(err, msg) {
   if (!inherits(err, "medfit_error_product")) {
     return(NULL)
