@@ -25,7 +25,8 @@
 # Options: --max-age DAYS (default 14; older results are stale), --dir DIR (results directory), --monthly (also run
 # the gates listed in tests/sim/gates-monthly.txt, which every mode drops otherwise: the qc-monthly workflow passes it,
 # the PR gates shards do not; ADR D-13), --local-only (also run the gates in tests/sim/gates-local-only.txt, each more
-# than about 300 s on a hosted runner; every mode drops them otherwise; scripts/check-local-full.sh and qc-monthly pass it).
+# than about 300 s on a hosted runner; every mode drops them otherwise; scripts/check-local-full.sh and qc-monthly
+# pass it).
 # Exit status: 0 only when every requested check passes. Summary: tests/sim/results/gates-summary-<date>.txt
 
 args <- commandArgs(trailingOnly = TRUE)

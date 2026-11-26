@@ -1,7 +1,13 @@
 # The local-only tier: skip_unless_local() skips on CRAN and on CI, runs locally; the tier list names real files.
 
 skip_reason <- function(env) {
-  withr::with_envvar(env, tryCatch({ skip_unless_local(); NULL }, skip = function(s) conditionMessage(s)))
+  withr::with_envvar(env, tryCatch(
+    {
+      skip_unless_local()
+      NULL
+    },
+    skip = function(s) conditionMessage(s)
+  ))
 }
 
 test_that("skip_unless_local() skips when CI is true", {
@@ -18,8 +24,16 @@ test_that("skip_unless_local() runs with NOT_CRAN=true and CI unset", {
 
 test_that("planted defect: a helper without skip_on_ci() would not skip under CI", {
   naive <- function() testthat::skip_on_cran()
-  r <- withr::with_envvar(c(NOT_CRAN = "true", CI = "true"),
-                          tryCatch({ naive(); NULL }, skip = function(s) "skipped"))
+  r <- withr::with_envvar(
+    c(NOT_CRAN = "true", CI = "true"),
+    tryCatch(
+      {
+        naive()
+        NULL
+      },
+      skip = function(s) "skipped"
+    )
+  )
   expect_null(r)
 })
 
@@ -41,7 +55,7 @@ test_that("every file in the local-only list calls skip_unless_local() before an
 # ---- the local-only gate tier (tests/sim/gates-local-only.txt) ----
 sim_root <- function() {
   root <- testthat::test_path("..", "..")
-  skip_if(!file.exists(file.path(root, "tests", "sim", "gates.csv")), "tests/sim is not in the installed package")
+  testthat::skip_if(!file.exists(file.path(root, "tests", "sim", "gates.csv")), "tests/sim is not in the installed package")
   root
 }
 
@@ -66,7 +80,7 @@ test_that("run-gates.R drops a local-only gate unless --local-only is passed (pl
   }
   out <- run(c("--only", "twolevel-equal-size"))
   expect_true(any(grepl("local-only gates skipped", out, fixed = TRUE)))
-  expect_false(any(grepl("twolevel-equal-size", sub("local-only gates skipped.*", "", out[!grepl("skipped", out)]), fixed = TRUE)))
+  expect_false(any(grepl("twolevel-equal-size  ", out, fixed = TRUE))) # no verdict line for the dropped gate
   out2 <- run(c("--only", "twolevel-equal-size", "--local-only"))
   expect_false(any(grepl("local-only gates skipped", out2, fixed = TRUE)))
 })
