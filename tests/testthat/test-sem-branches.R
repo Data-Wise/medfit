@@ -145,7 +145,7 @@ test_that("branches that cannot all be fitted error by listing each", {
 
 test_that("forms that are not zero products keep the nonlinear route; too many branches error", {
   d <- mem_data()
-  fit <- fit_sem(paste0(mem_syn, "\na1*b1 == 0.01"), d)
+  fit <- muffle_warnings_matching(fit_sem(paste0(mem_syn, "\na1*b1 == 0.01"), d), "the sign-branch starts disagree")
   expect_identical(fit@internals$branch, character())
   set.seed(1)
   dat <- as.data.frame(matrix(stats::rnorm(60 * 15), 60, 15))
