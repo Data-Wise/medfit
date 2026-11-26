@@ -357,6 +357,18 @@ usethis::use_article("article-name")  # Not included in R CMD check
 - **Release-only cost**: keep the platform matrix and OpenBLAS gates deferred
   until release to `main`; this policy does not disable fast PR checks.
 
+### Local-only tier (decided 2026-11-26)
+
+Items that alone cost more than about 300 s on a hosted runner do not run on GitHub Actions or CRAN; they run on the
+maintainer's machine. Testthat files list themselves in `tests/testthat/local-only-tests.txt` and start with
+`skip_unless_local()` (`helper-local-only.R`: `skip_on_cran()` plus `skip_on_ci()`); gates list their `gates.csv` id in
+`tests/sim/gates-local-only.txt` and `run-gates.R` drops them unless `--local-only` is passed (the `gates (rest)` and
+`gates (reliability)` check names do not change; `qc-monthly` passes `--local-only`, so the monthly OpenBLAS record
+keeps them). `scripts/check-local-full.sh` runs the whole tier and writes
+`planning/local-full-runs/RECEIPT-<date>-<sha>.md`. **A release requires a green local full-run receipt for the release
+commit**, because hosted CI no longer verifies these items (this overrides the 2026-11-25 "no coverage given up on
+release" line of the CI test-speed plan for the listed items only). Plan and list: `planning/PLAN-local-only-tier-2026-11-26.md`.
+
 ### Organization
 
 ```
