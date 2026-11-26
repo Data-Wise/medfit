@@ -78,6 +78,8 @@ jobs:
         run: |
           echo 'options(Ncpus = 4L)' > "$RUNNER_TEMP/test-workers.Rprofile"
           echo "R_PROFILE_USER=$RUNNER_TEMP/test-workers.Rprofile" >> "$GITHUB_ENV"
+          echo "OPENBLAS_NUM_THREADS=1" >> "$GITHUB_ENV"
+          echo "OMP_NUM_THREADS=1" >> "$GITHUB_ENV"
         shell: bash
 
       - uses: r-lib/actions/check-r-package@v2
@@ -130,6 +132,8 @@ jobs:
         run: |
           echo 'options(Ncpus = 4L)' > "$RUNNER_TEMP/test-workers.Rprofile"
           echo "R_PROFILE_USER=$RUNNER_TEMP/test-workers.Rprofile" >> "$GITHUB_ENV"
+          echo "OPENBLAS_NUM_THREADS=1" >> "$GITHUB_ENV"
+          echo "OMP_NUM_THREADS=1" >> "$GITHUB_ENV"
         shell: bash
 
       - uses: r-lib/actions/check-r-package@v2
