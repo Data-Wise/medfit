@@ -1,3 +1,4 @@
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 post_fit_model <- "repetition ~ a1*x\nimagery ~ a2*x\nrecall ~ cp*x + b1*repetition + b2*imagery"
 
 test_that("public covariance failure exposes accepted evidence, never a SEMFit", {

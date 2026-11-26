@@ -2,6 +2,7 @@
 # live defects of the code under test (the F1 SE gradient and the F5 weighted means, fixed by U0 and restored here by
 # mutation). A comparison that cannot fail proves nothing. `testthat::expect_failure()` inverts an expectation.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 skip_if_not_installed("lavaan")
 skip_if_not_installed("sandwich")
 

@@ -2,6 +2,7 @@
 # error and checks that the guide still quotes the same fragment, so a reworded
 # message or an edited page fails here before the guide goes stale.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 guide_path <- function() {
   testthat::test_path("..", "..", "vignettes", "articles", "guide-troubleshooting.qmd")
 }

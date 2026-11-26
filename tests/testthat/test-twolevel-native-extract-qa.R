@@ -8,6 +8,7 @@
 # planning/specs/ADR-twolevel-oracle-tolerances-2026-11-18.md: estimates TL-1 max(0.01 SE, 1e-4); SEs and covariances
 # TL-2 1e-3 relative (covariances relative to SE_i SE_j).
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 skip_if_not_installed("lavaan")
 
 tlq_paths <- c("a_within", "b_within", "c_prime_within", "a_between", "b_between", "c_prime_between")

@@ -7,6 +7,7 @@
 # .sem_sign_check() the dependent active sets it used to skip.
 
 # The Lawson-Hanson loop of the evidence script, reformatted and otherwise unchanged: absolute tolerance, no step guard.
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 nnls_old <- function(A, b, tol = 1e-12, maxit = 500) {
   n <- ncol(A)
   x <- numeric(n)

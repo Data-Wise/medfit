@@ -2,6 +2,7 @@
 # recursive model, checked against from-scratch references. This is an INTERNAL test of dimension-genericity only:
 # no public entry accepts these tables, and the refusal boundary is tested in test-fiml-generic-kernel-oracle.R.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 gk4_tables <- function() {
   a <- data.frame(
     row = c("M1", "M2", "Y", "Y"), col = c("X", "M1", "M2", "X"),

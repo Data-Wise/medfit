@@ -5,6 +5,7 @@
 # Oracles: lavaan se = "robust.huber.white" (TL-2, 1e-3 relative) and a hand sandwich from numeric per-cluster scores
 # of the unreduced stacked density (1e-6 relative on the full V).
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 tls_lavaan <- function(model, data, ...) {
   suppressWarnings(lavaan::sem(model, data, cluster = "cluster", fixed.x = FALSE, information = "observed",
                                h1.information = "structured", se = "robust.huber.white", ...))

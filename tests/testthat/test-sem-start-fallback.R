@@ -3,6 +3,7 @@
 # The perturbed retries are drawn around the supplied start, so a bad start gives five bad attempts; the default
 # start is now the last attempt (it replaces the fifth perturbation), reached only after the others failed.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 latent_case <- function() {
   mod <- sem_models()[["latent"]] # nolint: object_usage_linter. (helper-sem.R)
   d <- sem_sim(mod, 50L, 100000L * 4L + 50L) # nolint: object_usage_linter.

@@ -9,10 +9,11 @@
 #' @description
 #' Accessors and display for a [SEMFit] returned by [fit_sem()].
 #'
-#' @param object,x A [SEMFit] object
-#' @param ... Additional arguments (ignored)
-#'
 #' @details
+#' These are S7 methods for the base generics, so there is no separate usage
+#' section; each takes the [SEMFit] object as its first argument (`object`, or
+#' `x` for `print()`) and ignores further arguments in `...`.
+#'
 #' * `coef()` returns the free-parameter estimates, named as lavaan names its
 #'   coefficients: the label when the row has one, else `lhs op rhs` without
 #'   spaces (`"M~X"`, `"X~~X"`, `"eta=~m2"`). `vcov()`, `tidy()` and the

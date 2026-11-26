@@ -2,6 +2,7 @@
 # from semopy's inspect() table to medfit's lavaan-style names, the counting rule (semopy counts only where it agrees
 # with lavaan; a row where it does not is "disputed", neither pass nor fail), the n/a skip when uv is absent, the
 # driver's re-derived verdict, and the monthly-only registration (the gate must not run in the PR gates shards).
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 so_lib <- test_path("..", "sim", "semopy-oracle-lib.R")
 skip_if_not(file.exists(so_lib), "tests/sim is not shipped with the installed tests")
 source(so_lib, local = TRUE)

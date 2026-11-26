@@ -4,6 +4,7 @@
 # a valid base model that changes in one place only, and the message is matched as well as the class, so a planted
 # defect in one guard cannot pass through another guard of the same class.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 tl_guard_data <- function() {
   dat <- tl_data_balanced()
   withr::local_seed(23)

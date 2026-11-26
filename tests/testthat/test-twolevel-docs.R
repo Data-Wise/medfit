@@ -3,6 +3,7 @@
 # cluster-centered data, lavaan's own `:=` standard errors); every condition the guide quotes is triggered for
 # real. Skips when the vignettes are absent (installed or built package).
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 doc_path <- function(f) testthat::test_path("..", "..", "vignettes", "articles", f)
 doc_text <- function(f) {
   p <- doc_path(f)

@@ -3,6 +3,7 @@
 # 20 random admissible thetas per fixture. Error measure: max_i |g_i - g_fd,i| / max(1, max_i |g_fd,i|), tolerance
 # 1e-6. Planted defects (TL-7) change only the gradient (never f), and each must exceed the tolerance by a clear margin.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 tl_w <- c("X", "M", "Y")
 
 # Richardson extrapolation of central differences: R(h) = (4 D(h/2) - D(h)) / 3, error O(h^4). The oracle is R(h/2);

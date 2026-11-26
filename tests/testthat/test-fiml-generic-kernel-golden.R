@@ -1,6 +1,7 @@
 # FI-G0c/G0d parity: the existing X -> M -> Y kernel must reproduce the golden snapshot captured before any
 # generalization (helper-fiml-golden.R). Prepared quantities and kernel numerics are compared at 1e-12 (bit-for-bit on
 # the capturing machine); fitted results at the frozen 1e-6 (SLSQP differs across platforms near 1e-9).
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 gold <- readRDS(gk_golden_path())
 
 test_that("the golden snapshot covers every kind, both policies, and the expected failure cells", {

@@ -5,6 +5,7 @@
 # route to the step that does not use the SVD. Planted defects: a restoration into a worse point (rise far above the
 # cap) with the gate accepting it, a rescaled row, a duplicated row, rows of rank zero, and the boundary on either side.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 rb_data <- function(n = 100, seed = 17) {
   set.seed(seed)
   x <- stats::rnorm(n)

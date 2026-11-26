@@ -1,3 +1,4 @@
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 skip_if_not_installed("lavaan")
 
 # IG3 T-A: mbco_sem() on a native two-level fit tests the product null at one level (a_w * b_w = 0 within,

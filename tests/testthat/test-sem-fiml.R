@@ -1,3 +1,4 @@
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 fiml_data <- function(n = 240L, incomplete = TRUE) {
   set.seed(271L)
   x <- .8 + stats::rnorm(n, sd = 1.1)

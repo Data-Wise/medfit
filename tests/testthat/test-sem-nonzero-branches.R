@@ -1,3 +1,4 @@
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 test_that("nonzero products classify only independent two-label equalities", {
   ram <- list(par_names = c("a", "b", "v"))
   cons <- data.frame(lhs = "-2*a*b", op = "==", rhs = "0.8")
