@@ -121,7 +121,9 @@ Other cases (interaction, weights, constraints and MBCO, serial or parallel mode
 ## More, when you need it
 
 <details>
-<summary><strong>What's new in 0.21.0</strong></summary>
+<summary><strong>What's new in 0.21.0.9000</strong></summary>
+
+* **Development version:** no user-visible changes yet since 0.21.0 (released 2026-11-25), whose highlights follow.
 
 * **0.21.0 (2026-11-25, GitHub only):** adds the MLR estimator and classed product refusals below since 0.20.0 (released 2026-11-23).
 * **MLR estimator (0.21.0):** `fit_sem(model, data, estimator = "MLR")` keeps the ML estimates, uses sandwich standard errors and adds the Yuan-Bentler scaled chi-square (`chisq_scaled`, `scaling_factor`, `p_value_scaled` in `glance()`), as lavaan's MLR. It is defined for single-level complete-data fits with linear equality constraints; anything else stops with a classed error. See the [NEWS](https://data-wise.github.io/medfit/news/index.html).
