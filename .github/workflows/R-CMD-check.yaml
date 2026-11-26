@@ -32,7 +32,7 @@ jobs:
             curl -fsSL https://cran.r-project.org/src/contrib/Archive/medfit/medfit_0.3.2.tar.gz -o probe/original.tar.gz
           echo 'ec7c7a1e1ee2bfba8aba83a5391197fa906dfa7cfc477180a5f32c2d2c0ed9ad  probe/original.tar.gz' | sha256sum -c
           tar -xzf probe/original.tar.gz -C probe
-          git apply --directory=probe/medfit tools/medfit-546/s4-unions.patch
+          git show HEAD:tools/medfit-546/s4-unions.patch | git apply --directory=probe/medfit -
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
