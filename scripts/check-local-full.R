@@ -15,12 +15,12 @@ lf_read_list <- function(path) {
 lf_run_test_file <- function(f, out_dir) {
   out <- file.path(out_dir, paste0(sub("\\.R$", "", f), ".csv"))
   log <- file.path(out_dir, paste0(sub("\\.R$", "", f), ".log"))
-  code <- sprintf(paste(
+  code <- paste(
     "suppressMessages(devtools::load_all(quiet = TRUE))",
-    "r <- as.data.frame(testthat::test_file('tests/testthat/%s', reporter = 'summary', stop_on_failure = FALSE))",
-    "write.csv(data.frame(tests = nrow(r), expectations = sum(r$nb), failed = sum(r$failed), errors = sum(r$error),",
-    "  skipped = sum(r$skipped), warnings = sum(r$warning), seconds = sum(r$real)), '%s', row.names = FALSE)", sep = "; "),
-    f, out)
+    sprintf("r <- as.data.frame(testthat::test_file('tests/testthat/%s', reporter = 'summary', stop_on_failure = FALSE))", f),
+    paste0("write.csv(data.frame(tests = nrow(r), expectations = sum(r$nb), failed = sum(r$failed), errors = sum(r$error), ",
+           "skipped = sum(r$skipped), warnings = sum(r$warning), seconds = sum(r$real)), '", out, "', row.names = FALSE)"),
+    sep = "\n")
   t0 <- Sys.time()
   status <- system2("Rscript", c("-e", shQuote(code)), stdout = log, stderr = log)
   secs <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
