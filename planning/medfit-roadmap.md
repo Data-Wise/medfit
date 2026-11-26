@@ -2168,3 +2168,5 @@ Use the [Current board](#current-board) for priorities and release dispositions.
 **Historical review trigger**: after 0.8.0 (obsolete)
 **Snapshot date**: 2026-10-10
 **Current-board reconciliation**: 2026-10-31 MDT; inference design remains blocked before implementation.
+
+**Board 2026-11-26 (0.21.2 prep).** CRAN pretest of the withdrawn 0.21.1.9000 upload found the Windows check time and an Rd note, and CRAN has an open S7 issue on 0.3.2 (deadline 2026-12-11), so 0.21.2 is prepared on `feature/release-0.21.2` (checklist `planning/PLAN-0.21.2-release-checklist-2026-11-26.md`); it lands after the CRAN-fix PR. Tag, release and upload wait for the maintainer.
