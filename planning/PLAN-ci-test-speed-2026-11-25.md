@@ -91,6 +91,15 @@ on `dev` re-runs all of its hosted checks (it did once already, after #547). Pha
   Unverified: I did not read every one of the 131 `set.seed` files or the 67 `<<-` files; the greps show them inside
   `test_that` blocks, which is local.
   (original task text follows)
+- [x] **T1b: seed-sensitivity check of the 12 unseeded files. Done 2026-11-25: no seed-sensitivity found.**
+  Result: each of the 12 files ran alone in a fresh R session on an installed build of `origin/dev` under initial seeds
+  101, 202, 303, 404 and 505 (60 runs, `NOT_CRAN=true`). All 60 passed, with identical test and expectation counts per
+  file across seeds and 0 failures, 0 errors and 0 skips. Planted-defect control: a file asserting `rnorm(1) < 0` failed
+  under seed 404 and passed under the other four, so the method can detect seed-sensitivity. Limits: five seeds, one
+  platform (macOS, local), each file alone; a failure that needs a particular RNG state left by a specific earlier file
+  would not show here, and the parallel pilot (T2) is the test for that. Takeaway: the unseeded files are not a blocker
+  for T2; the remaining risks are the shared `.tl_cache`, the 0.1 s timing assertion and `mclapply` oversubscription.
+  (original task text follows)
 - [ ] **T1b: seed-sensitivity check of the 12 unseeded files.**
   Description: run each of the 12 files from finding 4 on its own, in a fresh R session, with five different initial
   seeds, and compare pass counts.
