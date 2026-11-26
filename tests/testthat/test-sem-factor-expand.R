@@ -62,7 +62,7 @@ test_that("the character order does not depend on the session collation", {
   d$g <- c("b", "B", "a", "A")[rep(1:4, length.out = nrow(d))]
   seen <- character()
   for (loc in c("C", "en_US.UTF-8", "sv_SE.UTF-8")) {
-    if (nzchar(Sys.setlocale("LC_COLLATE", loc))) {
+    if (nzchar(muffle_warnings_matching(Sys.setlocale("LC_COLLATE", loc), "cannot be honored"))) {
       seen <- c(seen, loc)
       expect_equal(.sem_expand_factors(fc_tab("y ~ g"), d, FALSE)$map$g$levels, c("A", "B", "a", "b"))
     }
