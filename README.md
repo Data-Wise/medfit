@@ -121,7 +121,9 @@ Other cases (interaction, weights, constraints and MBCO, serial or parallel mode
 ## More, when you need it
 
 <details>
-<summary><strong>What's new in 0.21.1</strong></summary>
+<summary><strong>What's new in 0.21.1.9000</strong></summary>
+
+* **Development version:** no user-visible changes yet since 0.21.1 (released 2026-11-26), whose highlights follow.
 
 * **0.21.1 (2026-11-26, GitHub only):** no change to the package code since 0.21.0 (released 2026-11-25); the longest test files are skipped on CRAN, the test warnings are gone, and the cookbook has recipe 25 (MLR). The highlights of 0.21.0 follow.
 
