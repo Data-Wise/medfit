@@ -1,0 +1,9 @@
+# Local-only gates: each costs more than about 300 s alone on the hosted runner (ubuntu-24.04), so no hosted PR workflow
+# runs it (the gates shards of gates.yaml, `gates (rest)` and `gates (reliability)`, keep their names). One gates.csv id per line.
+# run-gates.R drops these from every mode unless --local-only is passed; scripts/check-local-full.sh passes it, so do the
+# qc-monthly workflow (the monthly record still includes them) and the gates workflow's `local_only` dispatch input.
+# Seconds: tests/sim/gate-seconds.csv (median of four hosted runs, 2026-11-24 to 26). A release needs a green local
+# full-run receipt (planning/local-full-runs/RECEIPT-*.md).
+twolevel-equal-size   # 1868 s (28 to 53 min)
+twolevel-mbco-size    # 542 s
+four-way-kat          # 348 s

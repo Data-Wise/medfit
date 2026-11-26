@@ -19,9 +19,22 @@ for (sc in unique(sm[all_rest])) {
 stopifnot(sm[["constrained"]] == sm[["stationarity"]])
 # every gate in gates.csv has a weight row (a missing row is allowed at run time but must be noticed in review)
 wt <- utils::read.csv("tests/sim/gate-seconds.csv", stringsAsFactors = FALSE)
-stopifnot(!length(setdiff(all_rest, wt$gate)), !length(setdiff(wt$gate, all_rest)))
-# balance: the heaviest shard is the single heaviest gate (nothing smaller can lower it)
-stopifnot(max(p$load) == max(wt$seconds))
+everything <- rest_gates(include_local = TRUE)
+stopifnot(!length(setdiff(everything, wt$gate)), !length(setdiff(wt$gate, everything)))
+# balance: greedy longest-first keeps the spread of the shard loads within the heaviest hosted gate
+stopifnot(max(p$load) - min(p$load) <= max(wt$seconds[wt$gate %in% all_rest]))
+# local-only tier: excluded from the hosted partition and the union check, included with include_local / --local-only,
+# and the tier never swallows the required reliability gate
+lo <- gate_local_only()
+stopifnot(length(lo) > 0L, !any(lo %in% all_rest), !any(lo %in% ran), !"reliability" %in% lo,
+          all(lo %in% everything), setequal(c(all_rest, lo), everything))
+pl <- plan_shards(k, include_local = TRUE)
+stopifnot(!length(union_problems(unlist(pl$gates), everything)), all(lo %in% unlist(pl$gates)))
+# a shard file set that ran a local-only gate fails the hosted union check (planted defect), and passes with --local-only
+d2 <- tempfile(); dir.create(d2)
+for (s in seq_len(k)) writeLines(paste(pl$gates[[s]], collapse = ","), file.path(d2, sprintf("shard-gates-%d.txt", s)))
+stopifnot(suppressWarnings(system2("Rscript", c("scripts/gate-shards.R", "union-check", d2), stdout = FALSE)) == 1L,
+          system2("Rscript", c("scripts/gate-shards.R", "union-check", d2, "--local-only"), stdout = FALSE) == 0L)
 # planted defects: the union check must reject a gate missing from every shard, a duplicate, an unknown gate
 stopifnot(
   length(union_problems(setdiff(ran, "fiml"), all_rest)) == 1L,

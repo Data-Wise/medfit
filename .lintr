@@ -84,6 +84,8 @@ exclusions: list(
     "tests/testthat/test-fiml-g3-serial-two-cov.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-g3-serial-two-cov-defects.R" = list(object_usage_linter = Inf),
     "tests/testthat/test-fiml-generic-kernel-fourvar.R" = list(object_usage_linter = Inf),
-    "tests/testthat/test-fiml-generic-kernel-oracle.R" = list(object_usage_linter = Inf)
+    "tests/testthat/test-fiml-generic-kernel-oracle.R" = list(object_usage_linter = Inf),
+    # skip_unless_local() lives in helper-local-only.R, which object_usage_linter cannot see
+    "tests/testthat/test-local-only.R" = list(object_usage_linter = Inf)
   )
 encoding: "UTF-8"

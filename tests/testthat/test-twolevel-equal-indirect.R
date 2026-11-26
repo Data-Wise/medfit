@@ -5,7 +5,7 @@
 # spurious LR). The statistic is n_obs * (f_null - f_free), the scale of mbco_sem(); with f * n_obs = -2 logL it is
 # 2 (logL_free - logL_null). Tolerance TL-4: 1e-6 absolute on the log-likelihood difference.
 
-skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+skip_unless_local()  # >5 min on a hosted runner: local-only tier (tests/testthat/local-only-tests.txt)
 
 tle_fit <- function(data = tl_data_balanced()) fit_sem(tl_lavaan_model, data, cluster = "cluster")
 

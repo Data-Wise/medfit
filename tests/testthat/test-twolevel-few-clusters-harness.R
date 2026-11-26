@@ -6,6 +6,8 @@
 # a negative level-2 variance, the default fit (P0) ends below zero with a lavaan warning, the syntax floor (P1) ends
 # at `eps` with no warning, and `bounds = "pos.var"` adds no bound to a two-level fit. Each check has a planted defect.
 
+skip_unless_local()  # >5 min on a hosted runner: local-only tier (tests/testthat/local-only-tests.txt)
+
 skip_if_not_installed("lavaan")
 # internal study harness: never run on CRAN, even if tests/sim were shipped (0.19.0 release decision R19-2)
 skip_on_cran()
