@@ -1,6 +1,6 @@
 # medfit 0.21.0.9000
 
-* Development version. No user-visible changes since 0.21.0.
+* Cookbook recipe 25: robust standard errors and the scaled test (MLR). Docs only.
 
 # medfit 0.21.0
 

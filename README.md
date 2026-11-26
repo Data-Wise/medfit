@@ -116,7 +116,7 @@ Other cases (interaction, weights, constraints and MBCO, serial or parallel mode
 
 ## Go further
 
-[Get Started](https://data-wise.github.io/medfit/articles/getting-started.html) | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (twenty-four recipes) | [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html) | [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html) | [Which interval should I use?](https://data-wise.github.io/medfit/articles/guide-intervals.html)
+[Get Started](https://data-wise.github.io/medfit/articles/getting-started.html) | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (twenty-five recipes) | [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html) | [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html) | [Which interval should I use?](https://data-wise.github.io/medfit/articles/guide-intervals.html)
 
 ## More, when you need it
 
