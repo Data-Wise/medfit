@@ -7,6 +7,8 @@
 # Helpers: helper-fiml-serial.R (sb_*) and helper-fiml-serial3.R (s3_*). The covariate effects in the data-generating
 # process are large and distinct from the path values, so a covariate coefficient mistaken for a path cannot hide.
 
+skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+
 s3_observe <- function(model, data) {
   e <- tryCatch(fit_sem(model, data, missing = "fiml", fixed_x = FALSE), error = identity)
   if (!inherits(e, "error")) return(list(class = "<fit>", message = NA_character_, stage = NA_character_))

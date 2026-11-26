@@ -8,6 +8,8 @@
 # cell per variant. Helpers: helper-fiml-serial.R (sb_*), helper-fiml-serial3.R (s3_*), helper-fiml-serial4.R (s4_*).
 # The covariate effects in the data-generating process are large and distinct from the path values and from each other.
 
+skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+
 s4_observe <- function(model, data) {
   e <- tryCatch(fit_sem(model, data, missing = "fiml", fixed_x = FALSE), error = identity)
   if (!inherits(e, "error")) return(list(class = "<fit>", message = NA_character_, stage = NA_character_))

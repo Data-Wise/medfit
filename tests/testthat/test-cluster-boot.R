@@ -200,7 +200,9 @@ test_that("any other warning still marks the refit as failed", {
     res <- withCallingHandlers(
       bootstrap_mediation(stat, method = "nonparametric", data = d,
                           n_boot = 60L, seed = 2, cluster = "cluster"),
-      medfit_few_clusters = function(w) invokeRestart("muffleWarning")
+      medfit_few_clusters = function(w) invokeRestart("muffleWarning"),
+      # the statistic also warns on the observed data, outside the per-sample refit that counts failures
+      warning = function(w) if (identical(conditionMessage(w), "did not converge")) invokeRestart("muffleWarning")
     ),
     "bootstrap samples failed and were excluded"
   )

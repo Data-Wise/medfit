@@ -1895,6 +1895,12 @@ released** (2026-11-24, tag `v0.20.0` at `4739e8e7`, release PR #526; authorized
 (next cycle), T7 (dropped), two-level `compare_lr()`, serial two-level mediators (IG5s); IG4 and IG6 NO-GO, FIML
 admission unresolved, CRAN on hold (#83).
 
+**Board 2026-11-26 (0.21.0 released).** Released in 0.21.0 (tag `v0.21.0` at `cc84770c`, release PR #545, GitHub-only; all 14 hosted
+checks green on the release PR head, `main` CI green, tagged-install smoke passed, CRAN on hold #83): P1a `estimator = "MLR"` with the
+Yuan-Bentler scaled chi-square (#542), P2(c) classed product refusals (#540), and tooling and CI (#536, #538, #539, #541, #544, #547).
+`dev` is 0.21.0.9000 (back-merge). Next per `PLAN-lavaan-parity-0.21.0-2026-11-24.md`: 0.22.0 (P2(b), P3 lifts); CI and test speed:
+`PLAN-ci-test-speed-2026-11-25.md` (T0 done).
+
 **Board 2026-11-24 (0.20.0 released).** Released in 0.20.0 (tag `v0.20.0` at `4739e8e7`, GitHub-only; hosted checks green on the
 release PR head, tagged-install smoke passed): S4a native two-level fit (experimental), IG2 cluster-robust SEs, IG3
 `mbco_sem()` and `twolevel_equal_indirect()`, and T8 (the few-clusters records, not shipped code). `dev` is 0.20.0.9000 (back-merge #531).

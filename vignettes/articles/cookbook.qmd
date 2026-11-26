@@ -12,11 +12,11 @@ execute:
   echo: true
 ---
 
-Twenty-four task-sized recipes. Each says when to use it, runs on `mediation_demo`
+Twenty-five task-sized recipes. Each says when to use it, runs on `mediation_demo`
 (except the cluster, two-level and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a
 one-page lookup see the [Reference Card](refcard.html).
 
-These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, recipe 21 needs 0.11.0, recipe 22 needs 0.16.0, recipe 23 needs 0.17.0, and recipe 24 needs 0.19.0). CRAN has 0.3.2, which lacks
+These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, recipe 21 needs 0.11.0, recipe 22 needs 0.16.0, recipe 23 needs 0.17.0, recipe 24 needs 0.19.0, and recipe 25 needs 0.21.0). CRAN has 0.3.2, which lacks
 `mediation_demo` and the native, joint and cluster functions; install from
 GitHub or r-universe (see the [home page](https://data-wise.github.io/medfit/#install)).
 
@@ -56,9 +56,10 @@ GitHub or r-universe (see the [home page](https://data-wise.github.io/medfit/#in
 | Estimate observed intercepts and means in a sem fit | [19](#observed-intercepts-and-means) |
 | Split the effect into the four-way decomposition | [20](#four-way-decomposition-from-a-native-fit) |
 | Include a categorical covariate in a sem engine fit | [21](#a-categorical-covariate-in-a-native-fit) |
-| **Inference and missing data (13, 22)** | |
+| **Inference and missing data (13, 22, 25)** | |
 | Test joint significance for a binary or count outcome | [13](#joint-significance-for-a-binary-or-count-outcome) |
 | Handle missing data with bounded FIML | [22](#missing-data-bounded-fiml) |
+| Get robust standard errors and a scaled chi-square in a sem fit | [25](#robust-standard-errors-and-a-scaled-test-mlr) |
 
 ```{r}
 #| label: setup
@@ -861,6 +862,37 @@ bootstrap_mediation(
 and `level` is `"within"`, `"between"` or `"contrast"`. The between level is kept only when the treatment and
 every mediator have an ICC of at least 0.01. More: [Two-level mediation](model-twolevel.html).
 
+## 25. Robust standard errors and a scaled test (MLR)
+
+*When:* the sem engine fits your model and you doubt normality of the variables: `estimator = "MLR"` keeps the ML
+estimates, replaces the model-based standard errors with the sandwich ones, and adds the Yuan-Bentler scaled
+chi-square. The chunk fits one model twice and puts the two side by side.
+
+```{r}
+#| label: r25-mlr
+syntax25 <- "
+  mediator1 ~ a * treatment + covariate1 + covariate2
+  outcome ~ b * mediator1 + covariate1 + covariate2
+"
+fit_ml <- fit_sem(syntax25, mediation_demo)
+fit_mlr <- fit_sem(syntax25, mediation_demo, estimator = "MLR")
+tab <- tidy(fit_ml)[, c("term", "estimate", "std_error")]
+names(tab)[3] <- "se_ml"
+tab$estimate_mlr <- tidy(fit_mlr)$estimate
+tab$se_mlr <- tidy(fit_mlr)$std_error
+tab[tab$term %in% c("a", "b"), ]
+glance(fit_ml)[, c("df", "chisq", "p_value")]
+glance(fit_mlr)[, c("df", "chisq", "chisq_scaled", "scaling_factor", "p_value_scaled")]
+```
+
+The estimates and `chisq` are equal; the standard errors and the scaled columns differ. `fit_mediation(engine = "sem",
+model = , engine_args = list(estimator = "MLR"))` does the same and uses the sandwich standard error unless
+`se_type` is given. Fits with `cluster` or `level:` blocks, `missing = "fiml"`, `weights`, inequality or nonlinear
+constraints or an estimate on a bound stop with the classed errors `medfit_error_mlr_twolevel`,
+`medfit_error_mlr_missing`, `medfit_error_mlr_weights`, `medfit_error_mlr_constraints` and
+`medfit_error_mlr_bounds`; any estimator other than `"ML"` and `"MLR"` stops with `medfit_error_estimator`.
+More: [The sem engine](model-sem.html#mlr).
+
 ## Which recipe returns which object
 
 Every exported class and function appears in a recipe, or the table says why not.
@@ -873,7 +905,7 @@ Every exported class and function appears in a recipe, or the table says why not
 | `InteractionMediationData` | 7, 20 |
 | `JointMediationData` | 8 |
 | `ClusterMediationData` | 9 |
-| `SEMFit` | 11 to 21 |
+| `SEMFit` | 11 to 21, 25 (`estimator = "MLR"`) |
 | `BootstrapResult` | 9 and 20 (returned by `bootstrap_mediation()`) |
 | `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | 22 (the simple model; the parallel and serial forms are in [Bounded FIML](model-fiml.html)) |
 | `TwoLevelMediationData` | 23 (an `extract_mediation()` on a two-level `lavaan` fit, and `twolevel_statistic()` for its bootstrap; see [Two-level mediation](model-twolevel.html)) |

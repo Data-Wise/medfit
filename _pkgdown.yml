@@ -111,7 +111,7 @@ navbar:
     cookbook:
       text: Cookbook
       menu:
-      - text: "All 24 recipes"
+      - text: "All 25 recipes"
         href: articles/cookbook.html
       - text: "─────────────"
       - text: "Recipes by task"

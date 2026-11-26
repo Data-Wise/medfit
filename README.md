@@ -116,12 +116,14 @@ Other cases (interaction, weights, constraints and MBCO, serial or parallel mode
 
 ## Go further
 
-[Get Started](https://data-wise.github.io/medfit/articles/getting-started.html) | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (twenty-four recipes) | [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html) | [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html) | [Which interval should I use?](https://data-wise.github.io/medfit/articles/guide-intervals.html)
+[Get Started](https://data-wise.github.io/medfit/articles/getting-started.html) | [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html) (twenty-five recipes) | [Reference Card](https://data-wise.github.io/medfit/articles/refcard.html) | [Methods and Formulas](https://data-wise.github.io/medfit/articles/methods.html) | [Which interval should I use?](https://data-wise.github.io/medfit/articles/guide-intervals.html)
 
 ## More, when you need it
 
 <details>
-<summary><strong>What's new in 0.21.0</strong></summary>
+<summary><strong>What's new in 0.21.1</strong></summary>
+
+* **0.21.1 (2026-11-26, GitHub only):** no change to the package code since 0.21.0 (released 2026-11-25); the longest test files are skipped on CRAN, the test warnings are gone, and the cookbook has recipe 25 (MLR). The highlights of 0.21.0 follow.
 
 * **0.21.0 (2026-11-25, GitHub only):** adds the MLR estimator and classed product refusals below since 0.20.0 (released 2026-11-23).
 * **MLR estimator (0.21.0):** `fit_sem(model, data, estimator = "MLR")` keeps the ML estimates, uses sandwich standard errors and adds the Yuan-Bentler scaled chi-square (`chisq_scaled`, `scaling_factor`, `p_value_scaled` in `glance()`), as lavaan's MLR. It is defined for single-level complete-data fits with linear equality constraints; anything else stops with a classed error. See the [NEWS](https://data-wise.github.io/medfit/news/index.html).

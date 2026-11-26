@@ -1,4 +1,6 @@
 # Numerical limits and fixtures were committed before candidate fits; see planning/fixtures.
+skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+
 fo_records <- new.env(parent = emptyenv())
 fo_records$rows <- list()
 for (fo_direct in c(TRUE, FALSE)) {
@@ -43,8 +45,11 @@ for (fo_direct in c(TRUE, FALSE)) {
           )
         } else {
           ref_data <- if (fo_kind == "affine") fo_fixture("mar", fo_direct) else d
-          ref <- lavaan::sem(fo_model(fo_direct), ref_data, missing = "ml", fixed.x = FALSE,
-                             meanstructure = TRUE, information = "observed", control = list(rel.tol = 1e-10))
+          ref <- muffle_warnings_matching(
+            lavaan::sem(fo_model(fo_direct), ref_data, missing = "ml", fixed.x = FALSE,
+                        meanstructure = TRUE, information = "observed", control = list(rel.tol = 1e-10)),
+            "some cases are empty and will be ignored"
+          )
           q <- coef(fit)
           V <- vcov(fit)
           ref_q <- lavaan::coef(ref)

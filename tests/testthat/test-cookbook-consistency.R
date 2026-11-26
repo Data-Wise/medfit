@@ -1,4 +1,4 @@
-# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): twenty-four numbered
+# Consistency guard for the cookbook (SPEC-refcard-cookbook T4/T5): twenty-five numbered
 # recipes, every article link resolves, and the cluster recipe simulates the same
 # data as methods.qmd so their numbers agree. Skips when the vignettes are absent
 # (installed or built package).
@@ -14,10 +14,10 @@ article_text <- function(name) {
   paste(readLines(p, warn = FALSE), collapse = "\n")
 }
 
-test_that("the cookbook has twenty-four numbered recipes and every article link resolves", {
+test_that("the cookbook has twenty-five numbered recipes and every article link resolves", {
   cb <- article_text("cookbook.qmd")
   heads <- regmatches(cb, gregexpr("(?m)^## [0-9]+\\. ", cb, perl = TRUE))[[1]]
-  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:24, "."))
+  expect_identical(trimws(sub("^## ", "", heads)), paste0(1:25, "."))
   links <- unique(regmatches(cb, gregexpr("\\]\\(([a-z-]+)\\.html\\)", cb))[[1]])
   targets <- paste0(gsub("^\\]\\(|\\.html\\)$", "", links), ".qmd")
   expect_gt(length(targets), 0L)

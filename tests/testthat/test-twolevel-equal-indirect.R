@@ -5,6 +5,8 @@
 # spurious LR). The statistic is n_obs * (f_null - f_free), the scale of mbco_sem(); with f * n_obs = -2 logL it is
 # 2 (logL_free - logL_null). Tolerance TL-4: 1e-6 absolute on the log-likelihood difference.
 
+skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+
 tle_fit <- function(data = tl_data_balanced()) fit_sem(tl_lavaan_model, data, cluster = "cluster")
 
 # the hand log-likelihood difference (free minus constrained) on the same data
@@ -131,8 +133,11 @@ test_that("planted defect: the sign of one product flipped is caught by the orac
   hand <- tle_hand_dll(data)
   # the guard admits only the equality of two products, so the flipped row goes straight to the engine
   syntax <- paste(tl_lavaan_model, "a_w*b_w == -a_b*b_b", sep = "\n")
-  flipped <- .sem_fit_syntax(syntax, data, "observed", parsed = .sem_resolve_levels(.sem_parse(syntax), "cluster"),
-                             meanstructure = TRUE, fixed_x = FALSE, cluster = "cluster")
+  flipped <- muffle_warnings_matching(
+    .sem_fit_syntax(syntax, data, "observed", parsed = .sem_resolve_levels(.sem_parse(syntax), "cluster"),
+                    meanstructure = TRUE, fixed_x = FALSE, cluster = "cluster"),
+    "the starts disagree"
+  )
   bad <- list(statistic = c(LR = (flipped$f - tle_fit(data)@f) * flipped$n_obs))
   expect_failure(tle_check_oracle(bad, hand))
   # and the hand oracle for the flipped null agrees with the engine for the flipped null (the oracle itself is sound)

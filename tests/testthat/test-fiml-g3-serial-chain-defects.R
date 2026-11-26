@@ -7,6 +7,8 @@
 # (LR = 0, df 0) and a hidden saturated fit are visible. Helpers: helper-fiml-serial.R (sb_*) and
 # helper-fiml-serial2-chain.R (sc_*). The covr guard is the one of the S1b defect battery (function bodies are mutated).
 
+skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+
 sc_env <- new.env(parent = emptyenv())
 sc_setup <- function() {
   if (is.null(sc_env$f)) {
