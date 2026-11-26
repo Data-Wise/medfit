@@ -39,3 +39,5 @@
 ^\.worktrees$
 ^\.agents$
 ^tests/testthat/fixtures/make-twolevel-0\.17\.0\.R$
+^tests/testthat/_problems$
+^tests/testthat/testthat-problems\.rds$
