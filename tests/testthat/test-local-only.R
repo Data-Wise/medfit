@@ -55,7 +55,10 @@ test_that("every file in the local-only list calls skip_unless_local() before an
 # ---- the local-only gate tier (tests/sim/gates-local-only.txt) ----
 sim_root <- function() {
   root <- testthat::test_path("..", "..")
-  testthat::skip_if(!file.exists(file.path(root, "tests", "sim", "gates.csv")), "tests/sim is not in the installed package")
+  testthat::skip_if(
+    !file.exists(file.path(root, "tests", "sim", "gates.csv")),
+    "tests/sim is not in the installed package"
+  )
   root
 }
 
