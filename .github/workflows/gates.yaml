@@ -7,6 +7,11 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      local_only:
+        description: "Also run the local-only gates (tests/sim/gates-local-only.txt, each over 5 min hosted; twolevel-equal-size alone is 28 to 53 min)"
+        type: boolean
+        default: false
 
 name: gates
 
@@ -60,7 +65,8 @@ jobs:
     # tests/sim/gate-seconds.csv). The unsharded `rest` job took 58 to 97 minutes (77.5 on the v0.21.1 release PR, run
     # 45777601031); one gate, twolevel-equal-size, is about 31 minutes of that and cannot be split across jobs, so the
     # bound is that gate. A gate added to tests/sim/gates.csv lands in a shard automatically. Not a required check by
-    # name: the required `gates (rest)` is the aggregator job below.
+    # name: the required `gates (rest)` is the aggregator job below. The local-only gates (tests/sim/gates-local-only.txt,
+    # twolevel-equal-size among them) are not in the partition unless a manual dispatch sets `local_only`.
     name: gates rest shard ${{ matrix.shard }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
@@ -72,6 +78,8 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       NOT_CRAN: "true"
       SHARDS: "3" # must equal the matrix size; the aggregator's union check fails when it does not
+      # empty on PRs; "--local-only" only for a manual dispatch that asked for the local-only gates
+      LOCAL_ONLY: ${{ inputs.local_only && '--local-only' || '' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -91,11 +99,11 @@ jobs:
 
       - name: Run the gates of this shard (--sim)
         run: |
-          only=$(Rscript scripts/gate-shards.R select ${{ matrix.shard }} "$SHARDS")
+          only=$(Rscript scripts/gate-shards.R select ${{ matrix.shard }} "$SHARDS" $LOCAL_ONLY)
           echo "gates: $only"
           mkdir -p tests/sim/results
           echo "$only" > tests/sim/results/shard-gates-${{ matrix.shard }}.txt
-          Rscript tests/sim/run-gates.R --sim --only "$only"
+          Rscript tests/sim/run-gates.R --sim --only "$only" $LOCAL_ONLY
 
       - name: Upload results and logs
         if: always()
@@ -136,6 +144,8 @@ jobs:
           path: shard-artifacts
 
       - name: Shards together run exactly the rest set
+        env:
+          LOCAL_ONLY: ${{ inputs.local_only && '--local-only' || '' }}
         run: |
-          Rscript scripts/gate-shards.R union-check shard-artifacts
+          Rscript scripts/gate-shards.R union-check shard-artifacts $LOCAL_ONLY
           Rscript scripts/test-gate-shards.R
