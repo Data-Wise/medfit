@@ -85,6 +85,30 @@ test_that("the collect script merges shard files, appends to a history and write
   expect_identical(nrow(utils::read.csv(out)), 2L)
 })
 
+test_that("a clean collect run writes no alert lines, so the workflow's final grep does not fail the run", {
+  skip_if_not(nzchar(Sys.which("Rscript")))
+  # Regression (W1, review 2026-11-26): paste0("gate: ", character(0)) is "gate: ", so a clean run wrote a bare
+  # `gate: ` line and the last step of qc-monthly exited 1 (run 41312785545, both shards green).
+  expect_identical(length(paste0("gate: ", character(0))), 1L)
+  d <- withr::local_tempdir()
+  dir.create(file.path(d, "rest"))
+  utils::write.csv(qc_fixture(), file.path(d, "rest", "qc-metrics-rest.csv"), row.names = FALSE)
+  al <- file.path(d, "alerts.txt")
+  script <- file.path(root, "tests", "sim", "qc-collect.R")
+  res <- system2(file.path(R.home("bin"), "Rscript"),
+                 c(script, file.path(d, "rest"), "--out", file.path(d, "out.csv"), "--alerts", al),
+                 stdout = TRUE, stderr = TRUE)
+  expect_null(attr(res, "status"))
+  expect_identical(readLines(al), character(0))
+  expect_false(any(grepl("^gate: ", readLines(al))))
+  # planted defect: a failing gate still writes a `gate:` line, which the workflow's grep must catch
+  utils::write.csv(qc_fixture(gate_parity = "FAIL"), file.path(d, "rest", "qc-metrics-rest.csv"), row.names = FALSE)
+  system2(file.path(R.home("bin"), "Rscript"),
+          c(script, file.path(d, "rest"), "--out", file.path(d, "out2.csv"), "--alerts", al),
+          stdout = TRUE, stderr = TRUE)
+  expect_identical(readLines(al), "gate: parity")
+})
+
 test_that("the gate catalog has one row per gate and names the structures that cover each", {
   g <- utils::read.csv(file.path(root, "tests", "sim", "gates.csv"), stringsAsFactors = FALSE)
   s <- utils::read.csv(file.path(root, "tests", "sim", "structures.csv"), stringsAsFactors = FALSE)
