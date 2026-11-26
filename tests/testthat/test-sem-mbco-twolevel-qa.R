@@ -1,3 +1,4 @@
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 skip_if_not_installed("lavaan")
 
 # IG3 T-A independent QA: mbco_sem() on native two-level fits against lavaan two-level fits with each linear null

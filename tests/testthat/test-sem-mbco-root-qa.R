@@ -1,6 +1,7 @@
 # QA oracle for the MBCO root ledger validator: genuine results are never refused (the reference is the same call on
 # origin/dev, which has no validator), and forged roots are refused. Planted defects: see the QA report.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 qa_data <- function(n = 500, seed = 11) {
   set.seed(seed)
   d <- data.frame(X = stats::rnorm(n))

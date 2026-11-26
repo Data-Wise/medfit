@@ -4,6 +4,7 @@
 # least one check. The battery includes incomplete data (cross-equation covariance defects are invisible on complete
 # data) and distinct large path values (a swapped path cannot hide). Helpers are in helper-fiml-serial.R (sb_*).
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 sb_env <- new.env(parent = emptyenv())
 sb_setup <- function() {
   if (is.null(sb_env$f)) {

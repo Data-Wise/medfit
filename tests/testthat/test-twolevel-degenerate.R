@@ -1,6 +1,7 @@
 # Between-level identification (S1-Q1) and the degenerate fixtures: within-only results with classed conditions.
 # (#394, slice S2, PR1)
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 skip_if_not_installed("lavaan")
 
 test_that("a cluster-mean centered treatment gives a within-only result and a classed warning", {

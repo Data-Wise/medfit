@@ -5,6 +5,7 @@
 # the reference itself is dimension-generic (a path matrix B, disturbance variances psi, intercepts nu).
 
 # Discrepancy summaries, each returning Inf when the code under test errors (a mutation that crashes is caught).
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 gk_safe <- function(expr) tryCatch(suppressWarnings(expr), error = function(e) Inf)
 gk_value_gap <- function(d, direct, theta, prepare = .sem_fiml_prepare, eval = .sem_fiml_eval) {
   gk_safe({

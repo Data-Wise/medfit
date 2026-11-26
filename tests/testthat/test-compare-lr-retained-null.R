@@ -3,6 +3,7 @@
 # the unresolved case. Failure injection reuses test-sem-post-fit.R: a mocked `.sem_vcov` (retained) and a mocked
 # `.sem_fit_syntax` raising `.sem_no_convergence()` (unresolved, as in test-sem-mbco-root.R).
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 skip_if_not_installed("lavaan")
 
 retained_model <- "repetition ~ a1*x\nimagery ~ a2*x\nrecall ~ cp*x + b1*repetition + b2*imagery"

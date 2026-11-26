@@ -4,6 +4,7 @@
 # (numDeriv), a route independent of the finite differences of the analytic gradient that `.sem_vcov()` uses.
 # Tolerances: planning/specs/ADR-twolevel-oracle-tolerances-2026-11-18.md.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 skip_if_not_installed("lavaan")
 
 tlqa_key <- function(lhs, op, rhs, level) {

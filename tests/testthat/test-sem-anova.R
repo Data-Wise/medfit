@@ -4,6 +4,7 @@
 # 0.1353 at df 2), and mbco_sem(), which differences the same discrepancy per refit. Planted defects: the
 # infeasible-point value 0, the df mutated, the boundary check removed, a refusal removed.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 anova_mem <- function() {
   path <- testthat::test_path("fixtures", "memory_exp.rds")
   if (!file.exists(path)) testthat::skip("tests/testthat/fixtures/memory_exp.rds is not present")

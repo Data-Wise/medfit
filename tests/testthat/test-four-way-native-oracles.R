@@ -5,6 +5,7 @@
 # Planted defects: each oracle's `defect` argument must fail against the native route, and the defects of the shared
 # four-way worker (F1 SE gradient, F5 weighted means) must be caught when restored by mutation.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 skip_if_not_installed("lavaan")
 skip_if_not_installed("sandwich")
 
