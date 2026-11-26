@@ -12,7 +12,7 @@ execute:
   echo: true
 ---
 
-CRAN has medfit 0.3.2; this site documents 0.21.0.9000, the development version after 0.21.0 (GitHub and r-universe).
+CRAN has medfit 0.3.2; this site documents 0.21.1 (GitHub and r-universe).
 This page lists what a 0.3.2 user needs to know before upgrading: numbers that
 change, calls that now stop with an error, and what is new. The full record is
 [NEWS](https://data-wise.github.io/medfit/news/index.html).
@@ -125,6 +125,7 @@ reuses one of medfit's alias names for a different path (0.5.0).
 | 0.19.0 | `extract_mediation()` on a two-level `lavaan` fit with two or more mediators returns the new, experimental `TwoLevelParallelMediationData`: per-mediator and total effects at each level with delta-method standard errors, and `twolevel_statistic()` builds the bootstrap callback for it ([page](model-twolevel.html#several-parallel-mediators)). A mediator regressed on another mediator (serial) is refused. Additions only: a fit with one mediator still returns `TwoLevelMediationData`, and no result changes |
 | 0.20.0 | experimental two-level API only: `fit_sem(model, data, cluster = )` fits a two-level (1-1-1) model with the sem engine and `extract_mediation()` returns `TwoLevelMediationData` (`se_type = "sandwich"` gives cluster-robust SEs; [page](model-twolevel.html#the-sem-engine-route)); `mbco_sem()` tests the indirect effect at one level and `twolevel_equal_indirect()` tests within = between. Behavior change: the within-only rule reads the unrestricted (h1) ICC on both routes, so within-only results are rarer. No change outside the experimental two-level API |
 | 0.21.0 | `fit_sem(model, data, estimator = "MLR")` keeps the ML estimates, uses sandwich standard errors and adds the Yuan-Bentler scaled chi-square (`chisq_scaled`, `scaling_factor`, `p_value_scaled`) to `glance()`; other estimators and MLR with `cluster`, FIML, `weights`, inequality or nonlinear constraints stop with a classed error (`medfit_error_estimator`, `medfit_error_mlr_*`). Every refusal of the `:` product term now carries a class (`medfit_error_product_*`); messages and numbers are unchanged, but code that compared `class(err)` exactly now sees the added classes. The default `estimator = "ML"` is unchanged. |
+| 0.21.1 | no change to the package code: the longest test files are skipped on CRAN, the test warnings are gone and the cookbook gains recipe 25 (MLR). |
 
 ## Dependencies
 
