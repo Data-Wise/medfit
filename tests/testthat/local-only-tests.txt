@@ -1,0 +1,9 @@
+# The local-only testthat tier: files that alone cost more than about 300 s on a hosted runner (ubuntu-24.04,
+# NOT_CRAN=true; seconds from planning/PLAN-ci-test-speed-2026-11-25.md T0, probe run 45728692964).
+# Each file starts with skip_unless_local() (helper-local-only.R); scripts/check-local-full.sh runs them all.
+# One file name per line.
+test-fiml-g3-serial-two-cov.R          # 418 s
+test-twolevel-equal-indirect.R         # 388 s
+test-sem-fiml-oracles.R                # 380 s
+test-twolevel-icc-h1-qa.R              # 344 s
+test-twolevel-few-clusters-harness.R   # 340 s

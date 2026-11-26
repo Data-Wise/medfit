@@ -1,6 +1,8 @@
 # Independent QA of the h1 ICC change (feature/twolevel-icc-h1), 2026-11-22. Oracles: lavaan's own h1 ICC with a
 # tightened EM (`lavInspect(fit, "icc")`), and a real (unmocked) low-ICC parallel fit for the within-only branch.
 
+skip_unless_local()  # >5 min on a hosted runner: local-only tier (tests/testthat/local-only-tests.txt)
+
 skip_if_not_installed("lavaan")
 
 tliq_lavaan_tight <- function(model, data, cluster = "cluster") {
