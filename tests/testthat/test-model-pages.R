@@ -55,7 +55,7 @@ test_that("every article link on the model pages resolves", {
 
 test_that("every cookbook anchor used by the model pages and the navbar is a real recipe", {
   ids <- cookbook_ids()
-  expect_length(ids, 25L) # 24 recipes plus the closing object table
+  expect_length(ids, 26L) # 25 recipes plus the closing object table
   txt <- c(vapply(c("models", page_names()), function(f) {
     read_text(root_path("vignettes", "articles", paste0(f, ".qmd")))
   }, character(1)), read_text(root_path("_pkgdown.yml")))
