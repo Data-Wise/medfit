@@ -6,6 +6,8 @@
 # OLS with a block-diagonal covariance, a from-scratch rowwise likelihood with an independent Hessian, and OpenMx for
 # one cell. Helpers are in helper-fiml-serial.R (sb_*).
 
+skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+
 sb_kinds <- c("mar", "mcar30", "sparse")
 sb_directs <- c("free", "zero", "omit")
 

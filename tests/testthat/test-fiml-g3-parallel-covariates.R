@@ -5,6 +5,8 @@
 # products, their SUM and the total), a from-scratch rowwise Gaussian likelihood with an independent Hessian,
 # closed-form complete-data OLS, and OpenMx for one cell. Helpers are prefixed p4_ and self-contained.
 
+skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+
 p4_ks <- 1:2
 p4_exo <- function(k) c("X", if (k == 1L) "Z" else c("Z1", "Z2"))
 p4_kvars <- function(k) c(p4_exo(k), "M1", "M2", "Y")

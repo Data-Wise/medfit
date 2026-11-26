@@ -7,6 +7,8 @@
 # independent Hessian, OpenMx for one cell, hand delta gradients, the lavaan chi-square for the restriction against
 # the saturated fit. Helpers are in helper-fiml-serial.R (sb_*) and helper-fiml-serial2-chain.R (sc_*).
 
+skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+
 sc_kinds <- c("mar", "mcar30", "sparse", "complete")
 sc_directs <- c("free", "zero", "omit")
 sc_note_total <- "NIE total inference unavailable: zero delta gradient"

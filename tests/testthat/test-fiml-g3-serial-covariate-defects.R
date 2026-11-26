@@ -7,6 +7,8 @@
 # helper-fiml-serial.R (sb_*) and helper-fiml-serial3.R (s3_*). The covr guard is that of the earlier defect batteries
 # (function bodies are mutated).
 
+skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+
 s3d_env <- new.env(parent = emptyenv())
 s3d_setup <- function() {
   if (is.null(s3d_env$d)) {

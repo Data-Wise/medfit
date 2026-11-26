@@ -1,4 +1,6 @@
 # Numerical limits and fixtures were committed before candidate fits; see planning/fixtures.
+skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+
 fo_records <- new.env(parent = emptyenv())
 fo_records$rows <- list()
 for (fo_direct in c(TRUE, FALSE)) {

@@ -8,6 +8,8 @@
 # path, or one covariate for the other, cannot hide). Helpers: helper-fiml-serial.R (sb_*), -serial3.R (s3_*),
 # -serial4.R (s4_*). The covr guard is that of the earlier defect batteries (function bodies are mutated).
 
+skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+
 s4d_env <- new.env(parent = emptyenv())
 s4d_setup <- function() {
   if (is.null(s4d_env$d)) {

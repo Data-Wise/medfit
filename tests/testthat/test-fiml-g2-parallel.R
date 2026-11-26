@@ -3,6 +3,8 @@
 # independent of the production kernel: matched lavaan raw-data FIML (including the := products and their SUM), a
 # from-scratch rowwise Gaussian likelihood, and closed-form complete-data OLS. Helpers are prefixed p2_.
 
+skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+
 p2_vars <- c("X", "M1", "M2", "Y")
 p2_data <- function(kind = "mar", n = 450L, direct = TRUE, seed = 6121L, a = c(.9, .6), b = c(.7, .3)) {
   set.seed(seed)
