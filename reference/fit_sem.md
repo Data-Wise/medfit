@@ -23,7 +23,8 @@ fit_sem(
   fixed_x = TRUE,
   sampling_weights = lifecycle::deprecated(),
   missing = c("listwise", "fiml"),
-  cluster = NULL
+  cluster = NULL,
+  estimator = c("ML", "MLR")
 )
 ```
 
@@ -213,6 +214,26 @@ fit_sem(
   `se_type`), and
   [`glance()`](https://generics.r-lib.org/reference/glance.html) then
   reports `se_type`. Appended last to preserve positional calls.
+
+- estimator:
+
+  `"ML"` (the default) or `"MLR"`. `"MLR"` keeps the ML estimates and,
+  unless `se_type` is given, reports the sandwich standard errors;
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) then
+  adds `chisq_scaled`, `scaling_factor` and `p_value_scaled`, the
+  Yuan-Bentler scaled chi-square that lavaan reports for
+  `estimator = "MLR"` (`test = "yuan.bentler.mplus"`: the ML chi-square
+  divided by the scaling factor, from the casewise scores of the model
+  and of the saturated mean and covariance model). The Satorra-Bentler
+  (`"MLM"`) variant and the other lavaan estimators are not offered.
+  `"MLR"` is defined for single-level complete-data fits with linear
+  equality constraints; `cluster`, `level:` blocks, `missing = "fiml"`,
+  `weights`, and inequality or nonlinear constraints are refused with
+  classed errors (`medfit_error_mlr_*`, each also of class
+  `medfit_error_mlr`), and an unknown estimator with
+  `medfit_error_estimator`. A product term that makes the model test
+  invalid leaves the scaled statistic `NA` too. Appended last to
+  preserve positional calls.
 
 ## Value
 

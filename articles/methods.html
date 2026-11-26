@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.20.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -175,7 +175,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.20.0/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -878,6 +878,14 @@ s_{i,k} = w_i \, \frac{1}{2} \operatorname{tr}\left(\Sigma^{-1} (d_i d_i^\top - 
 \qquad d_i = x_i - \bar{x}_w .
 \]</span></p>
 <p>The means are free and do not involve <span class="math inline">\(\theta\)</span>, so <span class="math inline">\(A\)</span> is block diagonal and only the <span class="math inline">\(\theta\)</span> block of <span class="math inline">\(B\)</span> enters. Under constraints, <span class="math inline">\(A\)</span> is the observed Lagrangian information or expected Fisher information described below, and the same projection applies, <span class="math inline">\(Z (Z^\top A Z)^{-1} Z^\top B Z (Z^\top A Z)^{-1} Z^\top\)</span>. The estimator is invariant to the scale of the weights and has no leverage correction (HC0): it equals <code>sandwich::vcovHC(type = "HC0")</code> for each regression equation and lavaan’s robust standard errors with <code>sampling.weights</code>, and is narrower than the HC3 default of <code>fit_mediation(engine = "glm", se_type = "sandwich")</code> by a factor that shrinks like <span class="math inline">\(1/n\)</span>. The weighted likelihood is a pseudo likelihood, so <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> is not defined for a weighted fit.</p>
+</section><section class="level3"><h3 id="mlr-scaled">The MLR scaled chi-square<a class="anchor" aria-label="anchor" href="#mlr-scaled"></a>
+</h3>
+<p><code>estimator = "MLR"</code> keeps <span class="math inline">\(\hat\theta\)</span> and the sandwich covariance above, and rescales the ML chi-square <span class="math inline">\(T = n \hat F_{ML}\)</span> as lavaan does with <code>test = "yuan.bentler.mplus"</code>:</p>
+<p><span class="math display">\[
+T_{scaled} = T / \hat c, \qquad
+\hat c = \frac{\operatorname{tr}(A_1^{-1} B_1) - \operatorname{tr}(E^{-1} B_0)}{df}.
+\]</span></p>
+<p>Here <span class="math inline">\(A_1\)</span> and <span class="math inline">\(B_1\)</span> are the expected information and the cross product of the casewise scores of the saturated mean and covariance model (per case, at the sample moments), <span class="math inline">\(E\)</span> is the model information (observed or expected, as <code>information</code> asks) and <span class="math inline">\(B_0\)</span> the cross product of the model’s casewise scores, so <span class="math inline">\(\operatorname{tr}(E^{-1} B_0)\)</span> is the sum of the elementwise product of the model-based covariance of <span class="math inline">\(\hat\theta\)</span> and <span class="math inline">\(B_0\)</span>, projected on the active constraints as every standard error is. Moments of fixed exogenous variables are not saturated parameters; their rows and columns leave <span class="math inline">\(A_1\)</span> and <span class="math inline">\(B_1\)</span>. The Satorra-Bentler factor (<code>"MLM"</code>) uses normal-theory fourth moments and is a different number; it is not offered. <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> reports <span class="math inline">\(\hat c\)</span> as <code>scaling_factor</code>, <span class="math inline">\(T_{scaled}\)</span> as <code>chisq_scaled</code> and its chi-square(<span class="math inline">\(df\)</span>) p-value as <code>p_value_scaled</code>.</p>
 </section><section class="level3"><h3 id="constraints">Constraints<a class="anchor" aria-label="anchor" href="#constraints"></a>
 </h3>
 <p>Equality and inequality constraints that are linear in the labels become rows <span class="math inline">\(a^\top\theta + b\)</span>, normalized to unit length, with constant Jacobians for the optimizer (SLSQP through nloptr). A nonlinear equality (<code>cp == a*b</code>) is a row whose value is <span class="math inline">\(\text{lhs} - \text{rhs}\)</span> and whose Jacobian is a central difference, both recomputed at every point; a nonlinear inequality is the same row with the sign chosen so that it reads <span class="math inline">\(c(\theta) \le 0\)</span>.</p>

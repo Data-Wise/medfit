@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.20.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -175,7 +175,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.20.0/vignettes/articles/guide-engines.qmd" class="external-link"><code>vignettes/articles/guide-engines.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/guide-engines.qmd" class="external-link"><code>vignettes/articles/guide-engines.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -266,6 +266,7 @@
 <code>missing = "fiml"</code>: bounded full-information maximum likelihood, which keeps rows with some values missing. It covers a small set of models, is numerically verified and is not statistically admitted. See <a href="model-fiml.html">Missing data: bounded FIML</a> for its limits.</li>
 </ul>
 <p>Both are the same engine; only the objective changes, and so do the estimates.</p>
+<p>A separate argument, <code>estimator = "MLR"</code>, leaves the estimates alone and changes the standard errors (sandwich) and the model test (Yuan-Bentler scaled chi-square); see <a href="model-sem.html#mlr">the sem engine page</a>.</p>
 </section><section class="level2"><h2 id="optimizer">Optimizer<a class="anchor" aria-label="anchor" href="#optimizer"></a>
 </h2>
 <p>The optimizer is the algorithm that finds the minimum of the estimator’s objective. <code><a href="../reference/sem_control.html">sem_control()</a></code> sets it for a listwise fit:</p>

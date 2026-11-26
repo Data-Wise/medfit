@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.20.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -175,7 +175,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.20.0/vignettes/articles/guide-troubleshooting.qmd" class="external-link"><code>vignettes/articles/guide-troubleshooting.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/guide-troubleshooting.qmd" class="external-link"><code>vignettes/articles/guide-troubleshooting.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -915,6 +915,7 @@
 </tr>
 </tbody>
 </table>
+<p>Every product refusal in this table has the class <code>medfit_error_product</code> (a specific <code>medfit_error_product_*</code> too, and <code>medfit_warning_product_modeltest</code> for the model-test warning), so catch it by class rather than by message: <code>tryCatch(fit_sem(model, data), medfit_error_product = function(e) conditionMessage(e))</code>. The classes are listed in <a href="model-sem.html#product-terms">the sem engine model page</a>.</p>
 <section class="level3"><h3 id="an-unresolved-mbco-result">An unresolved MBCO result<a class="anchor" aria-label="anchor" href="#an-unresolved-mbco-result"></a>
 </h3>
 <p><code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> does not stop when a refit fails. It returns the result with the failure recorded, so a table of several tests is not lost to one bad refit:</p>

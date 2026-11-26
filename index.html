@@ -39,7 +39,7 @@
 
     <a class="navbar-brand me-2" href="index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.20.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -314,8 +314,14 @@
 <div class="section level2">
 <h2 id="more-when-you-need-it">More, when you need it<a class="anchor" aria-label="anchor" href="#more-when-you-need-it"></a>
 </h2>
-<details><summary><strong>What’s new in 0.20.0</strong>
+<details><summary><strong>What’s new in 0.21.0</strong>
 </summary><ul>
+<li>
+<strong>0.21.0 (2026-11-25, GitHub only):</strong> adds the MLR estimator and classed product refusals below since 0.20.0 (released 2026-11-23).</li>
+<li>
+<strong>MLR estimator (0.21.0):</strong> <code>fit_sem(model, data, estimator = "MLR")</code> keeps the ML estimates, uses sandwich standard errors and adds the Yuan-Bentler scaled chi-square (<code>chisq_scaled</code>, <code>scaling_factor</code>, <code>p_value_scaled</code> in <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>), as lavaan’s MLR. It is defined for single-level complete-data fits with linear equality constraints; anything else stops with a classed error. See the <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</li>
+<li>
+<strong>Classed product refusals (0.21.0):</strong> every refusal of the <code>:</code> product term has a class (<code>medfit_error_product_*</code>); messages and numbers are unchanged.</li>
 <li>
 <strong>0.20.0 (2026-11-23, GitHub only):</strong> adds the native two-level route below since 0.19.0 (released 2026-11-17). The two-level API is experimental, so it may change without a deprecation period.</li>
 <li>

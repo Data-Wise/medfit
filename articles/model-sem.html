@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.20.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -175,7 +175,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.20.0/vignettes/articles/model-sem.qmd" class="external-link"><code>vignettes/articles/model-sem.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/model-sem.qmd" class="external-link"><code>vignettes/articles/model-sem.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -468,10 +468,150 @@ standard errors (observed information) are unaffected.</code></pre>
 <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> with another product on the treatment or mediator</td>
 <td style="text-align: left;">“the native extraction does not support the product”</td>
 </tr>
+<tr class="odd">
+<td style="text-align: left;">
+<code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> or <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> on fits with different observed variables</td>
+<td style="text-align: left;">“different observed variables”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">A product of two categorical columns (<code>g:h</code>)</td>
+<td style="text-align: left;">“both sides are categorical columns”</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">
+<code>fixed_x</code> naming a column that appears only inside products</td>
+<td style="text-align: left;">“appears only inside products”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">A product in a modifier (<code>y ~ a:b*x</code>)</td>
+<td style="text-align: left;">“malformed modifier”</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Four-way on a native fit without the treatment-by-mediator product</td>
+<td style="text-align: left;">“needs the treatment-by-mediator product”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">
+<code>extract_mediation(interaction = )</code> that is not a <code>:</code> product</td>
+<td style="text-align: left;">“must be the product written with <code>:</code>”</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">
+<code>extract_mediation(interaction = )</code> that is not treatment by mediator</td>
+<td style="text-align: left;">“is not the product of the treatment”</td>
+</tr>
+</tbody>
+</table>
+<p>Each error has one of the classes below and also the class <code>medfit_error_product</code>, so a handler can match the class and a reader the message. The warning that the model test is not valid has the class <code>medfit_warning_product_modeltest</code>.</p>
+<table class="table caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th style="text-align: left;">Class</th>
+<th style="text-align: left;">Raised for</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>medfit_error_product_syntax</code></td>
+<td style="text-align: left;">spacing, <code>x:x</code>, three-way, left side, <code>=~</code>, constraint expression</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>medfit_error_product_latent</code></td>
+<td style="text-align: left;">a latent variable in a product</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>medfit_error_product_duplicate</code></td>
+<td style="text-align: left;">one product twice in an equation</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>medfit_error_product_outcome_regressor</code></td>
+<td style="text-align: left;">rule 8</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>medfit_error_product_recursive</code></td>
+<td style="text-align: left;">a loop of regressions</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>medfit_error_product_residual_covariance</code></td>
+<td style="text-align: left;">residual covariance between outcomes</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>medfit_error_product_shared_label</code></td>
+<td style="text-align: left;">a label on two rows</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>medfit_error_product_fixed_coefficient</code></td>
+<td style="text-align: left;">a fixed coefficient</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>medfit_error_product_bound</code></td>
+<td style="text-align: left;">an inline bound</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>medfit_error_product_constraint</code></td>
+<td style="text-align: left;">a constraint names a coefficient label</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>medfit_error_product_intercept</code></td>
+<td style="text-align: left;">a fixed, shared or constrained intercept</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>medfit_error_product_meanstructure</code></td>
+<td style="text-align: left;"><code>meanstructure = FALSE</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>medfit_error_product_column</code></td>
+<td style="text-align: left;">a data column that is not the product</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>medfit_error_product_nonnumeric</code></td>
+<td style="text-align: left;">a non-numeric product input</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>medfit_error_product_information</code></td>
+<td style="text-align: left;">
+<code>information = "expected"</code>, endogenous factor</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>medfit_error_product_modeltest</code></td>
+<td style="text-align: left;">
+<code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> or <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code>
+</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>medfit_error_product_observed</code></td>
+<td style="text-align: left;">
+<code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">AIC()</a></code> or <code><a href="https://rdrr.io/r/stats/AIC.html" class="external-link">BIC()</a></code> across observed variables</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>medfit_error_product_extract</code></td>
+<td style="text-align: left;">
+<code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> refusals</td>
+</tr>
 </tbody>
 </table>
 <p>Two more facts are not errors. The covariance that completion would add between two pure outcomes is fixed at 0 in a product model, with one note; and <code><a href="../reference/fit_sem.html">fit_sem()</a></code> warns once when a product is fitted without <code>se_type = "sandwich"</code>, which is the standard-error choice because a product is not normal. <code>fixed_x = TRUE</code> fixes the product columns with the other exogenous variables.</p>
 <p>The global chi-square is not valid when a factor of the product is itself a regression target (the model treats the product as exogenous although it is a function of that variable), or when the exogenous (co)variance block is restricted. <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> then reports chi-square, df and p-value as <code>NA</code> with a note, and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> refuse. A product of exogenous variables with a free block keeps the ordinary test. <a href="methods.html#products-and-observed-information">Methods and Formulas</a> gives the reason.</p>
+</section><section class="level2"><h2 id="mlr">Robust standard errors and a scaled test (MLR)<a class="anchor" aria-label="anchor" href="#mlr"></a>
+</h2>
+<p><code>estimator = "MLR"</code> keeps the ML estimates and, as lavaan’s <code>estimator = "MLR"</code> does, reports sandwich standard errors and the Yuan-Bentler scaled chi-square (<code>test = "yuan.bentler.mplus"</code>). <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> adds the scaled test after the plain one. The model above is saturated (<code>df = 0</code>), so this example drops the direct effect to leave one restriction:</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">syntax_mlr</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
+<span><span class="st">  mediator1 ~ a * treatment + covariate1 + covariate2</span></span>
+<span><span class="st">  outcome ~ b * mediator1 + covariate1 + covariate2</span></span>
+<span><span class="st">"</span></span>
+<span><span class="va">fit_mlr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">syntax_mlr</span>, <span class="va">mediation_demo</span>, estimator <span class="op">=</span> <span class="st">"MLR"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fit_mlr</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"df"</span>, <span class="st">"chisq"</span>, <span class="st">"chisq_scaled"</span>, <span class="st">"scaling_factor"</span>, <span class="st">"p_value_scaled"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 5
+     df chisq chisq_scaled scaling_factor p_value_scaled
+  &lt;dbl&gt; &lt;dbl&gt;        &lt;dbl&gt;          &lt;dbl&gt;          &lt;dbl&gt;
+1     1  3.54         3.46           1.02         0.0629</code></pre>
+</div>
+</div>
+<p>Coefficients and <code>chisq</code> equal the default fit; the standard errors and the scaled columns differ. The same numbers come from <code>lavaan::sem(model, data, estimator = "MLR")</code> read with <code>lavaan::fitMeasures(fit, c("chisq.scaled", "chisq.scaling.factor", "pvalue.scaled"))</code>; the agreement is tested to 1e-5. MLR needs single-level complete data and linear equality constraints; the Satorra-Bentler <code>"MLM"</code> and the other estimators stop with <code>medfit_error_estimator</code>. <a href="methods.html#mlr-scaled">Methods and Formulas</a> gives the formula. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> prints no chi-square, so read the scaled test from <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>.</p>
 </section><section class="level2"><h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
 </h2>
 <ul>

@@ -65,6 +65,7 @@ semopy](https://data-wise.github.io/medfit/articles/syntax-crosswalk.md).
 | twolevel-sandwich | lavaan two-level se = robust.huber.white, TL-3 (fixed.x = FALSE, observed information, structured h1) | casewise, zero_cross_meat, drop_cluster, cr1, no_projection, driver | two-level observed (1-1-1) |
 | twolevel-mbco-size | pchisq(statistic, 1) and the alpha + 3 MC SE size rule; branch minimum against lavaan in tests/testthat/test-sem-mbco-twolevel.R | max_branch, driver | two-level observed (1-1-1) |
 | twolevel-equal-size | hand O8 likelihood maximized under the constraint (lavaans nonlinear two-level fit is not an oracle: it returned an inadmissible optimum), pchisq(statistic, 1) and the alpha + 3 MC SE size rule | cross_pair, stat_doubled, df_two, driver | two-level observed (1-1-1) |
+| mlr | lavaan estimator = MLR (estimates; sandwich SEs; scaling factor; scaled chi-square) | sfac_df1, keep_fixed, sandwich_h0, normal_trace, no_scaling, no_bound_guard, fixed_pos, driver | MLR estimator (scaled chi-square) |
 
 A token in *Planted defects* is a `MUTANT=` value of the gate’s script;
 the driver (`tests/sim/run-gates.R --mutants`) also plants tolerance,

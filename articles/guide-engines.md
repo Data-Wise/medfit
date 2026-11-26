@@ -88,6 +88,11 @@ The estimator is what the engine minimizes. Within the sem engine, the
 Both are the same engine; only the objective changes, and so do the
 estimates.
 
+A separate argument, `estimator = "MLR"`, leaves the estimates alone and
+changes the standard errors (sandwich) and the model test (Yuan-Bentler
+scaled chi-square); see [the sem engine
+page](https://data-wise.github.io/medfit/articles/model-sem.html#mlr).
+
 ## Optimizer
 
 The optimizer is the algorithm that finds the minimum of the estimator’s

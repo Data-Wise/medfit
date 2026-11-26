@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.20.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -175,7 +175,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.20.0/vignettes/articles/lavaan-comparison.qmd" class="external-link"><code>vignettes/articles/lavaan-comparison.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/lavaan-comparison.qmd" class="external-link"><code>vignettes/articles/lavaan-comparison.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -315,7 +315,7 @@ lavaan                 0.04715465</code></pre>
 <tr class="odd">
 <td>Estimators other than ML</td>
 <td>yes</td>
-<td>ML, plus the HC0 sandwich</td>
+<td>ML, and MLR (<code>estimator = "MLR"</code>: ML estimates, the HC0 sandwich and the Yuan-Bentler scaled chi-square <code>chisq_scaled</code> with <code>scaling_factor</code> in <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>, as lavaan’s MLR; complete single-level data, linear equality constraints only); MLM, MLMV, WLSMV and the rest are refused</td>
 <td>Partial</td>
 </tr>
 <tr class="even">

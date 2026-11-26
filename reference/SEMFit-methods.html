@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.20.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -130,7 +130,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Methods for SEMFit objects</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.20.0/R/methods-sem.R" class="external-link"><code>R/methods-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/methods-sem.R" class="external-link"><code>R/methods-sem.R</code></a></small>
       <div class="d-none name"><code>SEMFit-methods.Rd</code></div>
     </div>
 
@@ -245,7 +245,9 @@ equality constraints), <code>df</code>, <code>chisq</code> (n times the minimize
 the test of the model against the saturated one), <code>p_value</code> (<code>NA</code> when
 <code>df</code> is 0), <code>logLik</code>, <code>AIC</code> and <code>BIC</code> (with the means free, as <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code>
 defines them) and <code>fixed_x</code>, the names the fit holds at their sample moments,
-comma-joined (<code>""</code> when none). A fit with sampling weights has no likelihood, so its
+comma-joined (<code>""</code> when none). A fit with <code>estimator = "MLR"</code> adds <code>chisq_scaled</code>, <code>scaling_factor</code> and
+<code>p_value_scaled</code> after <code>p_value</code>: the Yuan-Bentler scaled chi-square (see <code><a href="fit_sem.html">fit_sem()</a></code>).
+A fit with sampling weights has no likelihood, so its
 <code>chisq</code>, <code>p_value</code>, <code>logLik</code>, <code>AIC</code> and <code>BIC</code> are <code>NA</code>. There is no
 <code>converged</code> column: <code><a href="fit_sem.html">fit_sem()</a></code> returns a fit only for a solution that
 passed the acceptance gate and errors otherwise, so <code>@converged</code> is <code>TRUE</code>

@@ -1107,6 +1107,31 @@ shrinks like \\1/n\\. The weighted likelihood is a pseudo likelihood, so
 [`logLik()`](https://rdrr.io/r/stats/logLik.html) is not defined for a
 weighted fit.
 
+### The MLR scaled chi-square
+
+`estimator = "MLR"` keeps \\\hat\theta\\ and the sandwich covariance
+above, and rescales the ML chi-square \\T = n \hat F\_{ML}\\ as lavaan
+does with `test = "yuan.bentler.mplus"`:
+
+\\ T\_{scaled} = T / \hat c, \qquad \hat c =
+\frac{\operatorname{tr}(A_1^{-1} B_1) - \operatorname{tr}(E^{-1}
+B_0)}{df}. \\
+
+Here \\A_1\\ and \\B_1\\ are the expected information and the cross
+product of the casewise scores of the saturated mean and covariance
+model (per case, at the sample moments), \\E\\ is the model information
+(observed or expected, as `information` asks) and \\B_0\\ the cross
+product of the model’s casewise scores, so \\\operatorname{tr}(E^{-1}
+B_0)\\ is the sum of the elementwise product of the model-based
+covariance of \\\hat\theta\\ and \\B_0\\, projected on the active
+constraints as every standard error is. Moments of fixed exogenous
+variables are not saturated parameters; their rows and columns leave
+\\A_1\\ and \\B_1\\. The Satorra-Bentler factor (`"MLM"`) uses
+normal-theory fourth moments and is a different number; it is not
+offered. [`glance()`](https://generics.r-lib.org/reference/glance.html)
+reports \\\hat c\\ as `scaling_factor`, \\T\_{scaled}\\ as
+`chisq_scaled` and its chi-square(\\df\\) p-value as `p_value_scaled`.
+
 ### Constraints
 
 Equality and inequality constraints that are linear in the labels become

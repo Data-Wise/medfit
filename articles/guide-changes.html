@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.20.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -175,7 +175,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.20.0/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -184,7 +184,7 @@
 
 
 
-    <p>CRAN has medfit 0.3.2; this site documents 0.20.0 (GitHub and r-universe). This page lists what a 0.3.2 user needs to know before upgrading: numbers that change, calls that now stop with an error, and what is new. The full record is <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p>
+    <p>CRAN has medfit 0.3.2; this site documents 0.21.0 (GitHub and r-universe). This page lists what a 0.3.2 user needs to know before upgrading: numbers that change, calls that now stop with an error, and what is new. The full record is <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p>
 <div>
 <blockquote>
 <p><strong>At a glance</strong></p>
@@ -579,6 +579,11 @@
 <tr class="odd">
 <td>0.20.0</td>
 <td>experimental two-level API only: <code>fit_sem(model, data, cluster = )</code> fits a two-level (1-1-1) model with the sem engine and <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code> returns <code>TwoLevelMediationData</code> (<code>se_type = "sandwich"</code> gives cluster-robust SEs; <a href="model-twolevel.html#the-sem-engine-route">page</a>); <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> tests the indirect effect at one level and <code><a href="../reference/twolevel_equal_indirect.html">twolevel_equal_indirect()</a></code> tests within = between. Behavior change: the within-only rule reads the unrestricted (h1) ICC on both routes, so within-only results are rarer. No change outside the experimental two-level API</td>
+</tr>
+<tr class="even">
+<td>0.21.0</td>
+<td>
+<code>fit_sem(model, data, estimator = "MLR")</code> keeps the ML estimates, uses sandwich standard errors and adds the Yuan-Bentler scaled chi-square (<code>chisq_scaled</code>, <code>scaling_factor</code>, <code>p_value_scaled</code>) to <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>; other estimators and MLR with <code>cluster</code>, FIML, <code>weights</code>, inequality or nonlinear constraints stop with a classed error (<code>medfit_error_estimator</code>, <code>medfit_error_mlr_*</code>). Every refusal of the <code>:</code> product term now carries a class (<code>medfit_error_product_*</code>); messages and numbers are unchanged, but code that compared <code>class(err)</code> exactly now sees the added classes. The default <code>estimator = "ML"</code> is unchanged.</td>
 </tr>
 </tbody>
 </table></section><section class="level2"><h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>

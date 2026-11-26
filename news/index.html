@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.20.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -130,9 +130,40 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/data-wise/medfit/blob/v0.20.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/data-wise/medfit/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.21.0" id="medfit-0210">medfit 0.21.0<a class="anchor" aria-label="anchor" href="#medfit-0210"></a></h2>
+<div class="section level3">
+<h3 id="release-summary-0-21-0">Release summary<a class="anchor" aria-label="anchor" href="#release-summary-0-21-0"></a></h3>
+<ul><li>
+<strong>MLR estimator (sem engine).</strong> <code>fit_sem(estimator = "MLR")</code> keeps the ML estimates, uses sandwich standard errors and reports the Yuan-Bentler scaled chi-square (<code>chisq_scaled</code>, <code>scaling_factor</code>, <code>p_value_scaled</code> in <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>); it matches lavaan’s <code>estimator = "MLR"</code> to the tolerances in <code>tests/testthat/test-sem-mlr.R</code> (<a href="https://github.com/data-wise/medfit/issues/542" class="external-link">#542</a>). The default <code>estimator = "ML"</code> is unchanged to the last bit.</li>
+<li>
+<strong>Classed product refusals.</strong> Every refusal and the model-test warning of the <code>:</code> product term carries a class (<code>medfit_error_product_*</code>, <code>medfit_warning_product_modeltest</code>); messages and numbers are unchanged (<a href="https://github.com/data-wise/medfit/issues/540" class="external-link">#540</a>).</li>
+<li>Development tooling and CI, not user-facing: <code>scripts/dev-preflight.sh</code> and <code>scripts/cleanup-merged.sh</code> (<a href="https://github.com/data-wise/medfit/issues/538" class="external-link">#538</a>, <a href="https://github.com/data-wise/medfit/issues/539" class="external-link">#539</a>), R-CMD-check pinned to Ubuntu 24.04 with superseded runs canceled (<a href="https://github.com/data-wise/medfit/issues/536" class="external-link">#536</a>, <a href="https://github.com/data-wise/medfit/issues/541" class="external-link">#541</a>).</li>
+<li>
+<strong>Not in this release:</strong> fit indices and modification indices (including scaled fit indices under MLR), a valid scaled test for product models, two-level refusal lifts, serial two-level mediators, FIML statistical admission, and CRAN.</li>
+<li>GitHub-only release; CRAN stays on hold (<a href="https://github.com/data-wise/medfit/issues/83" class="external-link">#83</a>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-0-21-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-21-0"></a></h3>
+<ul><li>
+<strong>Product refusals are classed conditions (sem engine).</strong> Every refusal and the model-test warning of the <code>:</code> product term now carry a class, so a handler can catch one kind instead of matching message text. All errors carry the parent class <code>medfit_error_product</code> plus a specific one (<code>medfit_error_product_syntax</code>, <code>_latent</code>, <code>_outcome_regressor</code>, <code>_residual_covariance</code>, <code>_fixed_coefficient</code>, <code>_modeltest</code>, <code>_extract</code> and the others tabulated in <code><a href="../reference/medfit-syntax.html">?"medfit-syntax"</a></code>); the warning that the model test is not valid has the class <code>medfit_warning_product_modeltest</code>. Messages and numbers are unchanged. Code that tested <code>class(err)</code> for exactly <code>c("simpleError", "error", "condition")</code> on these conditions now sees the added classes first; <code>inherits(err, "error")</code> still holds. The two-level refusal <code>medfit_error_twolevel_product</code> is unchanged.</li>
+<li>
+<strong>MLR estimator (sem engine).</strong> <code>fit_sem(model, data, estimator = "MLR")</code> and <code>fit_mediation(engine = "sem", model = , engine_args = list(estimator = "MLR"))</code> keep the ML estimates and report the Yuan-Bentler scaled chi-square that lavaan reports for <code>estimator = "MLR"</code> (<code>test = "yuan.bentler.mplus"</code>). <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> adds <code>chisq_scaled</code>, <code>scaling_factor</code> and <code>p_value_scaled</code> after <code>p_value</code>; the plain <code>chisq</code> stays. Standard errors are the sandwich: <code><a href="../reference/fit_sem.html">fit_sem()</a></code> defaults <code>se_type</code> to <code>"sandwich"</code> under MLR, and <code><a href="../reference/fit_mediation.html">fit_mediation()</a></code> does too unless <code>se_type</code> is given (an explicit <code>se_type = "model"</code> keeps the model-based errors). Coefficients, standard errors, <code>chisq</code>, the scaling factor and <code>chisq_scaled</code> agree with lavaan’s MLR to the tolerances in <code>tests/testthat/test-sem-mlr.R</code>, and the <code>mlr</code> gate in <code>tests/sim</code> checks them and the size of the test. The default <code>estimator = "ML"</code> is unchanged to the last bit. MLR is defined for single-level complete-data fits with linear equality constraints. The Satorra-Bentler <code>"MLM"</code> variant and every other estimator stop with <code>medfit_error_estimator</code>; <code>cluster</code> or <code>level:</code> blocks, <code>missing = "fiml"</code>, <code>weights</code>, inequality or nonlinear constraints and an estimate on a bound stop with <code>medfit_error_mlr_twolevel</code>, <code>medfit_error_mlr_missing</code>, <code>medfit_error_mlr_weights</code>, <code>medfit_error_mlr_constraints</code> and <code>medfit_error_mlr_bounds</code> (each also of class <code>medfit_error_mlr</code>). <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> does not print a chi-square, so it shows no scaled test. The formula is in the Methods and Formulas article.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="known-limits-0-21-0">Known limits<a class="anchor" aria-label="anchor" href="#known-limits-0-21-0"></a></h3>
+<ul><li>
+<code>estimator = "MLR"</code> is defined for single-level complete-data fits with linear equality constraints. The Satorra-Bentler <code>"MLM"</code> variant and every other estimator stop with <code>medfit_error_estimator</code>; <code>cluster</code> or <code>level:</code> blocks, <code>missing = "fiml"</code>, <code>weights</code>, inequality or nonlinear constraints and an estimate on a bound stop with <code>medfit_error_mlr_*</code> (two-level, missing, weights, constraints, bounds).</li>
+<li>Scaled fit indices are not provided under MLR; <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> reports the scaled chi-square, its scaling factor and p-value only, and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> prints no chi-square.</li>
+<li>A model with a <code>:</code> product term still has <code>NA</code> chi-square, and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> and <code><a href="../reference/mbco_sem.html">mbco_sem()</a></code> still refuse when a product factor is a regression target; MLR does not change that.</li>
+<li>The native two-level route stays experimental and may change without the usual deprecation period; the 0.20.0 limits on it still hold. <code>estimator = "MLR"</code> with <code>cluster</code> is refused.</li>
+<li>FIML is numerically verified, not statistically admitted.</li>
+<li>GitHub-only release; CRAN stays on hold (<a href="https://github.com/data-wise/medfit/issues/83" class="external-link">#83</a>).</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.20.0" id="medfit-0200">medfit 0.20.0<a class="anchor" aria-label="anchor" href="#medfit-0200"></a></h2>
 <div class="section level3">

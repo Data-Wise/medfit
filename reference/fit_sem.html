@@ -21,7 +21,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.20.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -138,7 +138,7 @@ parameters (:=) with delta-method standard errors."><meta property="og:image" co
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit a Structural Equation Model by Maximum Likelihood</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.20.0/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/fit-sem.R" class="external-link"><code>R/fit-sem.R</code></a></small>
       <div class="d-none name"><code>fit_sem.Rd</code></div>
     </div>
 
@@ -164,7 +164,8 @@ parameters (<code>:=</code>) with delta-method standard errors.</p>
 <span>  fixed_x <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  sampling_weights <span class="op">=</span> <span class="fu">lifecycle</span><span class="fu">::</span><span class="fu"><a href="https://lifecycle.r-lib.org/reference/deprecated.html" class="external-link">deprecated</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  missing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"listwise"</span>, <span class="st">"fiml"</span><span class="op">)</span>,</span>
-<span>  cluster <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  cluster <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  estimator <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ML"</span>, <span class="st">"MLR"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -307,6 +308,19 @@ is the equality of the within and between indirect effects (<code>a_w*b_w == a_b
 <code><a href="twolevel_equal_indirect.html">twolevel_equal_indirect()</a></code>). <code>se_type = "sandwich"</code> gives
 the cluster-robust sandwich (see <code>se_type</code>), and <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> then reports <code>se_type</code>. Appended last to preserve
 positional calls.</p></dd>
+
+
+<dt id="arg-estimator">estimator<a class="anchor" aria-label="anchor" href="#arg-estimator"></a></dt>
+<dd><p><code>"ML"</code> (the default) or <code>"MLR"</code>. <code>"MLR"</code> keeps the ML estimates and, unless <code>se_type</code> is given,
+reports the sandwich standard errors; <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> then adds <code>chisq_scaled</code>, <code>scaling_factor</code> and <code>p_value_scaled</code>,
+the Yuan-Bentler scaled chi-square that lavaan reports for <code>estimator = "MLR"</code> (<code>test = "yuan.bentler.mplus"</code>:
+the ML chi-square divided by the scaling factor, from the casewise scores of the model and of the saturated
+mean and covariance model). The Satorra-Bentler (<code>"MLM"</code>) variant and the other lavaan estimators are not
+offered. <code>"MLR"</code> is defined for single-level complete-data fits with linear equality constraints; <code>cluster</code>,
+<code>level:</code> blocks, <code>missing = "fiml"</code>, <code>weights</code>, and inequality or nonlinear constraints are refused with classed
+errors (<code>medfit_error_mlr_*</code>, each also of class <code>medfit_error_mlr</code>), and an unknown estimator with
+<code>medfit_error_estimator</code>. A product term that makes the model test invalid leaves the scaled statistic <code>NA</code> too.
+Appended last to preserve positional calls.</p></dd>
 
 </dl></div>
     <div class="section level2">

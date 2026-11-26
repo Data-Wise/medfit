@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.20.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -175,7 +175,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.20.0/vignettes/articles/quality-control.qmd" class="external-link"><code>vignettes/articles/quality-control.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/quality-control.qmd" class="external-link"><code>vignettes/articles/quality-control.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -395,6 +395,12 @@
 <td style="text-align: left;">hand O8 likelihood maximized under the constraint (lavaans nonlinear two-level fit is not an oracle: it returned an inadmissible optimum), pchisq(statistic, 1) and the alpha + 3 MC SE size rule</td>
 <td style="text-align: left;">cross_pair, stat_doubled, df_two, driver</td>
 <td style="text-align: left;">two-level observed (1-1-1)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">mlr</td>
+<td style="text-align: left;">lavaan estimator = MLR (estimates; sandwich SEs; scaling factor; scaled chi-square)</td>
+<td style="text-align: left;">sfac_df1, keep_fixed, sandwich_h0, normal_trace, no_scaling, no_bound_guard, fixed_pos, driver</td>
+<td style="text-align: left;">MLR estimator (scaled chi-square)</td>
 </tr>
 </tbody>
 </table>

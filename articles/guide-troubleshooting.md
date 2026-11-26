@@ -172,6 +172,14 @@ carries a class, so you can handle or silence one kind.
 | `is constant in the rows the fit uses` | a dummy has no variation: an unused factor level, or a level only in rows dropped for missing values | [`droplevels()`](https://rdrr.io/r/base/droplevels.html) the column, or check the missing values |
 | `must be numeric: group` | a categorical column is an outcome or a mediator (only a covariate on a right side is expanded), or a column is a date or another type | recode it as a numeric column |
 
+Every product refusal in this table has the class `medfit_error_product`
+(a specific `medfit_error_product_*` too, and
+`medfit_warning_product_modeltest` for the model-test warning), so catch
+it by class rather than by message:
+`tryCatch(fit_sem(model, data), medfit_error_product = function(e) conditionMessage(e))`.
+The classes are listed in [the sem engine model
+page](https://data-wise.github.io/medfit/articles/model-sem.html#product-terms).
+
 ### An unresolved MBCO result
 
 [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)

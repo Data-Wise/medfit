@@ -662,7 +662,7 @@ c(medfit = as.character(utils::packageVersion("medfit")),
 ```
 
       medfit        R   lavaan
-    "0.20.0"  "4.6.2"  "0.7.3" 
+    "0.21.0"  "4.6.2"  "0.7.3" 
 
 Seeds: data `20261017`; bootstrap `123`; Monte Carlo `1` (n = 500) and
 `2` (n = 100). The simulation functions use

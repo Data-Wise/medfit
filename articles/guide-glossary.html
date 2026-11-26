@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.20.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -175,7 +175,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.20.0/vignettes/articles/guide-glossary.qmd" class="external-link"><code>vignettes/articles/guide-glossary.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/guide-glossary.qmd" class="external-link"><code>vignettes/articles/guide-glossary.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -502,6 +502,12 @@
 <td><a href="model-weights.html">Weights and robust SEs</a></td>
 </tr>
 <tr class="odd">
+<td><strong>MLR</strong></td>
+<td>
+<code>estimator = "MLR"</code> in the sem engine: the ML estimates with sandwich standard errors and the Yuan-Bentler scaled chi-square (<code>chisq_scaled</code>, <code>scaling_factor</code>, <code>p_value_scaled</code> in <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>), as lavaan’s MLR</td>
+<td><a href="model-sem.html#mlr">The sem engine</a></td>
+</tr>
+<tr class="even">
 <td><strong>MBCO</strong></td>
 <td>the minimum over the paths of the likelihood-ratio tests (two or k paths), for the hypothesis that an indirect effect is zero (<code><a href="../reference/mbco_sem.html">mbco_sem()</a></code>)</td>
 <td><a href="model-sem-constraints.html">constraints and MBCO</a></td>

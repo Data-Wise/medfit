@@ -116,6 +116,7 @@ mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md).
 | **plugin** | the point estimate only, with no interval | [Bootstrap Inference](https://data-wise.github.io/medfit/articles/bootstrap.md) |
 | **percentile interval** | the 2.5th and 97.5th percentiles of the bootstrap draws, for a 95% interval | [Bootstrap Inference](https://data-wise.github.io/medfit/articles/bootstrap.md) |
 | **sandwich** | a robust standard error, used with weights (`se_type = "sandwich"`); HC3 for the `glm` engine, HC0-type for the sem engine | [Weights and robust SEs](https://data-wise.github.io/medfit/articles/model-weights.md) |
+| **MLR** | `estimator = "MLR"` in the sem engine: the ML estimates with sandwich standard errors and the Yuan-Bentler scaled chi-square (`chisq_scaled`, `scaling_factor`, `p_value_scaled` in [`glance()`](https://generics.r-lib.org/reference/glance.html)), as lavaan’s MLR | [The sem engine](https://data-wise.github.io/medfit/articles/model-sem.html#mlr) |
 | **MBCO** | the minimum over the paths of the likelihood-ratio tests (two or k paths), for the hypothesis that an indirect effect is zero ([`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)) | [constraints and MBCO](https://data-wise.github.io/medfit/articles/model-sem-constraints.md) |
 
 ## The sem engine

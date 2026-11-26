@@ -1,7 +1,7 @@
 # medfit Reference Card
 
 Quick lookup for users who already know medfit. This card describes
-medfit 0.20.0 (CRAN has 0.3.2; install from GitHub or r-universe, see
+medfit 0.21.0 (CRAN has 0.3.2; install from GitHub or r-universe, see
 the [home page](https://data-wise.github.io/medfit/#install)).
 Explanations are in the
 [articles](https://data-wise.github.io/medfit/articles/getting-started.md);
@@ -88,6 +88,7 @@ med(mediation_demo, treatment = "treatment", mediator = "mediator1",
 | Log likelihood, AIC and BIC of a `SEMFit` | `logLik(fit)`, `AIC(fit1, fit2)`, `BIC(fit1, fit2)`; [`AIC()`](https://rdrr.io/r/stats/AIC.html) of a fit with a product term and one without are not comparable; the log likelihood is conditional on the fixed exogenous variables, so compare fits only with the same `fixed_x` |
 | Test of the indirect effect on a `SEMFit` (MBCO) | `mbco_sem(fit, "a", "b")`; `paths = c("a", "d", "b")` for a serial product |
 | Test that the within and between indirect effects of a two-level fit are equal | `twolevel_equal_indirect(fit)` (likelihood ratio of `a_w*b_w == a_b*b_b`; `n_boot = 200` adds a parametric bootstrap p-value; experimental) |
+| Robust standard errors and a scaled chi-square for a sem engine fit (lavaan’s MLR) | `fit_sem(model, data, estimator = "MLR")` or `fit_mediation(engine = "sem", model = , engine_args = list(estimator = "MLR"))`; `glance(fit)` adds `chisq_scaled`, `scaling_factor`, `p_value_scaled`; `"MLM"` and other estimators are refused |
 | Optimizer settings for a sem engine fit | `fit_sem(model, data, control = sem_control(n_starts = 7, nloptr = list(maxeval = 20000L)))`; a plain `nloptr` list still works; `fit@diagnostics$protocol` records what ran |
 | Rows with missing values on the mediator or outcome, continuous Gaussian model | `fit_sem(model, data, missing = "fiml", fixed_x = FALSE)`, then [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) (bounded FIML; refuses outside its scope, never falls back) |
 | Check the product-null LR against lavaan or OpenMx | `compare_lr(fit, paths = c("a", "b"), engine = "lavaan")`; warns only on observed evidence |
