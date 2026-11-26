@@ -30,6 +30,8 @@ on:
 jobs:
   revdep-check:
     runs-on: ubuntu-latest
+    # Recent runs take 1 to 7 minutes; revdepcheck itself allows 60 minutes per check (below).
+    timeout-minutes: 120
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -154,6 +156,7 @@ jobs:
     needs: revdep-check
     if: failure()
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       issues: write
 

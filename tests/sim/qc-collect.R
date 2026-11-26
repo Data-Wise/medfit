@@ -17,6 +17,10 @@ hist <- if (!is.na(opt("--history")) && file.exists(opt("--history"))) {
 }
 al <- qc_alerts(new, hist, planted = "--planted" %in% args)
 utils::write.csv(qc_append(hist, new), opt("--out"), row.names = FALSE, na = "")
-writeLines(c(paste0("gate: ", al$gate_failures), paste0("env: ", al$env_changes)), opt("--alerts"))
+# paste0("gate: ", character(0)) is "gate: ", not character(0): build each prefix only for a non-empty set, or a clean
+# run writes a bare `gate: ` line and the workflow's final `grep -q '^gate: '` fails it.
+lines <- c(if (length(al$gate_failures)) paste0("gate: ", al$gate_failures),
+           if (length(al$env_changes)) paste0("env: ", al$env_changes))
+writeLines(as.character(lines), opt("--alerts"))
 cat(sprintf("qc-collect: %d shard row(s), %d gate failure(s), %d environment change(s)\n",
             length(rows), length(al$gate_failures), length(al$env_changes)))

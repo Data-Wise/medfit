@@ -21,3 +21,5 @@ tests/sim/results/gates-summary-*.txt
 tests/sim/results/gates-*.log
 _agents_workspace/
 .worktrees/
+tests/testthat/_problems/
+tests/testthat/testthat-problems.rds

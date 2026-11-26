@@ -31,6 +31,9 @@ jobs:
     # tests) took 95 minutes on Ubuntu release, 147 on Windows and 157 on oldrel-1, and cancelled devel and macOS at
     # 180 minutes (probe runs of 2026-11-24), so the limit is 300 (the hosted maximum is 360).
     timeout-minutes: 300
+    # Step limits (setup-r 15, setup-r-dependencies 60) bound the install steps separately: release PR #556's job hung in
+    # setup-r for 5 hours before this job limit fired (review 2026-11-26, W3). Healthy setup-r takes under 2 minutes and
+    # the cold devel dependency build about 25.
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
@@ -62,12 +65,14 @@ jobs:
       - uses: r-lib/actions/setup-pandoc@v2
 
       - uses: r-lib/actions/setup-r@v2
+        timeout-minutes: 15
         with:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
       - uses: r-lib/actions/setup-r-dependencies@v2
+        timeout-minutes: 60
         with:
           extra-packages: any::rcmdcheck
           needs: check
@@ -110,11 +115,13 @@ jobs:
       - uses: actions/checkout@v7
 
       - uses: r-lib/actions/setup-r@v2
+        timeout-minutes: 15
         with:
           r-version: 'release'
           use-public-rspm: true
 
       - uses: r-lib/actions/setup-r-dependencies@v2
+        timeout-minutes: 60
         with:
           dependencies: '"hard"'
           # testthat is a Suggests dep (deliberately, so production code can't use it
