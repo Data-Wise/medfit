@@ -1895,6 +1895,8 @@ released** (2026-11-24, tag `v0.20.0` at `4739e8e7`, release PR #526; authorized
 (next cycle), T7 (dropped), two-level `compare_lr()`, serial two-level mediators (IG5s); IG4 and IG6 NO-GO, FIML
 admission unresolved, CRAN on hold (#83).
 
+**Board 2026-11-26 (0.21.1 released).** Released in 0.21.1 (tag `v0.21.1` at `0bca3ee5`, release PR #556, GitHub-only; 14 hosted checks green, `main` CI green, tagged-install smoke passed): no R changes since 0.21.0; the 17 longest test files skip on CRAN, test warnings removed (#553), cookbook recipe 25 (#552). `dev` is 0.21.1.9000 (back-merge). CRAN upload is the maintainer's. Next: parallel test workers (T3 of `PLAN-ci-test-speed-2026-11-25.md`), 0.22.0 per `PLAN-lavaan-parity-0.21.0-2026-11-24.md`.
+
 **Board 2026-11-26 (0.21.0 released).** Released in 0.21.0 (tag `v0.21.0` at `cc84770c`, release PR #545, GitHub-only; all 14 hosted
 checks green on the release PR head, `main` CI green, tagged-install smoke passed, CRAN on hold #83): P1a `estimator = "MLR"` with the
 Yuan-Bentler scaled chi-square (#542), P2(c) classed product refusals (#540), and tooling and CI (#536, #538, #539, #541, #544, #547).
