@@ -288,7 +288,7 @@ mbco_sem <- function(object, a, b, n_starts = NULL, control = NULL, fit = lifecy
         msg <- sprintf("the refit with `%s` converged to an inadmissible solution (%s).", con, reason)
       }
       if (!inadmissible && !inherits(err, "medfit_error_no_convergence")) {
-        stop(msg, call. = FALSE)
+        stop(.product_reraise(err, msg) %||% simpleError(msg))
       }
       failure <- msg
     } else {

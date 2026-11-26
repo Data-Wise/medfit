@@ -98,7 +98,9 @@
 #'   the test of the model against the saturated one), `p_value` (`NA` when
 #'   `df` is 0), `logLik`, `AIC` and `BIC` (with the means free, as `logLik()`
 #'   defines them) and `fixed_x`, the names the fit holds at their sample moments,
-#'   comma-joined (`""` when none). A fit with sampling weights has no likelihood, so its
+#'   comma-joined (`""` when none). A fit with `estimator = "MLR"` adds `chisq_scaled`, `scaling_factor` and
+#'   `p_value_scaled` after `p_value`: the Yuan-Bentler scaled chi-square (see [fit_sem()]).
+#'   A fit with sampling weights has no likelihood, so its
 #'   `chisq`, `p_value`, `logLik`, `AIC` and `BIC` are `NA`. There is no
 #'   `converged` column: `fit_sem()` returns a fit only for a solution that
 #'   passed the acceptance gate and errors otherwise, so `@converged` is `TRUE`
@@ -480,6 +482,15 @@ S7::method(confint, SEMFit) <- function(object, parm = NULL, level = 0.95, ...) 
     AIC = if (weighted) NA_real_ else stats::AIC(ll), BIC = if (weighted) NA_real_ else stats::BIC(ll),
     fixed_x = paste(x@internals$fixed_x, collapse = ", "), stringsAsFactors = FALSE
   )
+  if (identical(x@diagnostics$estimator, "MLR")) {
+    # estimator = "MLR": the Yuan-Bentler scaled chi-square, after the plain test (NA wherever the plain one is)
+    mlr <- x@diagnostics$mlr
+    scaled <- data.frame(chisq_scaled = if (invalid) NA_real_ else mlr$chisq_scaled,
+                         scaling_factor = if (invalid) NA_real_ else mlr$scaling_factor,
+                         p_value_scaled = if (invalid) NA_real_ else mlr$p_value_scaled)
+    at <- match("p_value", names(out))
+    out <- cbind(out[seq_len(at)], scaled, out[-seq_len(at)])
+  }
   if (twolevel) {
     sizes <- as.integer(table(x@internals$cluster_ids))
     out$n_clusters <- length(sizes)

@@ -953,6 +953,25 @@ HC3 default of `fit_mediation(engine = "glm", se_type = "sandwich")` by a factor
 that shrinks like $1/n$. The weighted likelihood is a pseudo likelihood, so
 `logLik()` is not defined for a weighted fit.
 
+### The MLR scaled chi-square {#mlr-scaled}
+
+`estimator = "MLR"` keeps $\hat\theta$ and the sandwich covariance above, and rescales the ML chi-square
+$T = n \hat F_{ML}$ as lavaan does with `test = "yuan.bentler.mplus"`:
+
+$$
+T_{scaled} = T / \hat c, \qquad
+\hat c = \frac{\operatorname{tr}(A_1^{-1} B_1) - \operatorname{tr}(E^{-1} B_0)}{df}.
+$$
+
+Here $A_1$ and $B_1$ are the expected information and the cross product of the casewise scores of the saturated
+mean and covariance model (per case, at the sample moments), $E$ is the model information (observed or expected, as
+`information` asks) and $B_0$ the cross product of the model's casewise scores, so
+$\operatorname{tr}(E^{-1} B_0)$ is the sum of the elementwise product of the model-based covariance of
+$\hat\theta$ and $B_0$, projected on the active constraints as every standard error is. Moments of fixed
+exogenous variables are not saturated parameters; their rows and columns leave $A_1$ and $B_1$. The Satorra-Bentler
+factor (`"MLM"`) uses normal-theory fourth moments and is a different number; it is not offered. `glance()` reports
+$\hat c$ as `scaling_factor`, $T_{scaled}$ as `chisq_scaled` and its chi-square($df$) p-value as `p_value_scaled`.
+
 ### Constraints
 
 Equality and inequality constraints that are linear in the

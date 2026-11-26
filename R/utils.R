@@ -226,3 +226,20 @@
   attr(prop, "type") <- "pm"
   prop
 }
+
+# The condition of a refused product term (`x:m`): the given specific class, the shared parent class
+# `medfit_error_product` (dependents may match either), and the message unchanged. No call, as `stop(call. = FALSE)`
+# gave. `type` is "error" or "warning"; a warning class has no parent.
+.product_condition <- function(msg, class, type = "error") {
+  cls <- if (identical(type, "error")) c(class, "medfit_error_product") else class
+  structure(class = c(cls, type, "condition"), list(message = msg, call = NULL))
+}
+
+# Re-raise a caught product refusal `err` under a new message, keeping its classes (the call stays NULL, as the
+# original `stop(call. = FALSE)` re-raise had). Returns NULL for any other condition.
+.product_reraise <- function(err, msg) {
+  if (!inherits(err, "medfit_error_product")) {
+    return(NULL)
+  }
+  structure(class = class(err), list(message = msg, call = NULL))
+}

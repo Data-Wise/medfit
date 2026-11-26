@@ -1,6 +1,6 @@
 # PLAN: close the gaps between the sem engine and lavaan (2026-11-17)
 
-Status: **planned, nothing implemented.** Written on `feature/lavaan-parity-plan` off `origin/dev` (`4f8eac80` era).
+Status: **planned, nothing implemented. Release grouping superseded 2026-11-24 by `PLAN-lavaan-parity-0.21.0-2026-11-24.md`** (T0 to T5 postponed; the four Partial rows come first). Written on `feature/lavaan-parity-plan` off `origin/dev` (`4f8eac80` era).
 Source of the gaps: the feature table in `vignettes/articles/lavaan-comparison.qmd` and its live probes in
 `tests/testthat/test-lavaan-comparison.R`. Runner: the `medfit-orchestrator` skill, one task per run, in task order.
 

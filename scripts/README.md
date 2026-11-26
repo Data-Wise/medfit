@@ -58,3 +58,18 @@ python3 -m unittest discover -s .github/scripts -p test_coverage_scope.py
 The checkout's `test-ci-workflows.R` suite also runs these regressions and checks
 the workflow wiring. No hosted CI or R dependency installation is needed for the
 scope tests. Expensive CI remains reserved for release to `main`.
+
+## Branch cleanup
+
+Run `sh scripts/cleanup-merged.sh` after PRs merge. It is read-only: it lists local branches whose tip equals the
+head of a merged PR and prints the worktree-remove and branch-delete lines for you to run. A squash merge leaves a
+branch looking unmerged to the safe delete, so the tip-equals-PR-head check replaces it. A branch with later commits
+is reported and not offered; a branch with no merged PR (probes, open PRs) is only counted. Needs an authenticated
+`gh`. Run `sh scripts/test-cleanup-merged.sh` to check it against a disposable repo with a planted moved branch.
+
+## Session preflight
+
+Run `sh scripts/dev-preflight.sh` at the start of a session. It fetches, then reports the current branch, origin/dev,
+how far local `dev` is behind or ahead, uncommitted changes and the worktree count. A stale local `dev` prints a
+STALE line: branch from `origin/dev`, because the safe delete refuses squash-merged branches off a stale base. It moves
+no branch and checks nothing out. `sh scripts/test-dev-preflight.sh` checks it against a disposable clone.

@@ -150,6 +150,7 @@ verdict_gate <- function(gate, d, s) {
     "fiml-ext" = c("cell", "check", "value", "limit", "pass"),
     "twolevel-parity" = c("cell", "check", "value", "limit", "pass"),
     "twolevel-sandwich" = c("cell", "check", "value", "limit", "pass"),
+    mlr = c("cell", "check", "value", "limit", "pass"),
     "twolevel-mbco-size" = c("pattern", "J", "level", "reps", "fails", "reject", "ledger", "other", "oracle_gap"),
     "twolevel-equal-size" = c("pattern", "J", "reps", "fails", "reject", "ledger", "other", "oracle_gap"),
     restoration = c("check", "kind", "value", "limit", "pass", "detail"),
@@ -533,6 +534,27 @@ verdict_gate <- function(gate, d, s) {
         chk("successful checks", all(d$pass %in% TRUE), "no failed or missing checks")
       )
     },
+    # P1a: native estimator = "MLR" against lavaan MLR (five models x fixed_x, four checks), metamorphic invariance,
+    # the size cell, fault injection and ML neutrality; the cells and limits are frozen here
+    mlr = {
+      oracle <- as.vector(outer(paste0(c("over", "chain", "cov", "equal", "latent"), rep(c(":fx", ":free"), each = 5L)),
+                                c("est", "se", "factor", "scaled"), paste, sep = ":"))
+      expected <- c(oracle, paste0("meta:", c("rows", "columns", "rescale"), ":invariance"),
+                    paste0("size:heavy-tail:", c("reject_mlr", "separation")),
+                    paste0("faults:", c("refused", "ml_neutral")))
+      keys <- paste(d$cell, d$check, sep = ":")
+      limits <- c(est = 1e-5, se = 1e-5, factor = 1e-5, scaled = 1e-5, invariance = 1e-6, reject_mlr = 0.08,
+                  separation = 0, refused = 0, ml_neutral = 0)
+      rbind(
+        rows_chk(d, s),
+        chk("complete cells", identical(sort(keys), sort(expected)),
+            "ten oracle cells, three invariance, size, faults"),
+        chk("numerical checks", all(is.finite(d$value) & d$value >= 0 & d$value <= d$limit),
+            "every recorded discrepancy satisfies its frozen limit"),
+        chk("frozen limits", all(d$limit == limits[d$check]), "limits cannot be widened in results"),
+        chk("successful checks", all(d$pass %in% TRUE), "no failed or missing checks")
+      )
+    },
     # IG3 T-B: size of the two-level equal-indirect-effects test per pattern and J; the 4 cells are frozen here and the
     # size limit is recomputed from the counts, as for the MBCO size gate
     "twolevel-equal-size" = {
@@ -734,6 +756,7 @@ mutate <- function(gate, kind, d) {
     if (gate %in% c("fiml", "fiml-ext")) d$value[1L] <- 1
     if (gate == "twolevel-parity") d$value[1L] <- 2 # the estimates limit is 1
     if (gate == "twolevel-sandwich") d$value[1L] <- 1 # the se limit is 1e-3
+    if (gate == "mlr") d$value[1L] <- 1 # the est limit is 1e-5
     if (gate == "twolevel-mbco-size") d$reject[1L] <- 0.2 # the pass column still says TRUE
     if (gate == "twolevel-equal-size") d$reject[1L] <- 0.2
     if (gate == "restoration") {
@@ -773,7 +796,9 @@ mutate <- function(gate, kind, d) {
     if (gate == "compare-lr") d$verdict[1] <- "error"
     if (gate == "native-defaults") d$status[1] <- "fail"
     if (gate == "semopy") d$status[1] <- "error"
-    if (gate %in% c("restoration", "fiml", "fiml-ext", "twolevel-parity", "twolevel-sandwich")) d$pass[1] <- FALSE
+    if (gate %in% c("restoration", "fiml", "fiml-ext", "twolevel-parity", "twolevel-sandwich", "mlr")) {
+      d$pass[1] <- FALSE
+    }
     if (gate == "twolevel-mbco-size") d$ledger[1] <- 1 # an aborted test
     if (gate == "twolevel-equal-size") d$ledger[1] <- 1
   }
@@ -816,7 +841,7 @@ mutate <- function(gate, kind, d) {
       names(product_gate_rules), "s7-lifecycle", "nonlinear-profile", "nonlinear-parity", "fixed-x",
       "mean-constrained", "factor", "bootstrap-coverage", "oracle-sweep", "compare-lr", "restoration",
       "native-defaults", "semopy", "fiml", "fiml-ext", "twolevel-parity", "twolevel-sandwich", "twolevel-mbco-size",
-      "twolevel-equal-size"
+      "twolevel-equal-size", "mlr"
     )
     # nolint end
     d <- if (new_gate) d[-nrow(d), , drop = FALSE] else d[-(1:7), , drop = FALSE]
@@ -1025,6 +1050,7 @@ scripts <- c(
   "fiml-ext" = "tests/sim/sem-fiml-ext-gate.R",
   "twolevel-parity" = "tests/sim/sem-twolevel-parity-gate.R",
   "twolevel-sandwich" = "tests/sim/sem-twolevel-sandwich-gate.R",
+  mlr = "tests/sim/sem-mlr-gate.R",
   "twolevel-mbco-size" = "tests/sim/sem-twolevel-mbco-size.R",
   "twolevel-equal-size" = "tests/sim/sem-twolevel-equal-size.R",
   restoration = "tests/sim/sem-restoration-gate.R",

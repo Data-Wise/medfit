@@ -244,6 +244,7 @@ fit_mediation <- function(formula_y,
                           cluster = NULL,
                           model = NULL,
                           ...) {
+  se_given <- !missing(se_type) # before the reassignment: the MLR default of the sem engine depends on it
   se_type <- match.arg(se_type)
   # "sem" is the engine's name and "native" its legacy spelling (ADR-engine-vocabulary-and-controls V-1, V-2):
   # map it once here, so no later code compares against two strings and the native messages stay as they are.
@@ -256,7 +257,8 @@ fit_mediation <- function(formula_y,
       given = list(
         formulas = !missing(formula_y) || !missing(formula_m),
         family = !missing(family_y) || !missing(family_m),
-        m_star = !missing(m_star)
+        m_star = !missing(m_star),
+        se_type = se_given
       ),
       weights = weights, se_type = se_type, cluster = cluster, engine_args = engine_args,
       m_star = m_star, dots = list(...)

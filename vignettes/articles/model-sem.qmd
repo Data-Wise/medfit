@@ -192,6 +192,38 @@ gives the limit and the start of its message.
 | `information = "expected"`, endogenous factor | "is not available for a model with a product of an endogenous variable" |
 | `anova()` or `mbco_sem()`, endogenous factor | "is not available for" ... "a model with a product term" |
 | `extract_mediation()` with another product on the treatment or mediator | "the native extraction does not support the product" |
+| `AIC()` or `BIC()` on fits with different observed variables | "different observed variables" |
+| A product of two categorical columns (`g:h`) | "both sides are categorical columns" |
+| `fixed_x` naming a column that appears only inside products | "appears only inside products" |
+| A product in a modifier (`y ~ a:b*x`) | "malformed modifier" |
+| Four-way on a native fit without the treatment-by-mediator product | "needs the treatment-by-mediator product" |
+| `extract_mediation(interaction = )` that is not a `:` product | "must be the product written with `:`" |
+| `extract_mediation(interaction = )` that is not treatment by mediator | "is not the product of the treatment" |
+
+Each error has one of the classes below and also the class `medfit_error_product`, so a handler can match the
+class and a reader the message. The warning that the model test is not valid has the class
+`medfit_warning_product_modeltest`.
+
+| Class | Raised for |
+|:--|:--|
+| `medfit_error_product_syntax` | spacing, `x:x`, three-way, left side, `=~`, constraint expression |
+| `medfit_error_product_latent` | a latent variable in a product |
+| `medfit_error_product_duplicate` | one product twice in an equation |
+| `medfit_error_product_outcome_regressor` | rule 8 |
+| `medfit_error_product_recursive` | a loop of regressions |
+| `medfit_error_product_residual_covariance` | residual covariance between outcomes |
+| `medfit_error_product_shared_label` | a label on two rows |
+| `medfit_error_product_fixed_coefficient` | a fixed coefficient |
+| `medfit_error_product_bound` | an inline bound |
+| `medfit_error_product_constraint` | a constraint names a coefficient label |
+| `medfit_error_product_intercept` | a fixed, shared or constrained intercept |
+| `medfit_error_product_meanstructure` | `meanstructure = FALSE` |
+| `medfit_error_product_column` | a data column that is not the product |
+| `medfit_error_product_nonnumeric` | a non-numeric product input |
+| `medfit_error_product_information` | `information = "expected"`, endogenous factor |
+| `medfit_error_product_modeltest` | `anova()` or `mbco_sem()` |
+| `medfit_error_product_observed` | `AIC()` or `BIC()` across observed variables |
+| `medfit_error_product_extract` | `extract_mediation()` refusals |
 
 Two more facts are not errors. The covariance that completion would add between two pure
 outcomes is fixed at 0 in a product model, with one note; and `fit_sem()` warns once when a
@@ -204,6 +236,30 @@ treats the product as exogenous although it is a function of that variable), or 
 with a note, and `anova()` and `mbco_sem()` refuse. A product of exogenous variables with a free block
 keeps the ordinary test. [Methods and Formulas](methods.html#products-and-observed-information) gives
 the reason.
+
+## Robust standard errors and a scaled test (MLR) {#mlr}
+
+`estimator = "MLR"` keeps the ML estimates and, as lavaan's `estimator = "MLR"` does, reports sandwich standard
+errors and the Yuan-Bentler scaled chi-square (`test = "yuan.bentler.mplus"`). `glance()` adds the scaled test after
+the plain one. The model above is saturated (`df = 0`), so this example drops the direct effect to leave one
+restriction:
+
+```{r}
+#| label: mlr
+syntax_mlr <- "
+  mediator1 ~ a * treatment + covariate1 + covariate2
+  outcome ~ b * mediator1 + covariate1 + covariate2
+"
+fit_mlr <- fit_sem(syntax_mlr, mediation_demo, estimator = "MLR")
+glance(fit_mlr)[, c("df", "chisq", "chisq_scaled", "scaling_factor", "p_value_scaled")]
+```
+
+Coefficients and `chisq` equal the default fit; the standard errors and the scaled columns differ. The same
+numbers come from `lavaan::sem(model, data, estimator = "MLR")` read with
+`lavaan::fitMeasures(fit, c("chisq.scaled", "chisq.scaling.factor", "pvalue.scaled"))`; the agreement is tested to
+1e-5. MLR needs single-level complete data and linear equality constraints; the Satorra-Bentler `"MLM"` and the
+other estimators stop with `medfit_error_estimator`. [Methods and Formulas](methods.html#mlr-scaled) gives the
+formula. `summary()` prints no chi-square, so read the scaled test from `glance()`.
 
 ## Limits
 
