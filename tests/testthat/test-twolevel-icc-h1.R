@@ -4,6 +4,8 @@
 # Oracles: lavaan's own h1 ICC (default and tightened EM), a hand ANOVA estimator on balanced data, and the
 # model-implied ICC as the source the rule used before (the divergence fixtures must separate the two).
 
+skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+
 skip_if_not_installed("lavaan")
 
 tli_model <- "level: 1\n  M ~ X\n  Y ~ M + X\nlevel: 2\n  M ~ X\n  Y ~ M + X\n"
