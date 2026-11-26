@@ -1,125 +1,86 @@
-# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
-# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
-# Runs on main only (release PRs and pushes). Work on dev is gated locally by
-# scripts/check-local.sh; main's required check `ubuntu-latest (release)` comes from here.
-# workflow_dispatch runs the full matrix on any ref when wanted.
+name: R-CMD-check
+run-name: medfit #546 union-only backport
+
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
-name: R-CMD-check
-
-permissions: read-all
-
-# A new push to a PR cancels that PR's superseded run (as lint and test-coverage do); pushes to main and manual
-# dispatches are never cancelled.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+permissions:
+  contents: read
 
 jobs:
-  R-CMD-check:
-    # `runner` pins the image where set. The job name still comes from `os`, because main's required check is named
-    # `ubuntu-latest (release)`; renaming it would leave that check unreported and block release PRs.
-    runs-on: ${{ matrix.config.runner || matrix.config.os }}
-    # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default. The 0.17.0 suite
-    # runs about 22 minutes on a laptop (FIML files are 71% of it) and 30 minutes on the macOS runner; 45 cancelled
-    # the Linux and Windows jobs on the 0.17.0 release PR. The 0.20.0 suite (244 test files, the native two-level
-    # tests) took 95 minutes on Ubuntu release, 147 on Windows and 157 on oldrel-1, and cancelled devel and macOS at
-    # 180 minutes (probe runs of 2026-11-24), so the limit is 300 (the hosted maximum is 360).
-    timeout-minutes: 300
-
-    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
-
+  backport:
+    name: ${{ matrix.os }} (R release, S7 1.0.0)
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        config:
-          - {os: macos-latest,   r: 'release'}
-          - {os: windows-latest, r: 'release'}
-          # Pinned to 24.04 for a stable image (gates.yaml timed out on 26.04 in PR #307). Speed is NOT the reason: two
-          # paired probe runs on one commit found no consistent difference (run 45505691085: 50 min on 24.04 against 65
-          # on ubuntu-latest; run 45573883028, four jobs started together: control 24.04 46 min against control latest
-          # 42 min), and one configuration varied from 42 to 62 min between runs. Capping BLAS and OpenMP threads at 1
-          # made it slower (68 to 69 min, same run).
-          - {os: ubuntu-latest,  runner: ubuntu-24.04, r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest,  runner: ubuntu-24.04, r: 'release'}
-          - {os: ubuntu-latest,  runner: ubuntu-24.04, r: 'oldrel-1'}
-
-    env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      R_KEEP_PKG_SOURCE: yes
-      _R_CHECK_CODOC_S4_METHODS_: false
+        os: [ubuntu-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v7
-
-      - uses: quarto-dev/quarto-actions/setup@v2
-
-      - uses: r-lib/actions/setup-pandoc@v2
-
       - uses: r-lib/actions/setup-r@v2
         with:
-          r-version: ${{ matrix.config.r }}
-          http-user-agent: ${{ matrix.config.http-user-agent }}
+          r-version: release
           use-public-rspm: true
+
+      - name: Verify and unpack the CRAN source
+        shell: bash
+        run: |
+          mkdir probe
+          curl -fsSL https://cran.r-project.org/src/contrib/medfit_0.3.2.tar.gz -o probe/original.tar.gz ||
+            curl -fsSL https://cran.r-project.org/src/contrib/Archive/medfit/medfit_0.3.2.tar.gz -o probe/original.tar.gz
+          echo 'ec7c7a1e1ee2bfba8aba83a5391197fa906dfa7cfc477180a5f32c2d2c0ed9ad  probe/original.tar.gz' | sha256sum -c
+          tar -xzf probe/original.tar.gz -C probe
+          git apply --directory=probe/medfit tools/medfit-546/s4-unions.patch
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
-          needs: check
+          working-directory: probe/medfit
+          extra-packages: cran::S7@1.0.0
+          cache: false
 
-      - uses: r-lib/actions/check-r-package@v2
+      - name: Check S7 and reproduce the original failure
+        shell: bash
+        run: |
+          Rscript --vanilla -e 'cat(R.version.string, R.Version()[["platform"]], "\n"); stopifnot(packageVersion("S7") == "1.0.0"); cat("S7 ", as.character(packageVersion("S7")), "\n")'
+          mkdir probe/original-lib
+          if R CMD INSTALL --library=probe/original-lib probe/original.tar.gz > probe/original-install.log 2>&1; then
+            cat probe/original-install.log
+            echo 'Unpatched source unexpectedly installed'
+            exit 1
+          fi
+          cat probe/original-install.log
+          grep -F 'Class union has not been registered with S4' probe/original-install.log
+
+      - name: Install and load the patched source
+        shell: bash
+        run: |
+          mkdir probe/patched-lib
+          R CMD INSTALL --library=probe/patched-lib probe/medfit 2>&1 | tee probe/patched-install.log
+          Rscript --vanilla tools/medfit-546/check-namespace.R probe/patched-lib 2>&1 | tee probe/namespace.log
+
+      - name: Build and run the packaged tests
+        working-directory: probe
+        shell: bash
+        run: |
+          R CMD build --no-build-vignettes medfit 2>&1 | tee build.log
+          R CMD check --no-manual --ignore-vignettes medfit_0.3.2.tar.gz 2>&1 | tee check.log
+
+      - name: Print test results
+        if: always()
+        shell: bash
+        run: |
+          for log in probe/medfit.Rcheck/tests/testthat.Rout*; do
+            if [ -f "$log" ]; then tail -n 30 "$log"; fi
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          upload-snapshots: true
-          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
-          args: 'c("--no-manual", "--as-cran", "--no-codoc")'
-          error-on: '"error"'
-
-  # noSuggests: emulate CRAN's "noSuggests" check flavor. Installs only hard
-  # dependencies (Depends/Imports/LinkingTo) and runs check with
-  # _R_CHECK_DEPENDS_ONLY_=true, so any Suggests package used without a
-  # requireNamespace() guard fails here. Plain --as-cran misses this because it
-  # installs Suggests. (Caught the unguarded MASS use in the parametric
-  # bootstrap; see rforge docs/specs/PROPOSAL-cran-incoming-hardening.)
-  noSuggests:
-    runs-on: ubuntu-24.04
-    # Bound a stalled runner (e.g. a throttled apt mirror) instead of the 360-minute default. The 0.17.0 run took
-    # 20 minutes (8 before the FIML expansion).
-    timeout-minutes: 45
-
-    name: ubuntu-latest (release, noSuggests)
-
-    env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      _R_CHECK_DEPENDS_ONLY_: true
-      _R_CHECK_CODOC_S4_METHODS_: false
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: 'release'
-          use-public-rspm: true
-
-      - uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          dependencies: '"hard"'
-          # testthat is a Suggests dep (deliberately, so production code can't use it
-          # unguarded) but the test harness itself needs it to run tests/testthat.R.
-          # dependencies: "hard" excludes Suggests for every package it resolves,
-          # including extra-packages, so it must be listed explicitly here or install
-          # is left to chance (transitive pulls from RSPM binary snapshots / stale
-          # cache), which is what caused the intermittent "no package called
-          # 'testthat'" failures.
-          extra-packages: any::rcmdcheck, any::testthat
-
-      - uses: r-lib/actions/check-r-package@v2
-        with:
-          build_args: 'c("--no-manual")'
-          args: 'c("--no-manual", "--as-cran", "--no-codoc")'
-          error-on: '"error"'
+          name: medfit-546-${{ matrix.os }}-logs
+          path: |
+            probe/*.log
+            probe/medfit.Rcheck/00check.log
+            probe/medfit.Rcheck/00install.out
+            probe/medfit.Rcheck/tests/testthat.Rout*
