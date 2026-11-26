@@ -45,6 +45,8 @@ jobs:
     timeout-minutes: 300
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      # covr instruments one process; parallel workers would lose coverage (DESCRIPTION sets parallel: true).
+      TESTTHAT_PARALLEL: "false"
 
     steps:
       - uses: actions/checkout@v7

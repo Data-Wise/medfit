@@ -72,6 +72,14 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
+      # Parallel test workers (Config/testthat/parallel in DESCRIPTION). The runner's own options(Ncpus) overrides the
+      # TESTTHAT_CPUS variable, so Ncpus is set through R_PROFILE_USER (T3 of planning/PLAN-ci-test-speed-2026-11-25.md).
+      - name: Set test workers
+        run: |
+          echo 'options(Ncpus = 4L)' > "$RUNNER_TEMP/test-workers.Rprofile"
+          echo "R_PROFILE_USER=$RUNNER_TEMP/test-workers.Rprofile" >> "$GITHUB_ENV"
+        shell: bash
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
@@ -117,6 +125,12 @@ jobs:
           # cache), which is what caused the intermittent "no package called
           # 'testthat'" failures.
           extra-packages: any::rcmdcheck, any::testthat
+
+      - name: Set test workers
+        run: |
+          echo 'options(Ncpus = 4L)' > "$RUNNER_TEMP/test-workers.Rprofile"
+          echo "R_PROFILE_USER=$RUNNER_TEMP/test-workers.Rprofile" >> "$GITHUB_ENV"
+        shell: bash
 
       - uses: r-lib/actions/check-r-package@v2
         with:

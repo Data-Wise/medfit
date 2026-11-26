@@ -116,7 +116,11 @@ on `dev` re-runs all of its hosted checks (it did once already, after #547). Pha
   tolerate, or run first via `start-first`).
   Verification: every hit is read, not bulk-judged; the list is reviewed against the file count.
   Dependencies: none (read-only). Files: report only. Scope: S.
-- [ ] **T2: parallel-workers pilot on one Ubuntu leg.**
+- [x] **T2: parallel-workers pilot on one Ubuntu leg. Done 2026-11-25/26 (three alternating pairs, results in the ledger).**
+  Result: the parallel config cut the `check-r-package` step by about 59% with identical counts. Finding: the runner's
+  own `options(Ncpus)` overrides `TESTTHAT_CPUS`, so the workflow sets `options(Ncpus = 4L)` through `R_PROFILE_USER`.
+  Local 8-worker run: 482 s. `test-sem-nnls.R` fixture failure appears only in checkout-based Linux runs (not
+  investigated). (original task text follows)
   Description: on a throwaway branch, add `Config/testthat/parallel: true`, `Config/testthat/start-first` for the
   slowest files from T0, `Ncpus = 4` in the workflow, and BLAS and OpenMP threads capped per worker.
   Acceptance: three alternating pairs (parallel vs serial control, same commit) on `ubuntu-latest (release)`;
@@ -125,7 +129,7 @@ on `dev` re-runs all of its hosted checks (it did once already, after #547). Pha
   test that fails) is still reported failed in the parallel run.
   Dependencies: T0, T1, T1b. Files: `DESCRIPTION`, `.github/workflows/R-CMD-check.yaml`, `tests/testthat/*` (leak fixes).
   Scope: M.
-- [ ] **T3: decision and adoption.**
+- [ ] **T3: decision and adoption. Implemented on `claude/ci-parallel-tests-cb00e7` (local verification done; hosted validation waits for the v0.21.1 tag and the dev back-merge).**
   Description: adopt on `dev` if T2 passes; otherwise record the failure and go to T6.
   Acceptance: the PR to `dev` carries the T2 evidence table; `devtools::test()` passes locally with the new config;
   the next PR to `main` shows the required job at or below 25 minutes.
@@ -198,3 +202,9 @@ on `dev` re-runs all of its hosted checks (it did once already, after #547). Pha
 | Date | Event |
 |---|---|
 | 2026-11-25 | written after the 0.21.0 release PR timing analysis; tasks T0 to T6, decision D1; nothing started |
+| 2026-11-25 | T2 pilot: three alternating pairs, parallel vs serial control on `ubuntu-latest (release)`; `check-r-package` step down about 59%, counts identical (2,751 tests, 23,125 expectations, 19 skips); `Ncpus` must be set by `options()` because it overrides `TESTTHAT_CPUS` |
+| 2026-11-25 | local 8-worker run of the full suite took 482 s |
+| 2026-11-25 | `test-sem-nnls.R` fixture failure seen only in checkout-based Linux runs; not investigated |
+| 2026-11-26 | `ubuntu-latest (release)` job on release PR #556 hung in `setup-r` for 5 h (timeout) and was re-run |
+| 2026-11-26 | r-universe Windows devel and oldrel builds timed out at 1 h: platform checks duplicate what hosted CI already runs |
+| 2026-11-26 | T3 implemented: `Config/testthat/parallel` and `start-first` in DESCRIPTION, `Ncpus = 4` in R-CMD-check (both jobs), `TESTTHAT_PARALLEL: "false"` in test-coverage, `scripts/check-local.sh` runs 8 workers (`--serial` opts out); local verification: parallel (8 workers) 244 s vs serial 1,935 s, both 2,751 blocks, 23,141 passed, 0 failed, 5 skipped; a planted failing test is reported failed in a parallel run; hosted validation pending |

@@ -1,17 +1,24 @@
 #!/bin/sh
 # Run the quick local package gate. Hosted R-CMD-check and coverage target main.
-# Usage: scripts/check-local.sh [--tests-only | --full-tests]
+# Usage: scripts/check-local.sh [--serial] [--tests-only | --full-tests]
 # The default uses NOT_CRAN=false, then checks a tarball without rerunning tests
 # or building vignettes. --full-tests runs only the NOT_CRAN=true source suite.
+# Tests run with 8 parallel workers (DESCRIPTION: Config/testthat/parallel); --serial runs one process, and
+# LOCAL_TEST_WORKERS=<n> changes the count.
 # Follow the run.log path printed at startup for progress.
 # Exit status: 0 = pass (notes allowed), 1 = gate failure, 2 = setup or usage error.
 
 set -u
 
+workers=${LOCAL_TEST_WORKERS:-8}
+if [ "${1:-}" = --serial ]; then
+  workers=1
+  shift
+fi
 mode=${1:-check}
 case "$mode:$#" in
   check:0 | --tests-only:1 | --full-tests:1) ;;
-  *) echo "Usage: $0 [--tests-only | --full-tests]" >&2; exit 2 ;;
+  *) echo "Usage: $0 [--serial] [--tests-only | --full-tests]" >&2; exit 2 ;;
 esac
 
 root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
@@ -123,6 +130,14 @@ initial_source_state=$source_state
 } >> "$LOG"
 
 # Parse the reporter before tests run so edits cannot add commands to this invocation.
+if [ "$workers" -gt 1 ]; then
+  export TESTTHAT_PARALLEL=true TESTTHAT_CPUS="$workers"
+  tests_r_profile="$run/workers.Rprofile"
+  echo "options(Ncpus = ${workers}L)" > "$tests_r_profile"
+  export R_PROFILE_USER="$tests_r_profile"
+else
+  export TESTTHAT_PARALLEL=false
+fi
 run_phase tests "$root" Rscript -e 'source(commandArgs(TRUE)[1L])' "$scripts/check-local-tests.R" || fail "tests"
 test_seconds=$phase_seconds
 if [ "$mode" != check ]; then

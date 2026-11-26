@@ -54,6 +54,8 @@ Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE, roclets = c("rd", "collate", "namespace"))
 Config/testthat/edition: 3
+Config/testthat/parallel: true
+Config/testthat/start-first: fiml-g3-serial-two-cov, twolevel-equal-indirect, sem-fiml-oracles, twolevel-icc-h1-qa, twolevel-few-clusters-harness, fiml-g3-serial-two-cov-defects, fiml-g3-parallel-covariates, fiml-g3-serial-covariate
 Config/Needs/website: knitr, rmarkdown, quarto
 Config/roxygen2/version: 8.1.1
 LazyData: true
