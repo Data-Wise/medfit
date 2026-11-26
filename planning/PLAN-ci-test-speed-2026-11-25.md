@@ -65,6 +65,40 @@ on `dev` re-runs all of its hosted checks (it did once already, after #547). Pha
 
 ### Phase 1: parallel workers (S3)
 
+- [x] **T1: state-leak audit of the test files. Done 2026-11-25 (read-only, `origin/dev` at the 0.21.0.9000 bump, 249 test files).**
+  Method: `git grep` per shared-state pattern, every hit in the risky categories read. Result: no blocker for parallel
+  workers; four findings feed T1b, T2 and T6.
+  Clean: no raw `options(` calls (the 11 files with option changes use `withr::local_options`/`local_envvar`), no
+  `Sys.setenv`, no `assignInNamespace`/`unlockBinding` hits in tests, all file writes go to temp paths, `setwd`
+  (`test-sem-fiml-harness.R`) and `Sys.setlocale` (`test-sem-factor-expand.R`, `test-sem-product-token.R`) restore in
+  `on.exit`, `RNGkind` changes (`test-sem-optim.R`, `test-twolevel-few-clusters-harness.R`) restore or are no-ops for
+  the default Mersenne-Twister. Mocks (`local_mocked_bindings`, 114 files) are test-scoped. Snapshots: 3 files only.
+  Findings:
+  1. **Shared two-level fit cache.** `helper-twolevel.R` keeps `.tl_cache` and `tl_cached()`, used by 11 files; each
+     parallel worker would rebuild the fits it needs, so two-level files (35% of test time) gain less than the worker
+     count suggests. The FIML serial caches (`s3_obj`, `s4_obj`, `sc_obj`) are each used by one file, so they do not
+     duplicate across workers.
+  2. **One timing assertion.** `test-bootstrap.R` (plugin bootstrap, `expect_true(elapsed < 0.1)`) can fail under a loaded
+     worker; relax or skip on CI before the pilot.
+  3. **Nested parallelism.** About six places call `mclapply` with `ncores = 2` (`test-bootstrap*.R`, `sim_gate(cores = 2L)`
+     in `test-cluster-211.R`): 4 workers x 2 would oversubscribe 4 cores. Slower, not wrong; count it in the pilot.
+  4. **Unseeded files.** 12 files draw random numbers with no `set.seed` or `seed =` in the file (`test-classes.R`,
+     `test-classes-coverage.R`, `test-fiml-g3-serial-chain-defects.R`, `test-fiml-g3-serial-defects.R`,
+     `test-sem-fixed-x-scale.R`, `test-sem-frozen-v080.R`, `test-sem-literal-certificates.R`, `test-sem-nloptr-faults.R`,
+     `test-sem-outcomes.R`, `test-sem-start-fallback.R`, `test-sem-twolevel-guards.R`, `test-twolevel-native-docs.R`).
+     In a serial run they inherit the RNG state an earlier file left, which is stable by file order; under parallel
+     workers that state differs. This is the one real exposure and T1b tests it.
+  Unverified: I did not read every one of the 131 `set.seed` files or the 67 `<<-` files; the greps show them inside
+  `test_that` blocks, which is local.
+  (original task text follows)
+- [ ] **T1b: seed-sensitivity check of the 12 unseeded files.**
+  Description: run each of the 12 files from finding 4 on its own, in a fresh R session, with five different initial
+  seeds, and compare pass counts.
+  Acceptance: every file passes under all five seeds, or the failing file and seed are listed with a fix (add `set.seed`).
+  Verification: per-file pass counts equal across seeds; a planted unseeded-failure (a test that asserts a random value)
+  is caught.
+  Dependencies: none (read-only until a fix is needed). Files: report; `tests/testthat/*` for fixes. Scope: S.
+
 - [ ] **T1: state-leak audit of the test files.**
   Description: grep the tests for what testthat does not reset between files: `set.seed`, `options(`, `Sys.setenv`,
   `local_mocked_bindings` on exported functions, writes outside `withr::local_tempdir`, `skip_on_covr` source
@@ -80,7 +114,7 @@ on `dev` re-runs all of its hosted checks (it did once already, after #547). Pha
   identical test and expectation counts and identical failures (none) in all runs; median wall-time gain at least 25%.
   Verification: counts compared from the logs; the run ids are recorded in the plan ledger; one planted defect (a
   test that fails) is still reported failed in the parallel run.
-  Dependencies: T0, T1. Files: `DESCRIPTION`, `.github/workflows/R-CMD-check.yaml`, `tests/testthat/*` (leak fixes).
+  Dependencies: T0, T1, T1b. Files: `DESCRIPTION`, `.github/workflows/R-CMD-check.yaml`, `tests/testthat/*` (leak fixes).
   Scope: M.
 - [ ] **T3: decision and adoption.**
   Description: adopt on `dev` if T2 passes; otherwise record the failure and go to T6.
