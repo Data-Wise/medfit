@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,7 +88,7 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook">
-<li><a class="dropdown-item" href="../articles/cookbook.html">All 24 recipes</a></li>
+<li><a class="dropdown-item" href="../articles/cookbook.html">All 25 recipes</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
     <li><h6 class="dropdown-header" data-toc-skip>Recipes by task</h6></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#one-line-mediation">Basics: one line, lm fits, binary outcome, weights (1-4)</a></li>
@@ -175,7 +175,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.21.0/vignettes/articles/model-twolevel.qmd" class="external-link"><code>vignettes/articles/model-twolevel.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/model-twolevel.qmd" class="external-link"><code>vignettes/articles/model-twolevel.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -544,7 +544,7 @@ c_prime_between
 <span><span class="va">ntd</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>&lt;TwoLevelMediationData&gt;
-  X -&gt; M -&gt; Y  (clusters: id; native 0.21.0 fit; between level: latent cluster means)
+  X -&gt; M -&gt; Y  (clusters: id; native 0.21.1 fit; between level: latent cluster means)
   n = 500 in 100 clusters (sizes 5 to 5)   |   ICC: X 0.503, M 0.323, Y 0.400
   a_within = +0.4432   b_within = +0.5518   c_prime_within = +0.2685
   a_between = +0.5595   b_between = +0.9553   c_prime_between = +0.2289
@@ -671,8 +671,8 @@ Estimate:   0.5344
 N bootstrap samples: 1000
 
 95% Confidence Interval:
-  Lower:   0.2901
-  Upper:   0.8234</code></pre>
+  Lower:   0.2980
+  Upper:   0.8209</code></pre>
 </div>
 <pre class="r cell-code"><code><span><span class="va">b_cl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_mediation.html">bootstrap_mediation</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/twolevel_statistic.html">twolevel_statistic</a></span><span class="op">(</span><span class="va">fit</span>, <span class="st">"nie_between"</span>, treatment <span class="op">=</span> <span class="st">"X"</span>, mediator <span class="op">=</span> <span class="st">"M"</span>, outcome <span class="op">=</span> <span class="st">"Y"</span><span class="op">)</span>,</span>
@@ -864,8 +864,8 @@ constraint. The within and between effects are still reported.</code></pre>
 <span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>               estimate     lower     upper
-total_between 1.4092637 1.0077536 1.9359104
-M1_within     0.2294339 0.1584271 0.3057644</code></pre>
+total_between 1.4092637 0.9201005 1.9129799
+M1_within     0.2294339 0.1573649 0.3040551</code></pre>
 </div>
 </div>
 <p>For the cluster bootstrap, pass the <code>lavaan</code> fit with all the mediators, as in <code>twolevel_statistic(fit_k, "nie", level = "between", treatment = "X", mediator = c("M1", "M2"), outcome = "Y")</code>, and give <code><a href="../reference/bootstrap_mediation.html">bootstrap_mediation()</a></code> the data and <code>cluster =</code>, as for one mediator. A refit’s between level counts as identified only when the treatment and every mediator pass the ICC check. An invalid <code>level</code>, or a contrast asked of <code>"nde"</code> or <code>"te"</code>, stops with class <code>medfit_error_twolevel_level</code>; an unknown effect or a missing or unknown <code>specific</code> stops with class <code>medfit_error_twolevel_unsupported</code>.</p>

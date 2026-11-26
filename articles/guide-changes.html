@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,7 +88,7 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook">
-<li><a class="dropdown-item" href="../articles/cookbook.html">All 24 recipes</a></li>
+<li><a class="dropdown-item" href="../articles/cookbook.html">All 25 recipes</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
     <li><h6 class="dropdown-header" data-toc-skip>Recipes by task</h6></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#one-line-mediation">Basics: one line, lm fits, binary outcome, weights (1-4)</a></li>
@@ -175,7 +175,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.21.0/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/guide-changes.qmd" class="external-link"><code>vignettes/articles/guide-changes.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -184,7 +184,7 @@
 
 
 
-    <p>CRAN has medfit 0.3.2; this site documents 0.21.0 (GitHub and r-universe). This page lists what a 0.3.2 user needs to know before upgrading: numbers that change, calls that now stop with an error, and what is new. The full record is <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p>
+    <p>CRAN has medfit 0.3.2; this site documents 0.21.1 (GitHub and r-universe). This page lists what a 0.3.2 user needs to know before upgrading: numbers that change, calls that now stop with an error, and what is new. The full record is <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p>
 <div>
 <blockquote>
 <p><strong>At a glance</strong></p>
@@ -584,6 +584,10 @@
 <td>0.21.0</td>
 <td>
 <code>fit_sem(model, data, estimator = "MLR")</code> keeps the ML estimates, uses sandwich standard errors and adds the Yuan-Bentler scaled chi-square (<code>chisq_scaled</code>, <code>scaling_factor</code>, <code>p_value_scaled</code>) to <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>; other estimators and MLR with <code>cluster</code>, FIML, <code>weights</code>, inequality or nonlinear constraints stop with a classed error (<code>medfit_error_estimator</code>, <code>medfit_error_mlr_*</code>). Every refusal of the <code>:</code> product term now carries a class (<code>medfit_error_product_*</code>); messages and numbers are unchanged, but code that compared <code>class(err)</code> exactly now sees the added classes. The default <code>estimator = "ML"</code> is unchanged.</td>
+</tr>
+<tr class="odd">
+<td>0.21.1</td>
+<td>no change to the package code: the longest test files are skipped on CRAN, the test warnings are gone and the cookbook gains recipe 25 (MLR).</td>
 </tr>
 </tbody>
 </table></section><section class="level2"><h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>

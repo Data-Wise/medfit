@@ -1,5 +1,33 @@
 # Changelog
 
+## medfit 0.21.1
+
+### Release summary
+
+No change to the package code: every function returns what it returned
+in 0.21.0 (no file under `R/` differs from the `v0.21.0` tag). This
+release makes the package ready to check on CRAN and adds one cookbook
+recipe.
+
+- **CRAN-ready tests.** The 17 slowest test files (FIML, two-level and
+  four-way oracle runs) call `skip_on_cran()`, so a CRAN-mode
+  `R CMD check` no longer spends 23 of its 24.6 minutes in tests; they
+  still run in GitHub CI and with `NOT_CRAN=true`
+  ([\#554](https://github.com/data-wise/medfit/issues/554)).
+- **No test warnings.** The six warnings the suite reported came from
+  five test files; a helper now mutes only the expected advisory in
+  each, so any new warning still shows
+  ([\#553](https://github.com/data-wise/medfit/issues/553)).
+- **Cookbook recipe 25:** robust standard errors and the scaled test
+  (MLR). Docs only
+  ([\#552](https://github.com/data-wise/medfit/issues/552)).
+- Records: the CI and test speed plan, with the per-file timing, the
+  state-leak audit and the parallel-workers pilot
+  ([\#549](https://github.com/data-wise/medfit/issues/549),
+  [\#550](https://github.com/data-wise/medfit/issues/550),
+  [\#551](https://github.com/data-wise/medfit/issues/551)). Nothing in
+  it is adopted yet.
+
 ## medfit 0.21.0
 
 ### Release summary

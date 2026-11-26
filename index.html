@@ -39,7 +39,7 @@
 
     <a class="navbar-brand me-2" href="index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -90,7 +90,7 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook">
-<li><a class="dropdown-item" href="articles/cookbook.html">All 24 recipes</a></li>
+<li><a class="dropdown-item" href="articles/cookbook.html">All 25 recipes</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
     <li><h6 class="dropdown-header" data-toc-skip>Recipes by task</h6></li>
     <li><a class="dropdown-item" href="articles/cookbook.html#one-line-mediation">Basics: one line, lm fits, binary outcome, weights (1-4)</a></li>
@@ -309,39 +309,27 @@
 <div class="section level2">
 <h2 id="go-further">Go further<a class="anchor" aria-label="anchor" href="#go-further"></a>
 </h2>
-<p><a href="https://data-wise.github.io/medfit/articles/getting-started.html">Get Started</a> | <a href="https://data-wise.github.io/medfit/articles/cookbook.html">Cookbook</a> (twenty-four recipes) | <a href="https://data-wise.github.io/medfit/articles/refcard.html">Reference Card</a> | <a href="https://data-wise.github.io/medfit/articles/methods.html">Methods and Formulas</a> | <a href="https://data-wise.github.io/medfit/articles/guide-intervals.html">Which interval should I use?</a></p>
+<p><a href="https://data-wise.github.io/medfit/articles/getting-started.html">Get Started</a> | <a href="https://data-wise.github.io/medfit/articles/cookbook.html">Cookbook</a> (twenty-five recipes) | <a href="https://data-wise.github.io/medfit/articles/refcard.html">Reference Card</a> | <a href="https://data-wise.github.io/medfit/articles/methods.html">Methods and Formulas</a> | <a href="https://data-wise.github.io/medfit/articles/guide-intervals.html">Which interval should I use?</a></p>
 </div>
 <div class="section level2">
 <h2 id="more-when-you-need-it">More, when you need it<a class="anchor" aria-label="anchor" href="#more-when-you-need-it"></a>
 </h2>
-<details><summary><strong>What’s new in 0.21.0</strong>
+<details><summary><strong>What’s new in 0.21.1</strong>
 </summary><ul>
-<li>
-<strong>0.21.0 (2026-11-25, GitHub only):</strong> adds the MLR estimator and classed product refusals below since 0.20.0 (released 2026-11-23).</li>
-<li>
-<strong>MLR estimator (0.21.0):</strong> <code>fit_sem(model, data, estimator = "MLR")</code> keeps the ML estimates, uses sandwich standard errors and adds the Yuan-Bentler scaled chi-square (<code>chisq_scaled</code>, <code>scaling_factor</code>, <code>p_value_scaled</code> in <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>), as lavaan’s MLR. It is defined for single-level complete-data fits with linear equality constraints; anything else stops with a classed error. See the <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</li>
-<li>
-<strong>Classed product refusals (0.21.0):</strong> every refusal of the <code>:</code> product term has a class (<code>medfit_error_product_*</code>); messages and numbers are unchanged.</li>
-<li>
-<strong>0.20.0 (2026-11-23, GitHub only):</strong> adds the native two-level route below since 0.19.0 (released 2026-11-17). The two-level API is experimental, so it may change without a deprecation period.</li>
-<li>
-<strong>Native two-level fit (0.20.0, experimental):</strong> <code>fit_sem(model, data, cluster = )</code> fits a two-level (1-1-1) model written in <code>level:</code> blocks with the sem engine, and <code><a href="reference/extract_mediation.html">extract_mediation()</a></code> on the fit returns <code>TwoLevelMediationData</code>; <code>fit_mediation(engine = "sem", model = , cluster = )</code> returns the same object. <code>se_type = "sandwich"</code> gives cluster-robust standard errors. See the <a href="https://data-wise.github.io/medfit/articles/model-twolevel.html">model page</a>.</li>
-<li>
-<strong>Tests on native two-level fits (0.20.0, experimental):</strong> <code><a href="reference/mbco_sem.html">mbco_sem()</a></code> tests the indirect effect at one level, and <code><a href="reference/twolevel_equal_indirect.html">twolevel_equal_indirect()</a></code> tests that the within and between indirect effects are equal; a pair-sign twin certificate stops a worse local optimum from standing in the equality refit.</li>
-<li>
-<strong>Behavior change (0.20.0, experimental):</strong> the within-only rule for a two-level fit now reads the unrestricted (h1) ICC on both routes, so within-only results are rarer. See the <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</li>
-<li>
-<strong>Two-level parallel mediation (0.19.0, experimental):</strong> <code><a href="reference/extract_mediation.html">extract_mediation()</a></code> on a two-level <code>lavaan</code> fit with two or more mediators returns <code>TwoLevelParallelMediationData</code>, with per-mediator and total effects at each level, delta-method SEs and <code><a href="reference/twolevel_statistic.html">twolevel_statistic()</a></code> for the bootstrap. One-mediator results are unchanged. See the <a href="https://data-wise.github.io/medfit/articles/model-twolevel.html#several-parallel-mediators">model page</a>.</li>
-<li>
-<strong>The sem engine (0.18.0):</strong> <code>fit_mediation(engine = "sem")</code> names medfit’s own SEM fitter; <code>engine = "native"</code> still works, with identical results. <code><a href="reference/sem_control.html">sem_control()</a></code> collects its optimizer settings. See <a href="https://data-wise.github.io/medfit/articles/guide-engines.html">Which engine should I use?</a>.</li>
-<li>
-<strong>Renamed pages (0.18.0):</strong> the sem engine articles moved (<code>native-guide</code> is now <code>sem-guide</code>, and so on); old links redirect.</li>
-<li>
-<strong>Bounded FIML expansion (0.17.0):</strong> one or two covariates, two parallel and two serial mediators (numerically verified, not statistically admitted). See the <a href="https://data-wise.github.io/medfit/articles/model-fiml.html">model page</a>.</li>
-<li>
-<strong>Two-level mediation (0.17.0, experimental):</strong> <code><a href="reference/extract_mediation.html">extract_mediation()</a></code> on a two-level <code>lavaan</code> fit returns <code>TwoLevelMediationData</code>; lavaan floor 0.7-3. See the <a href="https://data-wise.github.io/medfit/articles/model-twolevel.html">model page</a>.</li>
-<li>
-<strong>Before that:</strong> 0.16.0 (both sign branches of a nonzero-product equality, corrected constrained standard errors) and 0.15.0 (native defaults flip: <code>fixed_x</code> and <code>meanstructure</code> on when unset).</li>
+<li><p><strong>0.21.1 (2026-11-26, GitHub only):</strong> no change to the package code since 0.21.0 (released 2026-11-25); the longest test files are skipped on CRAN, the test warnings are gone, and the cookbook has recipe 25 (MLR). The highlights of 0.21.0 follow.</p></li>
+<li><p><strong>0.21.0 (2026-11-25, GitHub only):</strong> adds the MLR estimator and classed product refusals below since 0.20.0 (released 2026-11-23).</p></li>
+<li><p><strong>MLR estimator (0.21.0):</strong> <code>fit_sem(model, data, estimator = "MLR")</code> keeps the ML estimates, uses sandwich standard errors and adds the Yuan-Bentler scaled chi-square (<code>chisq_scaled</code>, <code>scaling_factor</code>, <code>p_value_scaled</code> in <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>), as lavaan’s MLR. It is defined for single-level complete-data fits with linear equality constraints; anything else stops with a classed error. See the <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p></li>
+<li><p><strong>Classed product refusals (0.21.0):</strong> every refusal of the <code>:</code> product term has a class (<code>medfit_error_product_*</code>); messages and numbers are unchanged.</p></li>
+<li><p><strong>0.20.0 (2026-11-23, GitHub only):</strong> adds the native two-level route below since 0.19.0 (released 2026-11-17). The two-level API is experimental, so it may change without a deprecation period.</p></li>
+<li><p><strong>Native two-level fit (0.20.0, experimental):</strong> <code>fit_sem(model, data, cluster = )</code> fits a two-level (1-1-1) model written in <code>level:</code> blocks with the sem engine, and <code><a href="reference/extract_mediation.html">extract_mediation()</a></code> on the fit returns <code>TwoLevelMediationData</code>; <code>fit_mediation(engine = "sem", model = , cluster = )</code> returns the same object. <code>se_type = "sandwich"</code> gives cluster-robust standard errors. See the <a href="https://data-wise.github.io/medfit/articles/model-twolevel.html">model page</a>.</p></li>
+<li><p><strong>Tests on native two-level fits (0.20.0, experimental):</strong> <code><a href="reference/mbco_sem.html">mbco_sem()</a></code> tests the indirect effect at one level, and <code><a href="reference/twolevel_equal_indirect.html">twolevel_equal_indirect()</a></code> tests that the within and between indirect effects are equal; a pair-sign twin certificate stops a worse local optimum from standing in the equality refit.</p></li>
+<li><p><strong>Behavior change (0.20.0, experimental):</strong> the within-only rule for a two-level fit now reads the unrestricted (h1) ICC on both routes, so within-only results are rarer. See the <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>.</p></li>
+<li><p><strong>Two-level parallel mediation (0.19.0, experimental):</strong> <code><a href="reference/extract_mediation.html">extract_mediation()</a></code> on a two-level <code>lavaan</code> fit with two or more mediators returns <code>TwoLevelParallelMediationData</code>, with per-mediator and total effects at each level, delta-method SEs and <code><a href="reference/twolevel_statistic.html">twolevel_statistic()</a></code> for the bootstrap. One-mediator results are unchanged. See the <a href="https://data-wise.github.io/medfit/articles/model-twolevel.html#several-parallel-mediators">model page</a>.</p></li>
+<li><p><strong>The sem engine (0.18.0):</strong> <code>fit_mediation(engine = "sem")</code> names medfit’s own SEM fitter; <code>engine = "native"</code> still works, with identical results. <code><a href="reference/sem_control.html">sem_control()</a></code> collects its optimizer settings. See <a href="https://data-wise.github.io/medfit/articles/guide-engines.html">Which engine should I use?</a>.</p></li>
+<li><p><strong>Renamed pages (0.18.0):</strong> the sem engine articles moved (<code>native-guide</code> is now <code>sem-guide</code>, and so on); old links redirect.</p></li>
+<li><p><strong>Bounded FIML expansion (0.17.0):</strong> one or two covariates, two parallel and two serial mediators (numerically verified, not statistically admitted). See the <a href="https://data-wise.github.io/medfit/articles/model-fiml.html">model page</a>.</p></li>
+<li><p><strong>Two-level mediation (0.17.0, experimental):</strong> <code><a href="reference/extract_mediation.html">extract_mediation()</a></code> on a two-level <code>lavaan</code> fit returns <code>TwoLevelMediationData</code>; lavaan floor 0.7-3. See the <a href="https://data-wise.github.io/medfit/articles/model-twolevel.html">model page</a>.</p></li>
+<li><p><strong>Before that:</strong> 0.16.0 (both sign branches of a nonzero-product equality, corrected constrained standard errors) and 0.15.0 (native defaults flip: <code>fixed_x</code> and <code>meanstructure</code> on when unset).</p></li>
 </ul>
 <p>Every release is listed in <a href="https://data-wise.github.io/medfit/news/index.html">NEWS</a>; upgrading from CRAN 0.3.2? See <a href="https://data-wise.github.io/medfit/articles/guide-changes.html">What changed since CRAN 0.3.2</a>.</p>
 </details><details><summary><strong>Bounded FIML (0.16.0 and 0.17.0): settings and limits</strong>

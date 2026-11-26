@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,7 +58,7 @@
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook"><li><a class="dropdown-item" href="../articles/cookbook.html">All 24 recipes</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook"><li><a class="dropdown-item" href="../articles/cookbook.html">All 25 recipes</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
     <li><h6 class="dropdown-header" data-toc-skip>Recipes by task</h6></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#one-line-mediation">Basics: one line, lm fits, binary outcome, weights (1-4)</a></li>
@@ -130,9 +130,23 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/data-wise/medfit/blob/v0.21.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/data-wise/medfit/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.21.1" id="medfit-0211">medfit 0.21.1<a class="anchor" aria-label="anchor" href="#medfit-0211"></a></h2>
+<div class="section level3">
+<h3 id="release-summary-0-21-1">Release summary<a class="anchor" aria-label="anchor" href="#release-summary-0-21-1"></a></h3>
+<p>No change to the package code: every function returns what it returned in 0.21.0 (no file under <code>R/</code> differs from the <code>v0.21.0</code> tag). This release makes the package ready to check on CRAN and adds one cookbook recipe.</p>
+<ul><li>
+<strong>CRAN-ready tests.</strong> The 17 slowest test files (FIML, two-level and four-way oracle runs) call <code>skip_on_cran()</code>, so a CRAN-mode <code>R CMD check</code> no longer spends 23 of its 24.6 minutes in tests; they still run in GitHub CI and with <code>NOT_CRAN=true</code> (<a href="https://github.com/data-wise/medfit/issues/554" class="external-link">#554</a>).</li>
+<li>
+<strong>No test warnings.</strong> The six warnings the suite reported came from five test files; a helper now mutes only the expected advisory in each, so any new warning still shows (<a href="https://github.com/data-wise/medfit/issues/553" class="external-link">#553</a>).</li>
+<li>
+<strong>Cookbook recipe 25:</strong> robust standard errors and the scaled test (MLR). Docs only (<a href="https://github.com/data-wise/medfit/issues/552" class="external-link">#552</a>).</li>
+<li>Records: the CI and test speed plan, with the per-file timing, the state-leak audit and the parallel-workers pilot (<a href="https://github.com/data-wise/medfit/issues/549" class="external-link">#549</a>, <a href="https://github.com/data-wise/medfit/issues/550" class="external-link">#550</a>, <a href="https://github.com/data-wise/medfit/issues/551" class="external-link">#551</a>). Nothing in it is adopted yet.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.21.0" id="medfit-0210">medfit 0.21.0<a class="anchor" aria-label="anchor" href="#medfit-0210"></a></h2>
 <div class="section level3">

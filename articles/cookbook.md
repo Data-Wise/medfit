@@ -1,6 +1,6 @@
 # medfit Cookbook
 
-Twenty-four task-sized recipes. Each says when to use it, runs on
+Twenty-five task-sized recipes. Each says when to use it, runs on
 `mediation_demo` (except the cluster, two-level and latent-mediator
 recipes, which simulate their data), and links to the article that
 explains it. For a one-page lookup see the [Reference
@@ -8,10 +8,11 @@ Card](https://data-wise.github.io/medfit/articles/refcard.md).
 
 These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0,
 recipe 20 and the native route in recipe 7 need 0.10.0, recipe 21 needs
-0.11.0, recipe 22 needs 0.16.0, recipe 23 needs 0.17.0, and recipe 24
-needs 0.19.0). CRAN has 0.3.2, which lacks `mediation_demo` and the
-native, joint and cluster functions; install from GitHub or r-universe
-(see the [home page](https://data-wise.github.io/medfit/#install)).
+0.11.0, recipe 22 needs 0.16.0, recipe 23 needs 0.17.0, recipe 24 needs
+0.19.0, and recipe 25 needs 0.21.0). CRAN has 0.3.2, which lacks
+`mediation_demo` and the native, joint and cluster functions; install
+from GitHub or r-universe (see the [home
+page](https://data-wise.github.io/medfit/#install)).
 
 > **At a glance**
 >
@@ -51,9 +52,10 @@ native, joint and cluster functions; install from GitHub or r-universe
 | Estimate observed intercepts and means in a sem fit | [19](#observed-intercepts-and-means) |
 | Split the effect into the four-way decomposition | [20](#four-way-decomposition-from-a-native-fit) |
 | Include a categorical covariate in a sem engine fit | [21](#a-categorical-covariate-in-a-native-fit) |
-| **Inference and missing data (13, 22)** |  |
+| **Inference and missing data (13, 22, 25)** |  |
 | Test joint significance for a binary or count outcome | [13](#joint-significance-for-a-binary-or-count-outcome) |
 | Handle missing data with bounded FIML | [22](#missing-data-bounded-fiml) |
+| Get robust standard errors and a scaled chi-square in a sem fit | [25](#robust-standard-errors-and-a-scaled-test-mlr) |
 
 ``` r
 library(medfit)
@@ -300,7 +302,7 @@ c(estimate = unname(nie(xj)), lower = boot_j@ci_lower, upper = boot_j@ci_upper)
 ```
 
      estimate     lower     upper
-    0.6560315 0.4351678 0.8930074 
+    0.6560315 0.4349603 0.8927176 
 
 More: [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.md).
@@ -589,10 +591,10 @@ rbind(reduced = glance(reduced)[, c("npar", "chisq", "AIC", "BIC")],
 ```
 
     # A tibble: 2 × 4
-       npar    chisq   AIC   BIC
-    * <int>    <dbl> <dbl> <dbl>
-    1     6 1.33e- 1 2408. 2432.
-    2     7 4.54e-30 2409. 2437.
+       npar chisq   AIC   BIC
+    * <int> <dbl> <dbl> <dbl>
+    1     6 0.133 2408. 2432.
+    2     7 0     2409. 2437.
 
 The restricted model is the one with more degrees of freedom. A small
 chi-square difference says dropping `cp` costs little.
@@ -1287,8 +1289,8 @@ bootstrap_mediation(
     N bootstrap samples: 500
 
     95% Confidence Interval:
-      Lower:   0.4025
-      Upper:   0.8424
+      Lower:   0.4234
+      Upper:   0.8708
 
 [`nie()`](https://data-wise.github.io/medfit/reference/nie.md) gives the
 total by default and one value per mediator with `type = "specific"`. In
@@ -1298,6 +1300,65 @@ total by default and one value per mediator with `type = "specific"`. In
 `"contrast"`. The between level is kept only when the treatment and
 every mediator have an ICC of at least 0.01. More: [Two-level
 mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md).
+
+## 25. Robust standard errors and a scaled test (MLR)
+
+*When:* the sem engine fits your model and you doubt normality of the
+variables: `estimator = "MLR"` keeps the ML estimates, replaces the
+model-based standard errors with the sandwich ones, and adds the
+Yuan-Bentler scaled chi-square. The chunk fits one model twice and puts
+the two side by side.
+
+``` r
+syntax25 <- "
+  mediator1 ~ a * treatment + covariate1 + covariate2
+  outcome ~ b * mediator1 + covariate1 + covariate2
+"
+fit_ml <- fit_sem(syntax25, mediation_demo)
+fit_mlr <- fit_sem(syntax25, mediation_demo, estimator = "MLR")
+tab <- tidy(fit_ml)[, c("term", "estimate", "std_error")]
+names(tab)[3] <- "se_ml"
+tab$estimate_mlr <- tidy(fit_mlr)$estimate
+tab$se_mlr <- tidy(fit_mlr)$std_error
+tab[tab$term %in% c("a", "b"), ]
+```
+
+    # A tibble: 2 × 5
+      term  estimate  se_ml estimate_mlr se_mlr
+      <chr>    <dbl>  <dbl>        <dbl>  <dbl>
+    1 a        0.583 0.0984        0.583 0.0973
+    2 b        0.600 0.0512        0.600 0.0530
+
+``` r
+glance(fit_ml)[, c("df", "chisq", "p_value")]
+```
+
+    # A tibble: 1 × 3
+         df chisq p_value
+      <dbl> <dbl>   <dbl>
+    1     1  3.54  0.0598
+
+``` r
+glance(fit_mlr)[, c("df", "chisq", "chisq_scaled", "scaling_factor", "p_value_scaled")]
+```
+
+    # A tibble: 1 × 5
+         df chisq chisq_scaled scaling_factor p_value_scaled
+      <dbl> <dbl>        <dbl>          <dbl>          <dbl>
+    1     1  3.54         3.46           1.02         0.0629
+
+The estimates and `chisq` are equal; the standard errors and the scaled
+columns differ.
+`fit_mediation(engine = "sem", model = , engine_args = list(estimator = "MLR"))`
+does the same and uses the sandwich standard error unless `se_type` is
+given. Fits with `cluster` or `level:` blocks, `missing = "fiml"`,
+`weights`, inequality or nonlinear constraints or an estimate on a bound
+stop with the classed errors `medfit_error_mlr_twolevel`,
+`medfit_error_mlr_missing`, `medfit_error_mlr_weights`,
+`medfit_error_mlr_constraints` and `medfit_error_mlr_bounds`; any
+estimator other than `"ML"` and `"MLR"` stops with
+`medfit_error_estimator`. More: [The sem
+engine](https://data-wise.github.io/medfit/articles/model-sem.html#mlr).
 
 ## Which recipe returns which object
 
@@ -1312,7 +1373,7 @@ why not.
 | `InteractionMediationData` | 7, 20 |
 | `JointMediationData` | 8 |
 | `ClusterMediationData` | 9 |
-| `SEMFit` | 11 to 21 |
+| `SEMFit` | 11 to 21, 25 (`estimator = "MLR"`) |
 | `BootstrapResult` | 9 and 20 (returned by [`bootstrap_mediation()`](https://data-wise.github.io/medfit/reference/bootstrap_mediation.md)) |
 | `FIMLMediationData`, `FIMLParallelMediationData`, `FIMLSerialMediationData` | 22 (the simple model; the parallel and serial forms are in [Bounded FIML](https://data-wise.github.io/medfit/articles/model-fiml.md)) |
 | `TwoLevelMediationData` | 23 (an [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) on a two-level `lavaan` fit, and [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md) for its bootstrap; see [Two-level mediation](https://data-wise.github.io/medfit/articles/model-twolevel.md)) |

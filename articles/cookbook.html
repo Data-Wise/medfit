@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,7 +88,7 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook">
-<li><a class="dropdown-item" href="../articles/cookbook.html">All 24 recipes</a></li>
+<li><a class="dropdown-item" href="../articles/cookbook.html">All 25 recipes</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
     <li><h6 class="dropdown-header" data-toc-skip>Recipes by task</h6></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#one-line-mediation">Basics: one line, lm fits, binary outcome, weights (1-4)</a></li>
@@ -175,7 +175,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.21.0/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -184,8 +184,8 @@
 
 
 
-    <p>Twenty-four task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster, two-level and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
-<p>These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, recipe 21 needs 0.11.0, recipe 22 needs 0.16.0, recipe 23 needs 0.17.0, and recipe 24 needs 0.19.0). CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#install">home page</a>).</p>
+    <p>Twenty-five task-sized recipes. Each says when to use it, runs on <code>mediation_demo</code> (except the cluster, two-level and latent-mediator recipes, which simulate their data), and links to the article that explains it. For a one-page lookup see the <a href="refcard.html">Reference Card</a>.</p>
+<p>These recipes need medfit 0.8.0 or later (recipes 18 and 19 need 0.9.0, recipe 20 and the native route in recipe 7 need 0.10.0, recipe 21 needs 0.11.0, recipe 22 needs 0.16.0, recipe 23 needs 0.17.0, recipe 24 needs 0.19.0, and recipe 25 needs 0.21.0). CRAN has 0.3.2, which lacks <code>mediation_demo</code> and the native, joint and cluster functions; install from GitHub or r-universe (see the <a href="https://data-wise.github.io/medfit/#install">home page</a>).</p>
 <div>
 <blockquote>
 <p><strong>At a glance</strong></p>
@@ -304,7 +304,7 @@
 <td><a href="#a-categorical-covariate-in-a-native-fit">21</a></td>
 </tr>
 <tr class="odd">
-<td><strong>Inference and missing data (13, 22)</strong></td>
+<td><strong>Inference and missing data (13, 22, 25)</strong></td>
 <td></td>
 </tr>
 <tr class="even">
@@ -314,6 +314,10 @@
 <tr class="odd">
 <td>Handle missing data with bounded FIML</td>
 <td><a href="#missing-data-bounded-fiml">22</a></td>
+</tr>
+<tr class="even">
+<td>Get robust standard errors and a scaled chi-square in a sem fit</td>
+<td><a href="#robust-standard-errors-and-a-scaled-test-mlr">25</a></td>
 </tr>
 </tbody>
 </table>
@@ -512,7 +516,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">xj</span><span class="op">)</span><span class="op">)</span>, lower <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code> estimate     lower     upper
-0.6560315 0.4351678 0.8930074 </code></pre>
+0.6560315 0.4349603 0.8927176 </code></pre>
 </div>
 </div>
 <p>More: <a href="methods.html">Methods and Formulas</a>.</p>
@@ -738,10 +742,10 @@ reduced  1 0.1335    0.13346       1     0.7149</code></pre>
 <span>      full <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">full</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"npar"</span>, <span class="st">"chisq"</span>, <span class="st">"AIC"</span>, <span class="st">"BIC"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2 × 4
-   npar    chisq   AIC   BIC
-* &lt;int&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-1     6 1.33e- 1 2408. 2432.
-2     7 4.54e-30 2409. 2437.</code></pre>
+   npar chisq   AIC   BIC
+* &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1     6 0.133 2408. 2432.
+2     7 0     2409. 2437.</code></pre>
 </div>
 </div>
 <p>The restricted model is the one with more degrees of freedom. A small chi-square difference says dropping <code>cp</code> costs little.</p>
@@ -1219,11 +1223,49 @@ Estimate:   0.6174
 N bootstrap samples: 500
 
 95% Confidence Interval:
-  Lower:   0.4025
-  Upper:   0.8424</code></pre>
+  Lower:   0.4234
+  Upper:   0.8708</code></pre>
 </div>
 </div>
 <p><code><a href="../reference/nie.html">nie()</a></code> gives the total by default and one value per mediator with <code>type = "specific"</code>. In <code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code>, <code>effect</code> is <code>"nie"</code>, <code>"nie_j"</code> (with the mediator in <code>specific</code>), <code>"nde"</code> or <code>"te"</code>, and <code>level</code> is <code>"within"</code>, <code>"between"</code> or <code>"contrast"</code>. The between level is kept only when the treatment and every mediator have an ICC of at least 0.01. More: <a href="model-twolevel.html">Two-level mediation</a>.</p>
+</section><section class="level2"><h2 id="robust-standard-errors-and-a-scaled-test-mlr">25. Robust standard errors and a scaled test (MLR)<a class="anchor" aria-label="anchor" href="#robust-standard-errors-and-a-scaled-test-mlr"></a>
+</h2>
+<p><em>When:</em> the sem engine fits your model and you doubt normality of the variables: <code>estimator = "MLR"</code> keeps the ML estimates, replaces the model-based standard errors with the sandwich ones, and adds the Yuan-Bentler scaled chi-square. The chunk fits one model twice and puts the two side by side.</p>
+<div class="cell">
+<pre class="r cell-code"><code><span><span class="va">syntax25</span> <span class="op">&lt;-</span> <span class="st">"</span></span>
+<span><span class="st">  mediator1 ~ a * treatment + covariate1 + covariate2</span></span>
+<span><span class="st">  outcome ~ b * mediator1 + covariate1 + covariate2</span></span>
+<span><span class="st">"</span></span>
+<span><span class="va">fit_ml</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">syntax25</span>, <span class="va">mediation_demo</span><span class="op">)</span></span>
+<span><span class="va">fit_mlr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">syntax25</span>, <span class="va">mediation_demo</span>, estimator <span class="op">=</span> <span class="st">"MLR"</span><span class="op">)</span></span>
+<span><span class="va">tab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit_ml</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"term"</span>, <span class="st">"estimate"</span>, <span class="st">"std_error"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">tab</span><span class="op">)</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"se_ml"</span></span>
+<span><span class="va">tab</span><span class="op">$</span><span class="va">estimate_mlr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit_mlr</span><span class="op">)</span><span class="op">$</span><span class="va">estimate</span></span>
+<span><span class="va">tab</span><span class="op">$</span><span class="va">se_mlr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit_mlr</span><span class="op">)</span><span class="op">$</span><span class="va">std_error</span></span>
+<span><span class="va">tab</span><span class="op">[</span><span class="va">tab</span><span class="op">$</span><span class="va">term</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span>, <span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 5
+  term  estimate  se_ml estimate_mlr se_mlr
+  &lt;chr&gt;    &lt;dbl&gt;  &lt;dbl&gt;        &lt;dbl&gt;  &lt;dbl&gt;
+1 a        0.583 0.0984        0.583 0.0973
+2 b        0.600 0.0512        0.600 0.0530</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fit_ml</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"df"</span>, <span class="st">"chisq"</span>, <span class="st">"p_value"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+     df chisq p_value
+  &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;
+1     1  3.54  0.0598</code></pre>
+</div>
+<pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fit_mlr</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"df"</span>, <span class="st">"chisq"</span>, <span class="st">"chisq_scaled"</span>, <span class="st">"scaling_factor"</span>, <span class="st">"p_value_scaled"</span><span class="op">)</span><span class="op">]</span></span></code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 5
+     df chisq chisq_scaled scaling_factor p_value_scaled
+  &lt;dbl&gt; &lt;dbl&gt;        &lt;dbl&gt;          &lt;dbl&gt;          &lt;dbl&gt;
+1     1  3.54         3.46           1.02         0.0629</code></pre>
+</div>
+</div>
+<p>The estimates and <code>chisq</code> are equal; the standard errors and the scaled columns differ. <code>fit_mediation(engine = "sem", model = , engine_args = list(estimator = "MLR"))</code> does the same and uses the sandwich standard error unless <code>se_type</code> is given. Fits with <code>cluster</code> or <code>level:</code> blocks, <code>missing = "fiml"</code>, <code>weights</code>, inequality or nonlinear constraints or an estimate on a bound stop with the classed errors <code>medfit_error_mlr_twolevel</code>, <code>medfit_error_mlr_missing</code>, <code>medfit_error_mlr_weights</code>, <code>medfit_error_mlr_constraints</code> and <code>medfit_error_mlr_bounds</code>; any estimator other than <code>"ML"</code> and <code>"MLR"</code> stops with <code>medfit_error_estimator</code>. More: <a href="model-sem.html#mlr">The sem engine</a>.</p>
 </section><section class="level2"><h2 id="which-recipe-returns-which-object">Which recipe returns which object<a class="anchor" aria-label="anchor" href="#which-recipe-returns-which-object"></a>
 </h2>
 <p>Every exported class and function appears in a recipe, or the table says why not.</p>
@@ -1259,7 +1301,7 @@ N bootstrap samples: 500
 </tr>
 <tr class="odd">
 <td><code>SEMFit</code></td>
-<td>11 to 21</td>
+<td>11 to 21, 25 (<code>estimator = "MLR"</code>)</td>
 </tr>
 <tr class="even">
 <td><code>BootstrapResult</code></td>

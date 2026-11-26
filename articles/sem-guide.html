@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.0</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,7 +88,7 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-cookbook" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Cookbook</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-cookbook">
-<li><a class="dropdown-item" href="../articles/cookbook.html">All 24 recipes</a></li>
+<li><a class="dropdown-item" href="../articles/cookbook.html">All 25 recipes</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>─────────────</h6></li>
     <li><h6 class="dropdown-header" data-toc-skip>Recipes by task</h6></li>
     <li><a class="dropdown-item" href="../articles/cookbook.html#one-line-mediation">Basics: one line, lm fits, binary outcome, weights (1-4)</a></li>
@@ -175,7 +175,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.21.0/vignettes/articles/sem-guide.qmd" class="external-link"><code>vignettes/articles/sem-guide.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/sem-guide.qmd" class="external-link"><code>vignettes/articles/sem-guide.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -338,7 +338,7 @@ Defined parameters:
  total cp + a * b 0.5374 0.1189
 
 Diagnostics:
-  Optimizer status: 4; stationarity 7.92e-16; retries 0
+  Optimizer status: 3; stationarity 7.01e-16; retries 0
   Active bounds: none
   Active constraints: none
   Improper solution: no
@@ -410,9 +410,9 @@ Diagnostics:
 <pre class="r cell-code"><code><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1 × 9
-   nobs  npar    df    chisq p_value logLik   AIC   BIC fixed_x
-  &lt;int&gt; &lt;int&gt; &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;
-1   400     9     0 3.55e-13      NA -1140. 2298. 2334. treatment, covariate1</code></pre>
+   nobs  npar    df chisq p_value logLik   AIC   BIC fixed_x
+  &lt;int&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;
+1   400     9     0     0      NA -1140. 2298. 2334. treatment, covariate1</code></pre>
 </div>
 </div>
 <p>The chi-square is <span class="math inline">\(n\)</span> times the minimized discrepancy and has <code>df</code> degrees of freedom. A saturated model (here <code>df = 0</code>) fits perfectly by construction, so the test only means something when there are restrictions.</p>

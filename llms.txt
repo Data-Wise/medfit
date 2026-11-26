@@ -146,7 +146,7 @@ use?](https://data-wise.github.io/medfit/articles/guide-engines.html)
 [Get
 Started](https://data-wise.github.io/medfit/articles/getting-started.html)
 \| [Cookbook](https://data-wise.github.io/medfit/articles/cookbook.html)
-(twenty-four recipes) \| [Reference
+(twenty-five recipes) \| [Reference
 Card](https://data-wise.github.io/medfit/articles/refcard.html) \|
 [Methods and
 Formulas](https://data-wise.github.io/medfit/articles/methods.html) \|
@@ -155,10 +155,16 @@ use?](https://data-wise.github.io/medfit/articles/guide-intervals.html)
 
 ## More, when you need it
 
-**What’s new in 0.21.0**
+**What’s new in 0.21.1**
+
+- **0.21.1 (2026-11-26, GitHub only):** no change to the package code
+  since 0.21.0 (released 2026-11-25); the longest test files are skipped
+  on CRAN, the test warnings are gone, and the cookbook has recipe 25
+  (MLR). The highlights of 0.21.0 follow.
 
 - **0.21.0 (2026-11-25, GitHub only):** adds the MLR estimator and
   classed product refusals below since 0.20.0 (released 2026-11-23).
+
 - **MLR estimator (0.21.0):** `fit_sem(model, data, estimator = "MLR")`
   keeps the ML estimates, uses sandwich standard errors and adds the
   Yuan-Bentler scaled chi-square (`chisq_scaled`, `scaling_factor`,
@@ -167,12 +173,15 @@ use?](https://data-wise.github.io/medfit/articles/guide-intervals.html)
   lavaan’s MLR. It is defined for single-level complete-data fits with
   linear equality constraints; anything else stops with a classed error.
   See the [NEWS](https://data-wise.github.io/medfit/news/index.html).
+
 - **Classed product refusals (0.21.0):** every refusal of the `:`
   product term has a class (`medfit_error_product_*`); messages and
   numbers are unchanged.
+
 - **0.20.0 (2026-11-23, GitHub only):** adds the native two-level route
   below since 0.19.0 (released 2026-11-17). The two-level API is
   experimental, so it may change without a deprecation period.
+
 - **Native two-level fit (0.20.0, experimental):**
   `fit_sem(model, data, cluster = )` fits a two-level (1-1-1) model
   written in `level:` blocks with the sem engine, and
@@ -182,6 +191,7 @@ use?](https://data-wise.github.io/medfit/articles/guide-intervals.html)
   object. `se_type = "sandwich"` gives cluster-robust standard errors.
   See the [model
   page](https://data-wise.github.io/medfit/articles/model-twolevel.html).
+
 - **Tests on native two-level fits (0.20.0, experimental):**
   [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md)
   tests the indirect effect at one level, and
@@ -189,10 +199,12 @@ use?](https://data-wise.github.io/medfit/articles/guide-intervals.html)
   tests that the within and between indirect effects are equal; a
   pair-sign twin certificate stops a worse local optimum from standing
   in the equality refit.
+
 - **Behavior change (0.20.0, experimental):** the within-only rule for a
   two-level fit now reads the unrestricted (h1) ICC on both routes, so
   within-only results are rarer. See the
   [NEWS](https://data-wise.github.io/medfit/news/index.html).
+
 - **Two-level parallel mediation (0.19.0, experimental):**
   [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
   on a two-level `lavaan` fit with two or more mediators returns
@@ -201,23 +213,28 @@ use?](https://data-wise.github.io/medfit/articles/guide-intervals.html)
   [`twolevel_statistic()`](https://data-wise.github.io/medfit/reference/twolevel_statistic.md)
   for the bootstrap. One-mediator results are unchanged. See the [model
   page](https://data-wise.github.io/medfit/articles/model-twolevel.html#several-parallel-mediators).
+
 - **The sem engine (0.18.0):** `fit_mediation(engine = "sem")` names
   medfit’s own SEM fitter; `engine = "native"` still works, with
   identical results.
   [`sem_control()`](https://data-wise.github.io/medfit/reference/sem_control.md)
   collects its optimizer settings. See [Which engine should I
   use?](https://data-wise.github.io/medfit/articles/guide-engines.html).
+
 - **Renamed pages (0.18.0):** the sem engine articles moved
   (`native-guide` is now `sem-guide`, and so on); old links redirect.
+
 - **Bounded FIML expansion (0.17.0):** one or two covariates, two
   parallel and two serial mediators (numerically verified, not
   statistically admitted). See the [model
   page](https://data-wise.github.io/medfit/articles/model-fiml.html).
+
 - **Two-level mediation (0.17.0, experimental):**
   [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md)
   on a two-level `lavaan` fit returns `TwoLevelMediationData`; lavaan
   floor 0.7-3. See the [model
   page](https://data-wise.github.io/medfit/articles/model-twolevel.html).
+
 - **Before that:** 0.16.0 (both sign branches of a nonzero-product
   equality, corrected constrained standard errors) and 0.15.0 (native
   defaults flip: `fixed_x` and `meanstructure` on when unset).
