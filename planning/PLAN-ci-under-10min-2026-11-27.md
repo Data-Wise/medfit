@@ -23,7 +23,7 @@ Builds on `planning/PLAN-ci-speed-2026-11-27.md` (local-only tier, 6 reliability
 
 | # | Task | Done when | State |
 |---|---|---|---|
-| C1 | macOS and Windows run a platform subset via `MEDFIT_TEST_FILTER` (40 files, 17 s on a laptop) | dispatched run 46070257784: both legs under 10 min | pushed on `feature/ci-under-10min`, run in progress |
+| C1 | Every hosted run (CRAN and GitHub, all legs) runs a smoke subset (47 files, 9 s on a laptop) chosen in `tests/testthat.R`; the rest is local (`MEDFIT_TEST_FILTER=all` or any non-CI run) | a dispatched run: every R-CMD-check leg under 10 min | pushed on `feature/ci-under-10min` (replaces the Windows/macOS-only filter) |
 | C2 | Measure coverage after the tier: add `workflow_dispatch` to `test-coverage.yaml`, run once on the branch | a wall-clock number for the job | not started |
 | C3 | If C2 is over 10 min: shard `covr` by test file (3 jobs, `covr::file_coverage` per shard, merged cobertura files uploaded to Codecov with flags) | each shard under 10 min, merged coverage within 1 point of the single run | not started |
 | C4 | If C3 is not enough: ask the user to narrow coverage scope (for example the CI tier minus engine-internals files) | user decision, not mine | blocked on C2 |
