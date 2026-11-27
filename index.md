@@ -155,7 +155,12 @@ use?](https://data-wise.github.io/medfit/articles/guide-intervals.html)
 
 ## More, when you need it
 
-**What’s new in 0.21.1**
+**What’s new in 0.21.2**
+
+- **0.21.2 (2026-11-26, GitHub; CRAN submission is the maintainer’s):**
+  no change to what any function returns; fixes the notes CRAN’s
+  incoming checks raised (Rd usage, check time) and the open S7 issue on
+  0.3.2, and moves the slowest tests and gates to the local full run.
 
 - **0.21.1 (2026-11-26, GitHub only):** no change to the package code
   since 0.21.0 (released 2026-11-25); the longest test files are skipped

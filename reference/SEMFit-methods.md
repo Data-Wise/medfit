@@ -5,17 +5,6 @@ Accessors and display for a
 returned by
 [`fit_sem()`](https://data-wise.github.io/medfit/reference/fit_sem.md).
 
-## Arguments
-
-- object, x:
-
-  A [SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md)
-  object
-
-- ...:
-
-  Additional arguments (ignored)
-
 ## Value
 
 [`coef()`](https://rdrr.io/r/stats/coef.html) a named numeric vector;
@@ -28,6 +17,13 @@ of class `"summary_SEMFit"`;
 argument.
 
 ## Details
+
+These are S7 methods for the base generics, so there is no separate
+usage section; each takes the
+[SEMFit](https://data-wise.github.io/medfit/reference/SEMFit.md) object
+as its first argument (`object`, or `x` for
+[`print()`](https://rdrr.io/r/base/print.html)) and ignores further
+arguments in `...`.
 
 - [`coef()`](https://rdrr.io/r/stats/coef.html) returns the
   free-parameter estimates, named as lavaan names its coefficients: the

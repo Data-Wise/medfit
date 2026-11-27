@@ -1,5 +1,29 @@
 # Changelog
 
+## medfit 0.21.2
+
+### Release summary
+
+No change to what any function returns. This release fixes what CRAN’s
+incoming checks reported for the first submission since 0.3.2, and moves
+the slowest checks out of the CRAN and hosted paths.
+
+- **CRAN pretest notes.** `SEMFit-methods.Rd` had an `\arguments`
+  section without a `\usage` section (Debian note); the Windows check
+  ran the tests for 25 minutes against CRAN’s 10-minute limit. The
+  slowest tests and simulation gates now run only in the local full run
+  (`scripts/check-local-full.sh`), and a green receipt for the release
+  commit is required to release
+  ([\#562](https://github.com/data-wise/medfit/issues/562)).
+- **The CRAN issue on 0.3.2** (`ERROR:from:upgrade:S7`, deadline
+  2026-12-11) is fixed by this release: the package works with the
+  current S7.
+- **CI.** Hosted jobs have time limits
+  ([\#560](https://github.com/data-wise/medfit/issues/560)); the
+  `gates (rest)` check is split into time-balanced shards behind one
+  required aggregator job
+  ([\#561](https://github.com/data-wise/medfit/issues/561)).
+
 ## medfit 0.21.1
 
 ### Release summary

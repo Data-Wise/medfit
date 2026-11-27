@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.1</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -130,7 +130,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Methods for SEMFit objects</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.21.1/R/methods-sem.R" class="external-link"><code>R/methods-sem.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/methods-sem.R" class="external-link"><code>R/methods-sem.R</code></a></small>
       <div class="d-none name"><code>SEMFit-methods.Rd</code></div>
     </div>
 
@@ -140,18 +140,6 @@
 
 
     <div class="section level2">
-    <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
-
-
-<dl><dt id="arg-object-x">object, x<a class="anchor" aria-label="anchor" href="#arg-object-x"></a></dt>
-<dd><p>A <a href="SEMFit.html">SEMFit</a> object</p></dd>
-
-
-<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments (ignored)</p></dd>
-
-</dl></div>
-    <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p><code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> a named numeric vector; <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> a matrix; <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> an
 integer; <code><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik()</a></code> an object of class <code>"logLik"</code>; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> an object of
@@ -159,8 +147,9 @@ class <code>"summary_SEMFit"</code>; <code><a href="https://rdrr.io/r/base/print
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-
-<ul><li><p><code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> returns the free-parameter estimates, named as lavaan names its
+    <p>These are S7 methods for the base generics, so there is no separate usage
+section; each takes the <a href="SEMFit.html">SEMFit</a> object as its first argument (<code>object</code>, or
+<code>x</code> for <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>) and ignores further arguments in <code>...</code>.</p><ul><li><p><code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> returns the free-parameter estimates, named as lavaan names its
 coefficients: the label when the row has one, else <code>lhs op rhs</code> without
 spaces (<code>"M~X"</code>, <code>"X~~X"</code>, <code>"eta=~m2"</code>). <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> and the
 accessors <code><a href="extract_mediation.html">extract_mediation()</a></code> reads use the same names.</p></li>

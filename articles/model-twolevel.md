@@ -575,7 +575,7 @@ ntd
 ```
 
     <TwoLevelMediationData>
-      X -> M -> Y  (clusters: id; native 0.21.1 fit; between level: latent cluster means)
+      X -> M -> Y  (clusters: id; native 0.21.2 fit; between level: latent cluster means)
       n = 500 in 100 clusters (sizes 5 to 5)   |   ICC: X 0.503, M 0.323, Y 0.400
       a_within = +0.4432   b_within = +0.5518   c_prime_within = +0.2685
       a_between = +0.5595   b_between = +0.9553   c_prime_between = +0.2289

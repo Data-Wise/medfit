@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.1</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -130,9 +130,22 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/data-wise/medfit/blob/v0.21.1/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/data-wise/medfit/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.21.2" id="medfit-0212">medfit 0.21.2<a class="anchor" aria-label="anchor" href="#medfit-0212"></a></h2>
+<div class="section level3">
+<h3 id="release-summary-0-21-2">Release summary<a class="anchor" aria-label="anchor" href="#release-summary-0-21-2"></a></h3>
+<p>No change to what any function returns. This release fixes what CRAN’s incoming checks reported for the first submission since 0.3.2, and moves the slowest checks out of the CRAN and hosted paths.</p>
+<ul><li>
+<strong>CRAN pretest notes.</strong> <code>SEMFit-methods.Rd</code> had an <code>\arguments</code> section without a <code>\usage</code> section (Debian note); the Windows check ran the tests for 25 minutes against CRAN’s 10-minute limit. The slowest tests and simulation gates now run only in the local full run (<code>scripts/check-local-full.sh</code>), and a green receipt for the release commit is required to release (<a href="https://github.com/data-wise/medfit/issues/562" class="external-link">#562</a>).</li>
+<li>
+<strong>The CRAN issue on 0.3.2</strong> (<code>ERROR:from:upgrade:S7</code>, deadline 2026-12-11) is fixed by this release: the package works with the current S7.</li>
+<li>
+<strong>CI.</strong> Hosted jobs have time limits (<a href="https://github.com/data-wise/medfit/issues/560" class="external-link">#560</a>); the <code>gates (rest)</code> check is split into time-balanced shards behind one required aggregator job (<a href="https://github.com/data-wise/medfit/issues/561" class="external-link">#561</a>).</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.21.1" id="medfit-0211">medfit 0.21.1<a class="anchor" aria-label="anchor" href="#medfit-0211"></a></h2>
 <div class="section level3">

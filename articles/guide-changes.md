@@ -1,6 +1,6 @@
 # What changed since CRAN 0.3.2
 
-CRAN has medfit 0.3.2; this site documents 0.21.1 (GitHub and
+CRAN has medfit 0.3.2; this site documents 0.21.2 (GitHub and
 r-universe). This page lists what a 0.3.2 user needs to know before
 upgrading: numbers that change, calls that now stop with an error, and
 what is new. The full record is
@@ -122,6 +122,7 @@ path (0.5.0).
 | 0.20.0 | experimental two-level API only: `fit_sem(model, data, cluster = )` fits a two-level (1-1-1) model with the sem engine and [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md) returns `TwoLevelMediationData` (`se_type = "sandwich"` gives cluster-robust SEs; [page](https://data-wise.github.io/medfit/articles/model-twolevel.html#the-sem-engine-route)); [`mbco_sem()`](https://data-wise.github.io/medfit/reference/mbco_sem.md) tests the indirect effect at one level and [`twolevel_equal_indirect()`](https://data-wise.github.io/medfit/reference/twolevel_equal_indirect.md) tests within = between. Behavior change: the within-only rule reads the unrestricted (h1) ICC on both routes, so within-only results are rarer. No change outside the experimental two-level API |
 | 0.21.0 | `fit_sem(model, data, estimator = "MLR")` keeps the ML estimates, uses sandwich standard errors and adds the Yuan-Bentler scaled chi-square (`chisq_scaled`, `scaling_factor`, `p_value_scaled`) to [`glance()`](https://generics.r-lib.org/reference/glance.html); other estimators and MLR with `cluster`, FIML, `weights`, inequality or nonlinear constraints stop with a classed error (`medfit_error_estimator`, `medfit_error_mlr_*`). Every refusal of the `:` product term now carries a class (`medfit_error_product_*`); messages and numbers are unchanged, but code that compared `class(err)` exactly now sees the added classes. The default `estimator = "ML"` is unchanged. |
 | 0.21.1 | no change to the package code: the longest test files are skipped on CRAN, the test warnings are gone and the cookbook gains recipe 25 (MLR). |
+| 0.21.2 | no change to what any function returns: fixes the Rd usage note and the check time CRAN reported, and the open S7 issue on 0.3.2; the slowest tests and gates run in the local full run. |
 
 ## Dependencies
 
