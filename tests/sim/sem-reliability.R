@@ -94,7 +94,15 @@ one <- function(i) {
 }
 
 grid <- expand.grid(structure = names(sem_models()), n = c(50, 200, 1000), rep = seq_len(REPS), stringsAsFactors = FALSE)
-cores <- max(1L, parallel::detectCores() - 1L)
+# SHARDS > 1 (the hosted gates workflow): this process runs every SHARDS-th grid row from SHARD, on all cores, and writes
+# tests/sim/results/shards/...-shard<SHARD>of<SHARDS>.csv.gz; scripts/merge-reliability.R joins the shards into the one
+# results file the verdict reads. Each row's data and seeds come from (structure, n, rep) only, so a row is the same fit
+# wherever it runs.
+SHARD <- as.integer(Sys.getenv("SHARD", "1"))
+SHARDS <- as.integer(Sys.getenv("SHARDS", "1"))
+stopifnot(SHARDS >= 1L, SHARD >= 1L, SHARD <= SHARDS)
+if (SHARDS > 1L) grid <- grid[(seq_len(nrow(grid)) - 1L) %% SHARDS == SHARD - 1L, , drop = FALSE]
+cores <- max(1L, parallel::detectCores() - if (SHARDS > 1L) 0L else 1L)
 safe_one <- function(i) {
   withCallingHandlers(
     tryCatch(one(i), error = function(e) structure(paste0("task ", i, ": ", conditionMessage(e), " | ", trace), class = "worker_error")),
@@ -141,4 +149,10 @@ print(summary(sg$min_eig[!sg$match & !is.na(sg$min_eig)]), digits = 3)
 ver <- sapply(c("lavaan", "nloptr", "MASS"), function(p) as.character(utils::packageVersion(p)))
 res$versions <- paste(names(ver), ver, collapse = "; ")
 dir.create("tests/sim/results", showWarnings = FALSE)
-utils::write.csv(res, gzfile(sprintf("tests/sim/results/sem-reliability-%s.csv.gz", Sys.Date())), row.names = FALSE)
+if (SHARDS > 1L) {
+  dir.create("tests/sim/results/shards", showWarnings = FALSE)
+  out_file <- sprintf("tests/sim/results/shards/sem-reliability-%s-shard%dof%d.csv.gz", Sys.Date(), SHARD, SHARDS)
+} else {
+  out_file <- sprintf("tests/sim/results/sem-reliability-%s.csv.gz", Sys.Date())
+}
+utils::write.csv(res, gzfile(out_file), row.names = FALSE)

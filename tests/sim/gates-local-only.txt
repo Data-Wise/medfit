@@ -7,3 +7,12 @@
 twolevel-equal-size   # 1868 s (28 to 53 min)
 twolevel-mbco-size    # 542 s
 four-way-kat          # 348 s
+# 2026-11-27: the gates of 70 s or more also move local (hosted `gates (rest)` 1,132 s to 411 s). The qc-monthly workflow
+# still runs them on the OpenBLAS runner every month (it passes --local-only).
+product-fixed-var-colon   # 137 s
+factor                    # 131 s
+product-fixed-var         # 129 s
+nonlinear-parity          # 100 s
+product-null-colon        # 78 s
+nonlinear-profile         # 74 s
+restoration               # 72 s

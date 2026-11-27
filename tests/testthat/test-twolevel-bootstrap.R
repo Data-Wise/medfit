@@ -5,6 +5,8 @@
 # the same seed; the parametric route is compared with the hand delta-method SE. Planted defects are asserted
 # with expect_false() on boolean checks.
 
+skip_unless_local() # local tier (46 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
+
 val <- function(e) as.numeric(unclass(e))
 
 # --- Parametric route (no lavaan needed) ---

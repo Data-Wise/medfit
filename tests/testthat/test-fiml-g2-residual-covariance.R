@@ -3,7 +3,7 @@
 # FIML, a from-scratch rowwise likelihood with an independent Hessian, closed-form complete-data checks. Helpers are
 # prefixed p3_ and self-contained.
 
-skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+skip_unless_local() # local tier (17 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 
 p3_vars <- c("X", "M1", "M2", "Y")
 p3_data <- function(kind = "mar", n = 450L, direct = TRUE, seed = 6131L, rho = .5) {

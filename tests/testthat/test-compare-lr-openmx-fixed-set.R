@@ -2,7 +2,7 @@
 # (R-4, plan T4c; design in planning/specs/NOTE-compare-lr-fixed-set-2026-10-24.md, decision 2). The fit's fixed set
 # is written as fixed paths at the sample moments; with a mean structure the model runs on raw data with a means path.
 
-skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+skip_unless_local() # local tier (4 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 skip_if_not_installed("OpenMx")
 
 ofs_base <- "mediator1 ~ a*treatment + covariate1\noutcome ~ b*mediator1 + cp*treatment + covariate1\n"

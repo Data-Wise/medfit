@@ -4,7 +4,7 @@
 # TRUE, a warning) and carries the same field; so does `compare_lr()`'s `$reference`. Evidence the consumers cannot
 # trust (missing, malformed, mismatched) is refused with `medfit_error_ledger`.
 # Stored inputs and injected conditions only; no generated samples.
-skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+skip_unless_local() # local tier (9 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 outcome_model <- "repetition ~ a1*x\nimagery ~ a2*x\nrecall ~ cp*x + b1*repetition + b2*imagery"
 outcome_data <- function() readRDS(testthat::test_path("fixtures", "memory_exp.rds"))
 outcome_union <- paste(outcome_model, "a1*b1 == 0", sep = "\n")

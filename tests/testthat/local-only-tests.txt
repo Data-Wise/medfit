@@ -7,3 +7,43 @@ test-twolevel-equal-indirect.R         # 388 s
 test-sem-fiml-oracles.R                # 380 s
 test-twolevel-icc-h1-qa.R              # 344 s
 test-twolevel-few-clusters-harness.R   # 340 s
+# 2026-11-27: the 37 files below move to the local tier with the 5 above (the top 40 files by hosted-mode seconds on the
+# maintainer's machine, 84% of test time; seconds from CI=true NOT_CRAN=true, scripts/check-local-full.sh runs them).
+# The cookbook, troubleshooting and two-level docs guards stay on CI: they protect the published site.
+test-fiml-g3-serial-two-cov-defects.R         # 78 s
+test-fiml-g3-parallel-covariates.R            # 70 s
+test-fiml-g3-serial-covariate.R               # 55 s
+test-twolevel-bootstrap.R                     # 46 s
+test-fiml-g3-serial-covariate-defects.R       # 34 s
+test-fiml-g3-serial-chain.R                   # 27 s
+test-fiml-g3-serial-router.R                  # 26 s
+test-fiml-g1-two-covariates.R                 # 25 s
+test-extract-joint.R                          # 24 s
+test-sem-nonlinear.R                          # 22 s
+test-fiml-g2-parallel.R                       # 21 s
+test-fiml-g3-serial-saturated.R               # 21 s
+test-twolevel-icc-h1.R                        # 18 s
+test-four-way-oracle-kat.R                    # 18 s
+test-fiml-g2-residual-covariance.R            # 17 s
+test-fiml-g3-serial-chain-defects.R           # 15 s
+test-fiml-g1-covariate.R                      # 11 s
+test-twolevel-native-sandwich-qa.R            # 9 s
+test-cluster-boot.R                           # 9 s
+test-sem-outcomes.R                           # 9 s
+test-fiml-g3-serial-defects.R                 # 7 s
+test-twolevel-native-sandwich.R               # 6 s
+test-sem-nl-ineq.R                            # 6 s
+test-sem-mean-parity.R                        # 6 s
+test-fiml-g3-baseline.R                       # 5 s
+test-twolevel-native-fit.R                    # 5 s
+test-cluster-211.R                            # 5 s
+test-example-gpa.R                            # 5 s
+test-semopy-oracle.R                          # 4 s
+test-sem-mbco-twolevel.R                      # 4 s
+test-sem-mbco-twolevel-qa.R                   # 4 s
+test-twolevel-extract.R                       # 4 s
+test-compare-lr-fixed-set.R                   # 4 s
+test-twolevel-parallel-statistic.R            # 4 s
+test-compare-lr-openmx-fixed-set.R            # 4 s
+test-twolevel-native-gradient.R               # 3 s
+test-sem-d4-covariance.R                      # 3 s

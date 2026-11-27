@@ -5,6 +5,8 @@
 # object's path vectors (independent of the shared effect kernel). The planted defect (the total NIE key mapped
 # to the first mediator's specific key) is asserted with expect_false() on a boolean check.
 
+skip_unless_local() # local tier (4 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
+
 val <- function(e) as.numeric(unclass(e))
 
 # The hand value of one effect from the object's path vectors (no package effect code).

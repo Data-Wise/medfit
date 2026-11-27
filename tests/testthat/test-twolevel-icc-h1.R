@@ -4,7 +4,7 @@
 # Oracles: lavaan's own h1 ICC (default and tightened EM), a hand ANOVA estimator on balanced data, and the
 # model-implied ICC as the source the rule used before (the divergence fixtures must separate the two).
 
-skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+skip_unless_local() # local tier (18 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 
 skip_if_not_installed("lavaan")
 

@@ -23,17 +23,25 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  reliability:
-    # The reliability gate (76,800 fits) alone, about 23 minutes.
-    name: gates (reliability)
+  reliability-shard:
+    # The reliability gate (76,800 fits) in SHARDS parallel jobs. The grid has 1,200 independent rows (structure x n x
+    # rep); shard i runs rows i, i + SHARDS, ... on all four cores (tests/sim/sem-reliability.R, SHARD and SHARDS). The
+    # unsharded job took 19 to 23 minutes on three of the four cores. Not a required check by name: the required
+    # `gates (reliability)` is the aggregator job below.
+    name: gates reliability shard ${{ matrix.shard }}
     # Pinned to ubuntu-24.04: the full gates job timed out at 75 min on ubuntu-26.04 (PR #307 runs 40053057744 attempts
     # 1-2, 40053008246, 40051687109) and passed on 24.04 for the same tree (run 40109489583: reliability 22 min, rest
     # 28 min). A single gate run alone on 26.04 was fast (run 40059864450), so the cause is not yet known.
     runs-on: ubuntu-24.04
-    timeout-minutes: 150
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       NOT_CRAN: "true"
+      SHARDS: "3" # must equal the matrix size; scripts/merge-reliability.R fails when the shard files do not match it
     steps:
       - uses: actions/checkout@v7
 
@@ -47,8 +55,50 @@ jobs:
           dependencies: '"all"'
           extra-packages: any::remotes, any::devtools
 
-      - name: Run the reliability gate (--sim)
-        run: Rscript tests/sim/run-gates.R --sim --only reliability
+      - name: Run this shard of the reliability grid
+        run: SHARD=${{ matrix.shard }} Rscript tests/sim/sem-reliability.R
+
+      - name: Upload the shard
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gate-results-reliability-${{ matrix.shard }}
+          path: tests/sim/results/shards/sem-reliability-*.csv.gz
+          if-no-files-found: error
+
+  reliability:
+    # The required status check `gates (reliability)` (branch protection on main names it; do not rename). Passes only
+    # when every shard succeeded, the shard files merge into one results file (all SHARDS of one date), and the gate's
+    # own verdict (tests/sim/run-gates.R, unchanged: 76,800 rows, match rate, no worker errors) passes on the merged file.
+    # `if: always()` so a cancelled or skipped shard fails this check instead of leaving it skipped.
+    name: gates (reliability)
+    needs: reliability-shard
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Every shard succeeded
+        env:
+          SHARD_RESULT: ${{ needs.reliability-shard.result }}
+        run: |
+          echo "shard jobs: $SHARD_RESULT"
+          [ "$SHARD_RESULT" = "success" ] || { echo "::error::a reliability shard did not succeed ($SHARD_RESULT)"; exit 1; }
+
+      - uses: actions/checkout@v7
+
+      - uses: r-lib/actions/setup-r@v2
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: gate-results-reliability-*
+          path: reliability-shards
+          merge-multiple: true
+
+      - name: Merge the shards and run the gate verdict
+        run: |
+          Rscript scripts/merge-reliability.R reliability-shards 3
+          # --max-age 2: the merged file is from today; an older file in the tree cannot satisfy the verdict
+          Rscript tests/sim/run-gates.R --only reliability --max-age 2
 
       - name: Upload results and logs
         if: always()

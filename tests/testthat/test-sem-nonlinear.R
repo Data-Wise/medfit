@@ -4,7 +4,7 @@
 # covariance must be annihilated by the constraint Jacobian at the solution. Planted defects: the row
 # classified as linear, the covariance projection frozen at a stale Jacobian, and the projection omitted.
 
-skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+skip_unless_local() # local tier (22 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 
 nl_syntax <- "M ~ a*X\nY ~ b*M + cp*X\ncp == a*b"
 

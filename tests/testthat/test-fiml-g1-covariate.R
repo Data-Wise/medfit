@@ -6,7 +6,7 @@
 #            including its numerical gradient and Hessian at the fitted point;
 #   closed   complete data: OLS regressions and ML (co)variances.
 
-skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+skip_unless_local() # local tier (11 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 
 g1_data <- function(kind = "mar", n = 400L, direct = TRUE, seed = 4107L) {
   set.seed(seed)

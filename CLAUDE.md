@@ -357,17 +357,20 @@ usethis::use_article("article-name")  # Not included in R CMD check
 - **Release-only cost**: keep the platform matrix and OpenBLAS gates deferred
   until release to `main`; this policy does not disable fast PR checks.
 
-### Local-only tier (decided 2026-11-26)
+### Local-only tier (decided 2026-11-26, widened 2026-11-27)
 
-Items that alone cost more than about 300 s on a hosted runner do not run on GitHub Actions or CRAN; they run on the
-maintainer's machine. Testthat files list themselves in `tests/testthat/local-only-tests.txt` and start with
-`skip_unless_local()` (`helper-local-only.R`: `skip_on_cran()` plus `skip_on_ci()`); gates list their `gates.csv` id in
+The majority of the test time does not run on GitHub Actions or CRAN; it runs on the maintainer's machine. Testthat
+files list themselves in `tests/testthat/local-only-tests.txt` and start with `skip_unless_local()`
+(`helper-local-only.R`: `skip_on_cran()` plus `skip_on_ci()`); gates list their `gates.csv` id in
 `tests/sim/gates-local-only.txt` and `run-gates.R` drops them unless `--local-only` is passed (the `gates (rest)` and
 `gates (reliability)` check names do not change; `qc-monthly` passes `--local-only`, so the monthly OpenBLAS record
 keeps them). `scripts/check-local-full.sh` runs the whole tier and writes
 `planning/local-full-runs/RECEIPT-<date>-<sha>.md`. **A release requires a green local full-run receipt for the release
-commit**, because hosted CI no longer verifies these items (this overrides the 2026-11-25 "no coverage given up on
-release" line of the CI test-speed plan for the listed items only). Plan and list: `planning/PLAN-local-only-tier-2026-11-26.md`.
+commit**, because hosted CI does not verify these items. Rule of thumb since 2026-11-27: a test file that takes more than
+about 3 s in hosted mode (`CI=true NOT_CRAN=true`) on the maintainer's machine is local-only, apart from the cookbook,
+troubleshooting and two-level docs guards, which stay on CI; a gate of 70 s or more is local-only. Result: hosted-mode
+tests 775 s to 149 s (42 of 244 files local), CRAN-mode tests 53 s to 34 s, `gates (rest)` 1,132 s to 411 s. Plans and
+lists: `planning/PLAN-local-only-tier-2026-11-26.md`, `planning/PLAN-ci-speed-2026-11-27.md`.
 
 ### Organization
 
