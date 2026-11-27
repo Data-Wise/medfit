@@ -14,7 +14,7 @@ are 72% of it and the top 40 are 84%.
 | Test files on CI and CRAN | 244 files, 775 s (hosted mode) | 202 files, 149 s: 37 more files local-only (42 in the tier) |
 | CRAN-mode tests | 53 s | 34 s |
 | `gates (rest)` | 1,132 s in 3 shards | 411 s in 3 shards of about 137 s; 7 gates of 70 s or more local-only |
-| `gates (reliability)` | 1,149 s on 3 of 4 cores | 3 shards on 4 cores each (`SHARD`/`SHARDS` in `tests/sim/sem-reliability.R`, `scripts/merge-reliability.R`); same 76,800 fits, same verdict |
+| `gates (reliability)` | 1,149 s on 3 of 4 cores | 6 shards on 4 cores each (3 measured at 9 to 12 min hosted, 2026-11-27; `SHARD`/`SHARDS` in `tests/sim/sem-reliability.R`, `scripts/merge-reliability.R`); same 76,800 fits, same verdict |
 
 Kept on CI: the cookbook, troubleshooting and two-level docs guards (they protect the published site).
 The release receipt (`scripts/check-local-full.sh`) now runs 42 files and 10 gates locally.
