@@ -24,13 +24,13 @@ Builds on `planning/PLAN-ci-speed-2026-11-27.md` (local-only tier, 6 reliability
 | # | Task | Done when | State |
 |---|---|---|---|
 | C1 | Every hosted run (CRAN and GitHub, all legs) runs a smoke subset (47 files, 9 s on a laptop) chosen in `tests/testthat.R`; the rest is local (`MEDFIT_TEST_FILTER=all` or any non-CI run) | a dispatched run: every R-CMD-check leg under 10 min | done: run 46071068028, all six legs 209 to 257 s (Windows 245 s, macOS 213 s) |
-| C2 | Measure coverage after the tier: add `workflow_dispatch` to `test-coverage.yaml`, run once on the branch | a wall-clock number for the job | dispatch trigger added; run 46070902427 in progress |
+| C2 | Measure coverage after the tier: add `workflow_dispatch` to `test-coverage.yaml`, run once on the branch | a wall-clock number for the job | done: run 46070902427, 439 s (before the smoke subset); #575 merged |
 | C3 | If C2 is over 10 min: shard `covr` by test file (3 jobs, `covr::file_coverage` per shard, merged cobertura files uploaded to Codecov with flags) | each shard under 10 min, merged coverage within 1 point of the single run | not started |
 | C4 | If C3 is not enough: ask the user to narrow coverage scope (for example the CI tier minus engine-internals files) | user decision, not mine | blocked on C2 |
 | C5 | Trim setup on slow legs: skip `quarto-dev/quarto-actions/setup` on Windows and macOS if no check step renders a vignette; cache the dependency library | setup under 1.5 min | not started |
 | C6 | CRAN: build the 0.21.3 tarball again from dev, run the CRAN-mode check locally with a timer, and have the user submit to win-builder | win-builder reports a check time under 10 min | user step |
 | C7 | pkgdown and lint: leave unless a release PR shows more than 8 min | none | watch only |
-| C8 | Record the rule: a hosted check over 8 min on a release PR gets a task here; update `CLAUDE.md` CI section and `.STATUS` | docs match the workflow | after C1 to C3 |
+| C8 | Record the rule: a hosted check over 8 min on a release PR gets a task here; update `CLAUDE.md` CI section and `.STATUS` | docs match the workflow | done: CLAUDE.md and .STATUS (this PR); C3 and C4 not needed |
 
 ## Order and risk
 
