@@ -4,7 +4,7 @@
 # product held at k by an equality (single-valued problems), and the unconstrained fit when the constraint
 # is inactive. Planted defect: the gate's Hessian of the Lagrangian replaced by the objective's Hessian.
 
-skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+skip_unless_local() # local tier (6 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 ni_base <- "M ~ a*X\nY ~ b*M + cp*X"
 
 ni_data <- function(n = 300, seed = 3, a = 0.5, b = 0.4, cp = 0.2) {

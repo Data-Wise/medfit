@@ -3,7 +3,7 @@
 # T2 covers the class and its validator. The hand-built objects need no lme4,
 # so these tests also run in the noSuggests job.
 
-skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+skip_unless_local() # local tier (5 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 
 named_diag <- function(nms, v = 0.01) {
   m <- diag(v, length(nms))

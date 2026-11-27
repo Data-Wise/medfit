@@ -4,7 +4,7 @@
 # X -> M -> Y two-level model; scores and the Hessian come from numDeriv. Second oracle: lavaan's full robust
 # covariance (se = "robust.huber.white", TL-3 convention), compared element by element, not only on the diagonal.
 
-skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+skip_unless_local() # local tier (9 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 tlq_implied <- function(a, b, cp, vx, vm, vy) {
   bm <- matrix(0, 3, 3)
   bm[2, 1] <- a

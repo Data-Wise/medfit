@@ -2,7 +2,7 @@
 # Oracles: O1 (balanced saturated closed form), O2 (lm), O5 (fixed.x = FALSE), O6 (robust, FIML).
 # Each oracle has a planted-defect test that must fail under the defect (spec section 8).
 
-skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+skip_unless_local() # local tier (4 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 
 skip_if_not_installed("lavaan")
 

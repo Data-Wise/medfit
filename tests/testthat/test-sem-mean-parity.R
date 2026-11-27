@@ -1,7 +1,7 @@
 # lavaan parity with a mean structure on the four model forms (0.9.0 S5, plan T8a): labeled paths, their standard
 # errors, the chi-square and the df, with free intercepts, a restricted intercept and a nonlinear constraint.
 
-skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+skip_unless_local() # local tier (6 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 mean_forms <- list(
   simple = "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment",
   serial = "mediator1 ~ a*treatment\nmediator2 ~ d*mediator1 + treatment\noutcome ~ b*mediator2 + cp*treatment",

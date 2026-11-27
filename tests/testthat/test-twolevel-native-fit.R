@@ -4,7 +4,7 @@
 # planning/specs/ADR-twolevel-oracle-tolerances-2026-11-18.md. Planted defects (TL-7): a zeroed cross-level block of
 # the vcov must fail the contrast-SE check, and an early-stopped SLSQP iterate must be rejected by the gate.
 
-skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+skip_unless_local() # local tier (5 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 skip_if_not_installed("lavaan")
 
 tlf_fixtures <- function() {

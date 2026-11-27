@@ -7,7 +7,7 @@
 # independent Hessian, OpenMx for one cell, hand delta gradients, the lavaan chi-square for the restriction against
 # the saturated fit. Helpers are in helper-fiml-serial.R (sb_*) and helper-fiml-serial2-chain.R (sc_*).
 
-skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+skip_unless_local() # local tier (27 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 
 sc_kinds <- c("mar", "mcar30", "sparse", "complete")
 sc_directs <- c("free", "zero", "omit")

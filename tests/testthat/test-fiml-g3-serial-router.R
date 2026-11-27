@@ -5,7 +5,7 @@
 # own parameter-count formula, equation-wise lm for complete data, and matched lavaan raw-data FIML (missing = "ml")
 # for the table solve with incomplete data. Helpers are prefixed sr_.
 
-skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+skip_unless_local() # local tier (26 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 
 sr_zeros <- c("M1 ~~ 0*M2", "M1 ~~ 0*Y", "M2 ~~ 0*Y")
 sr_exo <- function(k) c("X", if (k == 1L) "Z" else if (k == 2L) c("Z1", "Z2"))

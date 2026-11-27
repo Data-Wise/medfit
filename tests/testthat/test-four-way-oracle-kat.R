@@ -2,7 +2,7 @@
 # routes' estimates AND standard errors against the empirical SD over replications. The full gate is
 # tests/sim/four-way-known-answer.R (1000 replications, 63 rows); these tests run it small.
 
-skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+skip_unless_local() # local tier (18 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 
 skip_if_not_installed("lavaan")
 skip_if_not_installed("sandwich")

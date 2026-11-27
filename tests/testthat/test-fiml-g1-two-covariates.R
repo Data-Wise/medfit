@@ -4,7 +4,7 @@
 # Gaussian likelihood, and closed-form complete-data OLS. Slice-1 helpers (g1_*) live in test-fiml-g1-covariate.R and
 # are not reused.
 
-skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+skip_unless_local() # local tier (25 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 
 g2_vars <- c("X", "Z1", "Z2", "M", "Y")
 g2_data <- function(kind = "mar", n = 450L, direct = TRUE, seed = 5113L) {

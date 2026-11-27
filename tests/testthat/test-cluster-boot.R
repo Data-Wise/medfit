@@ -4,6 +4,8 @@
 # test-cluster-211.R. Uses the harness in helper-cluster.R.
 
 # nolint start: object_usage_linter.
+skip_unless_local() # local tier (9 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
+
 boot_data <- function(J = 12, size = 6, ...) {
   sim_cluster211(J = J, sizes = size, ...)$data
 }

@@ -1,6 +1,8 @@
 # The worked example (vignettes/articles/example-gpa.qmd) ends in stopifnot(all(checks$pass)). Run its code here so a
 # regression breaks the test suite, not only the site build. The planted defect shows a check can fail.
 
+skip_unless_local() # local tier (5 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
+
 example_gpa_path <- function() {
   p <- file.path(testthat::test_path("..", "..", "vignettes", "articles"), "example-gpa.qmd")
   if (file.exists(p)) p else NA_character_

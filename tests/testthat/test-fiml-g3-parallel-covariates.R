@@ -5,7 +5,7 @@
 # products, their SUM and the total), a from-scratch rowwise Gaussian likelihood with an independent Hessian,
 # closed-form complete-data OLS, and OpenMx for one cell. Helpers are prefixed p4_ and self-contained.
 
-skip_on_cran()  # long oracle run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
+skip_unless_local() # local tier (70 s hosted-mode on the maintainer's machine); tests/testthat/local-only-tests.txt
 
 p4_ks <- 1:2
 p4_exo <- function(k) c("X", if (k == 1L) "Z" else c("Z1", "Z2"))
