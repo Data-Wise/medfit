@@ -125,6 +125,7 @@ test_that("every job in the long-running workflows has a timeout and the install
 })
 
 test_that("planted defect: a job or install step without a timeout is detected", {
+  skip_if_not_installed("yaml")
   bare <- yaml::read_yaml(text = "jobs:\n  a:\n    runs-on: x\n    steps:\n      - uses: r-lib/actions/setup-r@v2\n")
   expect_null(bare$jobs$a[["timeout-minutes"]])
   expect_null(bare$jobs$a$steps[[1L]][["timeout-minutes"]])
