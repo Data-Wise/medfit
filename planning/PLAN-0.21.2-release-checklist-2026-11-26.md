@@ -8,10 +8,10 @@ the user's go-ahead.
 
 | # | Step | State |
 |---|---|---|
-| R1 | CRAN-fix PR merged into dev (Rd `\usage`, check time, S7) | open (branch `claude/cran-readiness-0212-258637`) |
-| R2 | Prep PR (this branch): version, NEWS, cran-comments, README, articles, status | in progress |
-| R3 | Release PR dev to main, required checks green | pending |
-| R4 | `scripts/check-local-full.sh` receipt for the release commit | pending |
-| R5 | CRAN-mode check of the tarball built from the tag (`git archive`), timings into cran-comments | pending |
-| R6 | Tag, GitHub release, tagged-install smoke, back-merge to 0.21.2.9000 | needs go-ahead |
+| R1 | CRAN-fix PR merged into dev (Rd `\usage`, check time, S7) | done (#564) |
+| R2 | Prep PR (this branch): version, NEWS, cran-comments, README, articles, status | done (#563) |
+| R3 | Release PR dev to main, required checks green | done (#566, 17 checks green; fixes #567 and #568 first) |
+| R4 | `scripts/check-local-full.sh` receipt for the release commit | done (receipt in #565) |
+| R5 | CRAN-mode check of the tarball built from the tag (`git archive`), timings into cran-comments | done (1 NOTE, tests 87 s) |
+| R6 | Tag, GitHub release, tagged-install smoke, back-merge to 0.21.2.9000 | done (v0.21.2 at 28e809c6) |
 | R7 | CRAN upload from the detached tag; read `Version: 0.21.2` in the confirmation email | user |
