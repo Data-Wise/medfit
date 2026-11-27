@@ -575,7 +575,7 @@ ntd
 ```
 
     <TwoLevelMediationData>
-      X -> M -> Y  (clusters: id; native 0.21.2 fit; between level: latent cluster means)
+      X -> M -> Y  (clusters: id; native 0.21.3 fit; between level: latent cluster means)
       n = 500 in 100 clusters (sizes 5 to 5)   |   ICC: X 0.503, M 0.323, Y 0.400
       a_within = +0.4432   b_within = +0.5518   c_prime_within = +0.2685
       a_between = +0.5595   b_between = +0.9553   c_prime_between = +0.2289
@@ -786,8 +786,8 @@ b_par
     N bootstrap samples: 1000
 
     95% Confidence Interval:
-      Lower:   0.2980
-      Upper:   0.8209
+      Lower:   0.2901
+      Upper:   0.8234
 
 ``` r
 b_cl <- bootstrap_mediation(
@@ -1060,8 +1060,8 @@ rbind(
 ```
 
                    estimate     lower     upper
-    total_between 1.4092637 0.9201005 1.9129799
-    M1_within     0.2294339 0.1573649 0.3040551
+    total_between 1.4092637 1.0077536 1.9359104
+    M1_within     0.2294339 0.1584271 0.3057644
 
 For the cluster bootstrap, pass the `lavaan` fit with all the mediators,
 as in

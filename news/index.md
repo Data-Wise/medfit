@@ -1,5 +1,20 @@
 # Changelog
 
+## medfit 0.21.3
+
+### Release summary
+
+No change to what any function returns. CRAN’s incoming pretest of
+0.21.2 failed on one point: the Windows check took 11 minutes against
+the 10-minute limit (Debian passed). This release cuts the tests that
+run under CRAN’s settings by about half.
+
+- **CRAN check time.** The Windows pretest spent 452 s of its 11 minutes
+  in tests. 33 more test files, the slowest of the files that still ran
+  on CRAN, now call `skip_on_cran()`: CRAN-mode test time drops from 105
+  s to 53 s on the development machine. They still run in GitHub CI and
+  with `NOT_CRAN=true`.
+
 ## medfit 0.21.2
 
 ### Release summary

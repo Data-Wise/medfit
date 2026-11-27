@@ -155,7 +155,12 @@ use?](https://data-wise.github.io/medfit/articles/guide-intervals.html)
 
 ## More, when you need it
 
-**What’s new in 0.21.2**
+**What’s new in 0.21.3**
+
+- **0.21.3 (2026-11-27, GitHub; CRAN submission is the maintainer’s):**
+  no change to what any function returns; cuts the tests that run on
+  CRAN by about half after CRAN’s pretest measured the Windows check at
+  11 minutes against a 10-minute limit.
 
 - **0.21.2 (2026-11-26, GitHub; CRAN submission is the maintainer’s):**
   no change to what any function returns; fixes the notes CRAN’s

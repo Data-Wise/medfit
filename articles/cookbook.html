@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.2</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -175,7 +175,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.21.2/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/cookbook.qmd" class="external-link"><code>vignettes/articles/cookbook.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -516,7 +516,7 @@ Attaching package: 'generics'</code></pre>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="../reference/nie.html">nie</a></span><span class="op">(</span><span class="va">xj</span><span class="op">)</span><span class="op">)</span>, lower <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_lower</span>, upper <span class="op">=</span> <span class="va">boot_j</span><span class="op">@</span><span class="va">ci_upper</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code> estimate     lower     upper
-0.6560315 0.4349603 0.8927176 </code></pre>
+0.6560315 0.4351678 0.8930074 </code></pre>
 </div>
 </div>
 <p>More: <a href="methods.html">Methods and Formulas</a>.</p>
@@ -742,10 +742,10 @@ reduced  1 0.1335    0.13346       1     0.7149</code></pre>
 <span>      full <span class="op">=</span> <span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">full</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"npar"</span>, <span class="st">"chisq"</span>, <span class="st">"AIC"</span>, <span class="st">"BIC"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2 × 4
-   npar chisq   AIC   BIC
-* &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-1     6 0.133 2408. 2432.
-2     7 0     2409. 2437.</code></pre>
+   npar    chisq   AIC   BIC
+* &lt;int&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1     6 1.33e- 1 2408. 2432.
+2     7 4.54e-30 2409. 2437.</code></pre>
 </div>
 </div>
 <p>The restricted model is the one with more degrees of freedom. A small chi-square difference says dropping <code>cp</code> costs little.</p>
@@ -1223,8 +1223,8 @@ Estimate:   0.6174
 N bootstrap samples: 500
 
 95% Confidence Interval:
-  Lower:   0.4234
-  Upper:   0.8708</code></pre>
+  Lower:   0.4025
+  Upper:   0.8424</code></pre>
 </div>
 </div>
 <p><code><a href="../reference/nie.html">nie()</a></code> gives the total by default and one value per mediator with <code>type = "specific"</code>. In <code><a href="../reference/twolevel_statistic.html">twolevel_statistic()</a></code>, <code>effect</code> is <code>"nie"</code>, <code>"nie_j"</code> (with the mediator in <code>specific</code>), <code>"nde"</code> or <code>"te"</code>, and <code>level</code> is <code>"within"</code>, <code>"between"</code> or <code>"contrast"</code>. The between level is kept only when the treatment and every mediator have an ICC of at least 0.01. More: <a href="model-twolevel.html">Two-level mediation</a>.</p>

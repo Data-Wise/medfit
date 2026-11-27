@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">medfit</a>
 
-    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.2</small>
+    <small class="nav-text text-default me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.21.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -130,9 +130,18 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/data-wise/medfit/blob/v0.21.2/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/data-wise/medfit/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.21.3" id="medfit-0213">medfit 0.21.3<a class="anchor" aria-label="anchor" href="#medfit-0213"></a></h2>
+<div class="section level3">
+<h3 id="release-summary-0-21-3">Release summary<a class="anchor" aria-label="anchor" href="#release-summary-0-21-3"></a></h3>
+<p>No change to what any function returns. CRAN’s incoming pretest of 0.21.2 failed on one point: the Windows check took 11 minutes against the 10-minute limit (Debian passed). This release cuts the tests that run under CRAN’s settings by about half.</p>
+<ul><li>
+<strong>CRAN check time.</strong> The Windows pretest spent 452 s of its 11 minutes in tests. 33 more test files, the slowest of the files that still ran on CRAN, now call <code>skip_on_cran()</code>: CRAN-mode test time drops from 105 s to 53 s on the development machine. They still run in GitHub CI and with <code>NOT_CRAN=true</code>.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.21.2" id="medfit-0212">medfit 0.21.2<a class="anchor" aria-label="anchor" href="#medfit-0212"></a></h2>
 <div class="section level3">
