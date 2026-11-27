@@ -786,8 +786,8 @@ b_par
     N bootstrap samples: 1000
 
     95% Confidence Interval:
-      Lower:   0.2901
-      Upper:   0.8234
+      Lower:   0.2980
+      Upper:   0.8209
 
 ``` r
 b_cl <- bootstrap_mediation(
@@ -1060,8 +1060,8 @@ rbind(
 ```
 
                    estimate     lower     upper
-    total_between 1.4092637 1.0077536 1.9359104
-    M1_within     0.2294339 0.1584271 0.3057644
+    total_between 1.4092637 0.9201005 1.9129799
+    M1_within     0.2294339 0.1573649 0.3040551
 
 For the cluster bootstrap, pass the `lavaan` fit with all the mediators,
 as in
