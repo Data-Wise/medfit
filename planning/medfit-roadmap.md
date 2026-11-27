@@ -2169,6 +2169,8 @@ Use the [Current board](#current-board) for priorities and release dispositions.
 **Snapshot date**: 2026-10-10
 **Current-board reconciliation**: 2026-10-31 MDT; inference design remains blocked before implementation.
 
+**Board 2026-11-27 (0.21.3 released).** Released in 0.21.3 (tag `v0.21.3` at `1570f220`, release PR #571, GitHub-only; 17 hosted checks green, `main` CI green, tagged-install smoke passed): no change to what any function returns; 33 more test files skip on CRAN (105 s to 53 s locally) after CRAN's pretest measured the Windows check of 0.21.2 at 11 min. Next: the maintainer's win-builder run and CRAN upload.
+
 **Board 2026-11-27 (0.21.3 prep).** CRAN's pretest of 0.21.2 (tag `v0.21.2`, uploaded 2026-11-27) failed on the Windows check time: 11 min against 10 min, tests 452 s. 0.21.3 skips 33 more test files on CRAN (105 s to 53 s locally); checklist `planning/PLAN-0.21.3-release-checklist-2026-11-27.md`.
 
 **Board 2026-11-26 (0.21.2 released).** Released in 0.21.2 (tag `v0.21.2` at `28e809c6`, release PR #566, GitHub-only; 17 hosted checks green, `main` CI green, tagged-install smoke passed, CRAN-mode check of the tag tarball: 1 NOTE, tests 87 s): no change to what any function returns; the CRAN pretest notes and the S7 issue on 0.3.2 are addressed. Next: the maintainer's win-builder run and CRAN upload.
