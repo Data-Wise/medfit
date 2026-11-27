@@ -2,6 +2,8 @@
 # S2, ADR V-5). The object is resolved once, at entry of `fit_sem()` and `mbco_sem()`, to the same plain list, so a fit
 # made either way is the same fit; the resolved search protocol is recorded in `fit@diagnostics$protocol`.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 sc_model <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"
 sc_fiml_message <- paste0("FIML requires meanstructure = TRUE, observed/model SEs, no weights, ",
                           "empty control and n_starts = 3 or NULL")

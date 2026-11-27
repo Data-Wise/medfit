@@ -1,6 +1,8 @@
 # Observed intercepts end to end (0.9.0 S1): the combined syntax `y ~ 1 + x`, the tri-state `meanstructure`,
 # saturated-mean equivalence with the covariance-only fit, and always-on oracles for the intercept SEs.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 mean_syntax <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"
 
 test_that("y ~ 1 + x parses to the same rows as two statements, in either order", {

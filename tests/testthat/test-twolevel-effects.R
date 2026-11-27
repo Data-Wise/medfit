@@ -1,5 +1,7 @@
 # Effects of TwoLevelMediationData: nie/nde/te/pm per level, the contrast, paths, decompose (#394, S2 PR2)
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 val <- function(e) as.numeric(unclass(e))
 
 test_that("nie() defaults to the within level and returns a mediation_effect", {

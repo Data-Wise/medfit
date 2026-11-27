@@ -2,6 +2,8 @@
 # canonical product name and rules 8 and 9. Oracles: the hand-coded twin, `lm()` per equation (a recursive model with
 # products equals equation-wise OLS), and the model-test policy of the twin.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 fp2_data <- function(n = 260L, seed = 41L) {
   set.seed(seed)
   g <- factor(sample(c("a", "b", "c"), n, replace = TRUE))

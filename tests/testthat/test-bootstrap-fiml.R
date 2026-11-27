@@ -1,3 +1,5 @@
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 testthat::local_mocked_bindings(.fiml_source_inference_admitted = function() TRUE)
 source(testthat::test_path("helper-fiml-bootstrap.R"), local = TRUE)
 fb_helpers <- mget(c("fb_model", "fb_fixture"), inherits = FALSE)

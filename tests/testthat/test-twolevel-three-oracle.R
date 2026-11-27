@@ -7,6 +7,8 @@
 # |diff| <= max(0.01 * SE, 1e-4) (TL-1, TL-5); SEs and the contrast SE 1e-3 relative (TL-2,
 # TL-5); logLik 1e-6 relative (TL-4, tl_check_loglik()). Set MEDFIT_O8_VERBOSE=true to print the values.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 verbose_u3 <- function(...) {
   if (identical(Sys.getenv("MEDFIT_O8_VERBOSE"), "true")) cat(sprintf(...))
 }

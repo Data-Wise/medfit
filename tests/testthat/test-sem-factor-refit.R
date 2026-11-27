@@ -1,6 +1,8 @@
 # T7 + Codex review of T3: a bare factor with an explicit labeled dummy, and refits (`mbco_sem()`, the zero-product
 # branch fits) of a fit that was built from a factor column.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 fr2_data <- function(n = 250L, seed = 8L) {
   set.seed(seed)
   g <- factor(sample(c("a", "b", "c"), n, replace = TRUE))

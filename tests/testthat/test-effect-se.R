@@ -5,6 +5,8 @@
 # TE interval, which the old formula computed without Cov(ab, c') (GRILL D2).
 
 # Explicit binding so lintr's object_usage_linter sees the lazy-loaded data
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 mediation_demo <- medfit::mediation_demo
 
 demo_formula <- function(lhs_rhs) {

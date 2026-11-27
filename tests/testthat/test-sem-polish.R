@@ -4,6 +4,8 @@
 # with cp replaced by a*b, solved by BFGS on the analytic gradient (the exact optimum). Planted defects: the
 # polish switched off, a step in the wrong direction, and a polished point that violates the constraint.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 pol_syntax <- "M ~ a*X\nY ~ b*M + cp*X\ncp == a*b"
 
 # Seed 17 at n = 100 leaves the unpolished fit 1.8e-5 from the optimum (measured over seeds 1 to 25).

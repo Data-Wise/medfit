@@ -1,6 +1,8 @@
 # IG5 T3: effects, delta-method SEs, tidy/confint/summary for TwoLevelParallelMediationData.
 # Oracle: lavaan `:=` defined parameters on the same fit (helper-twolevel-effects.R, tlp_defined_fit()).
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 skip_if_not_installed("lavaan")
 
 # --- O1: lavaan `:=` oracle, per level and for the contrasts ---

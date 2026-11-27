@@ -12,6 +12,8 @@
 #    mediator, other MediationData classes
 # 4. Integration with probmed (skipped when probmed is absent)
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 skip_if_not_installed("lavaan")
 
 alias_names <- c("m_X", "y_M", "y_X")

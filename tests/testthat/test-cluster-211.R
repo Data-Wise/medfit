@@ -3,6 +3,8 @@
 # T2 covers the class and its validator. The hand-built objects need no lme4,
 # so these tests also run in the noSuggests job.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 named_diag <- function(nms, v = 0.01) {
   m <- diag(v, length(nms))
   dimnames(m) <- list(nms, nms)
