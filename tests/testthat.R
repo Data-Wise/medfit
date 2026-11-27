@@ -9,4 +9,11 @@
 library(testthat)
 library(medfit)
 
-test_check("medfit")
+# The macOS and Windows CI legs set MEDFIT_TEST_FILTER to a platform subset (R-CMD-check.yaml); the full CI-tier
+# suite runs on ubuntu release. Unset or empty means every file.
+filter <- Sys.getenv("MEDFIT_TEST_FILTER", "")
+if (nzchar(filter)) {
+  test_check("medfit", filter = filter)
+} else {
+  test_check("medfit")
+}

@@ -130,3 +130,19 @@ test_that("planted defect: a job or install step without a timeout is detected",
   expect_null(bare$jobs$a[["timeout-minutes"]])
   expect_null(bare$jobs$a$steps[[1L]][["timeout-minutes"]])
 })
+
+test_that("the platform subset on the macOS and Windows legs matches enough test files", {
+  f <- wf_path("workflows", "R-CMD-check.yaml")
+  skip_if_not(file.exists(f), "no .github directory (installed package)")
+  skip_if_not_installed("yaml")
+  cfg <- yaml::read_yaml(f)$jobs[["R-CMD-check"]]$strategy$matrix$config
+  filters <- unlist(lapply(cfg, function(x) x[["test-filter"]]))
+  expect_length(filters, 2L)
+  files <- sub("^test-(.*)\\.R$", "\\1", list.files(testthat::test_path(), "^test-.*\\.R$"))
+  for (flt in filters) {
+    n <- sum(grepl(flt, files))
+    expect_gte(n, 30L)
+    expect_lt(n, 80L)
+  }
+  expect_identical(grepl("MEDFIT_TEST_FILTER", paste(readLines(f), collapse = "\n")), TRUE)
+})

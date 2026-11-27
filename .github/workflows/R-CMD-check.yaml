@@ -41,8 +41,10 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: macos-latest,   r: 'release'}
-          - {os: windows-latest, r: 'release'}
+          # macOS and Windows run a platform subset (classes, extraction, fitting, the optimizer core, bootstrap, effect SEs):
+          # 17 s of the 140 s CI tier on a laptop, because a full run was 14 min on Windows. ubuntu release runs every file.
+          - {os: macos-latest,   r: 'release', test-filter: '^(classes|validators|extract-(lm|glm|lavaan|serial|parallel|interaction)|fit-(glm|sem)|sem-(parse|model|ml|optim|constraints|se|fit|methods|anova)|bootstrap|effect-se|methods-|native-identities|mediation-demo)'}
+          - {os: windows-latest, r: 'release', test-filter: '^(classes|validators|extract-(lm|glm|lavaan|serial|parallel|interaction)|fit-(glm|sem)|sem-(parse|model|ml|optim|constraints|se|fit|methods|anova)|bootstrap|effect-se|methods-|native-identities|mediation-demo)'}
           # Pinned to 24.04 for a stable image (gates.yaml timed out on 26.04 in PR #307). Speed is NOT the reason: two
           # paired probe runs on one commit found no consistent difference (run 45505691085: 50 min on 24.04 against 65
           # on ubuntu-latest; run 45573883028, four jobs started together: control 24.04 46 min against control latest
@@ -56,6 +58,7 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
       _R_CHECK_CODOC_S4_METHODS_: false
+      MEDFIT_TEST_FILTER: ${{ matrix.config.test-filter }}
 
     steps:
       - uses: actions/checkout@v7
