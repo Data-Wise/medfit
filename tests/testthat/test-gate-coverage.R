@@ -86,3 +86,21 @@ test_that("planted defect: a structure with no gate, and a gate with no structur
   without <- gc_struct[gc_struct$structure != "factor covariates", ]
   expect_true("factor" %in% setdiff(gc_gates$gate, unlist(lapply(without$gates, gc_tokens))))
 })
+
+test_that("gate-shards.R select works for every shard index, the last one included, and the shards partition the rest set", {
+  skip_on_cran()
+  script <- file.path(root, "scripts", "gate-shards.R")
+  skip_if_not(file.exists(script), "scripts/ is not shipped here")
+  rscript <- file.path(R.home("bin"), "Rscript")
+  withr::local_dir(root) # the script sources tests/sim/... relative to the repo root
+  k <- 3L
+  picked <- lapply(seq_len(k), function(i) {
+    out <- suppressWarnings(system2(rscript, c(script, "select", i, k), stdout = TRUE, stderr = FALSE))
+    expect_null(attr(out, "status"), info = paste("select", i, k)) # the `select 3 3` repeat once dropped its second 3
+    strsplit(trimws(out), ",", fixed = TRUE)[[1]]
+  })
+  all <- unlist(picked)
+  expect_false(anyDuplicated(all) > 0L)
+  expect_setequal(all, setdiff(gc_gates$gate, c("reliability", readLines(file.path(root, "tests", "sim", "gates-local-only.txt")) |>
+    sub(pattern = "#.*", replacement = "") |> trimws() |> (\(x) x[nzchar(x)])())))
+})
