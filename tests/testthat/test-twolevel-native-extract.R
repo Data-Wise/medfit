@@ -5,6 +5,7 @@
 # planning/specs/ADR-twolevel-oracle-tolerances-2026-11-18.md. Planted defects: admissibility read from `converged`
 # only (the forged-ledger tests) and covariance rows keyed by name (the shared-label test).
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 skip_if_not_installed("lavaan")
 
 tlx_fit <- function(model, data) fit_sem(model, data, cluster = "cluster")

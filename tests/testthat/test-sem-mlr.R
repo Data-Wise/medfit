@@ -3,6 +3,7 @@
 # 1e-5. The Satorra-Bentler (MLM) factor is a different number and must fail the same comparison.
 
 # Skewed, heavy-tailed data, so that the scaling factor is far from 1 and a normal-theory shortcut shows.
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 mlr_data <- function(n = 400, seed = 20261125) {
   set.seed(seed)
   x <- stats::rexp(n) - 1

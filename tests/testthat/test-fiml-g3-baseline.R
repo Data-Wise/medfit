@@ -16,6 +16,7 @@
 # other simple_* entries are non-serial near misses and must not change (F8).
 # S1a never rewrites the frozen pre-serial files: fiml-refusals-after-g3s1a.rds and fiml-tables-after-g3s1a.rds
 # (made by make-fiml-after-g3s1a.R) pin the post-S1a answers and the 12 serial table cells.
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 b0_may_change <- function(nm) startsWith(nm, "ser_") || identical(nm, "simple_serial_chain_bare")
 
 # Slice S1b (the saturated k = 0 serial shape becomes a public fit) changes the answer for exactly the entries below:

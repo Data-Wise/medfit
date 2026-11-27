@@ -5,6 +5,7 @@
 # product. The population gate reads the statistic through the internal `.sem_chisq()`.
 
 # Codex's counterexample (amendment section 2a): m = .7 x + e, y = .4 m + .3 x + .2 x m + e', X uncentered.
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 pmt_data <- function(n = 600L, seed = 17L, xmean = 2) {
   set.seed(seed)
   x <- stats::rnorm(n) + xmean

@@ -1,5 +1,6 @@
 # Whole-fit edge grid: every accepted estimate has an independent regression or
 # hand oracle; otherwise the fit must explicitly warn or refuse.
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 edge_data <- function(n = 120L, seed = 41L) {
   d <- sem_sim(sem_model_observed(), n, seed) # nolint: object_usage_linter.
   d[, c("X", "C", "M", "Y")]

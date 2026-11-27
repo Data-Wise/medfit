@@ -77,7 +77,8 @@ jobs:
             only=$(Rscript -e 'ids <- read.csv("tests/sim/gates.csv", stringsAsFactors = FALSE)$gate; cat(setdiff(ids, "reliability"), sep = ",")')
           fi
           # --monthly: run the monthly-only gates (tests/sim/gates-monthly.txt) that the PR gates shards skip
-          Rscript tests/sim/run-gates.R --sim --only "$only" --monthly
+          # --local-only: also run the local-only gates (tests/sim/gates-local-only.txt); the monthly record keeps them
+          Rscript tests/sim/run-gates.R --sim --only "$only" --monthly --local-only
       - name: Record this shard's metrics
         if: always()
         run: Rscript tests/sim/qc-metrics.R "${{ matrix.shard }}"

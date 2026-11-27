@@ -121,7 +121,9 @@ Other cases (interaction, weights, constraints and MBCO, serial or parallel mode
 ## More, when you need it
 
 <details>
-<summary><strong>What's new in 0.21.1</strong></summary>
+<summary><strong>What's new in 0.21.2</strong></summary>
+
+* **0.21.2 (2026-11-26, GitHub; CRAN submission is the maintainer's):** no change to what any function returns; fixes the notes CRAN's incoming checks raised (Rd usage, check time) and the open S7 issue on 0.3.2, and moves the slowest tests and gates to the local full run.
 
 * **0.21.1 (2026-11-26, GitHub only):** no change to the package code since 0.21.0 (released 2026-11-25); the longest test files are skipped on CRAN, the test warnings are gone, and the cookbook has recipe 25 (MLR). The highlights of 0.21.0 follow.
 

@@ -100,3 +100,33 @@ test_that("coverage scope regression scenarios pass in a checkout", {
   ), stdout = TRUE, stderr = TRUE))
   expect_null(attr(result, "status"), info = paste(result, collapse = "\n"))
 })
+
+# Review 2026-11-26 (W3, W8): release PR #556's required check hung in setup-r for 5 hours (only the 300-minute job
+# limit fired), and three workflows had no limit at all.
+test_that("every job in the long-running workflows has a timeout and the install steps have their own", {
+  skip_if_not_installed("yaml")
+  files <- c("R-CMD-check.yaml", "test-coverage.yaml", "claude.yml", "revdep-check.yaml", "rhub.yaml")
+  skip_if_not(file.exists(wf_path("workflows", files[1L])), "no .github directory (installed package)")
+  for (f in files) {
+    jobs <- yaml::read_yaml(wf_path("workflows", f))$jobs
+    for (nm in names(jobs)) {
+      expect_false(is.null(jobs[[nm]][["timeout-minutes"]]),
+                   info = paste0(f, ": job `", nm, "` has no timeout-minutes"))
+    }
+  }
+  for (f in c("R-CMD-check.yaml", "test-coverage.yaml")) {
+    jobs <- yaml::read_yaml(wf_path("workflows", f))$jobs
+    for (nm in names(jobs)) for (st in jobs[[nm]]$steps) {
+      u <- st$uses %||% ""
+      if (grepl("^r-lib/actions/setup-r@", u)) expect_lte(st[["timeout-minutes"]] %||% Inf, 15)
+      if (grepl("^r-lib/actions/setup-r-dependencies@", u)) expect_lte(st[["timeout-minutes"]] %||% Inf, 60)
+    }
+  }
+})
+
+test_that("planted defect: a job or install step without a timeout is detected", {
+  skip_if_not_installed("yaml")
+  bare <- yaml::read_yaml(text = "jobs:\n  a:\n    runs-on: x\n    steps:\n      - uses: r-lib/actions/setup-r@v2\n")
+  expect_null(bare$jobs$a[["timeout-minutes"]])
+  expect_null(bare$jobs$a$steps[[1L]][["timeout-minutes"]])
+})

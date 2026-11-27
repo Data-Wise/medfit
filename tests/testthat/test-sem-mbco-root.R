@@ -1,5 +1,6 @@
 # The MBCO root ledger is validated before mbco_sem() returns: the full fit and one null per tested path, rebuilt.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 mbco_root_model <- "repetition ~ a1*x\nimagery ~ a2*x\nrecall ~ cp*x + b1*repetition + b2*imagery"
 
 mbco_root_fit <- function(...) {

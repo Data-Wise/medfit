@@ -3,6 +3,7 @@
 # data as methods.qmd so their numbers agree. Skips when the vignettes are absent
 # (installed or built package).
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 article_path <- function(name) {
   p <- testthat::test_path("..", "..", "vignettes", "articles", name)
   if (file.exists(p)) p else NA_character_

@@ -6,6 +6,7 @@
 # Oracles: lavaan's own `:=` defined parameter (value and delta SE) and a hand delta method on lavaan's
 # joint vcov, both independent of the adapter.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 val <- function(e) as.numeric(unclass(e))
 
 # lavaan `:=` contrast of a fit whose model is `model`, as c(est, se); `def` is the definition.

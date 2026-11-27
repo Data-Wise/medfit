@@ -2,6 +2,7 @@
 # computes its status from live behavior, the status in the article equals the probe's, and a planted edit to a
 # row is caught. Skips when the vignettes or lavaan are absent.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 lc_text <- function() {
   p <- testthat::test_path("..", "..", "vignettes", "articles", "lavaan-comparison.qmd")
   testthat::skip_if(!file.exists(p), "vignettes are not available (installed or built package)")

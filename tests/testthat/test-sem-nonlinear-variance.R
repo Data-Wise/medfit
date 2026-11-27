@@ -3,6 +3,7 @@
 # the unconstrained fit (LR = 0). These tests are RED until T3; the frozen unconstrained and linear-constrained fits
 # must stay as they are.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 nv_model <- "M ~ a*X\nY ~ cp*X + b*M\nM ~~ Vm*M\nY ~~ Vy*Y"
 
 nv_data <- function(seed, a, b, sigma_y2) {

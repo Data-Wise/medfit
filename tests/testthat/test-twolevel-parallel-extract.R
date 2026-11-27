@@ -1,6 +1,7 @@
 # IG5 T2: extraction of parallel mediators from a two-level lavaan fit (TwoLevelParallelMediationData).
 # Oracle: lavaan's own coef() and vcov() read by parameter LABEL, independent of the adapter's free-index key.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 skip_if_not_installed("lavaan")
 
 test_that("paths and the 2(2k + 1) vcov block equal lavaan's, read by label", {

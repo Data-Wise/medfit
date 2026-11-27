@@ -4,6 +4,7 @@
 # cap is checked with overflow-safe arithmetic before the grid is allocated; the over-cap node is `not_enumerated`
 # and keeps its plain error (message text only gains non-scientific, 2^53-approximate and overflow wording).
 # Stored data and injected objectives only; injected values are control payloads, not scientific results.
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 d3_model <- "repetition ~ a1*x\nimagery ~ a2*x\nrecall ~ cp*x + b1*repetition + b2*imagery"
 d3_data <- function() readRDS(testthat::test_path("fixtures", "memory_exp.rds"))
 

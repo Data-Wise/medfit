@@ -3,6 +3,7 @@
 # own `:=` (value and delta SE) and a hand delta method on lavaan's free-parameter vcov. Written by the
 # oracle QA agent, independent of test-twolevel-contrast.R.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 qa_defs <- list(
   free = list(tl_model(), "a*b - a2*b2", character(0)),
   a_label = list(tl_model(within = "a*X", between = "a*X"), "a*b - a*b2", "a"),

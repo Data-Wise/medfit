@@ -3,6 +3,7 @@
 # 0.083100 for b1 == 0; 0.060332 for the Rd example as written) and lavaan >= 0.7-3 constrained fits on a
 # latent-mediator model. Planted defects: the larger diffLL instead of the minimum, and the wrong multiplier.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 mbco_mem <- function() {
   path <- testthat::test_path("fixtures", "memory_exp.rds")
   if (!file.exists(path)) testthat::skip("tests/testthat/fixtures/memory_exp.rds is not present")

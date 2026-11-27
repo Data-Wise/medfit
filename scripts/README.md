@@ -15,6 +15,7 @@ The repair is idempotent and does nothing when pkgdown produces a correct page.
 | `scripts/check-local.sh --full-tests` | Source-mode testthat suite with `NOT_CRAN=true`. Record the counts for the final candidate. |
 | `scripts/check-local.sh --tests-only` | Source-mode quick suite with `NOT_CRAN=false` and force-Suggests disabled. |
 | `scripts/check-local.sh` | The quick suite, then a package build and check with vignettes and the repeated test pass disabled. |
+| `scripts/check-local-full.sh` | The local-only tier: the testthat files in `tests/testthat/local-only-tests.txt` and the gates in `tests/sim/gates-local-only.txt` (each over about 300 s on a hosted runner, so hosted CI and CRAN skip them). Writes `planning/local-full-runs/RECEIPT-<date>-<sha>.md` and exits 1 on any failure. `--dry-run` lists the items; `--tests-only`, `--gates-only`, `--workers N`. **A release needs a green receipt for the release commit.** |
 | Separate strict installed-package check | Build the tarball and check with `--as-cran --run-donttest` and the required strict flavor settings. Record which checks ran, including vignettes and optional dependencies. |
 
 The runner prints a different log path for each invocation. Follow that path

@@ -5,6 +5,7 @@
 # form (1e-10). Planted defects (TL-7) run through the same checks under expect_failure(), each with the fixture
 # condition that makes it visible asserted first. lavaan fits use the TL-3 convention (tln_fit_lavaan()).
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 tl_w <- c("X", "M", "Y")
 
 # Moments over W (and Z) for given path values, written by hand from the paths, not through the RAM code.

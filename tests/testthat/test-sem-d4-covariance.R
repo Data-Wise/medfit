@@ -1,4 +1,5 @@
 # Independent Gaussian likelihood with a*b = 0.4 and a negative: a = -exp(t), b = 0.4/a.
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 .d4_jacobian <- function(f, p) {
   h <- 1e-5 * pmax(1, abs(p))
   sapply(seq_along(p), function(i) {

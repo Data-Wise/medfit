@@ -3,11 +3,6 @@
 \name{SEMFit-methods}
 \alias{SEMFit-methods}
 \title{Methods for SEMFit objects}
-\arguments{
-\item{object, x}{A \link{SEMFit} object}
-
-\item{...}{Additional arguments (ignored)}
-}
 \value{
 \code{coef()} a named numeric vector; \code{vcov()} a matrix; \code{nobs()} an
 integer; \code{logLik()} an object of class \code{"logLik"}; \code{summary()} an object of
@@ -17,6 +12,9 @@ class \code{"summary_SEMFit"}; \code{print()} invisibly returns its argument.
 Accessors and display for a \link{SEMFit} returned by \code{\link[=fit_sem]{fit_sem()}}.
 }
 \details{
+These are S7 methods for the base generics, so there is no separate usage
+section; each takes the \link{SEMFit} object as its first argument (\code{object}, or
+\code{x} for \code{print()}) and ignores further arguments in \code{...}.
 \itemize{
 \item \code{coef()} returns the free-parameter estimates, named as lavaan names its
 coefficients: the label when the row has one, else \verb{lhs op rhs} without

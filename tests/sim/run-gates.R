@@ -24,7 +24,9 @@
 #                                                 cases for the --sim path (crash, no write, control)
 # Options: --max-age DAYS (default 14; older results are stale), --dir DIR (results directory), --monthly (also run
 # the gates listed in tests/sim/gates-monthly.txt, which every mode drops otherwise: the qc-monthly workflow passes it,
-# the PR gates shards do not; ADR D-13).
+# the PR gates shards do not; ADR D-13), --local-only (also run the gates in tests/sim/gates-local-only.txt, each more
+# than about 300 s on a hosted runner; every mode drops them otherwise; scripts/check-local-full.sh and qc-monthly
+# pass it).
 # Exit status: 0 only when every requested check passes. Summary: tests/sim/results/gates-summary-<date>.txt
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -48,6 +50,13 @@ if (!has("--monthly") && any(spec$gate %in% monthly)) {
               paste(intersect(spec$gate, monthly), collapse = ", ")))
 }
 spec <- so_drop_monthly(spec, monthly, has("--monthly"))
+source("tests/sim/gate-tier-lib.R") # the local-only gate list
+local_only <- gate_local_only()
+if (!has("--local-only") && any(spec$gate %in% local_only)) {
+  cat(sprintf("local-only gates skipped (pass --local-only to run them): %s\n\n",
+              paste(intersect(spec$gate, local_only), collapse = ", ")))
+}
+spec <- gate_drop_local_only(spec, local_only, has("--local-only"))
 
 chk <- function(check, ok, detail) {
   data.frame(check = check, pass = isTRUE(ok), detail = detail, stringsAsFactors = FALSE)

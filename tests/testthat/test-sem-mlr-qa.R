@@ -1,6 +1,7 @@
 # Independent oracle QA for estimator = "MLR" (P1a): models the implementer did not use, and planted defects inside
 # the engine (not only on the oracle side). Oracle: lavaan estimator = "MLR", 1e-5 (scaled chi-square relative).
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 qa_mlr_data <- function(n = 350, seed = 77) {
   set.seed(seed)
   c1 <- stats::rnorm(n)

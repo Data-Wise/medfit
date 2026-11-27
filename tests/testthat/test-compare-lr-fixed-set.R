@@ -3,6 +3,7 @@
 # fixed.x = FALSE and the fit's fixed set written as fixed rows at the sample moments, so lavaan's LR must equal its
 # own logLik difference and medfit's deviance difference on the product null.
 
+skip_on_cran()  # long run: skipped on CRAN to keep the check short; runs in GitHub CI and with NOT_CRAN=true
 skip_if_not_installed("lavaan")
 
 fs_base <- "mediator1 ~ a*treatment + covariate1\noutcome ~ b*mediator1 + cp*treatment + covariate1\n"

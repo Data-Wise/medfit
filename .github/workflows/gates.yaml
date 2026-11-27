@@ -7,6 +7,11 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      local_only:
+        description: "Also run the local-only gates (tests/sim/gates-local-only.txt, each over 5 min hosted; twolevel-equal-size alone is 28 to 53 min)"
+        type: boolean
+        default: false
 
 name: gates
 
@@ -18,25 +23,17 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  gates:
-    # Two shards run in parallel: the reliability gate (76,800 fits) alone, and every other gate. A gate added to
-    # tests/sim/gates.csv lands in "rest" automatically.
-    name: gates (${{ matrix.shard }})
+  reliability:
+    # The reliability gate (76,800 fits) alone, about 23 minutes.
+    name: gates (reliability)
     # Pinned to ubuntu-24.04: the full gates job timed out at 75 min on ubuntu-26.04 (PR #307 runs 40053057744 attempts
     # 1-2, 40053008246, 40051687109) and passed on 24.04 for the same tree (run 40109489583: reliability 22 min, rest
     # 28 min). A single gate run alone on 26.04 was fast (run 40059864450), so the cause is not yet known.
     runs-on: ubuntu-24.04
-    # The `rest` shard took 96 minutes and `reliability` 49 on the 0.20.0 probe run (the new two-level gates landed in
-    # `rest`); 75 cancelled both release runs.
     timeout-minutes: 150
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [reliability, rest]
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       NOT_CRAN: "true"
-
     steps:
       - uses: actions/checkout@v7
 
@@ -50,26 +47,105 @@ jobs:
           dependencies: '"all"'
           extra-packages: any::remotes, any::devtools
 
-      - name: Driver self-test (mutants)
-        if: matrix.shard == 'rest'
-        run: Rscript tests/sim/run-gates.R --mutants
-
-      - name: Run the gates of this shard (--sim)
-        run: |
-          if [ "${{ matrix.shard }}" = "reliability" ]; then
-            only="reliability"
-          else
-            only=$(Rscript -e 'ids <- read.csv("tests/sim/gates.csv", stringsAsFactors = FALSE)$gate; cat(setdiff(ids, "reliability"), sep = ",")')
-          fi
-          echo "gates: $only"
-          Rscript tests/sim/run-gates.R --sim --only "$only"
+      - name: Run the reliability gate (--sim)
+        run: Rscript tests/sim/run-gates.R --sim --only reliability
 
       - name: Upload results and logs
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: gate-results-${{ matrix.shard }}
+          name: gate-results-reliability
           path: |
             tests/sim/results/gates-*.log
             tests/sim/results/gates-summary-*.txt
           if-no-files-found: warn
+
+  shard:
+    # Every other gate, in SHARDS parallel shards chosen by measured time (scripts/gate-shards.R, weights in
+    # tests/sim/gate-seconds.csv). The unsharded `rest` job took 58 to 97 minutes (77.5 on the v0.21.1 release PR, run
+    # 45777601031); one gate, twolevel-equal-size, is about 31 minutes of that and cannot be split across jobs, so the
+    # bound is that gate. A gate added to tests/sim/gates.csv lands in a shard automatically. Not a required check by
+    # name: the required `gates (rest)` is the aggregator job below. The local-only gates (tests/sim/gates-local-only.txt,
+    # twolevel-equal-size among them) are not in the partition unless a manual dispatch sets `local_only`.
+    name: gates rest shard ${{ matrix.shard }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      NOT_CRAN: "true"
+      SHARDS: "3" # must equal the matrix size; the aggregator's union check fails when it does not
+      # empty on PRs; "--local-only" only for a manual dispatch that asked for the local-only gates
+      LOCAL_ONLY: ${{ inputs.local_only && '--local-only' || '' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"all"'
+          extra-packages: any::remotes, any::devtools
+
+      # Once per workflow run, in a light shard (not the one holding twolevel-equal-size)
+      - name: Driver self-test (mutants)
+        if: matrix.shard == 2
+        run: Rscript tests/sim/run-gates.R --mutants
+
+      - name: Run the gates of this shard (--sim)
+        run: |
+          only=$(Rscript scripts/gate-shards.R select ${{ matrix.shard }} "$SHARDS" $LOCAL_ONLY)
+          echo "gates: $only"
+          mkdir -p tests/sim/results
+          echo "$only" > tests/sim/results/shard-gates-${{ matrix.shard }}.txt
+          Rscript tests/sim/run-gates.R --sim --only "$only" $LOCAL_ONLY
+
+      - name: Upload results and logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gate-results-rest-${{ matrix.shard }}
+          path: |
+            tests/sim/results/gates-*.log
+            tests/sim/results/gates-summary-*.txt
+            tests/sim/results/shard-gates-*.txt
+          if-no-files-found: warn
+
+  rest:
+    # The required status check `gates (rest)` (branch protection on main names it; do not rename). Passes only when
+    # every shard succeeded and the shards together ran exactly the gates of tests/sim/gates.csv minus reliability.
+    # `if: always()` so a cancelled or skipped shard fails this check instead of leaving it skipped (a skipped required
+    # check counts as passing).
+    name: gates (rest)
+    needs: shard
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Every shard succeeded
+        env:
+          SHARD_RESULT: ${{ needs.shard.result }}
+        run: |
+          echo "shard jobs: $SHARD_RESULT"
+          [ "$SHARD_RESULT" = "success" ] || { echo "::error::a gates shard did not succeed ($SHARD_RESULT)"; exit 1; }
+
+      - uses: actions/checkout@v7
+
+      - uses: r-lib/actions/setup-r@v2
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: gate-results-rest-*
+          path: shard-artifacts
+
+      - name: Shards together run exactly the rest set
+        env:
+          LOCAL_ONLY: ${{ inputs.local_only && '--local-only' || '' }}
+        run: |
+          Rscript scripts/gate-shards.R union-check shard-artifacts $LOCAL_ONLY
+          Rscript scripts/test-gate-shards.R
