@@ -4,6 +4,8 @@
 # exist. Fixtures are parallel-mediator data: effects of 0.9 on one path and 0.1 on the other leave several
 # local optima; moderate effects leave one.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 sp_syntax <- "M1 ~ a1*X\nM2 ~ a2*X\nY ~ b1*M1 + b2*M2 + cp*X\na1*b1 + a2*b2 == 0"
 
 sp_data <- function(a1, b1, a2, b2, n = 300, seed = 1) {

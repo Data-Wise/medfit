@@ -3,6 +3,8 @@
 # covariate in the mediator equation in every model and one no-covariate model for the simple case. The same
 # helpers take the native route (`fwo_route_native()`) in test-four-way-native-oracles.R.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 skip_if_not_installed("lavaan")
 skip_if_not_installed("sandwich")
 

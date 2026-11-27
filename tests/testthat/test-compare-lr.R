@@ -1,4 +1,6 @@
 # compare_lr(): the public wrapper (#249 T4).
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 d <- mediation_demo
 mod <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"
 

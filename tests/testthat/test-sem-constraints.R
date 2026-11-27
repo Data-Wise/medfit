@@ -4,6 +4,8 @@
 # shared with nloptr). Planted defect: a nonlinear constraint misclassified as
 # linear is solved with a constant Jacobian and violates the true constraint.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 cons_data <- function(n = 500, seed = 11) {
   set.seed(seed)
   d <- data.frame(X = stats::rnorm(n))

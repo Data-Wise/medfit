@@ -2,6 +2,8 @@
 # Spec: planning/specs/SPEC-joint-mediator-interactions-2026-09-23.md
 
 # A valid hand-built parallel object with an X x M2 product; `...` overrides.
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 make_joint_obj <- function(...) {
   args <- list(
     structure = "parallel", mediators = c("M1", "M2"),

@@ -5,6 +5,8 @@
 # (TL-7) by two planted defects that the bound must reject: a shared label that keeps only its level-2 contribution,
 # and a level-2 mean chain that is dropped.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 tlq_key <- function(pt) {
   base <- ifelse(pt$op == "~1", paste0(pt$lhs, "~1"), paste0(pt$lhs, pt$op, pt$rhs))
   key <- ifelse(pt$level == 2, paste0(base, ".l2"), base)

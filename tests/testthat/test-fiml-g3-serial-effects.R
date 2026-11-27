@@ -5,6 +5,8 @@
 # gradients of spec 3.2 recomputed from the extracted covariance, an enumeration of the directed paths, and the lavaan
 # `:=` values in test-fiml-g3-serial-saturated.R. Helpers are in helper-fiml-serial.R (sb_*).
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 sb_obj <- local({
   cache <- list()
   function(direct = "free") {

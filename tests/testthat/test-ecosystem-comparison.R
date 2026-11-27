@@ -3,6 +3,8 @@
 # the numbers the prose quotes match a live computation. Skips when the vignettes or the dependent (at the
 # version the article was checked against) are absent.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 ec_text <- function(name) {
   p <- testthat::test_path("..", "..", "vignettes", "articles", name)
   testthat::skip_if(!file.exists(p), "vignettes are not available (installed or built package)")

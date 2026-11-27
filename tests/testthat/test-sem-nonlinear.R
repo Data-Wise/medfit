@@ -4,6 +4,8 @@
 # covariance must be annihilated by the constraint Jacobian at the solution. Planted defects: the row
 # classified as linear, the covariance projection frozen at a stale Jacobian, and the projection omitted.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 nl_syntax <- "M ~ a*X\nY ~ b*M + cp*X\ncp == a*b"
 
 # Mediation data whose direct effect equals the indirect effect (cp = a*b = 0.2), so the constraint is true.
