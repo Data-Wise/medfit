@@ -2,6 +2,8 @@
 # Oracles: O1 (balanced saturated closed form), O2 (lm), O5 (fixed.x = FALSE), O6 (robust, FIML).
 # Each oracle has a planted-defect test that must fail under the defect (spec section 8).
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 skip_if_not_installed("lavaan")
 
 test_that("a two-level fit returns TwoLevelMediationData with the six paths (the flipped S0 test)", {

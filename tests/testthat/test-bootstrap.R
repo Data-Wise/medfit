@@ -12,6 +12,8 @@
 # --- Test Data Generators ---
 
 # Generate simple mediation data
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 generate_mediation_data <- function(n = 200, a = 0.5, b = 0.3, c_prime = 0.2, seed = 123) {
   set.seed(seed)
   X <- rnorm(n)

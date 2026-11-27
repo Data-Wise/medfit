@@ -1,6 +1,8 @@
 # IG5 T2 oracle QA: cells the implementer's tests did not pin (each one caught a planted defect that the suite
 # missed). Oracle for k = 3: lavaan's parameter table read by (lhs, op, rhs, level), never by label or key order.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 skip_if_not_installed("lavaan")
 
 test_that("k = 3 with a covariate: paths and the 14 x 14 vcov equal lavaan's, read by lhs/rhs/level", {

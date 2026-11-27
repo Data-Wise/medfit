@@ -3,6 +3,8 @@
 # against lavaan; the planted defects fixedx_logical (a named subset translated as all-fixed) and product_free (the
 # unset leaves the product column free) must turn cells red. Full matrix: tests/sim/native-defaults-oracle.R.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 skip_if_not_installed("lavaan")
 ndo_lib <- test_path("..", "sim", "native-defaults-oracle-lib.R")
 skip_if_not(file.exists(ndo_lib), "tests/sim is not shipped with the installed tests")

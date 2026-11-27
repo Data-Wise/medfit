@@ -1,6 +1,8 @@
 # The OpenMx adapter of compare_lr() (#249 T3): real OpenMx on the bundled data and on the joint-null cell where OpenMx
 # 2.19.1 or later drops the constraint at a zero start (T0 spike), plus the shared refusals.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 skip_if_not_installed("OpenMx")
 
 model_txt <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"

@@ -1,3 +1,5 @@
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 .ev_out <- function() {
   set.seed(3)
   x <- stats::rnorm(180)

@@ -5,6 +5,8 @@
 # completion that skips the marker-loading rule must be caught before
 # optimization.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 sem_models_oracle <- c(
   simple = "mediator1 ~ a*treatment + covariate1\noutcome ~ b*mediator1 + cp*treatment + covariate1",
   serial = "mediator1 ~ treatment\nmediator2 ~ mediator1 + treatment\noutcome ~ mediator2 + mediator1 + treatment",

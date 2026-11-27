@@ -4,6 +4,8 @@
 # Each cell has its own oracle: the same model with the parameter fixed in the syntax, the fit without a mean
 # structure (no centering), or lavaan.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 pin_base <- "mediator1 ~ a*treatment + covariate1\noutcome ~ b*mediator1 + cp*treatment + covariate1\n"
 pin_fixed <- "mediator1 ~ a*treatment + covariate1\noutcome ~ 0*mediator1 + cp*treatment + covariate1\n"
 

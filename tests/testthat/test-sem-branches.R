@@ -4,6 +4,8 @@
 # the b1 branch) and a brute force over the single-factor fits. Planted defects: the larger branch taken, a
 # branch warm-started from the full fit's estimates.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 mem_data <- function() {
   path <- testthat::test_path("fixtures", "memory_exp.rds")
   if (!file.exists(path)) testthat::skip("tests/testthat/fixtures/memory_exp.rds is not present")

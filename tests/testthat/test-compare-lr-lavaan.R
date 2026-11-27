@@ -1,6 +1,8 @@
 # The lavaan adapter and the medfit reference of compare_lr() (#249 T2): real lavaan on the bundled data, plus the
 # refusal of every construct outside the supported class.
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 skip_if_not_installed("lavaan")
 
 model_txt <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment"

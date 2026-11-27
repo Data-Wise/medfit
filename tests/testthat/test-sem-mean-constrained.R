@@ -1,5 +1,7 @@
 # Constraints, MBCO and re-fits with a mean structure (0.9.0 S5).
 
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 con_base <- "mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment\noutcome ~ i1*1\nmediator1 ~ i2*1"
 
 # the demo data moved far from zero: same model, intercepts change, everything else must not

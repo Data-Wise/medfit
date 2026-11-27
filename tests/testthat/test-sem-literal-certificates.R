@@ -5,6 +5,8 @@
 # every other branch resolves or carries a valid certificate. The failures stay `medfit_error_no_convergence` (D-11),
 # with the typed subclasses `medfit_sem_infeasible` and `medfit_sem_empty_union` and the evidence in `$ledger`.
 # Stored data and injected errors only; no generated samples.
+skip_on_cran() # Windows check time (0.21.3): runs in CI and the local full run
+
 d2_model <- "repetition ~ a1*x\nimagery ~ a2*x\nrecall ~ cp*x + b1*repetition + b2*imagery"
 d2_data <- function() readRDS(testthat::test_path("fixtures", "memory_exp.rds"))
 d2_mutate <- function(fun, old, new) {
