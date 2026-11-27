@@ -130,3 +130,15 @@ test_that("planted defect: a job or install step without a timeout is detected",
   expect_null(bare$jobs$a[["timeout-minutes"]])
   expect_null(bare$jobs$a$steps[[1L]][["timeout-minutes"]])
 })
+
+test_that("the hosted smoke subset in tests/testthat.R matches enough test files", {
+  f <- testthat::test_path("..", "testthat.R")
+  skip_if_not(file.exists(f), "no tests/testthat.R (installed package)")
+  src <- paste(readLines(f), collapse = "\n")
+  smoke <- eval(parse(text = sub(".*\\nsmoke <- (paste0\\(.*?\\n\\)).*", "\\1", src)))
+  files <- sub("^test-(.*)\\.R$", "\\1", list.files(testthat::test_path(), "^test-.*\\.R$"))
+  n <- sum(grepl(smoke, files))
+  expect_gte(n, 35L)
+  expect_lt(n, 80L)
+  expect_match(src, "hosted", fixed = TRUE)
+})
