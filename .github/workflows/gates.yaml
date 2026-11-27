@@ -37,11 +37,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4, 5, 6]
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       NOT_CRAN: "true"
-      SHARDS: "3" # must equal the matrix size; scripts/merge-reliability.R fails when the shard files do not match it
+      SHARDS: "6" # must equal the matrix size; scripts/merge-reliability.R fails when the shard files do not match it
     steps:
       - uses: actions/checkout@v7
 
@@ -96,7 +96,7 @@ jobs:
 
       - name: Merge the shards and run the gate verdict
         run: |
-          Rscript scripts/merge-reliability.R reliability-shards 3
+          Rscript scripts/merge-reliability.R reliability-shards 6
           # --max-age 2: the merged file is from today; an older file in the tree cannot satisfy the verdict
           Rscript tests/sim/run-gates.R --only reliability --max-age 2
 
