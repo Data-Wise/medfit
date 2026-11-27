@@ -63,7 +63,7 @@ if (sys.nframe() == 0L) {
   a <- commandArgs(trailingOnly = TRUE)
   cmd <- if (length(a)) a[[1]] else ""
   inc <- "--local-only" %in% a
-  a <- setdiff(a, "--local-only")
+  a <- a[a != "--local-only"] # not setdiff(): it drops repeats, so `select 3 3` lost its second 3
   if (cmd == "plan") {
     p <- plan_shards(as.integer(a[[2]]), include_local = inc)
     for (s in seq_along(p$gates)) cat(sprintf("shard %d: %5.0f s  %s\n", s, p$load[s], paste(p$gates[[s]], collapse = ",")))

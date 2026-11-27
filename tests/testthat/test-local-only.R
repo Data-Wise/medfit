@@ -90,6 +90,8 @@ test_that("run-gates.R drops a local-only gate unless --local-only is passed (pl
 
 test_that("qc-monthly keeps the local-only gates; the hosted PR gates workflow does not pass --local-only", {
   root <- sim_root()
-  qc <- readLines(file.path(root, ".github", "workflows", "qc-monthly.yaml"))
+  qc_file <- file.path(root, ".github", "workflows", "qc-monthly.yaml")
+  skip_if_not(file.exists(qc_file), "workflow files are not shipped with the installed tests")
+  qc <- readLines(qc_file)
   expect_true(any(grepl("run-gates.R --sim --only \"$only\" --monthly --local-only", qc, fixed = TRUE)))
 })
