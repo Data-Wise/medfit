@@ -121,7 +121,9 @@ Other cases (interaction, weights, constraints and MBCO, serial or parallel mode
 ## More, when you need it
 
 <details>
-<summary><strong>What's new in 0.21.2</strong></summary>
+<summary><strong>What's new in 0.21.2.9000</strong></summary>
+
+* **Development version:** no user-visible changes yet since 0.21.2 (released 2026-11-26), whose highlights follow.
 
 * **0.21.2 (2026-11-26, GitHub; CRAN submission is the maintainer's):** no change to what any function returns; fixes the notes CRAN's incoming checks raised (Rd usage, check time) and the open S7 issue on 0.3.2, and moves the slowest tests and gates to the local full run.
 

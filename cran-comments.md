@@ -12,7 +12,7 @@ section, and the slowest tests call `skip_on_cran()`, so the check time is below
 ## Test environments
 
 * local macOS (aarch64), R 4.6.2: `R CMD check --as-cran --run-donttest` on the tarball built from the release tag, with
-  `NOT_CRAN` unset, `_R_CHECK_LIMIT_CORES_=TRUE` and the CRAN-incoming variables. TIMINGS_TBD
+  `NOT_CRAN` unset, `_R_CHECK_LIMIT_CORES_=TRUE` and the CRAN-incoming variables. Result: 1 NOTE (the version jump). The tests take 87 s (156 s for the whole check), run on the 0.21.2 tarball.
 * GitHub Actions: Ubuntu 24.04 (R release, devel, oldrel-1 and R release without the Suggests packages), macOS and
   Windows (R release), with the full test suite.
 
@@ -25,9 +25,10 @@ section, and the slowest tests call `skip_on_cran()`, so the check time is below
 
 ## Tests
 
-The 17 longest test files (maximum-likelihood oracle comparisons for the FIML, two-level and four-way routines) call
-`skip_on_cran()`, so the check stays short. They run in full in the GitHub Actions jobs above and whenever
-`NOT_CRAN=true`. The tests that remain on CRAN run 14,233 expectations with no failures and no warnings.
+The slowest test files (maximum-likelihood oracle comparisons for the FIML, two-level and four-way routines, and the
+simulation gates) call `skip_on_cran()`, so the check stays short: the tests take 87 s on the tarball. They run in full in
+the GitHub Actions jobs above and whenever `NOT_CRAN=true`. The tests that remain on CRAN give 7,639 passing expectations
+with no failures and no warnings.
 
 ## Dependencies
 
