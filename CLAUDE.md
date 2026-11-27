@@ -372,6 +372,17 @@ troubleshooting and two-level docs guards, which stay on CI; a gate of 70 s or m
 tests 775 s to 149 s (42 of 244 files local), CRAN-mode tests 53 s to 34 s, `gates (rest)` 1,132 s to 411 s. Plans and
 lists: `planning/PLAN-local-only-tier-2026-11-26.md`, `planning/PLAN-ci-speed-2026-11-27.md`.
 
+**Hosted smoke subset (decided 2026-11-27, #575).** Every hosted run and CRAN run executes only the 47 files that
+`tests/testthat.R` selects with its `smoke` regex (classes, extraction, fitting, the optimizer core, bootstrap, effect
+SEs, and the structural guards): about 9 s on the maintainer's machine, down from 140 s. The full suite runs only
+locally (`scripts/check-local-full.sh`, whose receipt gates a release). `MEDFIT_TEST_FILTER=all` forces the full suite in
+any environment; any other value is used as a file regex; a run that is neither CI nor CRAN is unchanged. A new test file
+that guards structure (workflows, counts, API) belongs in the `smoke` regex; a heavy file needs no marker, because the
+regex already leaves it out of hosted runs. Measured on dev (run 46071068028): every R-CMD-check leg 209 to 257 s;
+coverage 439 s before the subset; pkgdown about 6 min, lint 3.5 min. Rule: a hosted check over 8 min on a release PR gets a
+task in `planning/PLAN-ci-under-10min-2026-11-27.md`. The cookbook, troubleshooting and two-level docs guards now run only
+locally. Plan: `planning/PLAN-ci-under-10min-2026-11-27.md`.
+
 ### Organization
 
 ```

@@ -1,3 +1,5 @@
+# 2026-11-27: PR #575 merged into dev: every hosted and CRAN run uses the 47-file smoke subset chosen in tests/testthat.R (9 s locally; MEDFIT_TEST_FILTER=all runs everything); dispatched R-CMD-check run 46071068028: all six legs 209 to 257 s (Windows was 14 min); coverage 439 s (measured before the subset); test-coverage has workflow_dispatch. Open: win-builder time for a tarball from dev (user), coverage percentage and Codecov status on the next PR to main, plan planning/PLAN-ci-under-10min-2026-11-27.md (C6 user step).
+
 # 0.21.3 released, dev is 0.21.3.9000 (tag v0.21.3 at 1570f220, release PR #571, GitHub-only; CRAN-ready; CRAN upload is the maintainer's from the detached tag after win-builder) — 2026-11-27 MST
 
 # Release PR #571 merged with a merge commit after all 17 hosted checks passed on head 3b039798 (hosted Windows 30 min against 57 for 0.21.2); main CI green; tagged-install smoke passed; the tag tarball has the same file list as the checked one (1 NOTE, tests 43 s, 5,023 expectations). CRAN's pretest of 0.21.2 (Windows 11 min) is why this release exists.
