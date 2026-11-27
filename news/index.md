@@ -3105,7 +3105,7 @@ against this release. The same bugs are present in CRAN 0.3.2; see
   Both engines honor it, by different routes: `engine = "glm"` applies
   it at extraction time, after the coefficients are fit, while
   `engine = "regmedint"` passes it to
-  [`regmedint::regmedint()`](https://kaz-yos.github.io/regmedint/reference/regmedint.html)
+  [`regmedint::regmedint()`](https://rdrr.io/pkg/regmedint/man/regmedint.html)
   as `m_cde`, where that package’s closed-form estimator consumes it at
   fitting time. The two agree to delta-method tolerance on `@cde` and
   `@int_ref` at any shared `m_star`. Because `m_star` and `regmedint`’s

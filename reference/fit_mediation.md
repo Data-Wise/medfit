@@ -256,7 +256,7 @@ When `engine = "glm"` (default):
 When `engine = "regmedint"`:
 
 - Delegates to
-  [`regmedint::regmedint()`](https://kaz-yos.github.io/regmedint/reference/regmedint.html)
+  [`regmedint::regmedint()`](https://rdrr.io/pkg/regmedint/man/regmedint.html)
   (suggested package) for closed-form natural (in)direct effects, with
   or without a treatment-mediator interaction
 
@@ -284,7 +284,7 @@ invariant to `m_star`; only the CDE/INTref split moves.
 The engines reach the same result by different routes. `engine = "glm"`
 applies `m_star` at *extraction* time, after the coefficients are fit;
 `engine = "regmedint"` passes it to
-[`regmedint::regmedint()`](https://kaz-yos.github.io/regmedint/reference/regmedint.html)
+[`regmedint::regmedint()`](https://rdrr.io/pkg/regmedint/man/regmedint.html)
 as `m_cde`, where it is consumed by that package's closed-form estimator
 at *fitting* time. Supplying `m_star` for a fit with no
 treatment-by-mediator term is an error, not a silent no-op.

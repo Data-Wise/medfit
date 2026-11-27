@@ -717,7 +717,7 @@ bootstrap_mediation(
 with [`glm()`](https://rdrr.io/r/stats/glm.html) and passes them to
 [`extract_mediation()`](https://data-wise.github.io/medfit/reference/extract_mediation.md),
 so every formula above applies. `engine = "regmedint"` delegates to
-[`regmedint::regmedint()`](https://kaz-yos.github.io/regmedint/reference/regmedint.html),
+[`regmedint::regmedint()`](https://rdrr.io/pkg/regmedint/man/regmedint.html),
 a closed-form regression-based implementation, and maps its point
 estimates and its own delta-method covariance of the effects onto
 `MediationData` or `InteractionMediationData`. The adapter requires a

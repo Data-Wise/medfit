@@ -175,7 +175,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.21.2/vignettes/articles/extraction.qmd" class="external-link"><code>vignettes/articles/extraction.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -1124,7 +1124,7 @@ pie      0.19952257 0.4805126</code></pre>
 </div>
 </div>
 <p>The two terms shift in exactly compensating directions, so <code><a href="../reference/nde.html">nde()</a></code>, <code><a href="../reference/nie.html">nie()</a></code>, <code><a href="../reference/te.html">te()</a></code>, and <code><a href="../reference/pm.html">pm()</a></code> are <strong>invariant</strong> to <code>m_star</code> — only the CDE/INTref split moves. Passing <code>m_star</code> to a fit with no treatment-by-mediator term is an error, not a silent no-op.</p>
-<p>The engines reach the same answer by different routes. <code>engine = "glm"</code> applies <code>m_star</code> at <em>extraction</em> time, after the coefficients are fit; <code>engine = "regmedint"</code> hands the same value to <code><a href="https://kaz-yos.github.io/regmedint/reference/regmedint.html" class="external-link">regmedint::regmedint()</a></code> as its <code>m_cde</code> argument, where the closed-form estimator consumes it at <em>fitting</em> time. Because the two names denote one quantity, <code>m_cde</code> is not accepted in <code>engine_args</code> — use <code>m_star</code>.</p>
+<p>The engines reach the same answer by different routes. <code>engine = "glm"</code> applies <code>m_star</code> at <em>extraction</em> time, after the coefficients are fit; <code>engine = "regmedint"</code> hands the same value to <code><a href="https://rdrr.io/pkg/regmedint/man/regmedint.html" class="external-link">regmedint::regmedint()</a></code> as its <code>m_cde</code> argument, where the closed-form estimator consumes it at <em>fitting</em> time. Because the two names denote one quantity, <code>m_cde</code> is not accepted in <code>engine_args</code> — use <code>m_star</code>.</p>
 </section><section class="level4"><h4 id="other-engine-settings">Other engine settings<a class="anchor" aria-label="anchor" href="#other-engine-settings"></a>
 </h4>
 <p>Everything regmedint-specific that is <em>not</em> the reference level goes through <code>engine_args</code>:</p>

@@ -134,7 +134,7 @@ mediator and outcome models simultaneously."><meta property="og:image" content="
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit Mediation Models</h1>
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/R/fit-glm.R" class="external-link"><code>R/fit-glm.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.21.2/R/fit-glm.R" class="external-link"><code>R/fit-glm.R</code></a></small>
       <div class="d-none name"><code>fit_mediation.Rd</code></div>
     </div>
 
@@ -358,7 +358,7 @@ error</p></li>
 <h3 id="regmedint-engine">regmedint Engine<a class="anchor" aria-label="anchor" href="#regmedint-engine"></a></h3>
 
 
-<p>When <code>engine = "regmedint"</code>:</p><ul><li><p>Delegates to <code><a href="https://kaz-yos.github.io/regmedint/reference/regmedint.html" class="external-link">regmedint::regmedint()</a></code> (suggested package) for closed-form
+<p>When <code>engine = "regmedint"</code>:</p><ul><li><p>Delegates to <code><a href="https://rdrr.io/pkg/regmedint/man/regmedint.html" class="external-link">regmedint::regmedint()</a></code> (suggested package) for closed-form
 natural (in)direct effects, with or without a treatment-mediator interaction</p></li>
 <li><p>Returns <a href="MediationData.html">MediationData</a> or <a href="InteractionMediationData.html">InteractionMediationData</a> depending on whether
 <code>formula_y</code> contains a treatment-by-mediator interaction term; use
@@ -377,7 +377,7 @@ The two shift in compensating directions, so <code><a href="nde.html">nde()</a><
 <code><a href="pm.html">pm()</a></code> are invariant to <code>m_star</code>; only the CDE/INTref split moves.</p>
 <p>The engines reach the same result by different routes. <code>engine = "glm"</code>
 applies <code>m_star</code> at <em>extraction</em> time, after the coefficients are fit;
-<code>engine = "regmedint"</code> passes it to <code><a href="https://kaz-yos.github.io/regmedint/reference/regmedint.html" class="external-link">regmedint::regmedint()</a></code> as <code>m_cde</code>,
+<code>engine = "regmedint"</code> passes it to <code><a href="https://rdrr.io/pkg/regmedint/man/regmedint.html" class="external-link">regmedint::regmedint()</a></code> as <code>m_cde</code>,
 where it is consumed by that package's closed-form estimator at <em>fitting</em>
 time. Supplying <code>m_star</code> for a fit with no treatment-by-mediator term is an
 error, not a silent no-op.</p>

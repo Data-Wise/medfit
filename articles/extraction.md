@@ -1220,7 +1220,7 @@ silent no-op.
 The engines reach the same answer by different routes. `engine = "glm"`
 applies `m_star` at *extraction* time, after the coefficients are fit;
 `engine = "regmedint"` hands the same value to
-[`regmedint::regmedint()`](https://kaz-yos.github.io/regmedint/reference/regmedint.html)
+[`regmedint::regmedint()`](https://rdrr.io/pkg/regmedint/man/regmedint.html)
 as its `m_cde` argument, where the closed-form estimator consumes it at
 *fitting* time. Because the two names denote one quantity, `m_cde` is
 not accepted in `engine_args` — use `m_star`.

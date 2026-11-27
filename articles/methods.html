@@ -175,7 +175,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/main/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/data-wise/medfit/blob/v0.21.2/vignettes/articles/methods.qmd" class="external-link"><code>vignettes/articles/methods.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -787,7 +787,7 @@ d_{ij} \lambda_i\)</span> and <span class="math inline">\(\kappa_j = \theta_{3j}
 </div>
 </section><section class="level2"><h2 id="fitting-engines">Fitting engines<a class="anchor" aria-label="anchor" href="#fitting-engines"></a>
 </h2>
-<p><code>fit_mediation(engine = "glm")</code> fits the mediator and outcome models with <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> and passes them to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>, so every formula above applies. <code>engine = "regmedint"</code> delegates to <code><a href="https://kaz-yos.github.io/regmedint/reference/regmedint.html" class="external-link">regmedint::regmedint()</a></code>, a closed-form regression-based implementation, and maps its point estimates and its own delta-method covariance of the effects onto <code>MediationData</code> or <code>InteractionMediationData</code>. The adapter requires a linear mediator model and a unit treatment contrast; see <code><a href="../reference/fit_mediation.html">?fit_mediation</a></code>. For a non-Gaussian outcome model the components are on that model’s link scale, as regmedint reports them.</p>
+<p><code>fit_mediation(engine = "glm")</code> fits the mediator and outcome models with <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> and passes them to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>, so every formula above applies. <code>engine = "regmedint"</code> delegates to <code><a href="https://rdrr.io/pkg/regmedint/man/regmedint.html" class="external-link">regmedint::regmedint()</a></code>, a closed-form regression-based implementation, and maps its point estimates and its own delta-method covariance of the effects onto <code>MediationData</code> or <code>InteractionMediationData</code>. The adapter requires a linear mediator model and a unit treatment contrast; see <code><a href="../reference/fit_mediation.html">?fit_mediation</a></code>. For a non-Gaussian outcome model the components are on that model’s link scale, as regmedint reports them.</p>
 <p><code>engine = "lmer"</code> fits the two linear mixed models of the cluster design above (REML, random cluster intercepts, the mediator and level-1 covariates split into within-cluster deviation and cluster mean) and passes them to <code><a href="../reference/extract_mediation.html">extract_mediation()</a></code>; it returns a <code>ClusterMediationData</code>. <code>engine = "sem"</code> fits model syntax with the engine described in the next section, then extracts the mediation structure through the same workers as the lavaan route.</p>
 </section><section class="level2"><h2 id="native-sem-engine">The sem engine<a class="anchor" aria-label="anchor" href="#native-sem-engine"></a>
 </h2>
