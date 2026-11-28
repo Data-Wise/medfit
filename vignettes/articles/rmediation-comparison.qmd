@@ -30,7 +30,7 @@ against a live call on each build.
 | **Use RMediation when** | you want an interval from the distribution of a product (not a normal approximation), or `mbco()` on a restricted and a full `SEMFit` |
 | **Both** | read the same `MediationData` and `SerialMediationData`; the `mbco()` p-value agrees with `mbco_sem()` on a product null |
 
-The statements below were checked against RMediation 1.11.1 (a GitHub release) with medfit 0.16.0. RMediation is not
+The statements below were checked against RMediation 1.11.2 (a GitHub release) with medfit 0.21.3. RMediation is not
 a dependency of medfit, so the chunks run only where RMediation 1.11.1 or later is installed; a site built without it
 shows the code and the numbers quoted in the text. CRAN has 1.6.1, whose `mbco()` accepts only OpenMx models.
 
