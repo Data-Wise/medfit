@@ -29,7 +29,7 @@ accepts, with a status for each row that a test checks against a live call on ea
 | **Use probmed when** | you want P_med and its sensitivity analysis for a one-mediator or a parallel-mediator model |
 | **Both** | share one object: probmed calls `extract_mediation()` and reads the `MediationData` properties, so a medfit fit is the input to either |
 
-The statements below were checked against probmed 0.4.1 (a GitHub release, not on CRAN) with medfit 0.16.0. probmed
+The statements below were checked against probmed 0.4.1 (a GitHub release, not on CRAN) with medfit 0.21.3. probmed
 is not a dependency of medfit, so the chunks run only where probmed 0.4.1 or later is installed; a site built
 without it shows the code and the numbers quoted in the text.
 
