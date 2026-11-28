@@ -1,0 +1,142 @@
+# What changed since CRAN 0.3.2
+
+CRAN has medfit 0.3.2; this site documents 0.21.3.9000, the development
+version after 0.21.3 (GitHub and r-universe). This page lists what a
+0.3.2 user needs to know before upgrading: numbers that change, calls
+that now stop with an error, and what is new. The full record is
+[NEWS](https://data-wise.github.io/medfit/news/index.html).
+
+> **At a glance**
+>
+> **Use this when:** you used CRAN’s 0.3.2 and want to know what changes
+> before you upgrade.  
+> **You get:** the results that changed, the calls that now stop with an
+> error, and what is new, release by release.  
+> **Reading time:** 13 min
+
+> **The short version**
+>
+> - **Two results were wrong in 0.3.2 and are fixed:** serial
+>   [`te()`](https://data-wise.github.io/medfit/dev/reference/te.md)/[`pm()`](https://data-wise.github.io/medfit/dev/reference/pm.md),
+>   and `confint(parm = "paths")` on lavaan-extracted objects. See issue
+>   [\#83](https://github.com/Data-Wise/medfit/issues/83).
+> - **Several silent mistakes now stop with an error.** If code that ran
+>   before fails now, check the second table.
+> - **Install** from r-universe or GitHub; see the [home
+>   page](https://data-wise.github.io/medfit/#install).
+
+## Numbers that change
+
+| Version | What | Before | Now |
+|----|----|----|----|
+| 0.5.0 | serial [`te()`](https://data-wise.github.io/medfit/dev/reference/te.md) and [`pm()`](https://data-wise.github.io/medfit/dev/reference/pm.md) | summed only the chain and the direct effect (`a * d * b + c'`), leaving out paths that skip a mediator | sum every path from treatment to outcome; [`te()`](https://data-wise.github.io/medfit/dev/reference/te.md) equals the treatment coefficient of `lm(Y ~ X + covariates)` when the models are linear with the same covariates |
+| 0.5.0 | `confint(parm = "paths")` | looked for lm-style row names only; on lavaan-extracted objects the `b` and `c'` standard errors were swapped | finds each path by name, and stops with an error naming the missing rows |
+| 0.5.0 | `confint(parm = "effects")` for a simple fit | the total-effect interval was too wide (it dropped the covariance of the indirect effect and `c'`) | full delta-method gradient; on the `mediation_demo` fit the total-effect SE is 0.119, not 0.127 |
+| 0.5.0 | four-way decomposition with factor or transformed covariates | the covariate means skipped them, so NDE, INTref and the total were wrong | means come from the mediator model’s design matrix; with weights, they are weighted |
+| 0.8.0 | [`nobs()`](https://rdrr.io/r/stats/nobs.html), `@n_obs` and [`med()`](https://data-wise.github.io/medfit/dev/reference/med.md) when the data have missing values on a model variable | counted `nrow(data)` although [`glm()`](https://rdrr.io/r/stats/glm.html) had dropped the incomplete rows: 5 missing treatment values in 400 rows gave 400 | count the rows the models used (395 in that example); [`fit_mediation()`](https://data-wise.github.io/medfit/dev/reference/fit_mediation.md) drops rows that are incomplete on any variable in either formula before fitting, so both models share one sample |
+| 0.9.0 | standard errors of INTref, NDE and the total effect from [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md) of a lavaan four-way fit when the mediator equation has a covariate | left out the covariate-mean term, so they were too small: INTref SE 0.022 against 0.069 from lavaan’s own `:=` (measured on 0.8.0; 0.3.2 has no [`tidy()`](https://generics.r-lib.org/reference/tidy.html) for these objects) | equal lavaan’s `:=` (0.069) |
+| 0.9.0 | INTref from a lavaan four-way fit with sampling weights | used unweighted covariate means, so it differed from the lm/glm route: 0.726 against 0.841 on the check data | uses the weighted means and equals the lm/glm route (0.841) |
+| 0.8.0 | the names in [`coef()`](https://rdrr.io/r/stats/coef.html), [`vcov()`](https://rdrr.io/r/stats/vcov.html) and [`tidy()`](https://generics.r-lib.org/reference/tidy.html) of a `SEMFit` | an unlabeled parameter was `"M ~ X"` or `"X ~~ X"` (with spaces) and a loading `"m2 ~ eta"` | `"M~X"`, `"X~~X"` and `"eta=~m2"`, the names `lavaan::coef()` uses; labeled parameters are unchanged |
+| 0.9.0 | a fixed intercept, `y ~ 0*1`, in the native engine | the row was dropped and the covariance-only fit returned | a restriction (“the mean of `y` is 0”): one degree of freedom, a changed discrepancy, comparable with [`anova()`](https://rdrr.io/r/stats/anova.html); any `y ~ 1` row turns the mean structure on |
+| 0.9.0 | [`logLik()`](https://rdrr.io/r/stats/logLik.html), [`AIC()`](https://rdrr.io/r/stats/AIC.html), [`BIC()`](https://rdrr.io/r/stats/AIC.html) of a native fit with `fixed_x` | (new argument) | conditional on the fixed variables; [`anova()`](https://rdrr.io/r/stats/anova.html), [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md) and multi-fit [`AIC()`](https://rdrr.io/r/stats/AIC.html)/[`BIC()`](https://rdrr.io/r/stats/AIC.html) stop when fixed sets or data differ; [`glance()`](https://generics.r-lib.org/reference/glance.html) gains a `fixed_x` column |
+| 0.10.0 | `extract_mediation(<SEMFit>, decomposition = "four_way")` | refused by name until the `:` operator existed | returns the four-way decomposition when the outcome equation carries the treatment-by-mediator product; refused with a message that says to add `x:m` when it does not |
+| 0.14.0 | [`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md) and `fit_mediation(engine = "native")` with `fixed_x` or `meanstructure` left unset | (no warning) | same results, plus a once-per-session warning of class `medfit_warning_default_change`: in 0.15.0 the defaults become the exogenous observed variables and `TRUE`, which moves `npar`, [`logLik()`](https://rdrr.io/r/stats/logLik.html), AIC and BIC; pass both arguments to keep today’s results, or set `options(medfit.native_defaults = "0.15")` to use the new defaults now |
+| 0.15.0 | [`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md) and `fit_mediation(engine = "native")` with `fixed_x` or `meanstructure` left unset | the 0.14.x defaults, `fixed_x = FALSE` and `meanstructure = NULL` (with the 0.14.0 warning) | the defaults are the exogenous observed variables (as lavaan’s `fixed.x = TRUE`) and `TRUE`. Structural estimates and their standard errors do not change. [`logLik()`](https://rdrr.io/r/stats/logLik.html) is conditional on the fixed variables, `npar`, [`AIC()`](https://rdrr.io/r/stats/AIC.html) and [`BIC()`](https://rdrr.io/r/stats/AIC.html) change, and [`coef()`](https://rdrr.io/r/stats/coef.html), [`vcov()`](https://rdrr.io/r/stats/vcov.html) and [`tidy()`](https://generics.r-lib.org/reference/tidy.html) drop the fixed exogenous rows and gain one intercept per observed variable that is not fixed. [`AIC()`](https://rdrr.io/r/stats/AIC.html) and [`BIC()`](https://rdrr.io/r/stats/AIC.html) keep medfit’s own count, which always includes the observed means, so they equal lavaan’s with `meanstructure = TRUE`, not those of a default [`lavaan::sem()`](https://rdrr.io/pkg/lavaan/man/sem.html). Which random start a multi-start fit tries can change. Pass `fixed_x = FALSE, meanstructure = NULL` to keep the 0.14.x results ([article](https://data-wise.github.io/medfit/dev/articles/sem-defaults-0-15.md)). `options(medfit.native_defaults)` is ignored (with one message per session) and is removed in 0.16.0; `medfit_warning_default_change` no longer fires |
+| 0.5.0 | `se_type = "sandwich"` with a treatment-by-mediator term | returned the model-based covariance, with no warning | applies the sandwich estimator |
+| 0.5.0 | lavaan fits with custom path labels | the alias rows of `@vcov` were all zero, so a parametric bootstrap had a zero-width interval | the alias rows are filled from the labeled parameters |
+
+What did **not** change:
+[`nie()`](https://data-wise.github.io/medfit/dev/reference/nie.md) for
+serial objects still returns the chain effect by default. The new
+`nie(x, type = "total")` returns the total indirect effect.
+
+If you stored serial
+[`te()`](https://data-wise.github.io/medfit/dev/reference/te.md) or
+[`pm()`](https://data-wise.github.io/medfit/dev/reference/pm.md) values
+from 0.4.0 or earlier, rerun them.
+
+## Names that changed
+
+Code that reads a result by column name, or passes an argument by name,
+breaks silently when the name changes. These two renames are the ones to
+search your scripts for.
+
+| Version | What | Before | Now |
+|----|----|----|----|
+| 0.9.0 | [`tidy()`](https://generics.r-lib.org/reference/tidy.html) columns | `std.error`, `conf.low`, `conf.high` (and `p.value` for a `SEMFit`, which exists from 0.7.0) | `std_error`, `conf_low`, `conf_high`, `p_value`; [`glance()`](https://generics.r-lib.org/reference/glance.html) of a `SEMFit` has `p_value` too; [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md) keeps `p.value` because it returns a base-R `htest` |
+| 0.9.0 | [`tidy()`](https://generics.r-lib.org/reference/tidy.html) arguments | `conf.int = TRUE`, `conf.level = 0.9` | `conf_int = TRUE`, `conf_level = 0.9`; the dotted names still work and warn (`is deprecated as of medfit 0.9.0`) |
+| 0.9.0 | class of a [`summary()`](https://rdrr.io/r/base/summary.html) result | `summary.MediationData` | `summary_MediationData` (likewise `summary_SEMFit` and the other classes) |
+| 0.8.0 | `fit_sem(sampling_weights = )`, only for code written against 0.7.0 | the argument name in 0.7.0 | `fit_sem(weights = )`, the name [`fit_mediation()`](https://data-wise.github.io/medfit/dev/reference/fit_mediation.md) uses; the old name still works and warns once per session |
+
+## Calls that now stop with an error
+
+Each of these was accepted before and gave a wrong or ignored result.
+
+| Version | Call | Message to look for | What to do |
+|----|----|----|----|
+| 0.5.0 | `m_star` supplied with no treatment-by-mediator term | `applies only when the outcome model has a treatment-by-mediator` | drop `m_star`, or add the product term |
+| 0.5.0 | a product written inside a function, such as `I(X * M)` | `Found function-wrapped treatment-by-mediator product term(s)` | write it as `X * M` or `X:M` |
+| 0.5.0 | a product among mediators in a multi-mediator model | `Multi-mediator (serial or parallel) extraction supports only treatment-by-mediator product terms` | refit without it; a treatment-by-mediator product in the outcome model is supported (see [Joint mediation](https://data-wise.github.io/medfit/dev/articles/model-joint.md)) |
+| 0.5.0 | four-way decomposition with a non-identity link | `Four-way decomposition requires the identity link` | refit with `gaussian(link = "identity")` |
+| 0.7.0 | a [`glm()`](https://rdrr.io/r/stats/glm.html) argument passed through `...` that partly matches `model`, such as `mod = FALSE` | `is only used with engine = "sem"` (`engine = "native"` in 0.19.0 and earlier) | drop the argument; [`glm()`](https://rdrr.io/r/stats/glm.html)’s own `model` cannot be passed through [`fit_mediation()`](https://data-wise.github.io/medfit/dev/reference/fit_mediation.md) |
+| 0.9.0 | a lavaan four-way fit that has a product of the treatment with a covariate in the mediator or the outcome equation (`m ~ x + xc`) | `does not support a treatment product` | it changed the effects without changing a coefficient the decomposition reads, and 0.8.0 returned a decomposition without a message; remove the product, or fit without the four-way decomposition |
+| 0.11.0 | [`AIC()`](https://rdrr.io/r/stats/AIC.html) or [`BIC()`](https://rdrr.io/r/stats/AIC.html) of several `SEMFit`s over different observed variables, such as a fit with a product term and one without | `different observed variables` | the likelihoods describe different data, so they are not comparable; compare fits over the same variables ([`anova()`](https://rdrr.io/r/stats/anova.html) and [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md) refuse the same pair) |
+| 0.11.1 | [`anova()`](https://rdrr.io/r/stats/anova.html) of two `SEMFit`s where a nonzero fixed parameter (for example `M1 ~~ 0.5*M2`) is in one fit and absent from the other | `nonzero fixed parameters differ` | fit the restricted model by fixing or constraining parameters of the larger one, so both fits carry the same fixed values |
+| 0.13.0 | [`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md) of a model with a zero-product constraint (`a*b == 0`) where one branch cannot be fitted while another succeeds | `zero-product branches did not converge` | 0.12.0 returned the best surviving branch with a warning, and that fit could be used as if it were certified; fit the model without the product constraint, or raise `n_starts` |
+| 0.14.1 | [`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md) of a model whose own equalities contradict literally, such as `a == 0` with `a == 1e-9` | `literal zero/nonzero contradiction` (class `medfit_sem_infeasible`) | it used to stop only after the optimizer failed; the check is now exact, with no tolerance, and runs before the optimizer; remove or correct one equality (see [Troubleshooting](https://data-wise.github.io/medfit/dev/articles/guide-troubleshooting.html#errors-that-carry-evidence)) |
+
+Two more stop in situations 0.3.2 could not reach: two `lmer` fits that
+kept different individuals within the same clusters (0.6.0), and a
+lavaan label that reuses one of medfit’s alias names for a different
+path (0.5.0).
+
+## Objects that gained something
+
+| Version | What | Effect on your code |
+|----|----|----|
+| 0.5.0 | serial objects gain a `nie_total` row in [`tidy()`](https://generics.r-lib.org/reference/tidy.html), a `nie_total` column in [`glance()`](https://generics.r-lib.org/reference/glance.html), and `indirect_total` in `coef(type = "effects")` | appended after the existing entries, so positions are unchanged |
+| 0.7.0 | a lavaan fit of a simple single-mediator model appends the rows `m_<treatment>`, `y_<mediator>` and `y_<treatment>` to `@estimates` and `@vcov` | code that indexes these by position past the `a`, `b`, `c_prime` rows sees three more rows; code that looks rows up by name is fine |
+
+## What is new
+
+| Version | New |
+|----|----|
+| 0.4.0 | the `regmedint` engine, `engine_args`, and `m_star` in [`fit_mediation()`](https://data-wise.github.io/medfit/dev/reference/fit_mediation.md); see [The regmedint engine](https://data-wise.github.io/medfit/dev/articles/model-regmedint.md) |
+| 0.5.0 | joint mediation ([page](https://data-wise.github.io/medfit/dev/articles/model-joint.md)); the bundled `mediation_demo` data; delta-method standard errors in [`tidy()`](https://generics.r-lib.org/reference/tidy.html); [`confint()`](https://rdrr.io/r/stats/confint.html) and [`coef()`](https://rdrr.io/r/stats/coef.html) for bootstrap results |
+| 0.6.0 | cluster-randomized designs ([page](https://data-wise.github.io/medfit/dev/articles/model-cluster.md)); the [Reference Card](https://data-wise.github.io/medfit/dev/articles/refcard.md) and [Cookbook](https://data-wise.github.io/medfit/dev/articles/cookbook.md) |
+| 0.7.0 | the native maximum-likelihood engine ([page](https://data-wise.github.io/medfit/dev/articles/model-sem.md)), [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md), and sampling weights with robust standard errors for it |
+| 0.8.0 | nonlinear constraints in the native engine ([page](https://data-wise.github.io/medfit/dev/articles/model-sem-constraints.md)), `mbco_sem(paths = )` for a product of k paths, [`anova()`](https://rdrr.io/r/stats/anova.html), [`tidy()`](https://generics.r-lib.org/reference/tidy.html)/[`glance()`](https://generics.r-lib.org/reference/glance.html)/[`confint()`](https://rdrr.io/r/stats/confint.html) for `SEMFit`, [lavaan and the native engine](https://data-wise.github.io/medfit/dev/articles/lavaan-comparison.md), and cookbook recipes 12 and 13 |
+| 0.9.0 | observed intercepts and means in the native engine (`y ~ 1`, `meanstructure =`), `fixed_x` ([page](https://data-wise.github.io/medfit/dev/articles/model-sem.md)), cookbook recipe 18 and step 9 of the [native tutorial](https://data-wise.github.io/medfit/dev/articles/sem-tutorial.md) |
+| 0.10.0 | the product term `x:m` in native syntax and the four-way decomposition from a native fit ([`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md) on a [`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md) fit), a supported-class table, and a worked example in the [interaction page](https://data-wise.github.io/medfit/dev/articles/model-interaction.md) |
+| 0.11.0 | categorical covariates in native syntax ([page](https://data-wise.github.io/medfit/dev/articles/model-sem-factors.md), [recipe 21](https://data-wise.github.io/medfit/dev/articles/cookbook.html#a-categorical-covariate-in-a-native-fit)); `options(medfit.covariate_mean_variance = TRUE)` for population-average four-way standard errors (default unchanged); [`AIC()`](https://rdrr.io/r/stats/AIC.html)/[`BIC()`](https://rdrr.io/r/stats/AIC.html) refuse fits over different observed variables; nonlinear-constrained fits no longer wander to negative variances (#213); the native engine is no longer marked experimental (its signatures, `SEMFit` properties and syntax change only through a deprecation) |
+| 0.11.1 | nonparametric and cluster bootstrap resamples are reproducible across `ncores` with a fixed seed; [`anova()`](https://rdrr.io/r/stats/anova.html) records row-wise `p_valid` and refuses mismatched nonzero fixed parameters; native fits record the best-of-starts verdict in `@diagnostics$optimum` |
+| 0.12.0 | [`compare_lr()`](https://data-wise.github.io/medfit/dev/reference/compare_lr.md) ([article](https://data-wise.github.io/medfit/dev/articles/lavaan-comparison.html#checking-a-constrained-lr-against-lavaan-or-openmx)): the product-null LR in lavaan or OpenMx against [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md), with warnings only on observed evidence |
+| 0.13.0 | a roundoff-limited restoration’s objective rise is capped (a worse point can no longer stand and inflate an LR); a refit the optimizer cannot fit is an unresolved result in [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md) and [`compare_lr()`](https://data-wise.github.io/medfit/dev/reference/compare_lr.md) instead of an error or a silent answer, and a zero-product branch that cannot be fitted stops [`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md) with an error instead of returning a partial fit |
+| 0.14.0 | a native fit that leaves `fixed_x` or `meanstructure` unset warns once per session that both defaults change in 0.15.0 (no result changes); `options(medfit.native_defaults = "0.15")` opted in early (ignored from 0.15.0) ([article](https://data-wise.github.io/medfit/dev/articles/sem-defaults-0-15.md)) |
+| 0.14.1 | the outcome ledger (`fit@diagnostics$ledger`, `$ledger` on the errors): every zero-product branch and [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md) null keeps its outcome; literal contradictions are certified empty; branch maps and an overflow-safe 64-branch cap; a covariance-stage failure is the typed error `medfit_sem_covariance_error`, which [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md) retains for a null ([troubleshooting](https://data-wise.github.io/medfit/dev/articles/guide-troubleshooting.html#errors-that-carry-evidence)); [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md) validates its own ledger before returning |
+| 0.15.0 | the native defaults flip: a default [`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md) fit fixes the exogenous observed variables and fits a mean structure, as a lavaan [`sem()`](https://rdrr.io/pkg/lavaan/man/sem.html) fit with `fixed.x = TRUE` and `meanstructure = TRUE` does ([article](https://data-wise.github.io/medfit/dev/articles/sem-defaults-0-15.md)) |
+| 0.16.0 | bounded FIML for `fit_sem(missing = "fiml", fixed_x = FALSE)` (three-variable Gaussian random-X mediation; [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md) returns `FIMLMediationData`); a single nonzero-product equality searches both sign branches; corrected observed-information and sandwich standard errors under active nonlinear constraints ([guide](https://data-wise.github.io/medfit/dev/articles/sem-guide.html#bounded-fiml)) |
+| 0.17.0 | [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md) on a two-level `lavaan` fit (`level:` blocks) returns the new `TwoLevelMediationData`: the a, b and c’ paths at the within and the between level, with `nie(level = )`, [`tidy()`](https://generics.r-lib.org/reference/tidy.html), [`confint()`](https://rdrr.io/r/stats/confint.html) and [`summary()`](https://rdrr.io/r/base/summary.html), and [`twolevel_statistic()`](https://data-wise.github.io/medfit/dev/reference/twolevel_statistic.md) builds the callback for [`bootstrap_mediation()`](https://data-wise.github.io/medfit/dev/reference/bootstrap_mediation.md) (parametric, or a cluster bootstrap that refits the `lavaan` fit) ([page](https://data-wise.github.io/medfit/dev/articles/model-twolevel.md)). Before 0.17.0 this call stopped with `medfit_error_lavaan_multilevel`, and earlier it returned the within level only with the total sample size. Three-level and multigroup fits are still refused. Also, bounded FIML now fits one or two covariates, two parallel mediators and two serial mediators (the saturated graph or the pure chain) with up to two covariates; these refuse in 0.16.0 and are new, not a change to an existing result ([page](https://data-wise.github.io/medfit/dev/articles/model-fiml.md)) |
+| 0.18.0 | `fit_mediation(engine = "sem")` names the native SEM fitter; `engine = "native"` still works, with identical results and no warning; [`sem_control()`](https://data-wise.github.io/medfit/dev/reference/sem_control.md) collects its optimizer settings for [`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md) and [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md) (a plain `control` list keeps its meaning); `TwoLevelMediationData` gains an optional `source_version`; the sem engine articles moved (`native-guide` is now `sem-guide`), and old links redirect ([guide](https://data-wise.github.io/medfit/dev/articles/guide-engines.md)). Additions only: no result changes |
+| 0.19.0 | [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md) on a two-level `lavaan` fit with two or more mediators returns the new, experimental `TwoLevelParallelMediationData`: per-mediator and total effects at each level with delta-method standard errors, and [`twolevel_statistic()`](https://data-wise.github.io/medfit/dev/reference/twolevel_statistic.md) builds the bootstrap callback for it ([page](https://data-wise.github.io/medfit/dev/articles/model-twolevel.html#several-parallel-mediators)). A mediator regressed on another mediator (serial) is refused. Additions only: a fit with one mediator still returns `TwoLevelMediationData`, and no result changes |
+| 0.20.0 | experimental two-level API only: `fit_sem(model, data, cluster = )` fits a two-level (1-1-1) model with the sem engine and [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md) returns `TwoLevelMediationData` (`se_type = "sandwich"` gives cluster-robust SEs; [page](https://data-wise.github.io/medfit/dev/articles/model-twolevel.html#the-sem-engine-route)); [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md) tests the indirect effect at one level and [`twolevel_equal_indirect()`](https://data-wise.github.io/medfit/dev/reference/twolevel_equal_indirect.md) tests within = between. Behavior change: the within-only rule reads the unrestricted (h1) ICC on both routes, so within-only results are rarer. No change outside the experimental two-level API |
+| 0.21.0 | `fit_sem(model, data, estimator = "MLR")` keeps the ML estimates, uses sandwich standard errors and adds the Yuan-Bentler scaled chi-square (`chisq_scaled`, `scaling_factor`, `p_value_scaled`) to [`glance()`](https://generics.r-lib.org/reference/glance.html); other estimators and MLR with `cluster`, FIML, `weights`, inequality or nonlinear constraints stop with a classed error (`medfit_error_estimator`, `medfit_error_mlr_*`). Every refusal of the `:` product term now carries a class (`medfit_error_product_*`); messages and numbers are unchanged, but code that compared `class(err)` exactly now sees the added classes. The default `estimator = "ML"` is unchanged. |
+| 0.21.1 | no change to the package code: the longest test files are skipped on CRAN, the test warnings are gone and the cookbook gains recipe 25 (MLR). |
+| 0.21.3 | no change to what any function returns: cuts the tests that run on CRAN by about half, after CRAN’s pretest measured the Windows check at 11 minutes against a 10-minute limit. |
+| 0.21.2 | no change to what any function returns: fixes the Rd usage note and the check time CRAN reported, and the open S7 issue on 0.3.2; the slowest tests and gates run in the local full run. |
+
+## Dependencies
+
+0.7.0 adds `lifecycle` and `nloptr (>= 1.0.4)` to `Imports`, and
+`OpenMx` to `Suggests` (the tests use it as an independent check). 0.8.0
+adds `withr` to `Suggests` (tests only).
+
+**Next:** A call now stops with an error:
+[Troubleshooting](https://data-wise.github.io/medfit/dev/articles/guide-troubleshooting.md)
+
+## Related
+
+[Troubleshooting](https://data-wise.github.io/medfit/dev/articles/guide-troubleshooting.md)
+\| [Models](https://data-wise.github.io/medfit/dev/articles/models.md)
+\| [Methods and
+Formulas](https://data-wise.github.io/medfit/dev/articles/methods.md)

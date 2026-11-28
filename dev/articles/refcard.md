@@ -1,0 +1,193 @@
+# medfit Reference Card
+
+Quick lookup for users who already know medfit. This card describes
+medfit 0.21.3.9000 (the development version after 0.21.3; CRAN has
+0.3.2; install from GitHub or r-universe, see the [home
+page](https://data-wise.github.io/medfit/#install)). Explanations are in
+the
+[articles](https://data-wise.github.io/medfit/dev/articles/getting-started.md);
+formulas are in [Methods and
+Formulas](https://data-wise.github.io/medfit/dev/articles/methods.md);
+task recipes are in the
+[Cookbook](https://data-wise.github.io/medfit/dev/articles/cookbook.md);
+one page per model type is in
+[Models](https://data-wise.github.io/medfit/dev/articles/models.md).
+
+> **At a glance**
+>
+> **Use this when:** you already know medfit and want the call, the
+> class or the warning in one lookup.  
+> **You get:** one-page tables of the calls, the classes and the
+> warnings.  
+> **Reading time:** 7 min
+
+## Start here
+
+``` r
+library(medfit)
+```
+
+
+    Attaching package: 'medfit'
+
+    The following object is masked from 'package:stats':
+
+        decompose
+
+``` r
+med(mediation_demo, treatment = "treatment", mediator = "mediator1",
+    outcome = "outcome", covariates = c("covariate1", "covariate2"))
+```
+
+    MediationData object
+    ====================
+
+    Path coefficients:
+      a (X -> M):        0.5826
+      b (M -> Y|X):      0.5711
+      c' (X -> Y|M):     0.2058
+      Indirect (a*b):    0.3328
+
+    Variables:
+      Treatment: treatment
+      Mediator:  mediator1
+      Outcome:   outcome
+
+    Model info:
+      N observations: 400
+      Converged:      Yes
+      Source:         stats::glm
+
+    Residual SDs:
+      Mediator model:   0.9792
+      Outcome model:    1.0426
+
+## I have, run
+
+| I have | Run |
+|----|----|
+| Data frame, one mediator | [`med()`](https://data-wise.github.io/medfit/dev/reference/med.md), then [`quick()`](https://data-wise.github.io/medfit/dev/reference/quick.md) |
+| Fitted `lm`/`glm` pair | `extract_mediation(model_m, model_y = , treatment = , mediator = )` |
+| Formulas and data | `fit_mediation(formula_y, formula_m, data, treatment, mediator)` |
+| Several mediators (chain) | `extract_mediation(..., mediator = c(...), mediator_models = list(...))` |
+| Several mediators (side by side) | same call with `structure = "parallel"` |
+| Treatment-by-mediator term | [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md) on an outcome with `X * M`; from syntax, [`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md) with `x:m` in the outcome equation, then [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md) |
+| Population-average four-way SEs (INTref, NDE, TE) | `options(medfit.covariate_mean_variance = TRUE)`, then [`tidy()`](https://generics.r-lib.org/reference/tidy.html) or [`confint()`](https://rdrr.io/r/stats/confint.html); default is conditional on the covariates |
+| `lmer` pair, cluster treatment | `extract_mediation(..., cluster = )` |
+| Formulas, cluster treatment | `fit_mediation(engine = "lmer", cluster = )` with plain formulas, no `(1 \| id)` |
+| `lavaan` fit | `extract_mediation(lavaan_fit, ...)` |
+| Two-level `lavaan` fit (`level:` blocks, `cluster =`), X, M, Y on level-1 units (experimental) | `extract_mediation(lavaan_fit, treatment = , mediator = , outcome = )`, a `TwoLevelMediationData`; `nie(x, level = "within" \| "between" \| "contrast" \| "both")` |
+| The same two-level model fitted by the sem engine (0.20.0, experimental) | `fit_sem(model, data, cluster = )` or `fit_mediation(engine = "sem", model = , cluster = )`, then `extract_mediation(fit)`; `se_type = "sandwich"` for cluster-robust SEs; `mbco_sem(fit, "a_w", "b_w")` tests one level |
+| Two-level `lavaan` fit, two or more parallel mediators | `extract_mediation(lavaan_fit, treatment = , mediator = c("M1", "M2"), outcome = )`, a `TwoLevelParallelMediationData` (experimental); `nie(x, level = , type = "total" \| "specific")` |
+| IPW weights | `fit_mediation(weights = , se_type = "sandwich")` |
+| Choose an engine, estimator and optimizer | [Which engine should I use?](https://data-wise.github.io/medfit/dev/articles/guide-engines.md): `"glm"`, `"regmedint"`, `"lmer"` or `"sem"` (`"native"` is the earlier spelling) |
+| Model syntax and data (observed or latent variables, constraints, `:=`) | `fit_sem(model, data)`, a `SEMFit` |
+| Model syntax, mediator by name | `fit_mediation(engine = "sem", model = , treatment = , mediator = )` |
+| Exogenous covariates on a sem engine fit | fixed at the sample moments by default (`fixed_x` left unset); `fixed_x = FALSE` estimates them, a character vector fixes a subset; `glance(fit)$fixed_x` lists what was fixed |
+| Factor, character or logical covariates on a sem engine fit | Name the column on a regression’s right side: it becomes dummies `g_b`, `g_c` (reference: first level); label one dummy (`b*g_b`), not `g` |
+| Intercepts and means on a sem engine fit | on by default (`meanstructure = TRUE`), with a free intercept for every observed variable you did not write; `y ~ 0*1` restricts one; `meanstructure = NULL` or `FALSE` turns the default off |
+| Log likelihood, AIC and BIC of a `SEMFit` | `logLik(fit)`, `AIC(fit1, fit2)`, `BIC(fit1, fit2)`; [`AIC()`](https://rdrr.io/r/stats/AIC.html) of a fit with a product term and one without are not comparable; the log likelihood is conditional on the fixed exogenous variables, so compare fits only with the same `fixed_x` |
+| Test of the indirect effect on a `SEMFit` (MBCO) | `mbco_sem(fit, "a", "b")`; `paths = c("a", "d", "b")` for a serial product |
+| Test that the within and between indirect effects of a two-level fit are equal | `twolevel_equal_indirect(fit)` (likelihood ratio of `a_w*b_w == a_b*b_b`; `n_boot = 200` adds a parametric bootstrap p-value; experimental) |
+| Robust standard errors and a scaled chi-square for a sem engine fit (lavaan’s MLR) | `fit_sem(model, data, estimator = "MLR")` or `fit_mediation(engine = "sem", model = , engine_args = list(estimator = "MLR"))`; `glance(fit)` adds `chisq_scaled`, `scaling_factor`, `p_value_scaled`; `"MLM"` and other estimators are refused |
+| Optimizer settings for a sem engine fit | `fit_sem(model, data, control = sem_control(n_starts = 7, nloptr = list(maxeval = 20000L)))`; a plain `nloptr` list still works; `fit@diagnostics$protocol` records what ran |
+| Rows with missing values on the mediator or outcome, continuous Gaussian model | `fit_sem(model, data, missing = "fiml", fixed_x = FALSE)`, then [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md) (bounded FIML; refuses outside its scope, never falls back) |
+| Check the product-null LR against lavaan or OpenMx | `compare_lr(fit, paths = c("a", "b"), engine = "lavaan")`; warns only on observed evidence |
+| Compare nested `SEMFit`s (likelihood-ratio test) | `anova(fit_full, fit_restricted)` |
+| Parameter table, one-row fit summary and intervals for a `SEMFit` | `tidy(fit)`, `glance(fit)`, `confint(fit)` |
+
+## Which object
+
+| Structure | Class | NIE |
+|----|----|----|
+| X to M to Y | `MediationData` | \\a \\ b\\ |
+| Any model fitted from syntax by [`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md) | `SEMFit`, then [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md) | as extracted |
+| Chain X to M1 to M2 to Y | `SerialMediationData` | \\a \\ d \\ b\\ |
+| X to M_j to Y | `ParallelMediationData` | \\\sum a_j b_j\\ |
+| X by M term | `InteractionMediationData` | INTmed + PIE |
+| Several M with X by M | `JointMediationData` | joint over the block |
+| Cluster treatment, `lmer` | `ClusterMediationData` | \\a \\ b_B\\ |
+| Bounded FIML fit, X to M to Y | `FIMLMediationData` | \\a \\ b\\ |
+| Bounded FIML fit, two parallel mediators | `FIMLParallelMediationData` | \\\sum a_j b_j\\ |
+| Bounded FIML fit, two serial mediators | `FIMLSerialMediationData` | \\a \\ d \\ b\\ |
+| Two-level fit (`lavaan` or sem engine), X, M, Y on level-1 units (experimental) | `TwoLevelMediationData` | \\a_w b_w\\ and \\a_b b_b\\ per level |
+| Two-level `lavaan` fit, parallel mediators (experimental) | `TwoLevelParallelMediationData` | \\\sum_j a\_{jw} b\_{jw}\\ and \\\sum_j a\_{jb} b\_{jb}\\ per level |
+
+## Effects
+
+| Call | Gives |
+|----|----|
+| `nie(x)` | Natural indirect effect |
+| `nde(x)` | Natural direct effect |
+| `te(x)` | Total effect |
+| `pm(x)` | Proportion mediated |
+| `paths(x)` | Path coefficients |
+| `decompose(x)` | Interaction, joint, cluster and two-level (within, between, contrast) parts |
+| `nie(x, type = "total")` | Every indirect path (serial) |
+| `joint_effects(object, estimates)` | Joint effects for bootstrapping |
+
+## Tables and intervals
+
+| Call | Gives |
+|----|----|
+| `tidy(x, type = "effects")` | Effects with delta-method SEs |
+| `tidy(x, type = "paths", conf_int = TRUE)` | Paths with intervals |
+| `glance(x)` | One-row summary |
+| `confint(x, parm = "effects")` | Effect intervals |
+| `confint(x, parm = "paths")` | Path intervals |
+| `coef(x)`, `vcov(x)`, `nobs(x)` | Estimates, covariance, sample size |
+
+## Standard errors
+
+| `se_type`    | Use                                            |
+|--------------|------------------------------------------------|
+| `"model"`    | Default, model-based                           |
+| `"sandwich"` | Weights, robust (HC3)                          |
+| `"kr"`       | Cluster fits, REML only, t intervals for paths |
+
+## Bootstrap
+
+| Call | Draws |
+|----|----|
+| `bootstrap_mediation(f, "parametric", mediation_data = x)` | From N(estimates, vcov) |
+| `bootstrap_mediation(f, "nonparametric", data = d)` | Resampled rows, refit |
+| `bootstrap_mediation(f, "nonparametric", data = d, cluster = "id")` | Resampled clusters, refit |
+| `bootstrap_mediation(f, "plugin", mediation_data = x)` | Point estimate only |
+| `twolevel_statistic(td_or_fit, "nie_between", ...)` | The `f` for a two-level fit: parametric from the object, cluster refit from the `lavaan` fit |
+| `twolevel_statistic(x, "nie_j", level = "between", specific = "M1")` | The same for parallel mediators: `effect` is `"nie"`, `"nie_j"`, `"nde"` or `"te"` |
+
+Every call returns a `BootstrapResult`: use
+[`print()`](https://rdrr.io/r/base/print.html),
+[`summary()`](https://rdrr.io/r/base/summary.html),
+[`coef()`](https://rdrr.io/r/stats/coef.html),
+[`confint()`](https://rdrr.io/r/stats/confint.html),
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html).
+
+## Cluster designs (2-1-1)
+
+| Quantity                           | Formula                           |
+|------------------------------------|-----------------------------------|
+| NIE                                | \\a \\ b_B\\                      |
+| Own (approximate)                  | \\a \\ b_W\\                      |
+| Spillover (approximate)            | \\a (b_B - b_W)\\                 |
+| Own, exact in a cluster of \\n_j\\ | \\a \[b_W + (b_B - b_W) / n_j\]\\ |
+| NDE                                | \\c'\\                            |
+
+## Warnings
+
+| Message | Action |
+|----|----|
+| Fewer than 25 clusters, model SEs | Use `se_type = "kr"`, bootstrap clusters |
+| Fewer than 10 clusters | Treat intervals as rough |
+| Own-effect approximation gap | Read the split with care, small clusters |
+| Bootstrap samples failed | Check the count, interval uses the rest |
+| Normal approximation for the indirect effect | Prefer [`bootstrap_mediation()`](https://data-wise.github.io/medfit/dev/reference/bootstrap_mediation.md) |
+| Total effect near zero | Proportion mediated undefined |
+| Native fit: the model test is not valid for this model | A product factor is a regression target or the exogenous block is restricted: [`glance()`](https://generics.r-lib.org/reference/glance.html) reports `NA`, and [`anova()`](https://rdrr.io/r/stats/anova.html) and [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md) refuse |
+| Native fit: the starts disagree | Several accepted optima: the lowest was kept; raise `n_starts` |
+| Native [`anova()`](https://rdrr.io/r/stats/anova.html): not nested | The restricted model frees or drops something the larger one does not: constrain or fix parameters of the larger model instead |
+
+**Next:** Find a recipe:
+[Cookbook](https://data-wise.github.io/medfit/dev/articles/cookbook.md).
+Find a model page:
+[Models](https://data-wise.github.io/medfit/dev/articles/models.md)

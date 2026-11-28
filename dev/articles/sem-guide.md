@@ -1,0 +1,724 @@
+# The sem engine guide
+
+The sem engine fits models from lavaan-style syntax by maximum
+likelihood, with a covariance structure and, when you write intercepts,
+observed means. This guide covers the whole workflow in one place:
+syntax, fitting, inference, constraints, model comparison, diagnostics
+and the route to the mediation objects. For a first look, read [the
+five-minute
+quickstart](https://data-wise.github.io/medfit/dev/articles/sem-quickstart.md).
+
+> **At a glance**
+>
+> **Use this when:** you want the whole sem engine workflow in one
+> place: syntax, fitting, inference, constraints, comparison and
+> diagnostics.  
+> **You get:** the workflow from model syntax to the mediation objects,
+> with the limits stated.  
+> **Reading time:** 19 min \| **Status:** stable
+
+|  |  |
+|----|----|
+| **Entry points** | `fit_sem(syntax, data)`; `fit_mediation(model = syntax, engine = "sem")` for one mediator |
+| **Class returned** | `SEMFit`, then `MediationData`, `SerialMediationData` or `ParallelMediationData` from [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md) |
+| **Syntax reference** | [`?"medfit-syntax"`](https://data-wise.github.io/medfit/dev/reference/medfit-syntax.md) |
+| **Not covered** | latent means, latent products, groups, categorical outcomes, other estimators; see [the limits](#limits) |
+
+``` r
+library(medfit)
+```
+
+
+    Attaching package: 'medfit'
+
+    The following object is masked from 'package:stats':
+
+        decompose
+
+``` r
+library(generics)
+```
+
+
+    Attaching package: 'generics'
+
+    The following objects are masked from 'package:base':
+
+        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
+        setequal, union
+
+``` r
+d <- mediation_demo
+```
+
+## 1. Syntax
+
+| Statement | Meaning |
+|----|----|
+| `y ~ x1 + x2` | regression of `y` on `x1` and `x2` |
+| `f =~ y1 + y2 + y3` | latent variable `f` measured by indicators |
+| `y1 ~~ y2` | covariance; `y1 ~~ y1` is a variance |
+| `y ~ a*x` | label a path; equal labels are one parameter |
+| `y ~ 0.5*x` | fix a path |
+| `start(0.3)*`, `lower(0)*`, `upper(1)*` | starting value, lower and upper bound |
+| `ab := a*b` | defined parameter with a delta-method standard error |
+| `a == b`, `cp == a*b`, `a*b > 0.1` | equality or inequality constraint on labels, linear or not |
+| `y1, y2 ~ x` | comma shorthand (a medfit extension; lavaan reads it differently) |
+
+Exogenous observed variables are fixed at their sample moments by
+default, as lavaan does with `fixed.x = TRUE` (fewer parameters, the
+same structural estimates, a conditional log likelihood);
+`fixed_x = FALSE` in
+[`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md)
+gives them free variances and covariances instead. Both sides of a
+constraint and the right side of a definition are arithmetic expressions
+in the labels (`+ - * / ^`, parentheses, `exp`, `log`, `sqrt`, `abs`,
+`min`, `max`, `pnorm`, `qnorm`, and a few more).
+
+## 2. Fit and read
+
+``` r
+syntax <- "
+  mediator1 ~ a * treatment + covariate1
+  outcome ~ b * mediator1 + cp * treatment + covariate1
+  ab := a * b
+  total := cp + a * b
+"
+fit <- fit_sem(syntax, d)
+summary(fit)
+```
+
+    Summary of SEMFit
+    =================
+
+    Observations: 400
+    Degrees of freedom: 0
+    Information: observed
+    Standard errors: model-based
+    Converged: Yes
+    logLik is conditional on: treatment, covariate1
+
+    Parameters:
+                         name     est     se       z       p fixed_x
+                            a  0.5814 0.0986  5.8977 < 1e-04   FALSE
+       mediator1 ~ covariate1  0.4481 0.0483  9.2711 < 1e-04   FALSE
+                            b  0.5729 0.0531 10.7971 < 1e-04   FALSE
+                           cp  0.2043 0.1091  1.8725 0.06113   FALSE
+         outcome ~ covariate1  0.3559 0.0565  6.2949 < 1e-04   FALSE
+       mediator1 ~~ mediator1  0.9536 0.0674 14.1421 < 1e-04   FALSE
+           outcome ~~ outcome  1.0740 0.0759 14.1421 < 1e-04   FALSE
+       treatment ~~ treatment  0.2500     NA      NA            TRUE
+      treatment ~~ covariate1 -0.0700     NA      NA            TRUE
+     covariate1 ~~ covariate1  1.0398     NA      NA            TRUE
+                 mediator1 ~1  0.0844 0.0696  1.2117 0.22564   FALSE
+                 treatment ~1  0.5025     NA      NA            TRUE
+                covariate1 ~1  0.0174     NA      NA            TRUE
+                   outcome ~1  0.1967 0.0740  2.6561 0.00791   FALSE
+
+    Defined parameters:
+      name       expr    est     se
+        ab      a * b 0.3331 0.0644
+     total cp + a * b 0.5374 0.1189
+
+    Diagnostics:
+      Optimizer status: 3; stationarity 7.01e-16; retries 0
+      Active bounds: none
+      Active constraints: none
+      Improper solution: no
+      Multiplier sign check: ok
+
+| To get | Use |
+|----|----|
+| free-parameter estimates | `coef(fit)`; names are the label, else `lhs op rhs` without spaces (`M~X`, `eta=~m2`), as `lavaan::coef()` |
+| the covariance matrix | `vcov(fit)` |
+| a table with intervals | `tidy(fit, conf_int = TRUE)`; `confint(fit)` for the matrix |
+| defined parameters | `fit@defined`, or the `:=` rows of [`tidy()`](https://generics.r-lib.org/reference/tidy.html) and [`confint()`](https://rdrr.io/r/stats/confint.html) |
+| chi-square, df, logLik, AIC, BIC | `glance(fit)`; `logLik(fit)`, `nobs(fit)` |
+
+``` r
+tidy(fit, conf_int = TRUE)[, c("term", "estimate", "std_error", "conf_low", "conf_high")]
+```
+
+    # A tibble: 16 × 5
+       term                   estimate std_error conf_low conf_high
+       <chr>                     <dbl>     <dbl>    <dbl>     <dbl>
+     1 a                        0.581     0.0986  0.388       0.775
+     2 mediator1~covariate1     0.448     0.0483  0.353       0.543
+     3 b                        0.573     0.0531  0.469       0.677
+     4 cp                       0.204     0.109  -0.00954     0.418
+     5 outcome~covariate1       0.356     0.0565  0.245       0.467
+     6 mediator1~~mediator1     0.954     0.0674  0.821       1.09
+     7 outcome~~outcome         1.07      0.0759  0.925       1.22
+     8 mediator1~1              0.0844    0.0696 -0.0521      0.221
+     9 outcome~1                0.197     0.0740  0.0515      0.342
+    10 treatment~~treatment     0.250    NA      NA          NA
+    11 treatment~~covariate1   -0.0700   NA      NA          NA
+    12 covariate1~~covariate1   1.04     NA      NA          NA
+    13 treatment~1              0.502    NA      NA          NA
+    14 covariate1~1             0.0174   NA      NA          NA
+    15 ab                       0.333     0.0644  0.207       0.459
+    16 total                    0.537     0.119   0.304       0.770
+
+``` r
+glance(fit)
+```
+
+    # A tibble: 1 × 9
+       nobs  npar    df chisq p_value logLik   AIC   BIC fixed_x
+      <int> <int> <dbl> <dbl>   <dbl>  <dbl> <dbl> <dbl> <chr>
+    1   400     9     0     0      NA -1140. 2298. 2334. treatment, covariate1
+
+The chi-square is \\n\\ times the minimized discrepancy and has `df`
+degrees of freedom. A saturated model (here `df = 0`) fits perfectly by
+construction, so the test only means something when there are
+restrictions.
+
+## 3. Standard errors and weights
+
+The default information matrix is observed; `information = "expected"`
+gives lavaan’s default. `se_type = "sandwich"` gives the HC0 robust
+covariance, and `weights` takes case weights.
+
+``` r
+w <- seq_len(nrow(d)) %% 3 + 1
+robust <- fit_sem(syntax, d, weights = w, se_type = "sandwich")
+rbind(model_based = sqrt(diag(vcov(fit)))[1:3], weighted_robust = sqrt(diag(vcov(robust)))[1:3])
+```
+
+                             a mediator1~covariate1          b
+    model_based     0.09858458           0.04833820 0.05306479
+    weighted_robust 0.10207525           0.04774111 0.06498487
+
+## 4. Constraints
+
+A constraint is a line of syntax. The engine classifies it and uses the
+cheapest exact route:
+
+| Constraint | Example | How it is solved |
+|----|----|----|
+| linear equality or bound | `a == b`, `a + b == 1`, `a < 0.3` | constant Jacobian rows; every accepted solution passes a gate on all rows |
+| nonlinear equality | `cp == a*b` | Jacobian recomputed at every point; every start tried, the best accepted one kept; a Newton polish after acceptance |
+| nonlinear inequality | `a*b > 0.1`, `ab > 0` with `ab := a*b` | same, as rows \\c(\theta) \le 0\\; a warning when the starts disagree |
+| one independent nonzero product | `a*b == 0.1` | both sign domains searched; an unresolved required branch stops the fit; coverage is not global optimality |
+| product set to zero | `a*b == 0`, `b1*b2*b3 == 0` | exact: one linear fit per factor, smallest discrepancy kept |
+| sum of products | `a1*b1 + a2*b2 == 0` | best-effort: the best of the starts; a disagreement warning means a better optimum may exist, so raise `n_starts` |
+
+``` r
+tied <- fit_sem(paste0(syntax, "cp == a * b\n"), d)
+round(coef(tied)[c("a", "b", "cp")], 4)
+```
+
+         a      b     cp
+    0.5423 0.5497 0.2981 
+
+``` r
+tied@diagnostics$active_constraints
+```
+
+    [1] "cp == a * b"
+
+Labels used in a constraint must be defined in the model, and a
+constraint with no free parameter is an error. `CONSTRAINT(a == b)` is
+the same as the bare `a == b`.
+
+## 5. Compare models and test the indirect effect
+
+[`anova()`](https://rdrr.io/r/stats/anova.html) is the likelihood-ratio
+test for nested `SEMFit`s; it refits nothing. Nesting is checked by
+parameter-table inclusion, a necessary condition, so two models that
+pass but are not nested in substance are your responsibility.
+[`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md)
+tests an indirect effect that is a product of paths:
+
+``` r
+anova(tied, fit)
+```
+
+    Likelihood-ratio (chi-square difference) test for SEMFit models
+
+    n = 400; Chisq is n times the minimized discrepancy
+
+         Df Chisq Chisq diff Df diff Pr(>Chisq)
+    fit   0 0.000
+    tied  1 0.938    0.93802       1     0.3328
+
+``` r
+mbco_sem(fit, "a", "b")
+```
+
+
+        Minimum-of-two likelihood-ratio tests (MBCO) for an indirect effect
+
+    data:  a * b = 0
+    MBCO = 33.353, df = 1, p-value = 7.685e-09
+
+For a chain `a`, `d`, `b`, give the paths:
+`mbco_sem(fit, paths = c("a", "d", "b"))` is the minimum of the
+single-path tests against a chi-square with one degree of freedom. The
+null is a union of hypotheses, so the test is conservative when more
+than one path is zero (its size is at most 0.055 at the 5% level in the
+package’s simulation gate).
+
+## 6. Diagnostics
+
+Read these before trusting a fit; all are in `summary(fit)` and
+`fit@diagnostics`:
+
+| Field | What it says | If it is wrong |
+|----|----|----|
+| `Converged` | the optimizer returned and the acceptance gate passed | the fit is not returned; the error names the failure |
+| `Optimizer status`, `stationarity` | the solver’s code and the Newton decrement at the solution | a large decrement means a stall; try `n_starts` |
+| `Active bounds` / `Active constraints` | which bounds or constraints bind | a binding bound means the estimate is on the edge |
+| `Improper solution` | a negative variance or non-positive definite covariance | respecify, or bound the variance |
+| `Multiplier sign check` | active inequality multipliers have the right sign | a wrong sign means an active bound was not optimal |
+
+``` r
+b <- fit_sem(paste0(syntax, "outcome ~~ lower(2) * outcome\n"), d)
+b@diagnostics$active_bounds
+```
+
+    [1] "outcome~~outcome"
+
+For the nonzero-product supported shapes, local-search limits and
+coverage record, see [the constraints
+page](https://data-wise.github.io/medfit/dev/articles/model-sem-constraints.html#nonzero-product-equality).
+
+When a model with a nonlinear constraint warns that the starts reached
+different optima, the constraint has more than one solution (`a*b > 0.1`
+holds for two positive or two negative paths). The kept fit is the best,
+but say so in a report.
+
+### The outcome ledger
+
+Every native fit keeps a versioned record of how it was reached,
+`fit@diagnostics$ledger`: one node per fit, zero-product branch and
+[`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md)
+null, each with its optimizer state, likelihood, covariance status and
+notices. A node is `resolved` (the optimizer accepted it) or
+`unresolved`, and `unresolved` means unknown: only a `feasibility` of
+`certified_empty` is a proof that a branch has no solution, and only a
+literal contradiction such as `a == 0` with `a == 1` earns it. Errors
+that stop a fit carry the same ledger as `$ledger`, and
+[`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md)
+and
+[`compare_lr()`](https://data-wise.github.io/medfit/dev/reference/compare_lr.md)
+return it with an unresolved result. Read it with
+`str(fit@diagnostics$ledger, max.level = 2)`; the cases and what to do
+are in
+[Troubleshooting](https://data-wise.github.io/medfit/dev/articles/guide-troubleshooting.html#errors-that-carry-evidence),
+and the construction is in [Computation and
+algorithms](https://data-wise.github.io/medfit/dev/articles/computation-algorithms.html#a-zero-product-is-a-union-of-simpler-models).
+
+## 7. From a fit to mediation objects
+
+``` r
+x <- extract_mediation(fit, treatment = "treatment", mediator = "mediator1",
+                       outcome = "outcome")
+class(x)[1]
+```
+
+    [1] "medfit::MediationData"
+
+`fit_mediation(model = syntax, engine = "sem", treatment =, mediator =)`
+does both steps for **one** mediator. For several mediators, fit with
+[`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md)
+and call `extract_mediation(fit, mediator = c("m1", "m2"), outcome = )`:
+a chain gives a `SerialMediationData`, mediators side by side a
+`ParallelMediationData`. A latent mediator works through the same call.
+
+## Limits
+
+- **Observed means only.** Intercepts (`y ~ 1`, `y ~ 1 + x`) are
+  estimated for observed variables; a free latent mean or intercept
+  stops with “latent means are planned for a later release”.
+- **One group**; listwise deletion is the missing-data default. The
+  separate [bounded FIML opt-in](#bounded-fiml) retains partially
+  observed rows only for its random-X model: X, M and Y, with up to two
+  covariates.
+- **ML only**, plus the HC0 sandwich; no robust chi-square, no fit
+  indices beyond the chi-square, AIC and BIC.
+- **Products** (`x:m`, which give the four-way decomposition) work for
+  two observed variables inside a supported class; the table of limits
+  and messages is on [the sem engine model
+  page](https://data-wise.github.io/medfit/dev/articles/model-sem.html#product-terms).
+  The model test is `NA` when a product factor is a regression target.
+- **AIC and BIC of a fit with a product are not comparable** with those
+  of a fit without one (the product column enters the likelihood), so
+  `AIC(fit_a, fit_b)` and [`BIC()`](https://rdrr.io/r/stats/AIC.html)
+  refuse such a pair; see [the sem engine model
+  page](https://data-wise.github.io/medfit/dev/articles/model-sem.html#limits).
+- For latent means, groups, categorical outcomes or fit indices use
+  lavaan; the extraction route accepts a `lavaan` fit as well. See
+  [lavaan and the sem
+  engine](https://data-wise.github.io/medfit/dev/articles/lavaan-comparison.md).
+
+## Related
+
+[Quickstart](https://data-wise.github.io/medfit/dev/articles/sem-quickstart.md)
+\| [Models: sem
+engine](https://data-wise.github.io/medfit/dev/articles/model-sem.md) \|
+[Constraints and the MBCO
+test](https://data-wise.github.io/medfit/dev/articles/model-sem-constraints.md)
+\|
+[Cookbook](https://data-wise.github.io/medfit/dev/articles/cookbook.md)
+\| [Methods and
+Formulas](https://data-wise.github.io/medfit/dev/articles/methods.md) \|
+[`?"medfit-syntax"`](https://data-wise.github.io/medfit/dev/reference/medfit-syntax.md)
+
+## Bounded FIML (0.16.0)
+
+Bounded FIML was introduced in 0.16.0 and is unavailable in released
+0.15.0. Ordinary calls still delete incomplete model rows listwise. The
+explicit opt-in below fits numeric continuous observed variables: X to M
+to Y (three variables) with a free or exactly zero direct path,
+independent Gaussian disturbances and free intercepts. From 0.17.0 the
+opt-in also fits the same model with one covariate or two covariates
+(see [covariates](#bounded-fiml-covariates)), two parallel mediators
+(see [parallel mediators](#bounded-fiml-parallel)) and the two-mediator
+serial forms, saturated or pure chain, with up to two covariates (see
+[serial mediators](#bounded-fiml-serial)). It assumes ignorable
+missingness under that joint model; FIML does not impute the missing
+values.
+
+Generate continuous Gaussian X, M and Y with independent disturbances
+for this example; the bundled demo’s binary treatment does not match
+this joint model. The fixed missing-value pattern is for illustration,
+not evidence that missingness in an applied study is ignorable.
+`with_seed()` preserves the caller’s random-number state.
+
+``` r
+fiml_data <- withr::with_seed(271L, {
+  n <- 400L
+  treatment <- .8 + stats::rnorm(n, sd = 1.1)
+  mediator1 <- -.4 + .5 * treatment + stats::rnorm(n, sd = .8)
+  outcome <- .7 + .6 * mediator1 + .25 * treatment + stats::rnorm(n, sd = .9)
+  data.frame(treatment = treatment, mediator1 = mediator1, outcome = outcome)
+})
+fiml_data$mediator1[seq(1, nrow(fiml_data), by = 7)] <- NA_real_
+```
+
+``` r
+fiml_syntax <- "mediator1 ~ a*treatment
+outcome ~ b*mediator1 + cp*treatment"
+fiml_fit <- medfit::fit_sem(
+  fiml_syntax, fiml_data, missing = "fiml", fixed_x = FALSE,
+  meanstructure = TRUE, information = "observed", se_type = "model"
+)
+c(retained_rows = nobs(fiml_fit), logLik = as.numeric(logLik(fiml_fit)))
+```
+
+    retained_rows        logLik
+          400.000     -1544.246 
+
+``` r
+fiml_effects <- extract_mediation(fiml_fit, treatment = "treatment", mediator = "mediator1")
+nie(fiml_effects)
+```
+
+    Natural Indirect Effect (NIE): 0.2795
+
+``` r
+nde(fiml_effects)
+```
+
+    Natural Direct Effect (NDE): 0.2474
+
+``` r
+te(fiml_effects)
+```
+
+    Total Effect (TE): 0.5269
+
+``` r
+tidy(fiml_effects, type = "effects")
+```
+
+    # A tibble: 3 × 3
+      term  estimate std_error
+      <chr>    <dbl>     <dbl>
+    1 nie      0.279    0.0365
+    2 nde      0.247    0.0508
+    3 te       0.527    0.0457
+
+The wrapper route returns the extracted mediation object directly:
+
+``` r
+fiml_wrapped <- medfit::fit_mediation(
+  model = fiml_syntax, data = fiml_data,
+  treatment = "treatment", mediator = "mediator1", engine = "sem",
+  se_type = "model", engine_args = list(
+    missing = "fiml", fixed_x = FALSE, meanstructure = TRUE, information = "observed"
+  )
+)
+tidy(fiml_wrapped, type = "effects")
+```
+
+    # A tibble: 3 × 3
+      term  estimate std_error
+      <chr>    <dbl>     <dbl>
+    1 nie      0.279    0.0365
+    2 nde      0.247    0.0508
+    3 te       0.527    0.0457
+
+There is no new top-level `missing` argument on
+[`fit_mediation()`](https://data-wise.github.io/medfit/dev/reference/fit_mediation.md);
+[`med()`](https://data-wise.github.io/medfit/dev/reference/med.md)
+remains a formula-building fitter. The missing-method strings must match
+exactly. A failed FIML fit never falls back to listwise deletion or
+another engine, even on complete data.
+
+| Setting | Bounded FIML requirement |
+|----|----|
+| `fixed_x` | Explicit `FALSE`; omission, `TRUE` and named subsets refuse |
+| `meanstructure` | `TRUE`; `NULL` and `FALSE` refuse |
+| `information`, `se_type` | `"observed"`, `"model"` |
+| Weights | No non-NULL vector, including unit weights or the deprecated alias |
+| `n_starts`, `control` | `NULL` or 3; empty control (the empty list, or [`sem_control()`](https://data-wise.github.io/medfit/dev/reference/sem_control.md) with `optimizer = "auto"` and no `nloptr` options); no syntax-supplied starts |
+| Topology | X, M, Y, with at most two covariates, or X, M1, M2, Y (two parallel mediators, with at most two covariates, or the saturated serial graph or the pure chain, with up to two covariates); free or exactly zero direct path; no `:=`, constraints, ties, bounds, other extra predictors, latent variables, factors or products |
+
+The start/control restrictions preserve the initial validated protocol,
+rather than expressing mathematical limits of FIML. Three starts run for
+each solver; six attempt groups normally involve nine actual calls with
+nlminb refinements. Failures and completed calls are retained
+separately. Numerical acceptance requires both solvers, stationarity,
+agreeing likelihoods, local rank and valid observed information; it does
+not certify a global optimum or inference coverage.
+
+Rows with any observed model variable are retained, including singleton
+patterns; only all-empty model rows are dropped. Extra columns do not
+select rows. No complete-case initialization is used: data with no
+complete rows can fit when local identification checks pass.
+[`nobs()`](https://rdrr.io/r/stats/nobs.html) counts retained rows, not
+observed cells. Original positional row IDs and pattern/count evidence
+are retained.
+
+[`coef()`](https://rdrr.io/r/stats/coef.html), full
+[`vcov()`](https://rdrr.io/r/stats/vcov.html),
+[`nobs()`](https://rdrr.io/r/stats/nobs.html), raw
+[`logLik()`](https://rdrr.io/r/stats/logLik.html), AIC/BIC,
+print/summary, parameter tidy and normal confidence intervals work on
+the SEMFit. Its
+[`glance()`](https://generics.r-lib.org/reference/glance.html) reports
+likelihood/IC fields, with model-test fields unavailable and an explicit
+reason. The discrepancy `f` and model-test `df` are `NA`; the separate
+free-parameter count is eight or nine (three variables; 13 or 14 and 19
+or 20 with one and two covariates; 12 or 13 and 13 or 14 for parallel
+mediators with independent residuals and with a free residual
+covariance; without or with the direct path). There is no saturated
+missing-data fit. See [Methods and
+Formulas](https://data-wise.github.io/medfit/dev/articles/methods.html#bounded-fiml)
+for the likelihood.
+
+### Covariates
+
+New in 0.17.0; not in 0.16.0. The opt-in also fits one covariate `Z`, or
+two covariates `Z1` and `Z2`, written as `M ~ X + Z` and `Y ~ M + X + Z`
+(two covariates: `M ~ X + Z1 + Z2`, `Y ~ M + X + Z1 + Z2`). The
+exogenous variables have a free joint covariance with independent
+disturbances, and any variable may be incomplete. The rules:
+
+- Write every exogenous covariance pair (either order) or none. A
+  partial set would fix the unwritten pairs at zero, so it is refused
+  rather than completed.
+- Every exogenous variable needs a written path to `Y`, and every
+  covariate path to `M` is free. Omitting a `Y` path is refused.
+- With no `Y` path fixed at zero,
+  [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md)
+  may name any exogenous variable as the treatment. With exactly one `Y`
+  path fixed at zero (`0*X`), that variable is the treatment.
+- Three or more covariates, a covariate on one equation only, residual
+  covariances, constraints, ties, products and serial mediators remain
+  refused. Covariates combined with two parallel mediators are covered
+  in the [next section](#bounded-fiml-parallel).
+
+These fits are implemented and numerically verified against lavaan and
+an independent likelihood. They are not calibrated for coverage and not
+statistically admitted, so the normal (delta-method) intervals carry the
+same caveat as the three-variable fit.
+`bootstrap_mediation(source_fit = )` is withheld for every FIML fit, and
+a covariate fit is additionally refused by its own error
+(`medfit_error_fiml_covariate_source_fit`).
+
+### Parallel mediators
+
+New in 0.17.0; not in 0.16.0. The opt-in also fits two parallel
+mediators, written `M1 ~ X`, `M2 ~ X` and `Y ~ M1 + M2` (the direct path
+`Y ~ X` is free, fixed at exactly zero, or omitted). Any variable may be
+incomplete. The rules:
+
+- Independent residuals need the statement `M1 ~~ 0*M2` (either order).
+  Omitting the statement is refused: lavaan’s default would free that
+  covariance, so silence is ambiguous.
+- A free, label-less `M1 ~~ M2` fits the mediator residual covariance. A
+  labeled, fixed nonzero, bounded, tied or otherwise constrained
+  covariance is refused.
+- The free-parameter count is 12 or 13 with independent residuals and 13
+  or 14 with the free covariance, without or with a free direct path.
+- `extract_mediation(fit, treatment = , mediator = c("M1", "M2"))` names
+  both mediators and returns a `FIMLParallelMediationData` object. Its
+  covariance is the fitted full covariance of `a1`, `a2`, `b1`, `b2` and
+  `c_prime`, so the standard error of the sum of the indirect effects
+  keeps the cross-path terms (unlike separate regressions). A refused
+  extraction has class `medfit_error_fiml_extract_unsupported`.
+- With one covariate `Z` (or two, `Z1` and `Z2`), write `M1 ~ X + Z`,
+  `M2 ~ X + Z` and `Y ~ M1 + M2 + X + Z`, plus the mediator residual
+  statement above. The covariate rules are those of the
+  [covariates](#bounded-fiml-covariates) section: every exogenous
+  variable has a free path to both mediators and a written path to `Y`
+  (omitting the direct path is therefore refused), the exogenous
+  covariance pairs are all written or none, one `Y` path may be fixed at
+  zero (that variable is then the treatment), and
+  [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md)
+  may name any exogenous variable as the treatment otherwise. The
+  free-parameter count is 18 to 20 with one covariate and 25 to 27 with
+  two (without or with the direct path and the free residual
+  covariance).
+- Three or more mediators, three or more covariates and a covariate on
+  only some of the equations remain refused (serial mediators have
+  [their own section](#bounded-fiml-serial)).
+
+Like the covariate fits, these are implemented and numerically verified
+but not calibrated for coverage or statistically admitted. Delta-method
+Wald intervals for paths and effects are available.
+`bootstrap_mediation(source_fit = )` is withheld by
+`medfit_error_fiml_inference_unavailable`; behind that guard a parallel
+fit has no source-fit route either
+(`medfit_error_fiml_parallel_source_fit`; with covariates
+`medfit_error_fiml_covariate_source_fit`).
+
+### Serial mediators
+
+New in 0.17.0; not in 0.16.0. The opt-in also fits two serial mediators
+in two forms, each with no, one or two covariates: the saturated forward
+graph `M1 ~ X`, `M2 ~ M1 + X` and `Y ~ M1 + M2 + X`, and the pure chain
+`M1 ~ X`, `M2 ~ M1` and `Y ~ M2` (in both the direct path `Y ~ X` is
+free, fixed at exactly zero, or omitted). The rules:
+
+- The independence of all three disturbance pairs must be written:
+  `M1 ~~ 0*M2`, `M1 ~~ 0*Y` and `M2 ~~ 0*Y` (either order within a
+  pair). Omitting a statement is refused, and a free, labeled or nonzero
+  one is refused as correlated disturbances. lavaan 0.7-3 frees none of
+  these covariances for such models, so the written statement mirrors
+  the parallel form rather than overriding a default.
+- Both shortcut paths, `X -> M2` and `M1 -> Y`, are written and free
+  (the saturated graph) or both are absent (the pure chain); one
+  shortcut only, and a fixed or labeled shortcut, are refused.
+- The saturated model has 14 free parameters (13 with the direct path
+  fixed at zero). With the direct path free it equals the unrestricted
+  multivariate normal in parameters (the fit is a reparameterization of
+  it), so it cannot misfit, and a pair of variables that is never
+  observed together leaves that covariance undetermined: the fit fails
+  closed with a `medfit_sem_fiml_error` at the numerical stage. A
+  parallel fit that is accepted on the same data can therefore be
+  refused here.
+- The pure chain has 12 free parameters (11 with the direct path fixed
+  at zero) against 14 moments, so it has 2 (3) degrees of freedom: it is
+  a restriction (`X -> M2` and `M1 -> Y` are zero) that the data can
+  reject, and its log-likelihood is at most the saturated one. Its
+  structural zeros pin some covariances, so it can fit where the
+  saturated graph fails closed.
+- `extract_mediation(fit, treatment = , mediator = c("M1", "M2"))` names
+  both mediators in the fitted order (the reversed order is refused) and
+  returns a `FIMLSerialMediationData` object. Its covariance is the
+  fitted full covariance of `a`, `a2`, `d1`, `b1`, `b` and `c_prime`
+  (the chain: `a`, `d1`, `b` and `c_prime`; no `a2` or `b1` exist).
+  [`nie()`](https://data-wise.github.io/medfit/dev/reference/nie.md) is
+  the chain effect `a * d1 * b`; for the saturated graph
+  `nie(type = "total")` is `a * d1 * b + a2 * b + a * b1`, for the chain
+  it is the same effect, and
+  [`te()`](https://data-wise.github.io/medfit/dev/reference/te.md) adds
+  `c_prime`. Every estimated path is listed by
+  [`paths()`](https://data-wise.github.io/medfit/dev/reference/paths.md),
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html),
+  `coef(type = "paths")` and
+  [`summary()`](https://rdrr.io/r/base/summary.html); `c_prime` is
+  listed with value 0 and standard error 0 when it is fixed. A refused
+  extraction has class `medfit_error_fiml_extract_unsupported`.
+- At an exact origin the standard error of an indirect effect is
+  withheld only where its delta gradient is zero: the chain effect when
+  at least two of `a`, `d1`, `b` are zero, the saturated total indirect
+  effect when `a`, `a2`, `b` and `b1` are all zero. In the pure chain
+  both indirect rows are the same effect and are withheld together, when
+  at least two of `a`, `d1`, `b` are zero. Fits never produce exact
+  zeros; this concerns constructed objects.
+- With one covariate `Z`, it predicts `M1`, `M2` and `Y` in both forms
+  (`M1 ~ X + Z`, `M2 ~ M1 + X + Z` or `M2 ~ M1 + Z`, `Y ~ ... + X + Z`),
+  `X` and `Z` have a free covariance, and every exogenous variable needs
+  a written `Y` path (free; at most one fixed at exactly zero, which
+  makes that variable the treatment). The saturated model then has 20
+  free parameters (19 with the direct path fixed) and the chain 18 (17).
+  The covariate’s coefficients are never paths: the extracted aliases
+  are the treatment’s. In the saturated graph with a free direct path a
+  covariate may be named the treatment (it takes `a = Z -> M1`,
+  `a2 = Z -> M2`, `c_prime = Z -> Y`); in the pure chain the treatment
+  is structural, the one exogenous variable with no path to `M2`, and
+  naming a covariate is refused.
+- With two covariates `Z1` and `Z2` both predict every equation, the
+  three exogenous covariances (`X ~~ Z1`, `X ~~ Z2`, `Z1 ~~ Z2`) are all
+  written or none (a partial set is refused with a reason that names
+  it), and the saturated model has 27 free parameters (26) and the chain
+  25 (24). Either covariate may be the saturated treatment when the
+  direct path is free; with a fixed-zero direct path only the variable
+  carrying the fixed zero is valid and naming another one is refused
+  with a message saying so. In the chain, leaving a variable out of the
+  equation of `M2` makes it the treatment, and exactly one variable may
+  be left out.
+- Serial models with three or more covariates remain refused, as do
+  three or more mediators.
+
+Like the other bounded fits, this one is implemented and numerically
+verified but not calibrated for coverage or statistically admitted.
+Delta-method Wald intervals for paths and effects are available;
+[`pm()`](https://data-wise.github.io/medfit/dev/reference/pm.md),
+[`quick()`](https://data-wise.github.io/medfit/dev/reference/quick.md),
+[`glance()`](https://generics.r-lib.org/reference/glance.html) and
+bootstrap intervals are refused for the extracted object, and
+`bootstrap_mediation(source_fit = )` is withheld by
+`medfit_error_fiml_inference_unavailable` (behind that guard a serial
+fit is refused with `medfit_error_fiml_serial_source_fit`).
+
+Extraction preserves validated FIML context through copying and
+serialization. Original SEMFit labels/full covariance stay unchanged;
+extracted a/b/c_prime and m\_/y\_ aliases follow topology, with original
+coordinates retained in context. Supported extracted operations are
+[`paths()`](https://data-wise.github.io/medfit/dev/reference/paths.md),
+[`nie()`](https://data-wise.github.io/medfit/dev/reference/nie.md),
+[`nde()`](https://data-wise.github.io/medfit/dev/reference/nde.md),
+[`te()`](https://data-wise.github.io/medfit/dev/reference/te.md),
+[`coef()`](https://rdrr.io/r/stats/coef.html) (paths/effects/all), full
+[`vcov()`](https://rdrr.io/r/stats/vcov.html), print/summary, tidy and
+normal path/effect confidence intervals. At a = b = 0 the NIE point
+value is retained but its inferential fields are unavailable. A fixed
+direct path of zero instead has known zero covariance; other valid
+effect inference remains available.
+
+Implemented but currently withheld (the call is refused pending
+admission; covariate and parallel fits have no source-fit route):
+`bootstrap_mediation(source_fit = fiml_fit, effect = "nie", method = "nonparametric")`
+uses the original accepted source fit for a retained-row FIML percentile
+interval. Explicit `method = "parametric"` instead gives a joint
+Gaussian parameter-draw percentile interval with no refits. Both use the
+original point estimate and type-7 quantiles; any required failed or
+interrupted replicate withholds all intervals and distribution SD while
+preserving the full requested ledger. Statistical admission and coverage
+calibration remain deferred. These methods were added after 0.16.0; see
+[`bootstrap_mediation()`](https://data-wise.github.io/medfit/dev/reference/bootstrap_mediation.md)
+and [Methods and
+Formulas](https://data-wise.github.io/medfit/dev/articles/methods.html#fiml-source-intervals)
+for assumptions, conditional retention target and covariance handling.
+
+Extracted-object
+[`glance()`](https://generics.r-lib.org/reference/glance.html),
+[`quick()`](https://data-wise.github.io/medfit/dev/reference/quick.md),
+[`pm()`](https://data-wise.github.io/medfit/dev/reference/pm.md),
+extracted-object boot intervals, profiles, MBCO, fit tests, fit indices
+and prediction/residual APIs are deferred and refuse FIML objects.
+Package object-aware guards act before package-controlled refits, RNG or
+worker launch; opaque user callbacks are outside this guarantee. AIC/BIC
+comparisons dispatched with SEMFit first require compatible FIML
+contexts and refuse external/mixed objects before external likelihood
+calls. Calls dispatched first through another class are outside medfit’s
+guard.
+
+**Next:** Compare it with lavaan: [lavaan and the sem
+engine](https://data-wise.github.io/medfit/dev/articles/lavaan-comparison.md)

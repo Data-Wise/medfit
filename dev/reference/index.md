@@ -1,0 +1,101 @@
+# Package index
+
+## Quick Start
+
+Short entry points for rapid analysis
+
+- [`med()`](https://data-wise.github.io/medfit/dev/reference/med.md) :
+  Simple Mediation Analysis
+- [`quick()`](https://data-wise.github.io/medfit/dev/reference/quick.md)
+  : Quick Summary of Mediation Results
+
+## Data
+
+Simulated example data
+
+- [`mediation_demo`](https://data-wise.github.io/medfit/dev/reference/mediation_demo.md)
+  : Simulated Mediation Data for Examples
+
+## Effect Extractors
+
+Extract mediation effects from fitted models
+
+- [`nie()`](https://data-wise.github.io/medfit/dev/reference/nie.md) :
+  Extract Natural Indirect Effect (NIE)
+- [`nde()`](https://data-wise.github.io/medfit/dev/reference/nde.md) :
+  Extract Natural Direct Effect (NDE)
+- [`te()`](https://data-wise.github.io/medfit/dev/reference/te.md) :
+  Extract Total Effect (TE)
+- [`pm()`](https://data-wise.github.io/medfit/dev/reference/pm.md) :
+  Extract Proportion Mediated (PM)
+- [`paths()`](https://data-wise.github.io/medfit/dev/reference/paths.md)
+  : Extract All Path Coefficients
+- [`decompose()`](https://data-wise.github.io/medfit/dev/reference/decompose.md)
+  : Decomposition of a Mediation Effect
+- [`joint_effects()`](https://data-wise.github.io/medfit/dev/reference/joint_effects.md)
+  : Joint Effects at a Given Parameter Vector
+
+## S7 Classes
+
+Core S7 class definitions for mediation data structures
+
+- [`MediationData()`](https://data-wise.github.io/medfit/dev/reference/MediationData.md)
+  : MediationData S7 Class
+- [`SerialMediationData()`](https://data-wise.github.io/medfit/dev/reference/SerialMediationData.md)
+  : SerialMediationData S7 Class
+- [`ParallelMediationData()`](https://data-wise.github.io/medfit/dev/reference/ParallelMediationData.md)
+  : ParallelMediationData: Parallel (Multiple-Mediator) Mediation
+  Structure
+- [`InteractionMediationData()`](https://data-wise.github.io/medfit/dev/reference/InteractionMediationData.md)
+  : InteractionMediationData: Mediation with Treatment-Mediator
+  Interaction
+- [`JointMediationData()`](https://data-wise.github.io/medfit/dev/reference/JointMediationData.md)
+  : JointMediationData: Joint Natural Effects of Multiple Mediators
+- [`ClusterMediationData()`](https://data-wise.github.io/medfit/dev/reference/ClusterMediationData.md)
+  : ClusterMediationData: Cluster-Level Treatment Mediation (2-1-1)
+- [`TwoLevelMediationData()`](https://data-wise.github.io/medfit/dev/reference/TwoLevelMediationData.md)
+  : TwoLevelMediationData Class
+- [`TwoLevelParallelMediationData()`](https://data-wise.github.io/medfit/dev/reference/TwoLevelParallelMediationData.md)
+  : TwoLevelParallelMediationData Class
+- [`BootstrapResult()`](https://data-wise.github.io/medfit/dev/reference/BootstrapResult.md)
+  : BootstrapResult S7 Class
+- [`SEMFit()`](https://data-wise.github.io/medfit/dev/reference/SEMFit.md)
+  : SEMFit S7 Class
+
+## Model Fitting
+
+Functions for fitting and extracting mediation models
+
+- [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md)
+  : Extract Mediation Structure from Fitted Models
+- [`fit_mediation()`](https://data-wise.github.io/medfit/dev/reference/fit_mediation.md)
+  : Fit Mediation Models
+- [`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md)
+  : Fit a Structural Equation Model by Maximum Likelihood
+- [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md)
+  : Minimum-of-k Likelihood-Ratio Test for an Indirect Effect (MBCO)
+- [`sem_control()`](https://data-wise.github.io/medfit/dev/reference/sem_control.md)
+  : Optimizer settings for the sem engine
+- [`compare_lr()`](https://data-wise.github.io/medfit/dev/reference/compare_lr.md)
+  : Compare medfit's Product-Null LR with OpenMx or lavaan
+- [`medfit-syntax`](https://data-wise.github.io/medfit/dev/reference/medfit-syntax.md)
+  [`medfit_syntax`](https://data-wise.github.io/medfit/dev/reference/medfit-syntax.md)
+  : medfit Model Syntax
+- [`bootstrap_mediation()`](https://data-wise.github.io/medfit/dev/reference/bootstrap_mediation.md)
+  : Perform Bootstrap Inference for Mediation Statistics
+- [`twolevel_statistic()`](https://data-wise.github.io/medfit/dev/reference/twolevel_statistic.md)
+  : Bootstrap Callback for Two-Level Mediation
+- [`twolevel_equal_indirect()`](https://data-wise.github.io/medfit/dev/reference/twolevel_equal_indirect.md)
+  **\[experimental\]** : Test equal indirect effects across the two
+  levels of a native two-level fit
+
+## Methods
+
+tidy() and glance() for medfit classes; print, summary, anova, confint
+and logLik methods for SEMFit
+
+- [`tidy_s7_object()`](https://data-wise.github.io/medfit/dev/reference/tidy_s7_object.md)
+  [`glance_s7_object()`](https://data-wise.github.io/medfit/dev/reference/tidy_s7_object.md)
+  : Tidy, Glance, and Inference Methods for medfit Objects
+- [`SEMFit-methods`](https://data-wise.github.io/medfit/dev/reference/SEMFit-methods.md)
+  : Methods for SEMFit objects

@@ -1,0 +1,259 @@
+# Extract Mediation Structure from Fitted Models
+
+Generic function to extract mediation structure (a, b, c' paths and
+variance-covariance matrices) from fitted models. This function provides
+a unified interface for extracting mediation information from various
+model types (lm, glm, lavaan, lmer, and a
+[SEMFit](https://data-wise.github.io/medfit/dev/reference/SEMFit.md)
+from the sem engine).
+
+## Usage
+
+``` r
+extract_mediation(object, ...)
+```
+
+## Arguments
+
+- object:
+
+  Fitted model object (lm, glm, lavaan, lmerMod, or a
+  [SEMFit](https://data-wise.github.io/medfit/dev/reference/SEMFit.md))
+
+- ...:
+
+  Additional arguments passed to methods. Common arguments include:
+
+  - `treatment`: Character string specifying treatment variable name
+
+  - `mediator`: Character string specifying mediator variable name
+
+  - Method-specific arguments (see individual method documentation)
+
+## Value
+
+An S7 object whose class depends on the mediation structure (see
+Details):
+[MediationData](https://data-wise.github.io/medfit/dev/reference/MediationData.md),
+[InteractionMediationData](https://data-wise.github.io/medfit/dev/reference/InteractionMediationData.md),
+[SerialMediationData](https://data-wise.github.io/medfit/dev/reference/SerialMediationData.md),
+[ParallelMediationData](https://data-wise.github.io/medfit/dev/reference/ParallelMediationData.md),
+[JointMediationData](https://data-wise.github.io/medfit/dev/reference/JointMediationData.md),
+or
+[ClusterMediationData](https://data-wise.github.io/medfit/dev/reference/ClusterMediationData.md).
+Each carries the path coefficients, the full parameter vector and its
+variance-covariance matrix, residual standard deviations (for Gaussian
+models), variable names, and the original data when available.
+
+## Details
+
+The `extract_mediation()` generic provides methods for different model
+types:
+
+- **lm/glm**: Extract from linear and generalized linear models
+
+- **lavaan**: Extract from structural equation models
+
+- **lmerMod**: Extract from two linear mixed models for a treatment
+  assigned to whole clusters, as a
+  [ClusterMediationData](https://data-wise.github.io/medfit/dev/reference/ClusterMediationData.md):
+  the mediator model is `object`, the outcome model is `model_y`, and
+  `cluster` names the cluster variable. Both models must be fitted to
+  the same rows; the cluster means must be computed on those rows, and a
+  pair of fits that kept different individuals is an error (best effort:
+  it compares the data row names the fits kept, so it cannot see a
+  mismatch between frames whose row names were both reset)
+
+- **SEMFit**: Extract from a model fitted by
+  [`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md)
+  (the sem engine, medfit's own maximum-likelihood SEM fitter), with the
+  same arguments and structures as the lavaan method. A
+  treatment-by-mediator product written `x:m` (or `m:x`) in the outcome
+  equation gives the four-way decomposition, stored under the canonical
+  name `m:x`; without it `decomposition = "four_way"` is refused by
+  name. `interaction =` takes that product written with `:`. A fit from
+  `fit_sem(missing = "fiml")` extracts to a `FIMLMediationData` object
+  for the three-variable model and for the bounded one- and
+  two-covariate models (see the Bounded FIML section of
+  [`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md)).
+  With covariates, `treatment` may name any exogenous variable when no
+  outcome path is fixed at zero; with exactly one outcome path fixed at
+  zero, that variable is the treatment. The other exogenous variables
+  are the covariates; three or more covariates, a covariate on one
+  equation only and every other structure are refused. A fit with two
+  parallel mediators extracts to a `FIMLParallelMediationData` object
+  when `mediator` names both mediators (`structure = "parallel"` or
+  `"auto"`); it carries the full covariance of the paths, and a refusal
+  has class `medfit_error_fiml_extract_unsupported`. With one or two
+  covariates the same rules as for the one-mediator covariate fits
+  choose the treatment. A two-mediator serial fit (the saturated graph
+  or the pure chain, with no, one or two covariates) extracts to a
+  `FIMLSerialMediationData` object when `mediator` names both mediators
+  in the fitted order (a reversed order is refused with the same class);
+  it carries the full covariance of `a`, `a2`, `d1`, `b1`, `b` and
+  `c_prime` (saturated) or of `a`, `d1`, `b` and `c_prime` (chain).
+
+- **brmsfit**: Extract from Bayesian models (future)
+
+Note: OpenMx extraction is planned for a future release.
+
+The returned objects share one interface
+([`nie()`](https://data-wise.github.io/medfit/dev/reference/nie.md),
+[`nde()`](https://data-wise.github.io/medfit/dev/reference/nde.md),
+[`te()`](https://data-wise.github.io/medfit/dev/reference/te.md),
+[`confint()`](https://rdrr.io/r/stats/confint.html),
+[`bootstrap_mediation()`](https://data-wise.github.io/medfit/dev/reference/bootstrap_mediation.md),
+...) for use by other medfit functions and dependent packages (probmed,
+RMediation, medrobust).
+
+The class returned depends on the structure. A single mediator gives a
+[MediationData](https://data-wise.github.io/medfit/dev/reference/MediationData.md)
+object, or an
+[InteractionMediationData](https://data-wise.github.io/medfit/dev/reference/InteractionMediationData.md)
+object when the outcome model has a treatment-by-mediator term. A
+`mediator` vector of length two or more gives a
+[SerialMediationData](https://data-wise.github.io/medfit/dev/reference/SerialMediationData.md)
+or
+[ParallelMediationData](https://data-wise.github.io/medfit/dev/reference/ParallelMediationData.md)
+object; for lm/glm fits whose outcome model has a treatment-by-mediator
+term written with `:` or `*`, it gives a
+[JointMediationData](https://data-wise.github.io/medfit/dev/reference/JointMediationData.md)
+object with the joint natural effects of the mediators. Any other
+product term in a multi-mediator fit errors.
+
+### Arguments for lm and glm models
+
+With `object` the fitted mediator model (the first mediator's model for
+several mediators), the lm/glm method takes:
+
+- `model_y`: the fitted outcome model. With several mediators include
+  every mediator, not only the last: omitting one that also affects the
+  outcome biases the others' coefficients.
+
+- `treatment`: name of the treatment variable.
+
+- `mediator`: name of the mediator, or an ordered character vector of
+  two or more mediator names.
+
+- `mediator_models`: list of the fitted models for mediators 2 to k, in
+  order; required whenever `mediator` has length two or more.
+
+- `structure`: `"auto"` (default), `"serial"`, or `"parallel"`; `"auto"`
+  classifies the mediators from the mediator models.
+
+- `decomposition`: `"auto"` (default) uses the four-way decomposition
+  when a single mediator's outcome model has a treatment-by-mediator
+  term; `"four_way"` requires that term; `"two_way"` ignores it and
+  returns a
+  [MediationData](https://data-wise.github.io/medfit/dev/reference/MediationData.md)
+  object.
+
+- `m_star`: the reference mediator level for the controlled direct
+  effect (default 0; for
+  [JointMediationData](https://data-wise.github.io/medfit/dev/reference/JointMediationData.md)
+  a scalar or a vector named by the interacting mediators).
+
+- `vcov_fun`: function returning each model's covariance matrix (default
+  [`stats::vcov()`](https://rdrr.io/r/stats/vcov.html); for example
+  [`sandwich::vcovHC`](https://zeileis.codeberg.page/sandwich/reference/vcovHC.html)).
+  Not supported for
+  [JointMediationData](https://data-wise.github.io/medfit/dev/reference/JointMediationData.md).
+
+- `outcome`, `data`: optional; detected from the models when omitted.
+
+The lavaan method takes a fitted lavaan model and the variable names;
+see
+[`?extract_mediation_lavaan`](https://data-wise.github.io/medfit/dev/reference/extract_mediation_lavaan.md)
+for its arguments.
+
+### Covariance of the estimates
+
+For lm/glm fits, each equation's block of `@vcov` is that model's own
+covariance. The blocks for different equations are stored as zero. This
+is exact for simple mediation, serial chains, and the four-way model,
+whose later equations contain every regressor of the earlier ones, but
+for parallel mediators it leaves out the covariance between their `a`
+paths.
+[JointMediationData](https://data-wise.github.io/medfit/dev/reference/JointMediationData.md)
+stores the full stacked least-squares covariance, and a lavaan fit
+estimates all equations jointly, so for the same data the intervals can
+differ between engines.
+
+The four-way effects that contain a covariate mean (`int_ref`, the NDE
+and the total effect) treat that mean as a fixed constant, so their
+standard errors and intervals are conditional on the observed
+covariates. They omit the sampling variance of the estimated mean,
+`theta3 * gamma` times the variance of the covariate mean, so they can
+understate the uncertainty of a population-average effect. CDE,
+`int_med`, PIE and the NIE do not depend on the mean. For
+population-average standard errors set
+`options(medfit.covariate_mean_variance = TRUE)`:
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) and
+[`confint()`](https://rdrr.io/r/stats/confint.html) then add the
+variance of the estimated covariate mean, `(theta3 * gamma)^2` times the
+variance of the covariate mean (case-weighted when the fit has weights),
+to `int_ref`, the NDE and the total effect; the default stays
+conditional, as lavaan's `:=` and the glm route are. Or resample rows
+with
+[`bootstrap_mediation()`](https://data-wise.github.io/medfit/dev/reference/bootstrap_mediation.md)
+(`method = "nonparametric"`).
+
+### Coefficient names
+
+The simple single-mediator
+[MediationData](https://data-wise.github.io/medfit/dev/reference/MediationData.md)
+from lm/glm fits names three coefficients `m_<treatment>`,
+`y_<mediator>` and `y_<treatment>` (`m_X`, `y_M` and `y_X` for variables
+`X` and `M`), and code that looks coefficients up by name, such as the
+parametric bootstrap in probmed, relies on them. The lavaan method adds
+the same three names to `@estimates` and `@vcov` for an observed,
+continuous treatment, mediator and outcome. Each is a second name for
+the `a`, `b` or `c_prime` path, with the same estimate and covariances,
+appended after the existing rows. A lavaan fit with a latent or ordered
+treatment, mediator or outcome, and any extraction with
+`standardized = TRUE`, gets none of the three and works with the plugin
+estimators only. Serial, parallel and four-way objects are not affected.
+
+## See also
+
+[MediationData](https://data-wise.github.io/medfit/dev/reference/MediationData.md),
+[`fit_mediation()`](https://data-wise.github.io/medfit/dev/reference/fit_mediation.md),
+[`bootstrap_mediation()`](https://data-wise.github.io/medfit/dev/reference/bootstrap_mediation.md)
+
+## Examples
+
+``` r
+# \donttest{
+# Extract the mediation structure from fitted lm models, using the
+# simulated mediation_demo data bundled with medfit
+fit_m <- lm(mediator1 ~ treatment + covariate1 + covariate2,
+            data = mediation_demo)
+fit_y <- lm(outcome ~ treatment + mediator1 + covariate1 + covariate2,
+            data = mediation_demo)
+med_data <- extract_mediation(fit_m, model_y = fit_y,
+                              treatment = "treatment", mediator = "mediator1")
+# }
+
+# \donttest{
+if (requireNamespace("lme4", quietly = TRUE)) {
+# Treatment assigned to whole clusters (needs lme4); formulas hold fixed
+# effects only, the engine adds the random cluster intercept
+set.seed(1)
+J <- 30
+id <- rep(seq_len(J), each = 6)
+cdat <- data.frame(school = factor(id), X = sample(rep(0:1, J / 2))[id])
+cdat$M <- 0.5 * cdat$X + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+cdat$Y <- 0.2 * cdat$X + 0.4 * cdat$M + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+# The outcome model carries the mediator as its within-cluster deviation
+# plus the observed cluster mean
+cdat$M_bar <- ave(cdat$M, cdat$school)
+cdat$M_w <- cdat$M - cdat$M_bar
+fit_m <- lme4::lmer(M ~ X + (1 | school), data = cdat)
+fit_y <- lme4::lmer(Y ~ X + M_w + M_bar + (1 | school), data = cdat)
+cluster_med <- extract_mediation(fit_m, model_y = fit_y, treatment = "X",
+                                 mediator = "M", cluster = "school")
+nie(cluster_med)
+}
+#> Natural Indirect Effect (NIE): 0.2927
+# }
+```

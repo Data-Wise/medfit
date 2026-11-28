@@ -1,0 +1,80 @@
+# Quick Summary of Mediation Results
+
+Print a one-line summary of mediation results, perfect for quick checks
+or a compact report line.
+
+## Usage
+
+``` r
+quick(x, digits = 3, ...)
+```
+
+## Arguments
+
+- x:
+
+  A
+  [MediationData](https://data-wise.github.io/medfit/dev/reference/MediationData.md)
+  or
+  [SerialMediationData](https://data-wise.github.io/medfit/dev/reference/SerialMediationData.md)
+  object (or result from
+  [`med()`](https://data-wise.github.io/medfit/dev/reference/med.md)).
+  Other classes error; use
+  [`print()`](https://rdrr.io/r/base/print.html) or
+  [`summary()`](https://rdrr.io/r/base/summary.html) for them.
+
+- digits:
+
+  Integer: number of significant digits (default: 3)
+
+- ...:
+
+  Additional arguments (ignored)
+
+## Value
+
+Invisibly returns x
+
+## Details
+
+`quick()` refuses data extracted from bounded FIML fits. Use
+[`print()`](https://rdrr.io/r/base/print.html),
+[`summary()`](https://rdrr.io/r/base/summary.html) or
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) for those
+objects; see
+[`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md)
+for their limits.
+
+Prints a compact one-line summary showing:
+
+- NIE (Natural Indirect Effect) with CI if available
+
+- NDE (Natural Direct Effect)
+
+- Proportion Mediated (PM)
+
+If bootstrap results are available (from `med(..., boot = TRUE)`),
+confidence intervals are shown for NIE.
+
+## See also
+
+[`med()`](https://data-wise.github.io/medfit/dev/reference/med.md),
+[`nie()`](https://data-wise.github.io/medfit/dev/reference/nie.md),
+[`nde()`](https://data-wise.github.io/medfit/dev/reference/nde.md),
+[`pm()`](https://data-wise.github.io/medfit/dev/reference/pm.md)
+
+## Examples
+
+``` r
+result <- med(
+  data = mediation_demo,
+  treatment = "treatment",
+  mediator = "mediator1",
+  outcome = "outcome",
+  covariates = c("covariate1", "covariate2")
+)
+
+# One-line summary
+quick(result)
+#> NIE = 0.333  | NDE = 0.206 | PM = 61.8 %
+```

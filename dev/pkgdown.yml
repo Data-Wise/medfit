@@ -1,0 +1,52 @@
+pandoc: 3.8.3
+pkgdown: 2.2.1
+pkgdown_sha: ~
+articles:
+  articles/bootstrap: bootstrap.html
+  articles/computation-algorithms: computation-algorithms.html
+  articles/cookbook: cookbook.html
+  articles/example-gpa: example-gpa.html
+  articles/extraction: extraction.html
+  articles/getting-started: getting-started.html
+  articles/guide-architecture: guide-architecture.html
+  articles/guide-changes: guide-changes.html
+  articles/guide-engines: guide-engines.html
+  articles/guide-glossary: guide-glossary.html
+  articles/guide-intervals: guide-intervals.html
+  articles/guide-troubleshooting: guide-troubleshooting.html
+  articles/guide-twolevel-tutorial: guide-twolevel-tutorial.html
+  articles/introduction: introduction.html
+  articles/lavaan-comparison: lavaan-comparison.html
+  articles/methods: methods.html
+  articles/model-cluster: model-cluster.html
+  articles/model-fiml: model-fiml.html
+  articles/model-glm-families: model-glm-families.html
+  articles/model-interaction: model-interaction.html
+  articles/model-joint: model-joint.html
+  articles/model-lavaan: model-lavaan.html
+  articles/model-parallel: model-parallel.html
+  articles/model-regmedint: model-regmedint.html
+  articles/model-sem-constraints: model-sem-constraints.html
+  articles/model-sem-factors: model-sem-factors.html
+  articles/model-sem-latent: model-sem-latent.html
+  articles/model-sem-multi: model-sem-multi.html
+  articles/model-sem: model-sem.html
+  articles/model-serial: model-serial.html
+  articles/model-simple: model-simple.html
+  articles/model-twolevel: model-twolevel.html
+  articles/model-weights: model-weights.html
+  articles/models: models.html
+  articles/probmed-comparison: probmed-comparison.html
+  articles/quality-control: quality-control.html
+  articles/refcard: refcard.html
+  articles/rmediation-comparison: rmediation-comparison.html
+  articles/sem-defaults-0-15: sem-defaults-0-15.html
+  articles/sem-guide: sem-guide.html
+  articles/sem-quickstart: sem-quickstart.html
+  articles/sem-tutorial: sem-tutorial.html
+  articles/syntax-crosswalk: syntax-crosswalk.html
+  articles/whats-new-0-11: whats-new-0-11.html
+last_built: 2026-11-28T21:13Z
+urls:
+  reference: https://data-wise.github.io/medfit/reference
+  article: https://data-wise.github.io/medfit/articles

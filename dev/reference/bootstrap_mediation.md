@@ -1,0 +1,415 @@
+# Perform Bootstrap Inference for Mediation Statistics
+
+Conduct bootstrap inference to compute confidence intervals for
+mediation statistics. Supports parametric, nonparametric, and plugin
+methods.
+
+## Usage
+
+``` r
+bootstrap_mediation(
+  statistic_fn,
+  method = c("parametric", "nonparametric", "plugin"),
+  mediation_data = NULL,
+  data = NULL,
+  n_boot = 1000L,
+  ci_level = 0.95,
+  parallel = FALSE,
+  ncores = NULL,
+  seed = NULL,
+  cluster = NULL,
+  ...,
+  source_fit = NULL,
+  effect = NULL
+)
+```
+
+## Arguments
+
+- statistic_fn:
+
+  Function that computes the statistic of interest.
+
+  - For parametric bootstrap: receives named parameter vector, returns
+    scalar
+
+  - For nonparametric bootstrap: receives data frame, returns scalar
+
+  - For plugin: receives named parameter vector, returns scalar Omit
+    this argument when supplying `source_fit`.
+
+- method:
+
+  Character string: bootstrap method. Options:
+
+  - `"parametric"`: Sample from multivariate normal (fast, assumes
+    normality)
+
+  - `"nonparametric"`: Resample data and refit (robust, slower)
+
+  - `"plugin"`: Point estimate only, no CI (fastest)
+
+- mediation_data:
+
+  A mediation data object (required for parametric/plugin):
+  [MediationData](https://data-wise.github.io/medfit/dev/reference/MediationData.md),
+  [SerialMediationData](https://data-wise.github.io/medfit/dev/reference/SerialMediationData.md),
+  [ParallelMediationData](https://data-wise.github.io/medfit/dev/reference/ParallelMediationData.md),
+  [InteractionMediationData](https://data-wise.github.io/medfit/dev/reference/InteractionMediationData.md),
+  [JointMediationData](https://data-wise.github.io/medfit/dev/reference/JointMediationData.md),
+  [TwoLevelMediationData](https://data-wise.github.io/medfit/dev/reference/TwoLevelMediationData.md)
+  or
+  [TwoLevelParallelMediationData](https://data-wise.github.io/medfit/dev/reference/TwoLevelParallelMediationData.md)
+  (see
+  [`twolevel_statistic()`](https://data-wise.github.io/medfit/dev/reference/twolevel_statistic.md)).
+  `statistic_fn` receives its named `@estimates` vector, which includes
+  path aliases (e.g. `a`, `d1`, `b`, `c_prime` for a serial chain; `a1`,
+  `b1`, `a2`, `b2` for parallel mediators). For a
+  [JointMediationData](https://data-wise.github.io/medfit/dev/reference/JointMediationData.md)
+  the aliases alone cannot reproduce the NDE, which also needs the
+  prefixed intercept and covariate rows (`m1_`, ..., `y_`) and the
+  sample covariate means.
+
+- data:
+
+  Data frame (required for nonparametric bootstrap)
+
+- n_boot:
+
+  Integer: number of bootstrap samples (default: 1000)
+
+- ci_level:
+
+  Numeric: confidence level between 0 and 1 (default: 0.95)
+
+- parallel:
+
+  Logical: use parallel processing? (default: FALSE)
+
+- ncores:
+
+  Integer: number of cores for parallel processing. If NULL, uses
+  `parallel::detectCores() - 1`
+
+- seed:
+
+  Integer: random seed for reproducibility (optional but recommended)
+
+- cluster:
+
+  Character string: name of a cluster variable in `data`, for
+  `method = "nonparametric"` only (an error with the other methods). The
+  resampling then draws whole clusters with replacement and gives each
+  draw a fresh cluster id before `statistic_fn` sees the data, so a
+  cluster drawn twice is refit as two clusters, not one bigger one.
+  Singular fits and convergence warnings from a refit count as failures:
+  they are excluded, their messages are suppressed, and their number is
+  added to the warning. `NULL` (default) resamples rows as before.
+
+- ...:
+
+  Additional arguments (reserved for future use); must be empty with
+  `source_fit`.
+
+- source_fit:
+
+  Optional accepted bounded FIML
+  [SEMFit](https://data-wise.github.io/medfit/dev/reference/SEMFit.md),
+  supplied by name. Its original incomplete retained records, model and
+  settings are authoritative. Omit `statistic_fn`, `mediation_data`,
+  `data` and `cluster` with this route.
+
+- effect:
+
+  Scalar unstandardized effect, exactly `"nie"`, `"nde"` or `"te"`,
+  required with `source_fit` and unavailable without it. Supplied by
+  name.
+
+## Value
+
+A
+[BootstrapResult](https://data-wise.github.io/medfit/dev/reference/BootstrapResult.md)
+object containing:
+
+- Point estimate
+
+- Percentile confidence interval bounds (the \\\alpha/2\\ and \\1 -
+  \alpha/2\\ quantiles of the bootstrap distribution)
+
+- Bootstrap distribution (for parametric and nonparametric)
+
+- Method used
+
+## Details
+
+### Bounded FIML source intervals (unavailable pending admission)
+
+**Unavailable.** While statistical admission is undecided, every
+non-`NULL` `source_fit` is refused before any other check, random draw,
+refit or worker, with a classed error
+(`medfit_error_fiml_inference_unavailable`). No option or environment
+variable enables it. The text below records the implemented design and
+is not a statement that the intervals are supported.
+
+Supply `source_fit` and `effect` by name and choose `method` explicitly.
+Only accepted three-variable Gaussian random-X simple mediation fits
+from
+[`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md)
+are supported, with the direct path free or fixed exactly at zero. This
+route does not support callbacks, plugin estimates, clusters or
+additional arguments. Fits with one or two covariates (including two
+parallel mediators with covariates) are refused with
+`medfit_error_fiml_covariate_source_fit`, and fits with two parallel
+mediators and no covariates with `medfit_error_fiml_parallel_source_fit`
+(both checks follow the withheld-inference guard above). Bounded FIML
+objects supplied as `mediation_data` or `data` remain refused.
+Object-aware guards run before package-controlled RNG, workers or
+refits; opaque user callbacks and external-first dispatch are outside
+that guarantee.
+
+`method = "nonparametric"` gives a retained-row FIML percentile
+interval: resample entire nonempty records at fixed retained N,
+preserving missingness and duplicate rows, and refit the identical model
+with the accepted source protocol. `method = "parametric"` gives a
+Gaussian parameter-draw percentile interval, not a synthetic-data
+bootstrap: jointly draw the canonical free parameters using the full
+observed/model covariance in original coordinates, without refitting.
+The symmetric correlation-root factor permits only roundoff repairs;
+materially asymmetric or indefinite covariance is refused. Fixed zeros
+stay exact. Negative nuisance-variance draws are not filtered or
+truncated before evaluating the effect.
+
+Both routes retain the original fitted effect as the point estimate and
+use type-7 empirical quantiles. Every requested replicate is recorded in
+`@inference` (schema `fiml-bootstrap-1`), including indices or draw IDs,
+reasons, source/RNG provenance and retained/collected counts. Any
+failed, invalid or nonfinite required replicate withholds the entire
+interval. Interruption returns an incomplete length-`n_boot` result with
+interrupted/unattempted IDs and `NA` unresolved values. Print, summary,
+tidy and changed-level
+[`confint()`](https://rdrr.io/r/stats/confint.html) cannot report a
+survivor interval; tidy distribution SD is also unavailable for withheld
+results. An all-success SD is descriptive, not a robust standard error.
+
+The target is conditional on retained nonempty records. Assumptions
+include IID jointly Gaussian data, ignorable MAR with distinct
+missingness/model parameters, positivity and identified information.
+Retention normalization must be independent of model parameters;
+independently empty MCAR records suffice. Arbitrary value-dependent
+empty-row deletion and MNAR are not covered. Numerical verification does
+not establish interval coverage; statistical admission remains deferred.
+See the Methods and Formulas article, Bounded FIML, for the mathematical
+definition. These source intervals are development code added after
+0.16.0 and are withheld.
+
+### Bootstrap Methods
+
+**Parametric Bootstrap** (`method = "parametric"`):
+
+- Samples parameter vectors from \\N(\hat{\theta}, \hat{\Sigma})\\
+
+- Fast and efficient
+
+- Assumes asymptotic normality of parameters
+
+- Recommended for most applications with n \> 50
+
+- Requires `mediation_data` argument
+
+**Nonparametric Bootstrap** (`method = "nonparametric"`):
+
+- Resamples observations with replacement
+
+- Refits models for each bootstrap sample
+
+- More robust, no normality assumption
+
+- Computationally intensive
+
+- Use when normality is questionable or n is small
+
+- Requires `data` argument
+
+**Plugin Estimator** (`method = "plugin"`):
+
+- Computes point estimate only
+
+- No confidence interval
+
+- Fastest method
+
+- Use for quick checks or when CI not needed
+
+- Requires `mediation_data` argument
+
+### Statistic Function
+
+The `statistic_fn` should be a function that:
+
+- For parametric/plugin: Takes a named numeric vector of parameters
+
+- For nonparametric: Takes a data frame
+
+- Returns a single numeric value
+
+Common statistic functions for indirect effect:
+
+    # Using parameter names from MediationData
+    indirect_fn <- function(theta) {
+      theta["m_X"] * theta["y_M"]
+    }
+
+### Parallel Processing
+
+Set `parallel = TRUE` to use multiple cores:
+
+- Uses
+  [`parallel::mclapply()`](https://rdrr.io/r/parallel/mclapply.html) on
+  Unix systems
+
+- Falls back to sequential on Windows
+
+- Automatically detects available cores
+
+### Reproducibility
+
+Always set a seed for reproducible results:
+
+    bootstrap_mediation(..., seed = 12345)
+
+A fixed seed gives the same resamples for any `ncores`, and for
+sequential runs, because every resample is drawn before the work is
+split across cores. This holds for the nonparametric and cluster methods
+(earlier versions drew inside each worker). The statistic is still
+computed in the workers, so a `statistic_fn` that uses random numbers
+itself is not covered (in a sequential run its draws now follow all the
+resampling draws instead of interleaving with them, so its stream
+differs from earlier versions), and floating-point results can differ in
+the last digits when BLAS threads differ. The resamples are held in
+memory before the refits start: `n_boot` integer vectors of length `n`
+(about `4 * n * n_boot` bytes; 800 MB for `n = 100000` and
+`n_boot = 2000`).
+
+## See also
+
+[BootstrapResult](https://data-wise.github.io/medfit/dev/reference/BootstrapResult.md),
+[MediationData](https://data-wise.github.io/medfit/dev/reference/MediationData.md),
+[`fit_mediation()`](https://data-wise.github.io/medfit/dev/reference/fit_mediation.md)
+
+## Examples
+
+``` r
+# Fit mediation model
+med_data <- fit_mediation(
+  formula_y = outcome ~ treatment + mediator1 + covariate1 + covariate2,
+  formula_m = mediator1 ~ treatment + covariate1 + covariate2,
+  data = mediation_demo,
+  treatment = "treatment",
+  mediator = "mediator1"
+)
+
+# Define indirect effect function
+indirect_fn <- function(theta) theta["m_treatment"] * theta["y_mediator1"]
+
+# Plugin estimator (point estimate only, fastest)
+result_plugin <- bootstrap_mediation(
+  statistic_fn = indirect_fn,
+  method = "plugin",
+  mediation_data = med_data
+)
+print(result_plugin)
+#> BootstrapResult object
+#> ======================
+#> 
+#> Method:   plugin
+#> Estimate:   0.3328
+#> 
+#> (No confidence interval for plugin method)
+
+# \donttest{
+# Parametric bootstrap (recommended for most applications)
+result <- bootstrap_mediation(
+  statistic_fn = indirect_fn,
+  method = "parametric",
+  mediation_data = med_data,
+  n_boot = 1000,
+  ci_level = 0.95,
+  seed = 12345
+)
+print(result)
+#> BootstrapResult object
+#> ======================
+#> 
+#> Method:   parametric
+#> Estimate:   0.3328
+#> N bootstrap samples: 1000
+#> 
+#> 95% Confidence Interval:
+#>   Lower:   0.2163
+#>   Upper:   0.4674
+
+# Nonparametric bootstrap (slower but more robust)
+refit_fn <- function(boot_data) {
+  fit_m <- lm(mediator1 ~ treatment + covariate1 + covariate2,
+              data = boot_data)
+  fit_y <- lm(outcome ~ treatment + mediator1 + covariate1 + covariate2,
+              data = boot_data)
+  unname(coef(fit_m)["treatment"] * coef(fit_y)["mediator1"])
+}
+
+result_np <- bootstrap_mediation(
+  statistic_fn = refit_fn,
+  method = "nonparametric",
+  data = mediation_demo,
+  n_boot = 500,
+  seed = 12345
+)
+print(result_np)
+#> BootstrapResult object
+#> ======================
+#> 
+#> Method:   nonparametric
+#> Estimate:   0.3328
+#> N bootstrap samples: 500
+#> 
+#> 95% Confidence Interval:
+#>   Lower:   0.1956
+#>   Upper:   0.4865
+# }
+
+# \donttest{
+if (requireNamespace("lme4", quietly = TRUE)) {
+# Treatment assigned to whole clusters (needs lme4); formulas hold fixed
+# effects only, the engine adds the random cluster intercept
+set.seed(1)
+J <- 30
+id <- rep(seq_len(J), each = 6)
+cdat <- data.frame(school = factor(id), X = sample(rep(0:1, J / 2))[id])
+cdat$M <- 0.5 * cdat$X + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+cdat$Y <- 0.2 * cdat$X + 0.4 * cdat$M + rnorm(J, sd = 0.5)[id] + rnorm(J * 6)
+# Resample whole clusters. A refit that is singular or does not converge is
+# dropped, and the warning counts how many were
+nie_of <- function(d) {
+  unname(nie(fit_mediation(Y ~ X + M, M ~ X, data = d, treatment = "X",
+                           mediator = "M", engine = "lmer",
+                           cluster = "school")))
+}
+result_cluster <- bootstrap_mediation(
+  nie_of, method = "nonparametric", data = cdat, cluster = "school",
+  n_boot = 20, seed = 1
+)
+print(result_cluster)
+}
+#> Warning: 3 bootstrap samples failed and were excluded (3 of them singular or non-convergent refits)
+#> BootstrapResult object
+#> ======================
+#> 
+#> Method:   nonparametric
+#> Estimate:   0.2927
+#> N bootstrap samples: 17
+#> 
+#> 95% Confidence Interval:
+#>   Lower:   0.0631
+#>   Upper:   0.5778
+# }
+```

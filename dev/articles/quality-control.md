@@ -1,0 +1,369 @@
+# Quality control of the optimizer
+
+This page records how the sem engine’s optimizer is tested and where its
+technical decisions are written down. The two tables below are generated
+from the repository files at site build (`tests/sim/gates.csv`,
+`tests/sim/structures.csv` and the front matter of
+`planning/specs/ADR-*.md`), so they cannot drift from them. Plan and
+ledger:
+`planning/specs/BRAINSTORM-optimizer-quality-control-2026-10-23.md`. The
+model syntax for the external oracles (lavaan, OpenMx, and semopy) is on
+[One model in medfit, lavaan, OpenMx and
+semopy](https://data-wise.github.io/medfit/dev/articles/syntax-crosswalk.md).
+
+> **At a glance**
+>
+> **Use this when:** you want to see how the sem engine’s optimizer is
+> tested and where its decisions are recorded.  
+> **You get:** tables of the gates, the model structures and the
+> decision records, generated from the repository files at site build.  
+> **Reading time:** 12 min
+
+## Principles
+
+- Every number has an independent oracle (lavaan, OpenMx, OLS, a hand
+  calculation or a known truth).
+- Every gate has a planted defect it must catch, and the driver plants
+  defects in every gate’s results.
+- An unresolved result beats a wrong one: a refit or a branch that
+  cannot be fitted is reported as unresolved or stops the fit; it is
+  never replaced by the best of the others.
+- Evidence is designed before it is run: the gate’s thresholds and
+  design are committed first.
+
+## Gate catalog
+
+| Gate | Checked against | Planted defects | Structures |
+|:---|:---|:---|:---|
+| parity | lavaan and OpenMx (estimates, SEs) | driver | observed; latent; parallel; serial |
+| constrained | OpenMx constrained fit | driver | linear constraints |
+| se | OpenMx and lavaan standard errors | driver | observed; latent; parallel; serial |
+| stationarity | labeled accepted and truncated fits (decrement separation) | driver, driver:scale_down, driver:scale_up | linear constraints |
+| reliability | lavaan fit on the same data | driver | observed; latent |
+| product-null | chi-square null distribution (known answer) | endogenous, wrongdf | product term and four-way |
+| product-null-colon | chi-square null distribution (known answer) | endogenous, wrongdf | product term and four-way |
+| product-fixed-var | chi-square null (calibrated rows) and documented-miscalibrated rows | wrongvar, wrongdf | product term and four-way |
+| product-fixed-var-colon | chi-square null (calibrated rows) and documented-miscalibrated rows | wrongvar, wrongdf | product term and four-way |
+| product-corr | OLS and SUR hand regressions | nocorr, olsdrop | product term and four-way |
+| product-corr-colon | OLS and SUR hand regressions | nocorr, olsdrop | product term and four-way |
+| four-way-kat | hand oracle with known truth, glm and lavaan routes | nocovgrad, unwtd_glm, unwtd_lavaan, oracle, wrongtruth | product term and four-way |
+| s7-lifecycle | fresh-process install against CRAN S7 and S7 main | nounion, noonload | S7 install lifecycle |
+| nonlinear-profile | independent oracle (tests/sim/oracle213.R) | noref, noflips, nofloor, absfloor, oracle1, driver:all_flagged, driver:floor_disproved_silent | nonlinear constraints; nonzero product sign branches |
+| nonlinear-parity | OpenMx mxConstraint and an independent SE oracle | linear, larger, estoff, stale, noproj | nonlinear constraints; nonzero product sign branches |
+| fixed-x | lavaan fixed.x and the free fit | countrestrict, noshift, droppair, jointlik, acceptbad, aicwarnonly, driver:no_lavaan | fixed_x |
+| mean-constrained | lavaan and the invariance of the shifted fit | badshift, nocenter, driver:no_lavaan, driver:lavaan_partial | observed intercepts and means |
+| factor | hand-coded dummies and lavaan | wrongref, nofix, noncanon, oneprod, afterdelete, nolevelcheck, halffix, driver:no_lavaan | factor covariates |
+| bootstrap-coverage | known truth a\*b = 0.15 (interval coverage) | narrow, wrongtruth | bootstrap inference |
+| oracle-sweep | independent randomized oracle (OLS) | badshift | observed |
+| compare-lr | lavaan and OpenMx likelihood ratios | noresidual, zeroresid, fixedset, fixedset_openmx, driver:unresolved_converged, driver:ref_off | zero-product branches |
+| restoration | first-order cost bound derived in the Methods article | infslack, rawdist, nocurv, nopinv, nonorm, nodispatch | nonlinear constraints |
+| native-defaults | lavaan fixed.x/meanstructure/sampling.weights and a hand-calculated conditional likelihood | fixedx_logical, product_free, driver | observed intercepts and means; fixed_x; native defaults (fixed_x x meanstructure) |
+| semopy | semopy 2.3.11 (MLW, ftol 1e-12, observed information), cross-checked against lavaan | medfit_shift, medfit_se, perturb, swapname, driver | observed; latent; parallel; serial |
+| fiml | lavaan observed information and independent row-wise Gaussian likelihood | wrong_n, complete_case, dropped_cov, lost_provenance, missing_guard, driver | bounded random-X FIML |
+| fiml-ext | lavaan raw-data FIML with observed information (estimates; covariance; logLik; defined indirect effect and SE) | wrong_unit, no_offset, swap_b, dropped_cov, missing_guard, parcov_drop_path, parcov_orthogonal, serial_router_off, ser_swap_db, ser_drop_cross, ser_total_gradient, ser_drop_shortcut, ser_chain_free_shortcut, ser_chain_swap_db, ser_chain_origin, ser_chain_te_gradient, ser_cov_alias, ser_cov_drop_y, ser_cov_wrong_offset, ser_chain_cov_treatment, ser_cov2_drop_gy, ser_cov2_wrong_offset, ser_cov_max_narrow, ser_k2_closed, driver | bounded random-X FIML with covariates; bounded random-X FIML with parallel mediators; bounded random-X FIML with serial mediators; bounded random-X FIML with the pure chain of serial mediators; bounded random-X FIML with serial mediators and one covariate; bounded random-X FIML with the pure chain of serial mediators and one covariate; bounded random-X FIML with serial mediators and two covariates; bounded random-X FIML with the pure chain of serial mediators and two covariates |
+| twolevel-parity | lavaan two-level, TL-3 (fixed.x = FALSE, observed information, structured h1) | zero_cross, se_scale, perturb_theta, driver | two-level observed (1-1-1) |
+| twolevel-sandwich | lavaan two-level se = robust.huber.white, TL-3 (fixed.x = FALSE, observed information, structured h1) | casewise, zero_cross_meat, drop_cluster, cr1, no_projection, driver | two-level observed (1-1-1) |
+| twolevel-mbco-size | pchisq(statistic, 1) and the alpha + 3 MC SE size rule; branch minimum against lavaan in tests/testthat/test-sem-mbco-twolevel.R | max_branch, driver | two-level observed (1-1-1) |
+| twolevel-equal-size | hand O8 likelihood maximized under the constraint (lavaans nonlinear two-level fit is not an oracle: it returned an inadmissible optimum), pchisq(statistic, 1) and the alpha + 3 MC SE size rule | cross_pair, stat_doubled, df_two, driver | two-level observed (1-1-1) |
+| mlr | lavaan estimator = MLR (estimates; sandwich SEs; scaling factor; scaled chi-square) | sfac_df1, keep_fixed, sandwich_h0, normal_trace, no_scaling, no_bound_guard, fixed_pos, driver | MLR estimator (scaled chi-square) |
+
+A token in *Planted defects* is a `MUTANT=` value of the gate’s script;
+the driver (`tests/sim/run-gates.R --mutants`) also plants tolerance,
+missing, failed, unreadable and stale results in every gate.
+`test-gate-coverage.R` fails when a row has no oracle, names a defect
+its script does not contain, or when a structure has no gate.
+
+## Decision log
+
+| Id | Decision | Status | Date | ADR |
+|:---|:---|:---|:---|:---|
+| RD-1 | Every documentation surface has one owner and one moment it changes | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-2 | Version words come from DESCRIPTION; prose names a version only where a gate checks it | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-3 | Release docs gates live in the test suite (docs tier), not in a new workflow | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-4 | NEWS opens with the release heading and carries no stale wording in a release | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-5 | README and articles name the DESCRIPTION version and say nothing of a development version in a release | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-6 | README has a What’s new block for the version; CITATION reads the version | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-7 | CLAUDE.md and .STATUS status lines name the released version | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-8 | The FIML caveat is a marker on the home page and the FIML page, not a counted phrase | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-9 | Layout rules that can fail are tests: Next block, hidden setup, short navbar, readable colors, documented exports | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| RD-10 | What stays manual: release notes review, rendered-site inspection, Lighthouse, external URLs | accepted | 2026-11-12 | ADR-docs-release-pipeline-2026-11-12 |
+| V-1 | The in-package ML fitter is the sem engine: engine = ‘sem’, prose ‘the sem engine’ | decided | 2026-11-12 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| V-2 | engine = ‘native’ stays as a silent alias; soft deprecation one minor later; no removal without a \[BREAKING\] issue | decided | 2026-11-12 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| V-3 | compare_lr(engine = ) keeps its name in 0.18.0 (reference = deferred until \#320 and the result-field collision are resolved) | deferred | 2026-11-12 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| V-4 | Listwise ML and bounded FIML are one engine; missing = stays the switch | decided | 2026-11-12 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| V-5 | Tuning: the existing control accepts a plain list (legacy nloptr options) or sem_control(); optimizer = ‘auto’ for the listwise search, resolved protocol recorded | decided | 2026-11-12 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| V-6 | Argument design rules: meaning-changing options are arguments, search options are control, strings not logicals, options() only for tuning | decided | 2026-11-12 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| V-7 | TwoLevelMediationData: optional source_version and a fallback reader; source and source_package validators unchanged; source and lavaan_version kept | decided | 2026-11-13 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| V-8 | Prose and titles change first; the ‘native’ article URLs are renamed to sem-\* only after a pkgdown redirect spike confirms anchors survive | conditional | 2026-11-12 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| V-9 | One decision record and one user guide: this ADR and the Guides article ‘Which engine should I use?’ | decided | 2026-11-12 | ADR-engine-vocabulary-and-controls-2026-11-12 |
+| E-1 | fixed_x defaults to TRUE: warn in 0.14.0, flip in 0.15.0 | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-2 | meanstructure defaults to TRUE on the same schedule as fixed_x | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-3 | One default for fit_sem() and fit_mediation(engine = ‘native’) | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-4 | compare_lr() supports fixed_x and a saturated mean structure | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-5 | Only the default is lenient about statements on exogenous variables | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-6 | Dependents get a \[BREAKING\] notice and pass the settings explicitly | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-7 | Tests and gates that encode the old defaults pin them | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-8 | Fix the pinned-parameter SE under a mean structure before the flip | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-9 | Opt-in to the new defaults through options(medfit.native_defaults) | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-10 | Unset is detected with missing(); fit_mediation() forwards only supplied settings | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-11 | The fixed_x default fixes product columns too | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-12 | Reliability under the new defaults is a 0.15.0 blocker | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-13 | The fixed_x default resolves to an explicit subset (provenance) | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-14 | Versioned resolution: 0.15.0 ignores the opt-in option | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| E-15 | An oracle matrix gates the flip | decided | 2026-10-24 | ADR-native-defaults-2026-10-24 |
+| A | SLSQP as the default solver (D19) | accepted | 2026-10-09 | ADR-native-solver-and-engines-2026-10-23 |
+| B | Tiered path for constrained fits (D16; Tier 0 shipped, Tier 1 and the fallback not implemented) | approved | 2026-10-19 | ADR-native-solver-and-engines-2026-10-23 |
+| D-1 | Motivation for nlminb is reliability, not speed | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-2 | nlminb starts at the zero-product branch fits | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-3 | A branch reaches nlminb by pinning coordinates | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-4 | Unconstrained default and an option (measurement gate first) | deferred | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-5 | nlminb as a cross-check on branch fits | conditional | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-6 | Constrained default and the order of the tiered path | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-7 | Plain linear constraints stay on SLSQP until AUGLAG is measured | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-8 | D-4 reliability gate is a paired non-inferiority test | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-9 | The gate design is fixed before the first run | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-10 | Latent structures in the D-4 gate | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-11 | A partial branch result is an error (PR \#303) | decided | 2026-10-23 | ADR-native-solver-and-engines-2026-10-23 |
+| D-12 | The D1 outcome ledger rides on the D-11 error as \$ledger | decided | 2026-10-24 | ADR-native-solver-and-engines-2026-10-23 |
+| D-13 | semopy as a monthly third oracle for estimates and SEs | decided | 2026-10-26 | ADR-native-solver-and-engines-2026-10-23 |
+| D-14 | D18: SLSQP stays a permanent user-selectable option, never the default (#276) | decided | 2026-10-21 | ADR-native-solver-and-engines-2026-10-23 |
+| TL-1 | Two-level estimates match lavaan to 0.01 SE with a 1e-4 absolute floor; adapter arithmetic to 1e-10; a closed form to about 1e-5 | decided | 2026-11-18 | ADR-twolevel-oracle-tolerances-2026-11-18 |
+| TL-2 | Two-level SEs match to 1e-3 relative only against fixed.x = FALSE at the same information | decided | 2026-11-18 | ADR-twolevel-oracle-tolerances-2026-11-18 |
+| TL-3 | Native two-level fits are compared with lavaan fixed.x = FALSE | decided | 2026-11-18 | ADR-twolevel-oracle-tolerances-2026-11-18 |
+| TL-4 | Hand-built O8 log-likelihood: absolute logLik without Z, nested-fit differences with Z, both to 1e-6 | decided | 2026-11-18 | ADR-twolevel-oracle-tolerances-2026-11-18 |
+| TL-5 | OpenMx is a third oracle under the same rules; a disagreement beyond them stops the work | decided | 2026-11-18 | ADR-twolevel-oracle-tolerances-2026-11-18 |
+| TL-6 | Frozen SLSQP fixtures are pinned at 1e-6 across platforms | decided | 2026-11-18 | ADR-twolevel-oracle-tolerances-2026-11-18 |
+| TL-7 | Each tolerance is valid only if its matching planted defect fails it; the zeroed cross-level vcov block validates the SE bound | decided | 2026-11-18 | ADR-twolevel-oracle-tolerances-2026-11-18 |
+
+Each ADR opens with a YAML `decisions:` list (`id`, `title`, `status`,
+`date`, optional `supersedes`); `test-adr-front-matter.R` checks it. The
+ADR is the source; this table only reads it.
+
+## Evidence validators
+
+A native fit carries an outcome ledger (`fit@diagnostics$ledger`, since
+0.14.1): the restriction, the sample, the optimizer’s acceptance state,
+the discrepancy and the notices, one node per zero-product branch. The
+ledger is evidence, and the code that decides whether evidence is
+accepted is itself a QC subject: a false acceptance passes a forged or
+mismatched fit, and a false refusal turns a genuine result into an
+error.
+[`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md)
+runs the validators twice, on the ledger of the fit it is given and on
+its own root ledger before it returns. A refusal is the error
+`medfit_error_ledger`, a class that is never an optimizer failure and
+never becomes an unresolved row. The semantics of the ledger are in the
+[troubleshooting
+guide](https://data-wise.github.io/medfit/dev/articles/guide-troubleshooting.md);
+the decisions are ADR D-11 and D-12.
+
+**What the validators accept and refuse.** A node is accepted only when
+what it must contain can be rebuilt from its own constraints and the
+call: the child count and branch map, the IDs and parents, the shared
+sample (by digest), domain and settings, the minimum over the resolved
+branches, and, for a certified-empty branch, the premises of its
+certificate. A forged ID, count, state, digest, certificate or dropped
+child is refused. The MBCO root additionally ties each null to the
+returned `$tests` table and to the settings its refit used.
+
+**Nonzero-product coverage has a separate validator.** The optional
+internal `search_evidence` record does not alter the version-1 ledger.
+Its validator rebuilds supported-shape classification and sign bounds
+from the canonical model, checks the sample/settings context, exact
+parameter coordinates, candidate objectives, acceptance gates and actual
+attempt counts, and refuses fabricated local coverage or false
+emptiness. The independent tests use a separately parameterized
+likelihood and covariance calculation, plus forged-record and
+removed-validator defects (`test-sem-nonzero-branches.R`,
+`test-sem-nonzero-evidence.R`). Covered sign domains do not establish
+global optimality; see [Computation and
+algorithms](https://data-wise.github.io/medfit/dev/articles/computation-algorithms.html#a-nonzero-product-has-two-sign-branches).
+
+**Genuine shapes must validate.** A validator is also tested the other
+way: every shape
+[`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md)
+can produce must pass it. The shapes of a null node are:
+
+| Shape | Arises when | Evidence in the suite |
+|----|----|----|
+| plain resolved | an ordinary refit with `a == 0` | `test-sem-mbco-root.R` |
+| resolved zero-product union | the null holds a zero-product row and its branches resolve | `test-sem-mbco-root-qa.R` |
+| covariance-retained | the refit’s optimizer accepted and covariance explicitly diagnosed non-positive-definite information or a negative variance (warning, `covariance = "failed"`); arbitrary covariance errors propagate | `test-sem-post-fit.R`, `test-sem-mbco-root.R`, `test-sem-covariance-diagnostic.R` |
+| covariance-failed branch in a union | one branch of a union lost its covariance; the node reports the first such branch | `test-sem-post-fit.R`, `test-sem-mbco-root-qa.R` |
+| certified excluded | the null contradicts the fit’s own literal equalities | `test-sem-mbco-root.R` |
+| union with an excluded branch | a certified-empty branch beside a resolved one | `test-sem-literal-certificates.R` |
+| all-excluded union | every branch certified empty: unresolved, no likelihood | `test-sem-mbco-root.R`, `test-sem-literal-certificates.R` |
+| failed with the engine’s ledger | the refit stopped with an error that carries its own ledger | `test-sem-mbco-root.R` |
+| failed bare node | the refit stopped with no ledger, so [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md) builds the node: no likelihood, no witness, the condition | `test-sem-mbco-root.R` |
+| failed union with a failed branch | a union where at least one branch is unresolved and the others are resolved or excluded | `test-sem-mbco-root.R` |
+| latent | a model with a latent mediator, through the same path | `test-sem-mbco.R` |
+
+`test-sem-mbco-root-qa.R` adds the grid of genuine calls (plain, k
+paths, inequality, equality, boundary, `fixed_x` both ways, mean
+structure, expected information, `n_starts` and `control` overrides) and
+the sandwich fit.
+
+**What is deliberately not decided.** Some forgeries cannot be told from
+a genuine result without refitting, and the validator does not claim to
+catch them: a consistent rewrite of the root sample together with every
+`sample_hash`, and an altered parameter value inside the parameter table
+of a null. The free text of the condition of a failed null (message,
+class and call) is not checked. An all-excluded null is validated
+against its own certificates only, so a foreign self-consistent
+all-excluded union is accepted; the statistic is `NA` either way, so no
+number changes.
+
+## Adding a model
+
+A change that alters the objective, the parameter vector, the constraint
+set, the bounds or the solver path (the files in
+`tests/sim/risk-files.txt`) is high-risk, and its pull request body
+carries this checklist, each item ticked or `n/a: <reason>` (the
+`risk-tier` workflow checks it). Every new model class needs at least
+items 1 to 3.
+
+| \# | Check | Evidence |
+|----|----|----|
+| 1 | Independent oracle | lavaan, OpenMx, OLS or a hand calculation agrees within a stated tolerance |
+| 2 | Reliability cell | the structure is in the reliability grid (default and random starts, the data scales) |
+| 3 | Planted defect | a mutant the gate must reject |
+| 4 | Metamorphic invariance | rescaling a variable, reordering syntax, or a redundant constraint leaves the answer unchanged |
+| 5 | Fault injection | bad solver statuses and non-finite values are refused or retried, never accepted |
+| 6 | Registration | a `gates.csv` row with `oracle` and `mutants`, and a row in `structures.csv` |
+| 7 | Platform run | the gate passes on the OpenBLAS runner |
+
+## The monthly run
+
+The monthly-only semopy gate compares estimates and standard errors for
+observed, latent, parallel and serial models. A comparison counts only
+when semopy also agrees with lavaan. The gate uses semopy 2.3.11 and
+requires `uv` in the monthly workflow; outside that workflow an
+unavailable dependency produces `n/a` rows. semopy and medfit both use
+SLSQP, so lavaan provides a separate solver check.
+
+The `qc-monthly` workflow runs the gates on `dev` on the first of each
+month, appends one row to a history on the `qc-results` branch (the
+environment fingerprint, one PASS or FAIL per gate, the largest
+restoration ratio, the reliability match rate, the oracle-sweep
+outcomes), and opens one deduplicated GitHub issue when a gate fails or
+the R version, BLAS library, nloptr, lavaan or OpenMx version changes.
+The runner image is recorded and never alerts. Drift bands are not set
+yet: they need about eight rows (eight months at this cadence; a manual
+run adds one sooner), and a change merged to `dev` can go unseen for up
+to a month unless a run is started by hand or a pull request carries the
+`run-qc` label. A labeled pull-request run verifies that pull request;
+it does not append a scheduled/manual history row. The exact source and
+run must be checked before reusing either kind of evidence.
+
+## Known limits
+
+- No latent-model solver benchmark exists; the solver decisions that
+  depend on one are marked proposed in the decision log.
+- Gates run on the runner’s OpenBLAS; the reference BLAS needs a
+  separate container.
+- The constrained covariance tests include multiple seeds and extreme
+  variance scales, but do not exhaust boundary optima or establish
+  boundary calibration. The extreme-floor observed sandwich oracle
+  reached a normalized discrepancy of 1.39e-4; this is a numerical limit
+  of that fixture, not a general accuracy guarantee.
+- The evidence validators are not a gate: `R/sem-outcomes.R` and
+  `R/sem-mbco.R` are not in `tests/sim/risk-files.txt` and no
+  `gates.csv` row registers them, so their protection is the unit tests
+  and the admission checklist, not the OpenBLAS gate run.
+- The validators cannot detect a consistent rewrite of the root sample
+  and its hashes, an altered parameter value inside the parameter table
+  of a null, or a changed condition text of a failed null (see Evidence
+  validators).
+- An all-excluded null is validated against its own certificates, not
+  against the fit’s model, so a self-consistent foreign union is
+  accepted (the statistic is `NA` regardless).
+- A complete enumeration of zero-product branches is not a
+  global-optimum certificate, and a ledger records what a fit did, not
+  that its optimum is the global one.
+
+## The 0.15.0 defaults flip
+
+0.15.0 changes two defaults of the sem engine: an unset `fixed_x` fixes
+the exogenous observed variables and an unset `meanstructure` is `TRUE`.
+The release is gated on evidence that the change moves only what it
+should. It moves the conditional log likelihood, the parameter count
+behind AIC and BIC, the names in
+[`coef()`](https://rdrr.io/r/stats/coef.html), and the retry seed;
+structural estimates and their standard errors stay where they were.
+
+| Gate | What it shows |
+|----|----|
+| Oracle matrix (`tests/sim/native-defaults-oracle.R`) | 557 rows comparing the default fit with the 0.14.x settings and with lavaan: 503 pass, 54 limit, 0 block |
+| lavaan `fixed.x = TRUE, meanstructure = TRUE` | the default fit has the same row set, parameter count and conditional log likelihood, with coefficients within 1e-15 and standard errors within 2.1e-11 |
+| Planted defects | a resolver that overwrites an explicit `FALSE`, or leaves the old default in [`fit_mediation()`](https://data-wise.github.io/medfit/dev/reference/fit_mediation.md) only, is caught by the tests; restoring the old default fails nine of the twelve rewritten test files (the other three pin explicit settings) |
+| Full suite | 1694 tests, 8580 expectations, 0 failed (reference BLAS) |
+
+**A documented limit.**
+[`compare_lr()`](https://data-wise.github.io/medfit/dev/reference/compare_lr.md)
+with lavaan or OpenMx can put the product-null likelihood ratio above
+the reference (issue \#320): 18 of 60 runs for lavaan and 13 of 60 for
+OpenMx, on the pinned design and seeds. The 2026-10-26 re-measure
+reproduced both counts on the `v0.14.0` tree and on `dev`, so the flip
+does not change them. On this design each such run was checked and
+equals the minimum of the other line of the null (`a = 0` instead of
+`b = 0`, or the reverse), where the optimizer settled; medfit’s
+reference, the smaller of the two, stands. The warning itself does not
+establish that: outside a checked design, an above-reference run is
+undiagnosed until both line minima are computed, since an optimizer that
+stops short on either line raises the same warning. The limit is
+documented in
+[`?compare_lr`](https://data-wise.github.io/medfit/dev/reference/compare_lr.md).
+
+**At that local checkpoint.** The two OpenBLAS gate runs (`gates (rest)`
+and `gates (reliability)`) run on pull requests to `main`; they were
+deferred to the release pull request. The table above records the local
+checkpoint, not a later hosted run. The record, with its sources, is
+`planning/specs/RESULT-qc-0.15.0-native-defaults-flip-2026-10-26.md`.
+
+## D4 constrained covariance verification
+
+PR \#358 added Lagrangian observed curvature, preserved expected Fisher
+semantics, and projected the corresponding sandwich bread with
+case-score meat. Independent likelihood parameterizations, Fisher and
+case-score calculations check these choices; the regression cases cover
+weights, means, inactive inequalities, active bounds, exact pinned zeros
+and singular tangent information. See the [Methods
+article](https://data-wise.github.io/medfit/dev/articles/methods.html#constraints)
+for the formulas and boundary limitations.
+
+| Receipt | Source and scope |
+|----|----|
+| [Hosted OpenBLAS QC](https://github.com/data-wise/medfit/actions/runs/40815969203) | `cf7cfb4`: 24 gates and 155 checks, including 76,800 reliability fits and 350 semopy comparisons; this run predates the later test-only heads |
+| [Hosted coverage](https://github.com/data-wise/medfit/actions/runs/40820743419) | `dc575a11`: 96.38% overall and 97.82% patch coverage; both targeted covariance edge branches were covered |
+
+These receipts identify what ran at each source revision. They do not
+claim 100% coverage of critical paths or a later rerun of the OpenBLAS
+matrix. Development pull requests keep fast Ubuntu coverage, lint,
+risk-tier and pkgdown checks. The expensive OpenBLAS runs and full
+platform matrix are reserved for release pull requests from `dev` to
+`main`; monthly and manual QC remain available.
+
+## Lessons from the 0.14.1 port
+
+The recurring defect of the ledger port was the false refusal of a
+genuine result, not the acceptance of a forgery: a sandwich fit refused
+because its nulls are refit model-based while the root records the
+sandwich setting, and an all-excluded zero-product null refused as
+malformed. Each was found by the full suite or an adversarial reviewer
+and missed by the hand-built grids, which tested the shapes their
+authors had thought of. The rule that came out of it is the table above:
+list every shape the engine can produce and require each to validate,
+then run the whole suite, since the engine reaches shapes no grid
+enumerates.
+
+Two process notes. Coverage instrumentation rewrites function bodies, so
+a mutant that replaces source text in a function cannot find it under
+`covr`; those mutants skip under coverage and run in every other check.
+And the review that found the MBCO root ledger without a validator was
+an adversarial review, a reader independent of the slice’s own QA,
+looking for what the author’s tests assume. The record of the release is
+`planning/specs/RESULT-qc-0.14.1-d1-d4-2026-10-25.md`.
+
+**Next:** The same model in four packages’ syntax: [One model in medfit,
+lavaan, OpenMx and
+semopy](https://data-wise.github.io/medfit/dev/articles/syntax-crosswalk.md)

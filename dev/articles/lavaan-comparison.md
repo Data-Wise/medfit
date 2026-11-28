@@ -1,0 +1,240 @@
+# lavaan and the sem engine
+
+medfit’s sem engine fits covariance-structure models, with observed
+intercepts and means, from lavaan-style syntax. It is not a replacement
+for lavaan: it covers the path models behind mediation analysis and
+stops there. This page runs both on the same data, then lists what each
+does, with a status for every feature that a test checks against a live
+probe on each build.
+
+> **At a glance**
+>
+> **Use this when:** you are choosing between medfit’s sem engine and
+> lavaan for a path model, or moving a lavaan model across.  
+> **You get:** both fitted on the same data and a feature table whose
+> status a test checks against a live probe.  
+> **Reading time:** 7 min
+
+|  |  |
+|----|----|
+| **Use medfit native when** | you want the indirect effect, [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md), or a nonlinear constraint such as `cp == a*b` on a path model |
+| **Use lavaan when** | you need latent means, groups, categorical outcomes, other estimators, broader FIML models, or fit indices |
+| **Both** | read the same `~`, `=~`, `~~`, `:=` and constraint syntax, and agree to about 1e-6 where both apply |
+
+## The same model in both
+
+``` r
+library(medfit)
+```
+
+
+    Attaching package: 'medfit'
+
+    The following object is masked from 'package:stats':
+
+        decompose
+
+``` r
+library(generics)
+```
+
+
+    Attaching package: 'generics'
+
+    The following objects are masked from 'package:base':
+
+        as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
+        setequal, union
+
+``` r
+library(lavaan)
+```
+
+    This is lavaan 0.7-3
+    lavaan is FREE software! Please report any bugs.
+
+``` r
+model <- "
+  mediator1 ~ a * treatment
+  outcome ~ b * mediator1 + cp * treatment
+  ab := a * b
+"
+native <- tidy(fit_sem(model, mediation_demo))
+ref <- parameterEstimates(sem(model, mediation_demo))
+rows <- native[native$term %in% c("a", "b", "cp", "ab"), ]
+i <- match(rows$term, ref$label)
+data.frame(term = rows$term, native = rows$estimate, lavaan = ref$est[i],
+           se_native = rows$std_error, se_lavaan = ref$se[i])
+```
+
+      term     native     lavaan  se_native  se_lavaan
+    1    a 0.45599612 0.45599612 0.10763360 0.10763360
+    2    b 0.71342873 0.71342873 0.05047202 0.05047202
+    3   cp 0.04057665 0.04057665 0.11106057 0.11106057
+    4   ab 0.32532073 0.32532073 0.08016376 0.08016376
+
+Both fit with their defaults: lavaan fixes the exogenous covariates, and
+since medfit 0.15.0 so does
+[`fit_sem()`](https://data-wise.github.io/medfit/dev/reference/fit_sem.md)
+(`fixed_x` is the exogenous observed variables, `meanstructure` is
+`TRUE`). The standard errors, including the delta-method error of `ab`,
+agree as well. Pass `fixed_x = FALSE` (and `fixed.x = FALSE` in lavaan)
+to estimate the exogenous variances and covariances instead.
+
+## Where they differ by design
+
+The default information matrix is observed in medfit and expected in
+lavaan. They agree for a well-fitting model and separate when the model
+is misspecified; `information = "expected"` reproduces lavaan:
+
+``` r
+bad <- "mediator1 ~ treatment\nmediator2 ~ treatment\noutcome ~ mediator1 + mediator2"
+rbind(
+  native_observed = sqrt(diag(vcov(fit_sem(bad, mediation_demo))))[3],
+  native_expected = sqrt(diag(vcov(fit_sem(bad, mediation_demo, information = "expected"))))[3],
+  lavaan = sqrt(diag(vcov(sem(bad, mediation_demo))))[3]
+)
+```
+
+                    outcome~mediator1
+    native_observed        0.05642889
+    native_expected        0.04715465
+    lavaan                 0.04715465
+
+## Feature table
+
+Status is one of **Supported** (matches lavaan where lavaan has it),
+**Partial** (a subset), **Different by design** (both exist and differ
+on purpose) and **Unsupported** (use lavaan). Each row is checked by
+`tests/testthat/test-lavaan-comparison.R`; editing a status without
+changing the behavior makes that test fail.
+
+| Feature | lavaan | medfit native | Status |
+|----|----|----|----|
+| Paths, covariances, labels, fixed values, bounds | yes | yes | Supported |
+| Several modifiers on one term | yes | one per term | Unsupported |
+| Means and intercepts | yes | observed intercepts and means (`y ~ 1`, `y ~ 1 + x`); latent means are planned | Supported |
+| Multiple groups | yes | no | Unsupported |
+| Estimators other than ML | yes | ML, and MLR (`estimator = "MLR"`: ML estimates, the HC0 sandwich and the Yuan-Bentler scaled chi-square `chisq_scaled` with `scaling_factor` in [`glance()`](https://generics.r-lib.org/reference/glance.html), as lavaan’s MLR; complete single-level data, linear equality constraints only); MLM, MLMV, WLSMV and the rest are refused | Partial |
+| Missing data | FIML | listwise by default; separate bounded random-X FIML opt-in | Partial |
+| Categorical outcomes | WLSMV and others | numeric variables only; use lavaan (WLSMV) | Unsupported |
+| Information matrix | expected | observed by default | Different by design |
+| Robust standard errors | yes | `se_type = "sandwich"` equals lavaan’s huber.white | Supported |
+| Linear constraints | yes | yes | Supported |
+| Nonlinear constraints | yes | yes, including `a*b > k` and sums of products | Supported |
+| Defined parameters | `:=` | `:=` with delta-method errors | Supported |
+| Chi-square and df | yes | [`glance()`](https://generics.r-lib.org/reference/glance.html) | Supported |
+| CFI, RMSEA, SRMR | yes | not reported | Unsupported |
+| logLik, AIC, BIC | yes | equal when both fit the same settings (the 0.15.0 defaults count the intercepts, as `meanstructure = TRUE` does in lavaan) | Supported |
+| Standardized estimates, modification indices, fitted values, residuals | yes | no | Unsupported |
+| Fixed exogenous covariates | `fixed.x = TRUE` is the default | `fixed_x = TRUE` or names, and `TRUE` is the default since 0.15.0; product columns are fixed with the rest; a statement on a selected variable is an error | Supported |
+| Product terms (`x:m`) and four-way effects | `x:m` is an observed exogenous column, kept as written; no mediation effects | `x:m` stored as `m:x`; coefficients and sandwich standard errors equal lavaan’s; [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md) gives the four-way parts; chi-square, df and p-value are `NA` and [`anova()`](https://rdrr.io/r/stats/anova.html), [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md) refuse when a factor is a regression target; a supported class only | Partial |
+| Nested model comparison | [`lavTestLRT()`](https://rdrr.io/pkg/lavaan/man/lavTestLRT.html) | [`anova()`](https://rdrr.io/r/stats/anova.html) | Supported |
+| Mediation effects and the MBCO test | no | [`extract_mediation()`](https://data-wise.github.io/medfit/dev/reference/extract_mediation.md), [`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md) | Supported |
+| Two-level models (`level:` blocks, `cluster =`) | yes, many designs | experimental, since 0.20.0: observed-variable 1-1-1 mediation through `fit_sem(cluster = )`; estimates match lavaan fitted with `fixed.x = FALSE`, `information = "observed"` and `h1.information = "structured"`; weights, latent variables, products, FIML and most constraints are refused ([page](https://data-wise.github.io/medfit/dev/articles/model-twolevel.html#the-sem-engine-route)) | Partial |
+
+The first column names the feature; the probe for a row is in the test,
+not here, so the table cannot drift from the code without a failing
+test.
+
+### Products, in both
+
+lavaan reads `x:m` as an observed exogenous column and so does medfit,
+so the coefficients and the sandwich standard errors agree, with
+`fixed.x = TRUE` as well as with `fixed.x = FALSE` (the product column
+is fixed with the other exogenous variables):
+
+``` r
+prod_model <- "mediator1 ~ treatment
+               outcome_int ~ mediator1 + treatment + treatment:mediator1"
+nat <- suppressWarnings(fit_sem(prod_model, mediation_demo, se_type = "sandwich", fixed_x = FALSE))
+lav <- sem(prod_model, mediation_demo, fixed.x = FALSE, se = "robust.huber.white")
+nat_fx <- suppressWarnings(fit_sem(prod_model, mediation_demo, se_type = "sandwich"))
+lav_fx <- sem(prod_model, mediation_demo, fixed.x = TRUE, se = "robust.huber.white")
+paths <- 1:4
+rbind(
+  max_diff_estimate = max(abs(coef(nat)[paths] - lavaan::coef(lav)[paths])),
+  max_diff_se = max(abs(sqrt(diag(vcov(nat)))[paths] - sqrt(diag(lavaan::vcov(lav)))[paths])),
+  max_diff_estimate_fixed_x = max(abs(coef(nat_fx)[paths] - lavaan::coef(lav_fx)[paths]))
+)
+```
+
+                                      [,1]
+    max_diff_estimate         2.220446e-16
+    max_diff_se               2.254825e-11
+    max_diff_estimate_fixed_x 2.220446e-16
+
+They differ in what follows. lavaan reports a chi-square for this model;
+medfit reports `NA`, because the product contains a regression target
+(`mediator1`) and the model treats it as exogenous, which makes the
+global test invalid (see [the sem engine model
+page](https://data-wise.github.io/medfit/dev/articles/model-sem.html#product-terms)).
+lavaan stores the product under the spelling you wrote
+(`treatment:mediator1`); medfit stores `mediator1:treatment`, whichever
+order you write. A model medfit rejects (a residual covariance between
+outcomes, a shared or fixed coefficient, a constraint on a coefficient,
+a bound) is still fitted by lavaan.
+
+## Checking a constrained LR against lavaan or OpenMx
+
+The test of an indirect effect, \\ab = 0\\, can be posed to a general
+optimizer as the nonlinear constraint `a*b == 0`. That is the one place
+where a general optimizer can return a wrong statistic without saying
+so: OpenMx started at \\a = b = 0\\ can drop the constraint (its
+Jacobian is zero there), and lavaan can stop at a branch with a larger
+statistic than the true minimum. medfit never poses that constraint to
+its own solver:
+[`mbco_sem()`](https://data-wise.github.io/medfit/dev/reference/mbco_sem.md)
+takes the smaller of the two linear nulls. The decomposition is exact
+(the product is zero exactly when one factor is); each branch is a
+numerical refit from several starts, so the reference is the best
+accepted refit, not a proof of a global minimum.
+[`compare_lr()`](https://data-wise.github.io/medfit/dev/reference/compare_lr.md)
+runs the nonlinear form in lavaan or OpenMx from two starts and compares
+it with medfit’s result. lavaan starts from its own default and from its
+`"simple"` start (the paths at 0); OpenMx starts from medfit’s default
+start and from the same start with the tested paths set to 0, the start
+at which it drops the constraint. Its `engine` argument names the
+external comparison program (lavaan or OpenMx), not a fitter of the
+mediation model: the model is the native `SEMFit` passed in, and the
+result’s `reference` is medfit’s own LR.
+
+``` r
+fit <- fit_sem("mediator1 ~ a*treatment\noutcome ~ b*mediator1 + cp*treatment", mediation_demo)
+compare_lr(fit, paths = c("a", "b"), engine = "lavaan")
+```
+
+A warning is raised only on observed evidence, never because the
+engine’s LR is zero (a valid fit has LR = 0 when the unrestricted
+optimum already satisfies the null):
+
+| Condition | Warning class | Evidence |
+|----|----|----|
+| The engine’s returned fit violates \\ab = 0\\ | `medfit_warning_engine_constraint_dropped` | \\\|ab\|\\ above `1e-4` in the natural units of the product |
+| A feasible run’s statistic exceeds medfit’s best accepted refit | `medfit_warning_engine_statistic_above_max` | difference above `1e-4 * max(1, LR)` |
+
+Both inherit from `medfit_warning_engine_comparison`. The verdict is
+`"unresolved"`, and neither side is blamed, when medfit has no accepted
+reference, the engine’s unrestricted fit differs from medfit’s
+(parameters, estimates, or the discrepancy), or a run failed or could
+not be checked. Only observed-variable models are compared. A saturated
+mean structure (every intercept free) and `fixed_x` (all, a named subset
+or a lenient subset) are supported in both engines: the fixed exogenous
+moments are written to the engine as fixed parameters at their sample
+values, and in OpenMx a fit with a mean structure runs on the raw data
+of the rows the fit used. Latent variables, products, fixed or
+constrained intercepts, weights, factors, other fixed or shared
+parameters, start and bound modifiers and constraints in the model are
+refused by name. The live check behind these statements is the
+`compare-lr` gate (`tests/sim/compare-lr-gate.R`), which runs the
+issue’s cell through both engines and fails only when
+[`compare_lr()`](https://data-wise.github.io/medfit/dev/reference/compare_lr.md)
+mislabels.
+
+The same simple model written in OpenMx and semopy syntax, next to
+medfit and lavaan, is on [One model in medfit, lavaan, OpenMx and
+semopy](https://data-wise.github.io/medfit/dev/articles/syntax-crosswalk.md).
+
+**Next:** The same model in four packages’ syntax: [One model in medfit,
+lavaan, OpenMx and
+semopy](https://data-wise.github.io/medfit/dev/articles/syntax-crosswalk.md)
