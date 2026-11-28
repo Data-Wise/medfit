@@ -126,9 +126,9 @@ Other cases (interaction, weights, constraints and MBCO, serial or parallel mode
 * **Development version:** no user-visible changes yet since 0.21.3 (released 2026-11-27), whose highlights follow.
 
 
-* **0.21.3 (2026-11-27, GitHub; CRAN submission is the maintainer's):** no change to what any function returns; cuts the tests that run on CRAN by about half after CRAN's pretest measured the Windows check at 11 minutes against a 10-minute limit.
+* **0.21.3 (2026-11-27, GitHub; submitted to CRAN 2026-11-27, awaiting the CRAN team's review):** no change to what any function returns; cuts the tests that run on CRAN by about half after CRAN's pretest measured the Windows check at 11 minutes against a 10-minute limit.
 
-* **0.21.2 (2026-11-26, GitHub; CRAN submission is the maintainer's):** no change to what any function returns; fixes the notes CRAN's incoming checks raised (Rd usage, check time) and the open S7 issue on 0.3.2, and moves the slowest tests and gates to the local full run.
+* **0.21.2 (2026-11-26, GitHub only; CRAN's pretest failed it on Windows check time, so 0.21.3 replaced it):** no change to what any function returns; fixes the notes CRAN's incoming checks raised (Rd usage, check time) and the open S7 issue on 0.3.2, and moves the slowest tests and gates to the local full run.
 
 * **0.21.1 (2026-11-26, GitHub only):** no change to the package code since 0.21.0 (released 2026-11-25); the longest test files are skipped on CRAN, the test warnings are gone, and the cookbook has recipe 25 (MLR). The highlights of 0.21.0 follow.
 
