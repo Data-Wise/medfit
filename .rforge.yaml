@@ -46,6 +46,16 @@ site:
     - vignettes/articles/quality-control.qmd
     - vignettes/articles/whats-new-0-11.qmd
     - vignettes/articles/syntax-crosswalk.qmd
+    - vignettes/articles/guide-architecture.qmd
+    - vignettes/articles/guide-engines.qmd
+    - vignettes/articles/guide-twolevel-tutorial.qmd
+    - vignettes/articles/model-fiml.qmd
+    - vignettes/articles/model-twolevel.qmd
+    - vignettes/articles/probmed-comparison.qmd
+    - vignettes/articles/rmediation-comparison.qmd
+    - vignettes/articles/sem-defaults-0-15.qmd
+    # Contributor guide, published as a site page by design.
+    - CONTRIBUTING.md
 
 docs:
   site:
